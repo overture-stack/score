@@ -1,0 +1,73 @@
+# Eclipse IDE
+.project
+.classpath
+.apt_generated
+org.eclipse.core.resources.prefs
+org.eclipse.jdt.apt.core.prefs
+
+# Intellij IDE
+.idea
+*.iml
+atlassian-ide-plugin.xml
+
+# Maven
+target/
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+git.properties
+release.properties
+dependency-reduced-pom.xml
+
+# Javascript Temporary Files
+npm-debug.log
+.cake_task_cache
+public/
+node_modules/
+dist/
+components/
+.sass-cache/
+.tmp/
+unit.xml
+e2e.xml
+
+# Java Temporary files
+logs/
+reports/
+build/
+.pmd
+dist_*/
+mem.h2.db
+mem.lock.db
+mem.trace.db
+logs/
+
+# *nix temporary files
+*~
+*.swp
+
+# Mac metadata
+.DS_Store
+
+# Kaleidoscope
+*.orig
+
+# Python
+*.pyc
+
+# Reference genome databases
+*.fasta
+*.fasta.fai
+
+# H2 database
+*.h2.db
+
+# Keys
+*.pem
+
+# Vagrant
+.vagrant/
+
+# 
+KeyczarTest.java
+HelperTest.java
+DownloadPartRequest.java
