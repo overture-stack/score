@@ -1,0 +1,30 @@
+repository_server_uri: https://repository.icgc.org
+
+spring:
+  profiles.active: default
+---
+spring:
+  profiles: default
+  
+# Server
+server:
+  port: 5431
+  ssl:
+    key-store: src/main/cert/appliance.jks
+    key-store-type: JKS
+    key-store-password: password
+    key-alias: appliance
+
+key.resource.uri: ${repository_server_uri}/pcawg/keys
+dcc:
+  strict: true
+  retry.limit: 1000
+---
+spring:
+  profiles: prod
+endpoints:
+  dump.enabled: false
+  env.enabled: false
+  info.enabled: false
+dcc:
+  strict: true

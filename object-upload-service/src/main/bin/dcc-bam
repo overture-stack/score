@@ -1,0 +1,33 @@
+#!/bin/bash
+# chkconfig: 2345 95 20
+# description: dcc-bam-appliance
+# processname: dcc-bam
+
+# source function library
+. /etc/rc.d/init.d/functions
+
+JAVA_HOME=$(dirname $(readlink -f `which java`))/..
+DCC_HOME=${SRV_HOME}
+CERT_HOME=${DCC_HOME}/cert
+CLIENT_CERTIFICATE=${CERT_HOME}/client-certificate.cer
+TRUST_STORE=${JAVA_HOME}/lib/security/cacerts
+ALIAS=client
+PASSWD=changeit
+
+status=0
+CERT_JAVA_FLAG="-Dserver.ssl.client-auth=need -Dserver.ssl.trust-store=${TRUST_STORE} -Dserver.ssl.trust-store-type=JKS -Dserver.ssl.trust-store-password=${PASSWD}"
+keytool -list -keystore ${TRUST_STORE} -alias ${ALIAS} -storepass ${PASSWD} -noprompt || status=$?
+if [ $status -ne 0 ]; then
+        # Check if user provides a client certificate
+                status=0
+                curl -f http://169.254.169.254/latest/user-data -o ${CLIENT_CERTIFICATE} || status=$?
+        if [ $status -eq 0 ]; then
+                keytool -import -trustcacerts -file ${CLIENT_CERTIFICATE} -alias ${ALIAS} -keystore ${TRUST_STORE} -keypass ${PASSWD} -storepass ${PASSWD} -noprompt
+        else
+                CERT_JAVA_FLAG=""
+        fi
+fi
+export CERT_JAVA_FLAG
+
+daemon --user=${USER} /srv/dcc-bam-server/bin/dcc-bam-app &> /dev/null &
+#daemon --user=${USER} /srv/dcc-bam-server/bin/dcc-bam-app > /var/log/appliance.log 2>&1 &
