@@ -16,7 +16,7 @@ import com.amazonaws.services.s3.AmazonS3Client;
 @Configuration
 public class S3Config {
 
-  @Value("${dcc.retry.limit}")
+  @Value("${upload.retry.limit}")
   private int retryLimit;
 
   @Bean

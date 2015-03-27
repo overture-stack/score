@@ -18,10 +18,25 @@
 package collaboratory.storage.object.store.config;
 
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import collaboratory.storage.object.store.service.ObjectPartCalculator;
+import collaboratory.storage.object.store.service.SimplePartCalculator;
+import collaboratory.storage.object.store.service.UploadStateStore;
 
 @Configuration
 @EnableAutoConfiguration
 public class UploadConfig {
 
+  @Bean
+  public UploadStateStore stateStore() {
+    return new UploadStateStore();
+  }
+
+  @Bean
+  public ObjectPartCalculator calculator() {
+    return new SimplePartCalculator();
+
+  }
 }

@@ -50,7 +50,7 @@ public class ObjectUploadController {
     return uploadService.initiateUpload(objectId, fileSize);
   }
 
-  @RequestMapping(method = RequestMethod.POST, value = "/{object-id}")
+  @RequestMapping(method = RequestMethod.POST, value = "/{object-id}/parts")
   public void finalizePartUpload(
       @RequestHeader(value = "access-token", required = true) final String accessToken,
       @PathVariable(value = "object-id") String objectId,
@@ -61,18 +61,17 @@ public class ObjectUploadController {
     uploadService.finalizeUploadPart(objectId, uploadId, partNumber, md5, eTag);
   }
 
+  @RequestMapping(method = RequestMethod.POST, value = "/{object-id}")
+  public void finalizeUpload(@RequestHeader("access-token") final String accessToken,
+      @PathVariable("object-id") String objectId, @QueryParam("uploadId") String uploadId) {
+    uploadService.finalizeUpload(objectId, uploadId);
+  }
+
   @RequestMapping(method = RequestMethod.GET, value = "/{object-id}")
   public @ResponseBody
   UploadSpecification getUploadInfo(@RequestHeader("access-token") final String accessToken,
       @PathVariable("object-id") String objectId, @QueryParam("uploadId") String uploadId) {
     return uploadService.getIncompletedUploadParts(objectId, uploadId);
-  }
-
-  @RequestMapping(method = RequestMethod.POST, value = "/{object-id}")
-  public void finalizeUpload(@RequestHeader("access-token") final String accessToken,
-      @PathVariable("object-id") String objectId, @QueryParam("uploadId") String uploadId) {
-    uploadService.finalizeUpload(objectId, uploadId);
-
   }
 
   @RequestMapping(method = RequestMethod.DELETE, value = "/{object-id}")
