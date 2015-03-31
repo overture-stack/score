@@ -19,10 +19,12 @@ package collaboratory.storage.object.store.core.util;
 
 public class ObjectStoreUtil {
 
-  private static final String DATA_DIR = "data";
+  public static String getObjectKey(String dataDir, String objectId) {
+    return dataDir + "/" + objectId;
+  }
 
-  public static String getObjectKey(String objectId) {
-    return DATA_DIR + "/" + objectId;
+  public static String getObjectMetaKey(String dataDir, String objectId) {
+    return dataDir + "/" + objectId + ".meta";
   }
 
 }

@@ -17,17 +17,19 @@
  */
 package collaboratory.storage.object.store.core.model;
 
+import java.util.List;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+@Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Data
-final public class Part {
+public class UploadProgress {
 
-  int partNumber;
-  long partSize;
-  long offset;
-  String url;
+  private String objectId;
+  private String uploadId;
+  private List<Part> parts;
+  private List<CompletedPart> completedParts;
 }

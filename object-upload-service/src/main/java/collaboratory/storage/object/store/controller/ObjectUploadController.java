@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 The Ontario Institute for Cancer Research. All rights reserved.                             
+ * Copyright (c) 2015 The Ontario Institute for Cancer Research. All rights reserved.                             
  *                                                                                                               
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
  * You should have received a copy of the GNU General Public License along with                                  
@@ -17,9 +17,15 @@
  */
 package collaboratory.storage.object.store.controller;
 
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
+import java.util.Set;
+
 import javax.ws.rs.QueryParam;
 
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -30,12 +36,19 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import collaboratory.storage.object.store.core.model.CompletedPart;
+import collaboratory.storage.object.store.core.model.Part;
+import collaboratory.storage.object.store.core.model.UploadProgress;
 import collaboratory.storage.object.store.core.model.UploadSpecification;
+import collaboratory.storage.object.store.core.util.ChannelUtils;
 import collaboratory.storage.object.store.service.ObjectUploadService;
+
+import com.google.common.collect.Sets;
 
 @Setter
 @RestController
 @RequestMapping("/upload")
+@Slf4j
 public class ObjectUploadController {
 
   @Autowired
@@ -57,27 +70,74 @@ public class ObjectUploadController {
       @RequestParam(value = "partNumber", required = true) int partNumber,
       @RequestParam(value = "uploadId", required = true) String uploadId,
       @RequestParam(value = "md5", required = true) String md5,
-      @RequestParam(value = "md5", required = true) String eTag) {
+      @RequestParam(value = "etag", required = true) String eTag) {
     uploadService.finalizeUploadPart(objectId, uploadId, partNumber, md5, eTag);
   }
 
   @RequestMapping(method = RequestMethod.POST, value = "/{object-id}")
-  public void finalizeUpload(@RequestHeader("access-token") final String accessToken,
-      @PathVariable("object-id") String objectId, @QueryParam("uploadId") String uploadId) {
+  public void finalizeUpload(
+      @RequestHeader(value = "access-token", required = true) final String accessToken,
+      @PathVariable(value = "object-id") String objectId,
+      @RequestParam(value = "uploadId", required = true) String uploadId
+      ) {
     uploadService.finalizeUpload(objectId, uploadId);
   }
 
   @RequestMapping(method = RequestMethod.GET, value = "/{object-id}")
   public @ResponseBody
-  UploadSpecification getUploadInfo(@RequestHeader("access-token") final String accessToken,
-      @PathVariable("object-id") String objectId, @QueryParam("uploadId") String uploadId) {
-    return uploadService.getIncompletedUploadParts(objectId, uploadId);
+  UploadProgress getUploadProgress(@RequestHeader("access-token") final String accessToken,
+      @PathVariable("object-id") String objectId) {
+    return uploadService.getUploadProgress(objectId, uploadService.getUploadId(objectId));
   }
 
+  /**
+   * probably needs to call this asynchronously
+   * @param accessToken
+   * @param objectId
+   * @param uploadId
+   */
   @RequestMapping(method = RequestMethod.DELETE, value = "/{object-id}")
   public void cancelUpload(@RequestHeader("access-token") final String accessToken,
       @PathVariable("object-id") String objectId, @QueryParam("uploadId") String uploadId) {
     uploadService.cancelUpload(objectId, uploadId);
   }
 
+  @RequestMapping(method = RequestMethod.POST, value = "/{object-id}/test")
+  public void test(@PathVariable("object-id") String objectId, @QueryParam("filename") String filename)
+      throws IOException {
+    log.info("filename: {}", filename);
+    File upload = new File(filename);
+    UploadSpecification spec = uploadService.initiateUpload(objectId, upload.length());
+    for (Part part : spec.getParts()) {
+      String etag = ChannelUtils.UploadObject(upload, new URL(part.getUrl()), part.getOffset(), part.getPartSize());
+      uploadService.finalizeUploadPart(objectId, spec.getUploadId(), part.getPartNumber(), etag, etag);
+    }
+    uploadService.finalizeUpload(objectId, spec.getUploadId());
+  }
+
+  @RequestMapping(method = RequestMethod.POST, value = "/{object-id}/resume")
+  public void testResume(@PathVariable("object-id") String objectId, @QueryParam("filename") String filename)
+      throws IOException {
+    log.info("filename: {}", filename);
+    File upload = new File(filename);
+    String uploadId = uploadService.getUploadId(objectId);
+    log.info("Upload ID: {}", uploadId);
+    UploadProgress progress = uploadService.getUploadProgress(objectId, uploadId);
+
+    Set<Integer> completedPartNumber = Sets.newHashSet();
+    for (CompletedPart part : progress.getCompletedParts()) {
+      completedPartNumber.add(part.getPartNumber());
+    }
+
+    for (Part part : progress.getParts()) {
+      if (!completedPartNumber.contains(part.getPartNumber())) {
+        String etag = ChannelUtils.UploadObject(upload, new URL(part.getUrl()), part.getOffset(), part.getPartSize());
+        uploadService.finalizeUploadPart(objectId, uploadId, part.getPartNumber(), etag, etag);
+      } else {
+        log.debug("Part Completed: {}", part);
+      }
+    }
+
+    uploadService.finalizeUpload(objectId, uploadId);
+  }
 }

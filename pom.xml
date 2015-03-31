@@ -19,6 +19,7 @@
 
   <modules>
     <module>object-store-core</module>
+    <module>object-store-client</module>
     <module>object-upload-service</module>
   </modules>
 
@@ -30,9 +31,10 @@
   </scm>
 
   <repositories>
+    <!-- DCC -->
     <repository>
-      <id>collaboratory-release</id>
-      <url>http://seqwaremaven.oicr.on.ca/artifactory/collaboratory-release</url>
+      <id>dcc-release</id>
+      <url>http://seqwaremaven.oicr.on.ca/artifactory/dcc-release</url>
     </repository>
 
     <!-- Spring -->
@@ -689,8 +691,8 @@
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
         <configuration>
-          <source>1.7</source>
-          <target>1.7</target>
+          <source>1.8</source>
+          <target>1.8</target>
         </configuration>
       </plugin>
     </plugins>
@@ -705,7 +707,7 @@
     <spring-security-oauth2.version>2.0.3.RELEASE</spring-security-oauth2.version>
 
     <!-- Versions - Amazon -->
-    <aws-java-sdk.version>1.8.9</aws-java-sdk.version>
+    <aws-java-sdk.version>1.8.11</aws-java-sdk.version>
 
     <!-- Versions - JSON -->
     <jackson.version>2.3.0</jackson.version>

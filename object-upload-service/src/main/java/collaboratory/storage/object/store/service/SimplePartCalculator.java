@@ -19,7 +19,6 @@ package collaboratory.storage.object.store.service;
 
 import java.util.List;
 
-
 import collaboratory.storage.object.store.core.model.Part;
 
 import com.google.common.collect.ImmutableList;
@@ -28,7 +27,8 @@ import com.google.common.collect.ImmutableList.Builder;
 public class SimplePartCalculator implements ObjectPartCalculator {
 
   private static final int MAX_NUM_PART = 10000;
-  private static final int PART_SIZE = 4194304;
+  // minimum size for S3
+  private static final int PART_SIZE = 5242880;
 
   @Override
   public List<Part> divide(long fileSize) {

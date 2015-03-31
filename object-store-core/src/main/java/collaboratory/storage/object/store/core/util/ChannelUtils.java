@@ -1,9 +1,16 @@
 package collaboratory.storage.object.store.core.util;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.nio.ByteBuffer;
+import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
+import java.util.List;
+import java.util.Map;
 
 public final class ChannelUtils {
 
@@ -21,5 +28,35 @@ public final class ChannelUtils {
     while (buffer.hasRemaining()) {
       dest.write(buffer);
     }
+  }
+
+  public static void UploadObject(File upload, URL url) throws IOException {
+    UploadObject(upload, url, 0, upload.length());
+  }
+
+  // TODO: http://codereview.stackexchange.com/questions/45819/httpurlconnection-response-code-handling
+  public static String UploadObject(File upload, URL url, long offset, long length) throws IOException
+  {
+    System.out.println(String.format("URL: %s", url));
+    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+    connection.setDoOutput(true);
+    connection.setRequestMethod("PUT");
+    connection.setFixedLengthStreamingMode(length);
+    FileInputStream fis = new FileInputStream(upload);
+    WritableByteChannel toChannel = Channels.newChannel(connection.getOutputStream());
+    fis.getChannel().transferTo(offset, length, toChannel);
+    fis.close();
+    toChannel.close();
+    Map<String, List<String>> map = connection.getHeaderFields();
+    for (Map.Entry<String, List<String>> entry : map.entrySet()) {
+      System.out.println("Key : " + entry.getKey()
+          + " ,Value : " + entry.getValue());
+    }
+    if (connection.getResponseCode() == 200) {
+      return connection.getHeaderField("ETag");
+    } else {
+      throw new IOException("fail to upload: " + connection.getResponseMessage());
+    }
+
   }
 }
