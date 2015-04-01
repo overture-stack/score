@@ -41,6 +41,7 @@ import com.amazonaws.services.s3.model.DeleteObjectsRequest.KeyVersion;
 import com.amazonaws.services.s3.model.GetObjectRequest;
 import com.amazonaws.services.s3.model.ListObjectsRequest;
 import com.amazonaws.services.s3.model.ObjectListing;
+import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PartETag;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
@@ -54,7 +55,7 @@ public class UploadStateStore {
   private static final String UPLOAD_SEPARATOR = "_";
   private static final String DIRECTORY_SEPARATOR = "/";
   private static final String META = ".meta";
-  private static final String PART = ".part";
+  private static final String PART = "part";
 
   @Autowired
   private AmazonS3 s3Client;
@@ -69,8 +70,11 @@ public class UploadStateStore {
     log.debug("Upload Specification : {}", spec);
     ObjectMapper mapper = new ObjectMapper();
     try {
+      byte[] content = mapper.writeValueAsBytes(spec);
+      ObjectMetadata meta = new ObjectMetadata();
+      meta.setContentLength(content.length);
       s3Client.putObject(bucketName, getUploadStateKey(spec.getObjectId(), spec.getUploadId(), META),
-          new ByteArrayInputStream(mapper.writeValueAsBytes(spec)), null);
+          new ByteArrayInputStream(content), meta);
     } catch (IOException e) {
       log.error("Fail to create upload temporary directory", e);
       throw e;
@@ -163,9 +167,12 @@ public class UploadStateStore {
       throws IOException {
     ObjectMapper mapper = new ObjectMapper();
     try {
+      byte[] content = mapper.writeValueAsBytes(new CompletedPart(partNumber, md5, eTag));
+      ObjectMetadata meta = new ObjectMetadata();
+      meta.setContentLength(content.length);
       s3Client.putObject(bucketName,
           getUploadStateKey(objectId, uploadId, getLexicographicalOrderUploadPartName(partNumber)),
-          new ByteArrayInputStream(mapper.writeValueAsBytes(new CompletedPart(partNumber, md5, eTag))), null);
+          new ByteArrayInputStream(content), meta);
     } catch (IOException e) {
       log.error("Fail to create upload temporary directory", e);
       throw e;

@@ -55,8 +55,7 @@ public class ObjectUploadController {
   ObjectUploadService uploadService;
 
   @RequestMapping(method = RequestMethod.POST, value = "/{object-id}/uploads")
-  public @ResponseBody
-  UploadSpecification initializeMultipartUpload(
+  public @ResponseBody UploadSpecification initializeMultipartUpload(
       @RequestHeader(value = "access-token", required = true) final String accessToken,
       @PathVariable(value = "object-id") String objectId,
       @RequestParam(value = "fileSize", required = true) long fileSize) {
@@ -84,8 +83,7 @@ public class ObjectUploadController {
   }
 
   @RequestMapping(method = RequestMethod.GET, value = "/{object-id}")
-  public @ResponseBody
-  UploadProgress getUploadProgress(@RequestHeader("access-token") final String accessToken,
+  public @ResponseBody UploadProgress getUploadProgress(@RequestHeader("access-token") final String accessToken,
       @PathVariable("object-id") String objectId) {
     return uploadService.getUploadProgress(objectId, uploadService.getUploadId(objectId));
   }
@@ -98,8 +96,8 @@ public class ObjectUploadController {
    */
   @RequestMapping(method = RequestMethod.DELETE, value = "/{object-id}")
   public void cancelUpload(@RequestHeader("access-token") final String accessToken,
-      @PathVariable("object-id") String objectId, @QueryParam("uploadId") String uploadId) {
-    uploadService.cancelUpload(objectId, uploadId);
+      @PathVariable("object-id") String objectId) {
+    uploadService.cancelUpload(objectId, uploadService.getUploadId(objectId));
   }
 
   @RequestMapping(method = RequestMethod.POST, value = "/{object-id}/test")
@@ -139,5 +137,11 @@ public class ObjectUploadController {
     }
 
     uploadService.finalizeUpload(objectId, uploadId);
+  }
+
+  @RequestMapping(method = RequestMethod.POST, value = "/cancel")
+  public void cancelAll()
+      throws IOException {
+    uploadService.cancelAllUpload();
   }
 }
