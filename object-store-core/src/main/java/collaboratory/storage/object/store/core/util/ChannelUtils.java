@@ -1,6 +1,5 @@
 package collaboratory.storage.object.store.core.util;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -12,8 +11,6 @@ import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
 import java.util.List;
 import java.util.Map;
-
-import com.google.api.client.util.IOUtils;
 
 public final class ChannelUtils {
 
@@ -67,29 +64,4 @@ public final class ChannelUtils {
 
   }
 
-  public static String GetObject(URL url) throws IOException
-  {
-    System.out.println(String.format("URL: %s", url));
-    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-    try {
-      connection.setDoOutput(true);
-      connection.setRequestMethod("GET");
-      ByteArrayOutputStream response = new ByteArrayOutputStream();
-      IOUtils.copy(connection.getInputStream(), response);
-      Map<String, List<String>> map = connection.getHeaderFields();
-      for (Map.Entry<String, List<String>> entry : map.entrySet()) {
-        System.out.println("Key : " + entry.getKey()
-            + " ,Value : " + entry.getValue());
-      }
-
-      if (connection.getResponseCode() == 200) {
-        return response.toString();
-      } else {
-        throw new IOException("fail to upload: " + connection.getResponseMessage());
-      }
-    } finally {
-      connection.disconnect();
-    }
-
-  }
 }

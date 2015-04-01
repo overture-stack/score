@@ -20,7 +20,6 @@ package collaboratory.storage.object.store.controller;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.util.Set;
 
 import javax.ws.rs.QueryParam;
 
@@ -36,14 +35,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import collaboratory.storage.object.store.core.model.CompletedPart;
 import collaboratory.storage.object.store.core.model.Part;
 import collaboratory.storage.object.store.core.model.UploadProgress;
 import collaboratory.storage.object.store.core.model.UploadSpecification;
 import collaboratory.storage.object.store.core.util.ChannelUtils;
 import collaboratory.storage.object.store.service.ObjectUploadService;
-
-import com.google.common.collect.Sets;
 
 @Setter
 @RestController
@@ -85,6 +81,7 @@ public class ObjectUploadController {
   @RequestMapping(method = RequestMethod.GET, value = "/{object-id}")
   public @ResponseBody UploadProgress getUploadProgress(@RequestHeader("access-token") final String accessToken,
       @PathVariable("object-id") String objectId) {
+    // TODO: if upload id, throw not found exception
     return uploadService.getUploadProgress(objectId, uploadService.getUploadId(objectId));
   }
 
@@ -111,32 +108,6 @@ public class ObjectUploadController {
       uploadService.finalizeUploadPart(objectId, spec.getUploadId(), part.getPartNumber(), etag, etag);
     }
     uploadService.finalizeUpload(objectId, spec.getUploadId());
-  }
-
-  @RequestMapping(method = RequestMethod.POST, value = "/{object-id}/resume")
-  public void testResume(@PathVariable("object-id") String objectId, @QueryParam("filename") String filename)
-      throws IOException {
-    log.info("filename: {}", filename);
-    File upload = new File(filename);
-    String uploadId = uploadService.getUploadId(objectId);
-    log.info("Upload ID: {}", uploadId);
-    UploadProgress progress = uploadService.getUploadProgress(objectId, uploadId);
-
-    Set<Integer> completedPartNumber = Sets.newHashSet();
-    for (CompletedPart part : progress.getCompletedParts()) {
-      completedPartNumber.add(part.getPartNumber());
-    }
-
-    for (Part part : progress.getParts()) {
-      if (!completedPartNumber.contains(part.getPartNumber())) {
-        String etag = ChannelUtils.UploadObject(upload, new URL(part.getUrl()), part.getOffset(), part.getPartSize());
-        uploadService.finalizeUploadPart(objectId, uploadId, part.getPartNumber(), etag, etag);
-      } else {
-        log.debug("Part Completed: {}", part);
-      }
-    }
-
-    uploadService.finalizeUpload(objectId, uploadId);
   }
 
   @RequestMapping(method = RequestMethod.POST, value = "/cancel")

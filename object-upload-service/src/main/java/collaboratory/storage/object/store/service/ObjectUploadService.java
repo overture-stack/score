@@ -2,8 +2,9 @@ package collaboratory.storage.object.store.service;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.Date;
 import java.util.List;
 
 import javax.annotation.PostConstruct;
@@ -23,12 +24,7 @@ import collaboratory.storage.object.store.core.model.UploadProgress;
 import collaboratory.storage.object.store.core.model.UploadSpecification;
 import collaboratory.storage.object.store.core.util.ObjectStoreUtil;
 
-import com.amazonaws.AmazonClientException;
-import com.amazonaws.AmazonServiceException;
-import com.amazonaws.DefaultRequest;
 import com.amazonaws.HttpMethod;
-import com.amazonaws.Request;
-import com.amazonaws.http.HttpMethodName;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.AbortMultipartUploadRequest;
 import com.amazonaws.services.s3.model.CompleteMultipartUploadRequest;
@@ -41,10 +37,8 @@ import com.amazonaws.services.s3.model.MultipartUpload;
 import com.amazonaws.services.s3.model.MultipartUploadListing;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PartETag;
-import com.amazonaws.services.s3.model.PartListing;
 import com.amazonaws.services.s3.model.PartSummary;
 import com.amazonaws.services.s3.model.transform.Unmarshallers.ListPartsResultUnmarshaller;
-import com.google.common.net.UrlEscapers;
 
 @Service
 @Setter
@@ -59,6 +53,9 @@ public class ObjectUploadService {
 
   @Value("${collaboratory.data.directory}")
   private String dataDir;
+
+  @Value("${collaboratory.upload.expiration}")
+  private int expiration;
 
   @Value("${s3.endpoint}")
   private String endPoint;
@@ -75,26 +72,29 @@ public class ObjectUploadService {
 
   @SneakyThrows
   public UploadSpecification initiateUpload(String objectId, long fileSize) {
-
+    // TODO: check if a upload for the object id is already initiated, if no start, else delete it first before initiate
+    // TODO: check if the object already exists
     String objectKey = ObjectStoreUtil.getObjectKey(dataDir, objectId);
     InitiateMultipartUploadRequest req = new InitiateMultipartUploadRequest(
         bucketName, objectKey);
     InitiateMultipartUploadResult result = s3Client.initiateMultipartUpload(req);
 
     List<Part> parts = partCalculator.divide(fileSize);
+
+    LocalDateTime now = LocalDateTime.now();
+    Date expirationDate = Date.from(now.plusDays(expiration).atZone(ZoneId.systemDefault()).toInstant());
     for (Part part : parts) {
-      insertPartUploadUrl(objectKey, result.getUploadId(), part);
+      insertPartUploadUrl(objectKey, result.getUploadId(), part, expirationDate);
     }
     UploadSpecification spec = new UploadSpecification(objectKey, objectId, result.getUploadId(), parts);
     stateStore.create(spec);
     return spec;
-
   }
 
   // TODO: Ceph does not provide ways to query parts info
   @SneakyThrows
   private boolean isPartExist(String objectKey, String uploadId, int partNumber, String eTag) {
-    List<PartSummary> parts;
+    List<PartSummary> parts = null;
     if (endPoint == null) {
       ListPartsRequest req =
           new ListPartsRequest(bucketName, objectKey, uploadId);
@@ -126,58 +126,12 @@ public class ObjectUploadService {
     return false;
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see com.amazonaws.services.s3.AmazonS3#listParts(com.amazonaws.services.s3.model.ListPartsRequest)
-   */
-  public PartListing listParts(ListPartsRequest listPartsRequest)
-      throws AmazonClientException, AmazonServiceException, URISyntaxException {
-
-    Request<ListPartsRequest> request =
-        createRequest(listPartsRequest.getBucketName(), listPartsRequest.getKey(), listPartsRequest, HttpMethodName.GET);
-    request.addParameter("uploadId", listPartsRequest.getUploadId());
-
-    if (listPartsRequest.getMaxParts() != null) request.addParameter("max-parts", listPartsRequest.getMaxParts()
-        .toString());
-    if (listPartsRequest.getPartNumberMarker() != null) request.addParameter("part-number-marker", listPartsRequest
-        .getPartNumberMarker().toString());
-    if (listPartsRequest.getEncodingType() != null) request.addParameter("encoding-type",
-        listPartsRequest.getEncodingType());
-
-    // return invoke(request, new Unmarshallers.ListPartsResultUnmarshaller(), listPartsRequest.getBucketName(),
-    // listPartsRequest.getKey());
-    return null;
-  }
-
-  /**
-   * @param bucketName2
-   * @param key
-   * @param listPartsRequest
-   * @param get
-   * @return
-   * @throws URISyntaxException
-   */
-  private Request<ListPartsRequest> createRequest(String bucketName, String key, ListPartsRequest originalRequest,
-      HttpMethodName get) throws URISyntaxException {
-    Request<ListPartsRequest> request =
-        new DefaultRequest<ListPartsRequest>(originalRequest,
-            com.amazonaws.services.s3.internal.Constants.S3_SERVICE_NAME);
-    request.setHttpMethod(get);
-    request.setEndpoint(new URI(endPoint));
-
-    if (bucketName != null) {
-      request.setResourcePath(bucketName + "/" + (key != null ? key : ""));
-    }
-    return request;
-  }
-
   @SneakyThrows
   public void finalizeUploadPart(String objectId, String uploadId, int partNumber, String md5, String eTag) {
     if (md5 != null && eTag != null && !md5.isEmpty() && !eTag.isEmpty()) {
       // TODO: re-enable after apply ceph fix: http://tracker.ceph.com/issues/10271
       if (isPartExist(ObjectStoreUtil.getObjectKey(dataDir, objectId), uploadId, partNumber, eTag)) {
-        stateStore.finalizeUploadPart(objectId, UrlEscapers.urlFragmentEscaper().escape(uploadId), partNumber, md5,
+        stateStore.finalizeUploadPart(objectId, uploadId, partNumber, md5,
             eTag);
       } else {
         throw new IOException("Part does not exist: " + partNumber);
@@ -187,10 +141,10 @@ public class ObjectUploadService {
     }
   }
 
-  private void insertPartUploadUrl(String objectKey, String uploadId, Part part) {
+  private void insertPartUploadUrl(String objectKey, String uploadId, Part part, Date expiration) {
     GeneratePresignedUrlRequest req =
         new GeneratePresignedUrlRequest(bucketName, objectKey, HttpMethod.PUT);
-    // req.setExpiration(expiration);
+    req.setExpiration(expiration);
     req.addRequestParameter("partNumber", String.valueOf(part.getPartNumber()));
     req.addRequestParameter("uploadId", uploadId);
     part.setUrl(s3Client.generatePresignedUrl(req).toString());

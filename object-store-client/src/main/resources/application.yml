@@ -1,0 +1,40 @@
+#
+# Collaboratory Client - Configuration
+#
+repository.proxy.hostname: localhost
+repository.server.uri: https://repository.icgc.org
+repository.proxy.uri: https://${repository.proxy.hostname}:5431
+client.directory: ${user.home}
+
+spring:
+  profiles.active: default
+---
+spring:
+  profiles: default
+
+collaboratory:
+  upload:
+    endpoint: http://localhost:5431
+    uploadRetrylimit.number: 2
+    upload.retrylimit.duration: 3
+
+client:
+  strictSsl: true
+  home: ${client.directory}
+    
+  # SSL
+  #ssl:
+  #  trustStore: classpath:client.jks
+  #  trustStoreType: JKS
+  #  trustStorePassword: password
+  #  trustName: repository.icgc.org
+  #  keyStore: file:///${client.directory}/cert/client.jks
+  #  keyStoreType: JKS
+  #  keyStorePassword: password
+  #  keyAlias: client
+    
+logging:
+  file: target/logs/application.log
+---
+spring:
+  profiles: override

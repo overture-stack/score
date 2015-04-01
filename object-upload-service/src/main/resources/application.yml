@@ -18,14 +18,14 @@ server:
   
 s3:
   #OICR
-  #endpoint: http://10.5.73.101
-  #accessKey: c6525e9b10804c1c9306d7051b10a3b3
-  #secretKey: 36c1aec6a9014fee95b0459d43d6bc6e
+  endpoint: http://10.5.73.101
+  accessKey: c6525e9b10804c1c9306d7051b10a3b3
+  secretKey: 36c1aec6a9014fee95b0459d43d6bc6e
   
   #Sinai Center
-  endpoint: http://142.1.177.10:9080
-  accessKey: 29c65c06a9de4e35b8baa4a0fc12193e
-  secretKey: 536d4ff664cc4509a7fce5b9a604e1aa
+  #endpoint: http://142.1.177.10:9080
+  #accessKey: 29c65c06a9de4e35b8baa4a0fc12193e
+  #secretKey: 536d4ff664cc4509a7fce5b9a604e1aa
 
   secured: false
 
@@ -33,6 +33,7 @@ collaboratory:
   bucket.name: oicr.collaboratory
   upload.directory: upload
   data.directory: data
+  upload.expiration: 14
 
 upload:
   strict: false
