@@ -15,8 +15,8 @@ spring:
 collaboratory:
   upload:
     endpoint: http://localhost:5431
-    uploadRetrylimit.number: 2
-    upload.retrylimit.duration: 3
+    retryNumber: 100
+    retryTimeout: 1
 
 client:
   strictSsl: true

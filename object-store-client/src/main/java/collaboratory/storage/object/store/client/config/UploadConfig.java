@@ -18,22 +18,59 @@
 package collaboratory.storage.object.store.client.config;
 
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.retry.backoff.FixedBackOffPolicy;
+import org.springframework.retry.policy.SimpleRetryPolicy;
+import org.springframework.retry.support.RetryTemplate;
 import org.springframework.web.client.RestTemplate;
 
 @Data
 @Configuration
 @ConfigurationProperties(prefix = "collaboratory.upload")
+@Slf4j
 public class UploadConfig {
 
   private String endpoint;
+  private int retryNumber;
+  private int retryInterval;
+  private static final long MIN_TERNVAL = 1000;
 
-  @Bean(name = "upload-template")
+  // TODO:
+  // - http://codereview.stackexchange.com/questions/62108/efficiently-use-resttemplate-for-http-request-timeout
+  // - http://stackoverflow.com/questions/13837012/spring-resttemplate-timeout
+  @Bean(name = "upload-rest-template")
   public RestTemplate uploadTemplate() {
     RestTemplate req = new RestTemplate();
     return req;
+  }
+
+  @Bean(name = "upload-retry-template")
+  public RetryTemplate retryTemplate() {
+    RetryTemplate retry = new RetryTemplate();
+
+    SimpleRetryPolicy retryPolicy = new SimpleRetryPolicy();
+    retryPolicy.setMaxAttempts(retryNumber < 0 ? Integer.MAX_VALUE : retryNumber);
+    // TODO: set proper exception handling
+    // Collection<Class> retryableExceptions = new ArrayList<Class>();
+    // retryableExceptions.add(ConnectionFailureException.class);
+    // retryableExceptions.add(Exception.class);
+    // policy.setRetryableExceptionClasses(retryableExceptions);
+    // Collection<Class> fatalExceptionClasses = new ArrayList<Class>();
+    // fatalExceptionClasses.add(ResourceNotAvailableException.class);
+    // policy.setFatalExceptionClasses(fatalExceptionClasses);
+
+    // TODO: prevent DOS attack yourself
+    FixedBackOffPolicy backOffPolicy = new FixedBackOffPolicy();
+    long interval = retryInterval * 60 * 1000;
+    backOffPolicy.setBackOffPeriod(interval < MIN_TERNVAL ? MIN_TERNVAL : interval);
+    retry.setBackOffPolicy(backOffPolicy);
+
+    retry.setRetryPolicy(retryPolicy);
+    return retry;
+
   }
 }

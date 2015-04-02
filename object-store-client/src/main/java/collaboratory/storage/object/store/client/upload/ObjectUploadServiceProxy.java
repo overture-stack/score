@@ -27,8 +27,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
-import org.springframework.retry.annotation.Backoff;
-import org.springframework.retry.annotation.Retryable;
+import org.springframework.retry.RetryCallback;
+import org.springframework.retry.RetryContext;
+import org.springframework.retry.support.RetryTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -44,46 +45,79 @@ public class ObjectUploadServiceProxy {
   private String endpoint;
 
   @Autowired
-  @Qualifier("upload-template")
+  @Qualifier("upload-rest-template")
   private RestTemplate req;
 
-  @Retryable(maxAttempts = 100, backoff = @Backoff(delay = 100, maxDelay = 500))
-  public UploadProgress getProgress(String objectId) {
-    HttpEntity<Object> requestEntity = new HttpEntity<Object>(defaultHeaders());
-    return req.exchange(endpoint + "/upload/{object-id}", HttpMethod.GET,
-        requestEntity,
-        UploadProgress.class, objectId).getBody();
+  @Autowired
+  @Qualifier("upload-retry-template")
+  private RetryTemplate retry;
+
+  public UploadProgress getProgress(String objectId) throws IOException {
+    return retry.execute(new RetryCallback<UploadProgress, IOException>() {
+
+      @Override
+      public UploadProgress doWithRetry(RetryContext ctx) throws IOException {
+        HttpEntity<Object> requestEntity = new HttpEntity<Object>(defaultHeaders());
+        return req.exchange(endpoint + "/upload/{object-id}", HttpMethod.GET,
+            requestEntity,
+            UploadProgress.class, objectId).getBody();
+      }
+    });
 
   }
 
-  @Retryable(maxAttempts = 100, backoff = @Backoff(delay = 100, maxDelay = 500))
   public String uploadPart(File file, Part part) throws IOException {
-    return ChannelUtils.UploadObject(file, new URL(part.getUrl()), part.getOffset(), part.getPartSize());
+    return retry.execute(new RetryCallback<String, IOException>() {
+
+      @Override
+      public String doWithRetry(RetryContext ctx) throws IOException {
+        return ChannelUtils.UploadObject(file, new URL(part.getUrl()), part.getOffset(), part.getPartSize());
+      }
+    });
+
   }
 
-  @Retryable(maxAttempts = 100, backoff = @Backoff(delay = 100, maxDelay = 500))
-  public UploadSpecification initiateUpload(String objectId, long length) {
-    HttpEntity<Object> requestEntity = new HttpEntity<Object>(defaultHeaders());
-    return req.exchange(endpoint + "/upload/{object-id}/uploads?fileSize={file-size}", HttpMethod.POST, requestEntity,
-        UploadSpecification.class, objectId, length).getBody();
+  public UploadSpecification initiateUpload(String objectId, long length) throws IOException {
+    return retry.execute(new RetryCallback<UploadSpecification, IOException>() {
+
+      @Override
+      public UploadSpecification doWithRetry(RetryContext ctx) throws IOException {
+        HttpEntity<Object> requestEntity = new HttpEntity<Object>(defaultHeaders());
+        return req.exchange(endpoint + "/upload/{object-id}/uploads?fileSize={file-size}", HttpMethod.POST,
+            requestEntity,
+            UploadSpecification.class, objectId, length).getBody();
+      }
+    });
   }
 
-  @Retryable(maxAttempts = 100, backoff = @Backoff(delay = 100, maxDelay = 500))
-  public void finalizeUpload(String objectId, String uploadId) {
+  public void finalizeUpload(String objectId, String uploadId) throws IOException {
 
-    HttpEntity<Object> requestEntity = new HttpEntity<Object>(defaultHeaders());
-    req.exchange(endpoint + "/upload/{object-id}?uploadId={upload-id}", HttpMethod.POST, requestEntity,
-        Void.class, objectId, uploadId);
+    retry.execute(new RetryCallback<Void, IOException>() {
+
+      @Override
+      public Void doWithRetry(RetryContext ctx) throws IOException {
+        HttpEntity<Object> requestEntity = new HttpEntity<Object>(defaultHeaders());
+        req.exchange(endpoint + "/upload/{object-id}?uploadId={upload-id}", HttpMethod.POST, requestEntity,
+            Void.class, objectId, uploadId);
+        return null;
+      }
+    });
   }
 
-  @Retryable(maxAttempts = 100, backoff = @Backoff(delay = 100, maxDelay = 500))
-  public void finalizeUploadPart(String objectId, String uploadId, int partNumber, String md5, String etag) {
-    HttpEntity<Object> requestEntity = new HttpEntity<Object>(defaultHeaders());
+  public void finalizeUploadPart(String objectId, String uploadId, int partNumber, String md5, String etag)
+      throws IOException {
+    retry.execute(new RetryCallback<Void, IOException>() {
 
-    req.exchange(
-        endpoint + "/upload/{object-id}/parts?uploadId={upload-id}&partNumber={partNumber}&md5={md5}&etag={etag}",
-        HttpMethod.POST, requestEntity,
-        Void.class, objectId, uploadId, partNumber, md5, etag);
+      @Override
+      public Void doWithRetry(RetryContext ctx) throws IOException {
+        HttpEntity<Object> requestEntity = new HttpEntity<Object>(defaultHeaders());
+        req.exchange(
+            endpoint + "/upload/{object-id}/parts?uploadId={upload-id}&partNumber={partNumber}&md5={md5}&etag={etag}",
+            HttpMethod.POST, requestEntity,
+            Void.class, objectId, uploadId, partNumber, md5, etag);
+        return null;
+      }
+    });
   }
 
   private HttpHeaders defaultHeaders() {
@@ -92,6 +126,7 @@ public class ObjectUploadServiceProxy {
     return requestHeaders;
   }
 
+  // TODO: integrate AuthorizationService
   private String getToken() {
     return "token";
 
