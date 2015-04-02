@@ -31,8 +31,9 @@ public class UploadConfig {
 
   private String endpoint;
 
-  @Bean(name = "upload")
+  @Bean(name = "upload-template")
   public RestTemplate uploadTemplate() {
-    return new RestTemplate();
+    RestTemplate req = new RestTemplate();
+    return req;
   }
 }

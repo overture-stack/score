@@ -12,6 +12,7 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.retry.annotation.EnableRetry;
 
 import collaboratory.storage.object.store.client.cli.command.ClientCommand;
 
@@ -24,6 +25,7 @@ import com.beust.jcommander.ParameterException;
 @Slf4j
 @Configuration
 @EnableAutoConfiguration
+@EnableRetry
 @ComponentScan
 public class ClientMain implements CommandLineRunner {
 

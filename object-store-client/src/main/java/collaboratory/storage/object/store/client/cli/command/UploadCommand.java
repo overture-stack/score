@@ -8,7 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import collaboratory.storage.object.store.client.upload.ObjectUploadService;
+import collaboratory.storage.object.store.client.upload.ObjectUpload;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
@@ -28,7 +28,7 @@ public class UploadCommand extends AbstractClientCommand {
   private String oid;
 
   @Autowired
-  private ObjectUploadService uploadService;
+  private ObjectUpload uploadService;
 
   @Override
   @SneakyThrows
