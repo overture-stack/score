@@ -28,7 +28,7 @@ public class UploadCommand extends AbstractClientCommand {
   private String oid;
 
   @Autowired
-  private ObjectUpload uploadService;
+  private ObjectUpload uploader;
 
   @Override
   @SneakyThrows
@@ -37,7 +37,7 @@ public class UploadCommand extends AbstractClientCommand {
     println("Start uploading file: %s", filePath);
     log.info("file: {}", filePath);
     File upload = new File(filePath);
-    uploadService.upload(upload, oid, isForce);
+    uploader.upload(upload, oid, isForce);
     return SUCCESS_STATUS;
   }
 

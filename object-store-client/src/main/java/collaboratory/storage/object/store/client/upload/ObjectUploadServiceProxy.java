@@ -21,6 +21,8 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -39,6 +41,7 @@ import collaboratory.storage.object.store.core.model.UploadSpecification;
 import collaboratory.storage.object.store.core.util.ChannelUtils;
 
 @Service
+@Slf4j
 public class ObjectUploadServiceProxy {
 
   @Value("${collaboratory.upload.endpoint}")
@@ -58,7 +61,7 @@ public class ObjectUploadServiceProxy {
       @Override
       public UploadProgress doWithRetry(RetryContext ctx) throws IOException {
         HttpEntity<Object> requestEntity = new HttpEntity<Object>(defaultHeaders());
-        return req.exchange(endpoint + "/upload/{object-id}", HttpMethod.GET,
+        return req.exchange(endpoint + "/upload/{object-id}/status", HttpMethod.GET,
             requestEntity,
             UploadProgress.class, objectId).getBody();
       }
@@ -66,12 +69,20 @@ public class ObjectUploadServiceProxy {
 
   }
 
-  public String uploadPart(File file, Part part) throws IOException {
-    return retry.execute(new RetryCallback<String, IOException>() {
+  public void uploadPart(File file, Part part, String objectId, String uploadId) throws IOException {
+    retry.execute(new RetryCallback<Void, IOException>() {
 
       @Override
-      public String doWithRetry(RetryContext ctx) throws IOException {
-        return ChannelUtils.UploadObject(file, new URL(part.getUrl()), part.getOffset(), part.getPartSize());
+      public Void doWithRetry(RetryContext ctx) throws IOException {
+        String etag = ChannelUtils.UploadObject(file, new URL(part.getUrl()), part.getOffset(), part.getPartSize());
+        // TODO: calculate md5
+        try {
+          finalizeUploadPart(objectId, uploadId, part.getPartNumber(), etag, etag);
+        } catch (NotRetryableException e) {
+          log.warn("Checksum failed for part: {}", part, e);
+          throw new RetryableException();
+        }
+        return null;
       }
     });
 
@@ -82,6 +93,7 @@ public class ObjectUploadServiceProxy {
 
       @Override
       public UploadSpecification doWithRetry(RetryContext ctx) throws IOException {
+        log.debug("Retry #: {}", ctx.getRetryCount());
         HttpEntity<Object> requestEntity = new HttpEntity<Object>(defaultHeaders());
         return req.exchange(endpoint + "/upload/{object-id}/uploads?fileSize={file-size}", HttpMethod.POST,
             requestEntity,
@@ -120,6 +132,25 @@ public class ObjectUploadServiceProxy {
     });
   }
 
+  public boolean isObjectExist(String objectId) throws IOException {
+    return retry.execute(new RetryCallback<Boolean, IOException>() {
+
+      @Override
+      public Boolean doWithRetry(RetryContext ctx) throws IOException {
+        try {
+          HttpEntity<Object> requestEntity = new HttpEntity<Object>(defaultHeaders());
+          req.exchange(
+              endpoint + "/upload/{object-id}",
+              HttpMethod.GET, requestEntity,
+              Boolean.class, objectId);
+        } catch (Exception e) {
+          return false;
+        }
+        return true;
+      }
+    });
+  }
+
   private HttpHeaders defaultHeaders() {
     HttpHeaders requestHeaders = new HttpHeaders();
     requestHeaders.set("access-token", getToken());
@@ -129,6 +160,15 @@ public class ObjectUploadServiceProxy {
   // TODO: integrate AuthorizationService
   private String getToken() {
     return "token";
-
   }
+
+  /**
+   * @param objectId
+   * @return
+   */
+  public boolean isUploadDataRecoverable(String objectId) {
+    // TODO Auto-generated method stub
+    return false;
+  }
+
 }

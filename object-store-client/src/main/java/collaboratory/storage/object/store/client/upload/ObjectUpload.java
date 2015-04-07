@@ -19,22 +19,24 @@ package collaboratory.storage.object.store.client.upload;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URL;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Predicate;
 
+import javax.annotation.PostConstruct;
+
+import lombok.SneakyThrows;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import collaboratory.storage.object.store.core.model.CompletedPart;
 import collaboratory.storage.object.store.core.model.Part;
 import collaboratory.storage.object.store.core.model.UploadProgress;
 import collaboratory.storage.object.store.core.model.UploadSpecification;
-import collaboratory.storage.object.store.core.util.ChannelUtils;
 
 import com.google.common.collect.Sets;
 
@@ -45,29 +47,51 @@ public class ObjectUpload {
   @Autowired
   private ObjectUploadServiceProxy proxy;
 
-  public void upload(File file, String objectId, boolean redo) throws IOException {
-    if (redo) {
-      // create another version of the object
-      startUpload(file, objectId, true);
-    } else {
-      try {
-        resume(file, objectId);
-      } catch (Exception e) {
-        // TODO: only start upload if it is a not found exception
-        // check if object exists, exit
-        startUpload(file, objectId, false);
-      }
+  @Value("${collaboratory.upload.retryNumber}")
+  private int retryNumber;
 
-    }
+  @PostConstruct
+  public void setup() {
+    retryNumber = retryNumber < 0 ? Integer.MAX_VALUE : retryNumber;
   }
 
-  private void startUpload(File file, String objectId, boolean overwrite) throws IOException {
+  public void upload(File file, String objectId, boolean redo) throws IOException {
+    for (int retry = 0; retry < retryNumber; retry++)
+      try {
+        if (redo) {
+          // create another version of the object
+          startUpload(file, objectId);
+        } else {
+          resumeIfPossible(file, objectId);
+        }
+      } catch (NotRetryableException e) {
+        // TODO: server side check data integrity, if data integrity is not recoverable (i.e. NotRetryable), startupload
+        // again else try resume
+        redo = !proxy.isUploadDataRecoverable(objectId);
+      }
+  }
+
+  @SneakyThrows
+  private void startUpload(File file, String objectId) {
     UploadSpecification spec = proxy.initiateUpload(objectId, file.length());
     uploadParts(spec.getParts(), file, objectId, spec.getUploadId());
   }
 
-  private void resume(File file, String objectId) throws IOException {
-    UploadProgress progress = proxy.getProgress(objectId);
+  @SneakyThrows
+  private void resumeIfPossible(File file, String objectId) {
+    UploadProgress progress = null;
+    try {
+      progress = proxy.getProgress(objectId);
+    } catch (NotRetryableException e) {
+      log.info("New upload: ", objectId);
+      startUpload(file, objectId);
+      return;
+    }
+    resume(file, progress, objectId);
+
+  }
+
+  private void resume(File file, UploadProgress progress, String objectId) {
     final Set<Integer> completedPartNumber = Sets.newHashSet();
 
     for (CompletedPart part : progress.getCompletedParts()) {
@@ -82,15 +106,15 @@ public class ObjectUpload {
         return completedPartNumber.contains(part.getPartNumber());
       }
     });
+    // TODO: run checksum on the completed part on a separate thread
     uploadParts(parts, file, progress.getObjectId(), progress.getUploadId());
 
-    // TODO: run checksum on the completed part on a separate thread
   }
 
-  private void uploadParts(List<Part> parts, File file, String objectId, String uploadId) throws IOException {
+  @SneakyThrows
+  private void uploadParts(List<Part> parts, File file, String objectId, String uploadId) {
     for (Part part : parts) {
-      String etag = ChannelUtils.UploadObject(file, new URL(part.getUrl()), part.getOffset(), part.getPartSize());
-      proxy.finalizeUploadPart(objectId, uploadId, part.getPartNumber(), etag, etag);
+      proxy.uploadPart(file, part, objectId, uploadId);
     }
     proxy.finalizeUpload(objectId, uploadId);
   }

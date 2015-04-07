@@ -33,7 +33,12 @@ import org.springframework.http.HttpStatus;
 import collaboratory.storage.object.store.core.model.CompletedPart;
 import collaboratory.storage.object.store.core.model.Part;
 import collaboratory.storage.object.store.core.model.UploadSpecification;
+import collaboratory.storage.object.store.exception.IdNotFoundException;
+import collaboratory.storage.object.store.exception.InternalUnrecoverableError;
+import collaboratory.storage.object.store.exception.NotRetryableException;
+import collaboratory.storage.object.store.exception.RetryableException;
 
+import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.AmazonS3Exception;
 import com.amazonaws.services.s3.model.DeleteObjectsRequest;
@@ -66,7 +71,7 @@ public class UploadStateStore {
   @Value("${collaboratory.upload.directory}")
   private String upload;
 
-  public void create(UploadSpecification spec) throws IOException {
+  public void create(UploadSpecification spec) {
     log.debug("Upload Specification : {}", spec);
     ObjectMapper mapper = new ObjectMapper();
     try {
@@ -75,20 +80,30 @@ public class UploadStateStore {
       meta.setContentLength(content.length);
       s3Client.putObject(bucketName, getUploadStateKey(spec.getObjectId(), spec.getUploadId(), META),
           new ByteArrayInputStream(content), meta);
+    } catch (AmazonServiceException e) {
+      throw new RetryableException(e);
     } catch (IOException e) {
-      log.error("Fail to create upload temporary directory", e);
-      throw e;
+      log.error("Fail to create meta file", e);
+      throw new NotRetryableException(e);
     }
   }
 
-  public UploadSpecification loadUploadSpecification(String objectId, String uploadId) throws IOException {
-    GetObjectRequest req =
-        new GetObjectRequest(bucketName, getUploadStateKey(objectId,
-            uploadId, META));
-    S3Object obj = s3Client.getObject(req);
-    ObjectMapper mapper = new ObjectMapper();
-
-    return mapper.readValue(obj.getObjectContent(), UploadSpecification.class);
+  @SneakyThrows
+  public UploadSpecification loadUploadSpecification(String objectId, String uploadId) {
+    try {
+      GetObjectRequest req =
+          new GetObjectRequest(bucketName, getUploadStateKey(objectId,
+              uploadId, META));
+      S3Object obj = s3Client.getObject(req);
+      ObjectMapper mapper = new ObjectMapper();
+      return mapper.readValue(obj.getObjectContent(), UploadSpecification.class);
+    } catch (AmazonServiceException e) {
+      if (e.isRetryable()) {
+        throw new RetryableException(e);
+      } else {
+        throw new IdNotFoundException(uploadId);
+      }
+    }
 
   }
 
@@ -100,7 +115,7 @@ public class UploadStateStore {
       if (ex.getStatusCode() == HttpStatus.NOT_FOUND.value()) {
         return false;
       }
-      throw ex;
+      throw new RetryableException(ex);
     }
     return true;
   }
@@ -113,7 +128,7 @@ public class UploadStateStore {
       if (ex.getStatusCode() == HttpStatus.NOT_FOUND.value()) {
         return false;
       }
-      throw ex;
+      throw new RetryableException(ex);
     }
     return true;
   }
@@ -121,23 +136,27 @@ public class UploadStateStore {
   @SneakyThrows
   public List<CompletedPart> retrieveCompletedParts(String objectId, String uploadId) {
 
-    ListObjectsRequest listObjectsRequest = new ListObjectsRequest()
-        .withBucketName(bucketName)
-        .withPrefix(getUploadStateKey(objectId, uploadId, PART));
-    ObjectMapper mapper = new ObjectMapper();
-    ObjectListing objectListing;
-    Builder<CompletedPart> completedParts = ImmutableList.builder();
-    do {
-      objectListing = s3Client.listObjects(listObjectsRequest);
-      for (S3ObjectSummary objectSummary : objectListing.getObjectSummaries()) {
-        S3Object obj = s3Client.getObject(objectSummary.getBucketName(), objectSummary.getKey());
-        CompletedPart part = mapper.readValue(obj.getObjectContent(), CompletedPart.class);
-        completedParts.add(part);
-      }
-      listObjectsRequest.setMarker(objectListing.getNextMarker());
-    } while (objectListing.isTruncated());
+    try {
+      ListObjectsRequest listObjectsRequest = new ListObjectsRequest()
+          .withBucketName(bucketName)
+          .withPrefix(getUploadStateKey(objectId, uploadId, PART));
+      ObjectMapper mapper = new ObjectMapper();
+      ObjectListing objectListing;
+      Builder<CompletedPart> completedParts = ImmutableList.builder();
+      do {
+        objectListing = s3Client.listObjects(listObjectsRequest);
+        for (S3ObjectSummary objectSummary : objectListing.getObjectSummaries()) {
+          S3Object obj = s3Client.getObject(objectSummary.getBucketName(), objectSummary.getKey());
+          CompletedPart part = mapper.readValue(obj.getObjectContent(), CompletedPart.class);
+          completedParts.add(part);
+        }
+        listObjectsRequest.setMarker(objectListing.getNextMarker());
+      } while (objectListing.isTruncated());
 
-    return completedParts.build();
+      return completedParts.build();
+    } catch (AmazonServiceException e) {
+      throw new RetryableException(e);
+    }
 
   }
 
@@ -153,7 +172,7 @@ public class UploadStateStore {
     return incompletedParts.build();
   }
 
-  public boolean isCompleted(String objectId, String uploadId) throws IOException {
+  public boolean isCompleted(String objectId, String uploadId) {
     UploadSpecification spec = loadUploadSpecification(objectId, uploadId);
     for (Part part : spec.getParts()) {
       if (!isUploadPartCompleted(objectId, uploadId, part.getPartNumber())) {
@@ -164,7 +183,7 @@ public class UploadStateStore {
   }
 
   public void finalizeUploadPart(String objectId, String uploadId, int partNumber, String md5, String eTag)
-      throws IOException {
+  {
     ObjectMapper mapper = new ObjectMapper();
     try {
       byte[] content = mapper.writeValueAsBytes(new CompletedPart(partNumber, md5, eTag));
@@ -173,9 +192,13 @@ public class UploadStateStore {
       s3Client.putObject(bucketName,
           getUploadStateKey(objectId, uploadId, getLexicographicalOrderUploadPartName(partNumber)),
           new ByteArrayInputStream(content), meta);
+    } catch (AmazonServiceException e) {
+      log.error("Storage failed", e);
+      throw new RetryableException(e);
+
     } catch (IOException e) {
-      log.error("Fail to create upload temporary directory", e);
-      throw e;
+      log.error("Fail to finalize part", e);
+      throw new InternalUnrecoverableError();
     }
 
   }
@@ -188,17 +211,21 @@ public class UploadStateStore {
     ObjectMapper mapper = new ObjectMapper();
     ObjectListing objectListing;
     List<PartETag> etags = Lists.newArrayList();
-    do {
-      objectListing = s3Client.listObjects(listObjectsRequest);
-      for (S3ObjectSummary objectSummary : objectListing.getObjectSummaries()) {
-        log.debug("ETag: {}", objectSummary.getETag());
-        S3Object obj = s3Client.getObject(objectSummary.getBucketName(), objectSummary.getKey());
-        CompletedPart part = mapper.readValue(obj.getObjectContent(), CompletedPart.class);
-        etags.add(new PartETag(part.getPartNumber(), part.getEtag()));
-      }
-      listObjectsRequest.setMarker(objectListing.getNextMarker());
-    } while (objectListing.isTruncated());
-    return etags;
+    try {
+      do {
+        objectListing = s3Client.listObjects(listObjectsRequest);
+        for (S3ObjectSummary objectSummary : objectListing.getObjectSummaries()) {
+          log.debug("ETag: {}", objectSummary.getETag());
+          S3Object obj = s3Client.getObject(objectSummary.getBucketName(), objectSummary.getKey());
+          CompletedPart part = mapper.readValue(obj.getObjectContent(), CompletedPart.class);
+          etags.add(new PartETag(part.getPartNumber(), part.getEtag()));
+        }
+        listObjectsRequest.setMarker(objectListing.getNextMarker());
+      } while (objectListing.isTruncated());
+      return etags;
+    } catch (AmazonServiceException e) {
+      throw new RetryableException(e);
+    }
   }
 
   public void delete(String objectId, String uploadId) {
@@ -206,44 +233,52 @@ public class UploadStateStore {
         .withBucketName(bucketName)
         .withPrefix(getUploadStateKey(objectId, uploadId, PART));
     ObjectListing objectListing;
-    do {
-      objectListing = s3Client.listObjects(listObjectsRequest);
-      Builder<KeyVersion> keys = ImmutableList.builder();
-      for (S3ObjectSummary objectSummary : objectListing.getObjectSummaries()) {
-        keys.add(new KeyVersion(objectSummary.getKey()));
-      }
-      DeleteObjectsRequest deletes = new DeleteObjectsRequest(bucketName).withKeys(keys.build());
-      if (!deletes.getKeys().isEmpty()) {
-        s3Client.deleteObjects(deletes);
-      }
-      listObjectsRequest.setMarker(objectListing.getNextMarker());
-    } while (objectListing.isTruncated());
-    s3Client.deleteObject(bucketName, getUploadStateKey(objectId, uploadId, META));
-    s3Client.deleteObject(bucketName, getUploadStateKey(objectId, uploadId));
+    try {
+      do {
+        objectListing = s3Client.listObjects(listObjectsRequest);
+        Builder<KeyVersion> keys = ImmutableList.builder();
+        for (S3ObjectSummary objectSummary : objectListing.getObjectSummaries()) {
+          keys.add(new KeyVersion(objectSummary.getKey()));
+        }
+        DeleteObjectsRequest deletes = new DeleteObjectsRequest(bucketName).withKeys(keys.build());
+        if (!deletes.getKeys().isEmpty()) {
+          s3Client.deleteObjects(deletes);
+        }
+        listObjectsRequest.setMarker(objectListing.getNextMarker());
+      } while (objectListing.isTruncated());
+      s3Client.deleteObject(bucketName, getUploadStateKey(objectId, uploadId, META));
+      s3Client.deleteObject(bucketName, getUploadStateKey(objectId, uploadId));
+    } catch (AmazonServiceException e) {
+      throw new RetryableException(e);
+    }
   }
 
-  @SneakyThrows
   public String getUploadId(String objectId) {
 
     ListObjectsRequest req = new ListObjectsRequest()
         .withBucketName(bucketName)
         .withPrefix(getUploadStateKey(objectId, ""));
 
-    ObjectListing objectListing;
-    do {
-      objectListing = s3Client.listObjects(req);
-      for (S3ObjectSummary objectSummary : objectListing.getObjectSummaries()) {
-        log.debug("Found object upload key: {}", objectSummary.getKey());
-        String uploadId = getUploadIdFromMeta(objectId, objectSummary.getKey());
-        // TODO: look for .meta
-        if (isMetaAvailable(objectId, uploadId)) {
-          return uploadId;
+    try {
+      ObjectListing objectListing;
+      do {
+        objectListing = s3Client.listObjects(req);
+        for (S3ObjectSummary objectSummary : objectListing.getObjectSummaries()) {
+          log.debug("Found object upload key: {}", objectSummary.getKey());
+          String uploadId = getUploadIdFromMeta(objectId, objectSummary.getKey());
+          // TODO: look for .meta
+          if (isMetaAvailable(objectId, uploadId)) {
+            return uploadId;
+          }
         }
-      }
-      req.setMarker(objectListing.getNextMarker());
+        req.setMarker(objectListing.getNextMarker());
 
-    } while (objectListing.isTruncated());
-    throw new IOException("Upload ID not found for object ID: " + objectId);
+      } while (objectListing.isTruncated());
+    } catch (AmazonServiceException e) {
+      throw new RetryableException(e);
+    }
+    log.warn("Upload Id not found for object ID: {}", objectId);
+    throw new IdNotFoundException("Upload ID not found for object ID: " + objectId);
   }
 
   private String getUploadIdFromMeta(String objectId, String objectUploadKey) {
@@ -273,5 +308,14 @@ public class UploadStateStore {
 
   private String getLexicographicalOrderUploadPartName(int partNumber) {
     return String.format("%s-%08x", PART, (0xFFFFFFFF & partNumber));
+  }
+
+  public void deleletePart(String objectId, String uploadId, int partNumber) {
+    try {
+      s3Client.deleteObject(bucketName,
+          getUploadStateKey(objectId, uploadId, getLexicographicalOrderUploadPartName(partNumber)));
+    } catch (AmazonServiceException e) {
+      throw new RetryableException(e);
+    }
   }
 }

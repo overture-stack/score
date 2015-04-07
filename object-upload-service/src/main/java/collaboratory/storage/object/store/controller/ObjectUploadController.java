@@ -41,6 +41,8 @@ import collaboratory.storage.object.store.core.model.UploadSpecification;
 import collaboratory.storage.object.store.core.util.ChannelUtils;
 import collaboratory.storage.object.store.service.ObjectUploadService;
 
+import com.amazonaws.services.s3.model.ObjectMetadata;
+
 @Setter
 @RestController
 @RequestMapping("/upload")
@@ -78,11 +80,26 @@ public class ObjectUploadController {
     uploadService.finalizeUpload(objectId, uploadId);
   }
 
-  @RequestMapping(method = RequestMethod.GET, value = "/{object-id}")
+  @RequestMapping(method = RequestMethod.POST, value = "/{object-id}/recovery")
+  public void tryRecover(
+      @RequestHeader(value = "access-token", required = true) final String accessToken,
+      @PathVariable(value = "object-id") String objectId
+      ) {
+    uploadService.recover(objectId);
+  }
+
+  @RequestMapping(method = RequestMethod.GET, value = "/{object-id}/status")
   public @ResponseBody UploadProgress getUploadProgress(@RequestHeader("access-token") final String accessToken,
       @PathVariable("object-id") String objectId) {
-    // TODO: if upload id, throw not found exception
+    // TODO: if object id/upload id does not exist, throw not found exception
     return uploadService.getUploadProgress(objectId, uploadService.getUploadId(objectId));
+  }
+
+  @RequestMapping(method = RequestMethod.GET, value = "/{object-id}")
+  public @ResponseBody ObjectMetadata getObjectMetadata(@RequestHeader("access-token") final String accessToken,
+      @PathVariable("object-id") String objectId) {
+    // TODO: if object id exist, throw not found exception
+    return uploadService.getObjectMetadata(objectId);
   }
 
   /**

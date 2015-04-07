@@ -17,26 +17,32 @@
  */
 package collaboratory.storage.object.store.client.config;
 
+import java.io.IOException;
+
 import lombok.Data;
-import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.retry.backoff.FixedBackOffPolicy;
+import org.springframework.retry.backoff.ExponentialBackOffPolicy;
 import org.springframework.retry.policy.SimpleRetryPolicy;
 import org.springframework.retry.support.RetryTemplate;
 import org.springframework.web.client.RestTemplate;
 
+import collaboratory.storage.object.store.client.upload.NotRetryableException;
+import collaboratory.storage.object.store.client.upload.RetryableException;
+
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMap.Builder;
+
 @Data
 @Configuration
 @ConfigurationProperties(prefix = "collaboratory.upload")
-@Slf4j
 public class UploadConfig {
 
   private String endpoint;
   private int retryNumber;
-  private int retryInterval;
+  // private int retryTimeout;
   private static final long MIN_TERNVAL = 1000;
 
   // TODO:
@@ -45,6 +51,7 @@ public class UploadConfig {
   @Bean(name = "upload-rest-template")
   public RestTemplate uploadTemplate() {
     RestTemplate req = new RestTemplate();
+    req.setErrorHandler(new RetryableResponseErrorHandler());
     return req;
   }
 
@@ -52,21 +59,19 @@ public class UploadConfig {
   public RetryTemplate retryTemplate() {
     RetryTemplate retry = new RetryTemplate();
 
-    SimpleRetryPolicy retryPolicy = new SimpleRetryPolicy();
-    retryPolicy.setMaxAttempts(retryNumber < 0 ? Integer.MAX_VALUE : retryNumber);
-    // TODO: set proper exception handling
-    // Collection<Class> retryableExceptions = new ArrayList<Class>();
-    // retryableExceptions.add(ConnectionFailureException.class);
-    // retryableExceptions.add(Exception.class);
-    // policy.setRetryableExceptionClasses(retryableExceptions);
-    // Collection<Class> fatalExceptionClasses = new ArrayList<Class>();
-    // fatalExceptionClasses.add(ResourceNotAvailableException.class);
-    // policy.setFatalExceptionClasses(fatalExceptionClasses);
+    int maxAttempts = retryNumber < 0 ? Integer.MAX_VALUE : retryNumber;
+
+    Builder<Class<? extends Throwable>, Boolean> exceptions = ImmutableMap.builder();
+    exceptions.put(NotRetryableException.class, Boolean.FALSE);
+    exceptions.put(RetryableException.class, Boolean.TRUE);
+    exceptions.put(IOException.class, Boolean.TRUE);
+
+    SimpleRetryPolicy retryPolicy = new SimpleRetryPolicy(maxAttempts, exceptions.build(), true);
 
     // TODO: prevent DOS attack yourself
-    FixedBackOffPolicy backOffPolicy = new FixedBackOffPolicy();
-    long interval = retryInterval * 60 * 1000;
-    backOffPolicy.setBackOffPeriod(interval < MIN_TERNVAL ? MIN_TERNVAL : interval);
+    ExponentialBackOffPolicy backOffPolicy = new ExponentialBackOffPolicy();
+    // long timeout = retryTimeout * 60 * 1000;
+    // backOffPolicy.setBackOffPeriod(interval < MIN_TERNVAL ? MIN_TERNVAL : interval);
     retry.setBackOffPolicy(backOffPolicy);
 
     retry.setRetryPolicy(retryPolicy);
