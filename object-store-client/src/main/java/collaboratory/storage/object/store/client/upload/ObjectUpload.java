@@ -26,7 +26,6 @@ import java.util.function.Predicate;
 import javax.annotation.PostConstruct;
 
 import lombok.SneakyThrows;
-import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,6 +36,7 @@ import collaboratory.storage.object.store.core.model.CompletedPart;
 import collaboratory.storage.object.store.core.model.Part;
 import collaboratory.storage.object.store.core.model.UploadProgress;
 import collaboratory.storage.object.store.core.model.UploadSpecification;
+import collaboratory.storage.object.transport.ObjectTransport;
 
 import com.google.common.collect.Sets;
 
@@ -46,6 +46,8 @@ public class ObjectUpload {
 
   @Autowired
   private ObjectUploadServiceProxy proxy;
+  @Autowired
+  private ObjectTransport.Builder transportBuilder;
 
   @Value("${collaboratory.upload.retryNumber}")
   private int retryNumber;
@@ -59,11 +61,11 @@ public class ObjectUpload {
     for (int retry = 0; retry < retryNumber; retry++)
       try {
         if (redo) {
-          // create another version of the object
           startUpload(file, objectId);
         } else {
           resumeIfPossible(file, objectId);
         }
+        return;
       } catch (NotRetryableException e) {
         // TODO: server side check data integrity, if data integrity is not recoverable (i.e. NotRetryable), startupload
         // again else try resume
@@ -74,7 +76,8 @@ public class ObjectUpload {
   @SneakyThrows
   private void startUpload(File file, String objectId) {
     UploadSpecification spec = proxy.initiateUpload(objectId, file.length());
-    uploadParts(spec.getParts(), file, objectId, spec.getUploadId());
+    uploadParts(spec.getParts(), file, objectId, spec.getUploadId(), new ProgressBar(spec.getParts().size(), spec
+        .getParts().size()));
   }
 
   @SneakyThrows
@@ -83,7 +86,7 @@ public class ObjectUpload {
     try {
       progress = proxy.getProgress(objectId);
     } catch (NotRetryableException e) {
-      log.info("New upload: ", objectId);
+      log.info("New upload: {}", objectId);
       startUpload(file, objectId);
       return;
     }
@@ -98,7 +101,8 @@ public class ObjectUpload {
       completedPartNumber.add(part.getPartNumber());
     }
 
-    val parts = progress.getParts();
+    List<Part> parts = progress.getParts();
+    int total = parts.size();
     parts.removeIf(new Predicate<Part>() {
 
       @Override
@@ -107,16 +111,18 @@ public class ObjectUpload {
       }
     });
     // TODO: run checksum on the completed part on a separate thread
-    uploadParts(parts, file, progress.getObjectId(), progress.getUploadId());
+    uploadParts(parts, file, progress.getObjectId(), progress.getUploadId(), new ProgressBar(total, parts.size()));
 
   }
 
   @SneakyThrows
-  private void uploadParts(List<Part> parts, File file, String objectId, String uploadId) {
-    for (Part part : parts) {
-      proxy.uploadPart(file, part, objectId, uploadId);
-    }
-    proxy.finalizeUpload(objectId, uploadId);
+  private void uploadParts(List<Part> parts, File file, String objectId, String uploadId, ProgressBar progressBar) {
+    transportBuilder.withProxy(proxy)
+        .withProgressBar(progressBar)
+        .withParts(parts)
+        .withObjectId(objectId)
+        .withUploadId(uploadId)
+        .build()
+        .send(file);
   }
-
 }

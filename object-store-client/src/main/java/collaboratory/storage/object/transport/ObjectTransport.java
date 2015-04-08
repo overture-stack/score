@@ -15,20 +15,75 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package collaboratory.storage.object.store.exception;
+package collaboratory.storage.object.transport;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
+import java.io.File;
+import java.util.List;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.ResponseStatus;
+import collaboratory.storage.object.store.client.upload.ObjectUploadServiceProxy;
+import collaboratory.storage.object.store.client.upload.ProgressBar;
+import collaboratory.storage.object.store.core.model.Part;
 
-@ResponseStatus(HttpStatus.BAD_REQUEST)
-@Data
-@AllArgsConstructor
-public class NotRetryableException extends RuntimeException {
+/**
+ * 
+ */
+public interface ObjectTransport {
 
-  public NotRetryableException(Throwable cause) {
-    super(cause);
+  public void send(File file);
+
+  public interface Builder {
+
+    public ObjectTransport build();
+
+    public Builder withProgressBar(ProgressBar progressBar);
+
+    public Builder withParts(List<Part> parts);
+
+    public Builder withObjectId(String objectId);
+
+    public Builder withUploadId(String uploadId);
+
+    public Builder withProxy(ObjectUploadServiceProxy proxy);
   }
+
+  public abstract class AbstractBuilder implements Builder {
+
+    protected ObjectUploadServiceProxy proxy;
+    protected ProgressBar progressBar;
+    protected List<Part> parts;
+    protected String objectId;
+    protected String uploadId;
+
+    @Override
+    public Builder withProgressBar(ProgressBar progressBar) {
+      this.progressBar = progressBar;
+      return this;
+    }
+
+    @Override
+    public Builder withParts(List<Part> parts) {
+      this.parts = parts;
+      return this;
+    }
+
+    @Override
+    public Builder withObjectId(String objectId) {
+      this.objectId = objectId;
+      return this;
+    }
+
+    @Override
+    public Builder withUploadId(String uploadId) {
+      this.uploadId = uploadId;
+      return this;
+    }
+
+    @Override
+    public Builder withProxy(ObjectUploadServiceProxy proxy) {
+      this.proxy = proxy;
+      return this;
+    }
+
+  }
+
 }

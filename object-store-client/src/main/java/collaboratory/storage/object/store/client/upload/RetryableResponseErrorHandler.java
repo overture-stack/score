@@ -15,32 +15,30 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package collaboratory.storage.object.store.client.config;
+package collaboratory.storage.object.store.client.upload;
 
 import java.io.IOException;
 
 import lombok.extern.slf4j.Slf4j;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.web.client.DefaultResponseErrorHandler;
-
-import collaboratory.storage.object.store.client.upload.NotRetryableException;
-import collaboratory.storage.object.store.client.upload.RetryableException;
 
 @Slf4j
 public class RetryableResponseErrorHandler extends DefaultResponseErrorHandler {
 
   @Override
   public void handleError(ClientHttpResponse response) throws IOException {
-    if (response.getStatusCode() == HttpStatus.NOT_FOUND) {
-      log.warn("Not Retryable exception: {}", response.getStatusCode());
+    switch (response.getStatusCode()) {
+    case NOT_FOUND:
+    case BAD_REQUEST:
+    case INTERNAL_SERVER_ERROR:
+      log.warn("Service Unavailable");
       throw new NotRetryableException();
-    } else {
+    default:
       log.warn("Retryable exception: {}", response.getStatusCode());
       throw new RetryableException();
+
     }
-
   }
-
 }

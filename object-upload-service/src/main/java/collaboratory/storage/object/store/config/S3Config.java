@@ -61,7 +61,7 @@ public class S3Config {
 
     }
 
-    if (endpoint != null) {
+    if (endpoint != null && !endpoint.isEmpty()) {
       log.debug("OS Endpoint: {}", endpoint);
       s3Client.setEndpoint(endpoint);
     }

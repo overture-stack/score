@@ -26,6 +26,7 @@ import collaboratory.storage.object.store.core.model.Part;
 import collaboratory.storage.object.store.core.model.UploadProgress;
 import collaboratory.storage.object.store.core.model.UploadSpecification;
 import collaboratory.storage.object.store.core.util.ObjectStoreUtil;
+import collaboratory.storage.object.store.exception.IdNotFoundException;
 import collaboratory.storage.object.store.exception.InternalUnrecoverableError;
 import collaboratory.storage.object.store.exception.NotRetryableException;
 import collaboratory.storage.object.store.exception.RetryableException;
@@ -79,8 +80,14 @@ public class ObjectUploadService {
   }
 
   public UploadSpecification initiateUpload(String objectId, long fileSize) {
-    // TODO: check if a upload for the object id is already initiated, if no start, else delete it first before initiate
     // TODO: check if the object already exists
+    try {
+      String uploadId = getUploadId(objectId);
+      stateStore.delete(objectId, uploadId);
+    } catch (IdNotFoundException e) {
+      log.info("No upload ID found. Initiate upload...");
+    }
+
     String objectKey = ObjectStoreUtil.getObjectKey(dataDir, objectId);
     InitiateMultipartUploadRequest req = new InitiateMultipartUploadRequest(
         bucketName, objectKey);
@@ -102,7 +109,6 @@ public class ObjectUploadService {
     }
   }
 
-  // TODO: Ceph does not provide ways to query parts info
   private boolean isPartExist(String objectKey, String uploadId, int partNumber, String eTag) {
     List<PartSummary> parts = null;
     try {
@@ -240,6 +246,7 @@ public class ObjectUploadService {
   }
 
   public void recover(String objectId) {
+
     String uploadId = getUploadId(objectId);
     UploadProgress progress = getUploadProgress(objectId, uploadId);
     String objectKey = ObjectStoreUtil.getObjectKey(dataDir, objectId);

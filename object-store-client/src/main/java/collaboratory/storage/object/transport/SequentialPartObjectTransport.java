@@ -15,20 +15,61 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package collaboratory.storage.object.store.exception;
+package collaboratory.storage.object.transport;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
+import java.io.File;
+import java.util.List;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.ResponseStatus;
+import lombok.SneakyThrows;
+import collaboratory.storage.object.store.client.upload.ObjectUploadServiceProxy;
+import collaboratory.storage.object.store.client.upload.ProgressBar;
+import collaboratory.storage.object.store.core.model.Part;
 
-@ResponseStatus(HttpStatus.BAD_REQUEST)
-@Data
-@AllArgsConstructor
-public class NotRetryableException extends RuntimeException {
+import com.google.common.base.Preconditions;
 
-  public NotRetryableException(Throwable cause) {
-    super(cause);
+public class SequentialPartObjectTransport implements ObjectTransport {
+
+  final private ObjectUploadServiceProxy proxy;
+  final private ProgressBar progress;
+  final private List<Part> parts;
+  final private String objectId;
+  final private String uploadId;
+
+  private SequentialPartObjectTransport(SequentialBuilder builder) {
+    this.proxy = builder.proxy;
+    this.progress = builder.progressBar;
+    this.parts = builder.parts;
+    this.objectId = builder.objectId;
+    this.uploadId = builder.uploadId;
   }
+
+  @Override
+  @SneakyThrows
+  public void send(File file) {
+    for (Part part : parts) {
+      proxy.uploadPart(file, part, objectId, uploadId);
+      progress.updateProgress(1);
+    }
+    proxy.finalizeUpload(objectId, uploadId);
+
+  }
+
+  public static ObjectTransport.Builder builder() {
+    return new SequentialBuilder();
+  }
+
+  public static class SequentialBuilder extends ObjectTransport.AbstractBuilder {
+
+    @Override
+    public ObjectTransport build() {
+      Preconditions.checkNotNull(parts);
+      Preconditions.checkNotNull(proxy);
+      Preconditions.checkNotNull(objectId);
+      Preconditions.checkNotNull(uploadId);
+      Preconditions.checkNotNull(progressBar);
+      return new SequentialPartObjectTransport(this);
+    }
+
+  }
+
 }

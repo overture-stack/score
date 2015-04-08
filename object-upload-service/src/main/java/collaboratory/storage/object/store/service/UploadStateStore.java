@@ -49,6 +49,7 @@ import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PartETag;
 import com.amazonaws.services.s3.model.S3Object;
+import com.amazonaws.services.s3.model.S3ObjectInputStream;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
@@ -96,7 +97,10 @@ public class UploadStateStore {
               uploadId, META));
       S3Object obj = s3Client.getObject(req);
       ObjectMapper mapper = new ObjectMapper();
-      return mapper.readValue(obj.getObjectContent(), UploadSpecification.class);
+
+      try (S3ObjectInputStream inputStream = obj.getObjectContent()) {
+        return mapper.readValue(inputStream, UploadSpecification.class);
+      }
     } catch (AmazonServiceException e) {
       if (e.isRetryable()) {
         throw new RetryableException(e);
@@ -147,8 +151,10 @@ public class UploadStateStore {
         objectListing = s3Client.listObjects(listObjectsRequest);
         for (S3ObjectSummary objectSummary : objectListing.getObjectSummaries()) {
           S3Object obj = s3Client.getObject(objectSummary.getBucketName(), objectSummary.getKey());
-          CompletedPart part = mapper.readValue(obj.getObjectContent(), CompletedPart.class);
-          completedParts.add(part);
+          try (S3ObjectInputStream inputStream = obj.getObjectContent()) {
+            CompletedPart part = mapper.readValue(inputStream, CompletedPart.class);
+            completedParts.add(part);
+          }
         }
         listObjectsRequest.setMarker(objectListing.getNextMarker());
       } while (objectListing.isTruncated());
@@ -217,8 +223,10 @@ public class UploadStateStore {
         for (S3ObjectSummary objectSummary : objectListing.getObjectSummaries()) {
           log.debug("ETag: {}", objectSummary.getETag());
           S3Object obj = s3Client.getObject(objectSummary.getBucketName(), objectSummary.getKey());
-          CompletedPart part = mapper.readValue(obj.getObjectContent(), CompletedPart.class);
-          etags.add(new PartETag(part.getPartNumber(), part.getEtag()));
+          try (S3ObjectInputStream inputStream = obj.getObjectContent()) {
+            CompletedPart part = mapper.readValue(inputStream, CompletedPart.class);
+            etags.add(new PartETag(part.getPartNumber(), part.getEtag()));
+          }
         }
         listObjectsRequest.setMarker(objectListing.getNextMarker());
       } while (objectListing.isTruncated());
@@ -229,6 +237,7 @@ public class UploadStateStore {
   }
 
   public void delete(String objectId, String uploadId) {
+    s3Client.deleteObject(bucketName, getUploadStateKey(objectId, uploadId, META));
     ListObjectsRequest listObjectsRequest = new ListObjectsRequest()
         .withBucketName(bucketName)
         .withPrefix(getUploadStateKey(objectId, uploadId, PART));
@@ -246,7 +255,6 @@ public class UploadStateStore {
         }
         listObjectsRequest.setMarker(objectListing.getNextMarker());
       } while (objectListing.isTruncated());
-      s3Client.deleteObject(bucketName, getUploadStateKey(objectId, uploadId, META));
       s3Client.deleteObject(bucketName, getUploadStateKey(objectId, uploadId));
     } catch (AmazonServiceException e) {
       throw new RetryableException(e);

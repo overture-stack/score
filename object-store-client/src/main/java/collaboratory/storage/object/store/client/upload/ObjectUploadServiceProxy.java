@@ -74,18 +74,18 @@ public class ObjectUploadServiceProxy {
 
       @Override
       public Void doWithRetry(RetryContext ctx) throws IOException {
+        // TODO: Change the implementation
         String etag = ChannelUtils.UploadObject(file, new URL(part.getUrl()), part.getOffset(), part.getPartSize());
         // TODO: calculate md5
         try {
           finalizeUploadPart(objectId, uploadId, part.getPartNumber(), etag, etag);
         } catch (NotRetryableException e) {
-          log.warn("Checksum failed for part: {}", part, e);
+          log.warn("Checkum failed for part: {}", part, e);
           throw new RetryableException();
         }
         return null;
       }
     });
-
   }
 
   public UploadSpecification initiateUpload(String objectId, long length) throws IOException {
@@ -151,6 +151,25 @@ public class ObjectUploadServiceProxy {
     });
   }
 
+  public boolean isUploadDataRecoverable(String objectId) throws IOException {
+    return retry.execute(new RetryCallback<Boolean, IOException>() {
+
+      @Override
+      public Boolean doWithRetry(RetryContext ctx) throws IOException {
+        try {
+          HttpEntity<Object> requestEntity = new HttpEntity<Object>(defaultHeaders());
+          req.exchange(
+              endpoint + "/upload/{object-id}/recovery",
+              HttpMethod.POST, requestEntity,
+              Boolean.class, objectId);
+        } catch (NotRetryableException e) {
+          return false;
+        }
+        return true;
+      }
+    });
+  }
+
   private HttpHeaders defaultHeaders() {
     HttpHeaders requestHeaders = new HttpHeaders();
     requestHeaders.set("access-token", getToken());
@@ -160,15 +179,6 @@ public class ObjectUploadServiceProxy {
   // TODO: integrate AuthorizationService
   private String getToken() {
     return "token";
-  }
-
-  /**
-   * @param objectId
-   * @return
-   */
-  public boolean isUploadDataRecoverable(String objectId) {
-    // TODO Auto-generated method stub
-    return false;
   }
 
 }
