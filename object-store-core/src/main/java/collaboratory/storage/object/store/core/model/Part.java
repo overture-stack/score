@@ -27,7 +27,7 @@ import lombok.NoArgsConstructor;
 final public class Part {
 
   int partNumber;
-  long partSize;
+  int partSize;
   long offset;
   String url;
 }

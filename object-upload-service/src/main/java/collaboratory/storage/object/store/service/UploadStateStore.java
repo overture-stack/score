@@ -192,6 +192,7 @@ public class UploadStateStore {
   {
     ObjectMapper mapper = new ObjectMapper();
     try {
+      log.debug("Finalize part for object id: {}, upload id: {}, md5: {}, eTag: {}", objectId, uploadId, md5, eTag);
       byte[] content = mapper.writeValueAsBytes(new CompletedPart(partNumber, md5, eTag));
       ObjectMetadata meta = new ObjectMetadata();
       meta.setContentLength(content.length);

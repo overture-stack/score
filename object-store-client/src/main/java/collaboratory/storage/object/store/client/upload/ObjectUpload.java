@@ -69,12 +69,14 @@ public class ObjectUpload {
       } catch (NotRetryableException e) {
         // TODO: server side check data integrity, if data integrity is not recoverable (i.e. NotRetryable), startupload
         // again else try resume
+        log.warn("Upload is not completed fully. Checking data integrity. Please wait...");
         redo = !proxy.isUploadDataRecoverable(objectId);
       }
   }
 
   @SneakyThrows
   private void startUpload(File file, String objectId) {
+    log.info("Start a new upload...");
     UploadSpecification spec = proxy.initiateUpload(objectId, file.length());
     uploadParts(spec.getParts(), file, objectId, spec.getUploadId(), new ProgressBar(spec.getParts().size(), spec
         .getParts().size()));
@@ -95,6 +97,7 @@ public class ObjectUpload {
   }
 
   private void resume(File file, UploadProgress progress, String objectId) {
+    log.info("Resume from the previous upload...");
     final Set<Integer> completedPartNumber = Sets.newHashSet();
 
     for (CompletedPart part : progress.getCompletedParts()) {

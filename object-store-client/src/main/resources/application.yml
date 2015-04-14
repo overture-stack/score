@@ -18,10 +18,15 @@ collaboratory:
     retryNumber: 100
     retryTimeout: 1
 
+transport:
+  fileFrom: remote
+  memory: 1
+  parallel: 2
+
 client:
-  strictSsl: true
+  #strictSsl: true
   home: ${client.directory}
-    
+   
   # SSL
   #ssl:
   #  trustStore: classpath:client.jks
@@ -32,6 +37,7 @@ client:
   #  keyStoreType: JKS
   #  keyStorePassword: password
   #  keyAlias: client
+  token:
     
 logging:
   file: target/logs/application.log

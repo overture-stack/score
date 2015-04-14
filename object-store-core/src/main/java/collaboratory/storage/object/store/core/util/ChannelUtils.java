@@ -9,8 +9,8 @@ import java.nio.ByteBuffer;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
-import java.util.List;
-import java.util.Map;
+
+import collaboratory.storage.object.store.core.model.InputChannel;
 
 public final class ChannelUtils {
 
@@ -37,7 +37,6 @@ public final class ChannelUtils {
   // TODO: http://codereview.stackexchange.com/questions/45819/httpurlconnection-response-code-handling
   public static String UploadObject(File upload, URL url, long offset, long length) throws IOException
   {
-    System.out.println(String.format("URL: %s", url));
     HttpURLConnection connection = (HttpURLConnection) url.openConnection();
     connection.setDoOutput(true);
     connection.setRequestMethod("PUT");
@@ -47,11 +46,11 @@ public final class ChannelUtils {
     fis.getChannel().transferTo(offset, length, toChannel);
     fis.close();
     toChannel.close();
-    Map<String, List<String>> map = connection.getHeaderFields();
-    for (Map.Entry<String, List<String>> entry : map.entrySet()) {
-      System.out.println("Key : " + entry.getKey()
-          + " ,Value : " + entry.getValue());
-    }
+    // Map<String, List<String>> map = connection.getHeaderFields();
+    // for (Map.Entry<String, List<String>> entry : map.entrySet()) {
+    // System.out.println("Key : " + entry.getKey()
+    // + " ,Value : " + entry.getValue());
+    // }
 
     if (connection.getResponseCode() == 200) {
       if (connection.getHeaderField("ETag").isEmpty()) {
@@ -61,7 +60,24 @@ public final class ChannelUtils {
     } else {
       throw new IOException("fail to upload: " + connection.getResponseMessage());
     }
-
   }
 
+  public static String UploadObject(InputChannel channel, URL url) throws IOException
+  {
+    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+    connection.setDoOutput(true);
+    connection.setRequestMethod("PUT");
+    connection.setFixedLengthStreamingMode(channel.getlength());
+
+    channel.writeTo(connection.getOutputStream());
+
+    if (connection.getResponseCode() == 200) {
+      if (connection.getHeaderField("ETag").isEmpty()) {
+        throw new IOException("no etag found in the header: " + connection.getResponseMessage());
+      }
+      return connection.getHeaderField("ETag").replaceAll("^\"|\"$", "");
+    } else {
+      throw new IOException("fail to upload: " + connection.getResponseMessage());
+    }
+  }
 }

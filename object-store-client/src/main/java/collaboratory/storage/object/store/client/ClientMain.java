@@ -2,8 +2,8 @@ package collaboratory.storage.object.store.client;
 
 import java.util.Arrays;
 import java.util.Map;
+import java.util.Map.Entry;
 
-import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,33 +47,33 @@ public class ClientMain implements CommandLineRunner {
   @Override
   public void run(String... params) throws Exception {
     // HACK: delete all args with - from the left
-    val args = filterSpringConfigurations(params);
+    String[] args = filterSpringConfigurations(params);
 
-    val cli = new JCommander();
+    JCommander cli = new JCommander();
     cli.setAcceptUnknownOptions(true);
 
     cli.setProgramName(APPLICATION_NAME);
-    for (val entry : commands.entrySet()) {
-      val beanName = entry.getKey();
-      val commandName = getCommandName(beanName);
-      val command = entry.getValue();
+    for (Entry<String, ClientCommand> entry : commands.entrySet()) {
+      String beanName = entry.getKey();
+      String commandName = getCommandName(beanName);
+      ClientCommand command = entry.getValue();
 
       cli.addCommand(commandName, command);
     }
 
     try {
       cli.parse(args);
-      val commandName = cli.getParsedCommand();
+      String commandName = cli.getParsedCommand();
       if (commandName == null) {
         throw new ParameterException("Command name is empty");
       }
 
-      val command = getCommand(commandName);
+      ClientCommand command = getCommand(commandName);
       if (command == null) {
         throw new ParameterException("Unknown command: " + commandName);
       }
 
-      val status = command.execute();
+      int status = command.execute();
 
       System.exit(status);
     } catch (ParameterException e) {
@@ -104,7 +104,7 @@ public class ClientMain implements CommandLineRunner {
 
   private String[] filterSpringConfigurations(String[] args) {
     int lastSpringConfIdx = 0;
-    for (val arg : args) {
+    for (String arg : args) {
       if (arg.trim().startsWith("-")) lastSpringConfIdx++;
       else
         break;
@@ -112,5 +112,4 @@ public class ClientMain implements CommandLineRunner {
 
     return Arrays.copyOfRange(args, lastSpringConfIdx, args.length);
   }
-
 }

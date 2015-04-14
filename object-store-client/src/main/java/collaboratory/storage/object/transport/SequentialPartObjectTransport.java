@@ -21,6 +21,7 @@ import java.io.File;
 import java.util.List;
 
 import lombok.SneakyThrows;
+import collaboratory.storage.object.store.client.upload.FileInputChannel;
 import collaboratory.storage.object.store.client.upload.ObjectUploadServiceProxy;
 import collaboratory.storage.object.store.client.upload.ProgressBar;
 import collaboratory.storage.object.store.core.model.Part;
@@ -46,12 +47,16 @@ public class SequentialPartObjectTransport implements ObjectTransport {
   @Override
   @SneakyThrows
   public void send(File file) {
+    progress.start();
     for (Part part : parts) {
-      proxy.uploadPart(file, part, objectId, uploadId);
+      progress.incrementByteRead(part.getPartSize());
+      proxy
+          .uploadPart(new FileInputChannel(file, part.getOffset(), part.getPartSize(), null), part, objectId, uploadId);
+      progress.incrementByteWritten(part.getPartSize());
       progress.updateProgress(1);
     }
     proxy.finalizeUpload(objectId, uploadId);
-
+    progress.end();
   }
 
   public static ObjectTransport.Builder builder() {

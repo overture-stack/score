@@ -4,7 +4,7 @@ spring:
 spring:
   profiles: default
   
-logging.level.collaboratory: DEBUG
+logging.level.collaboratory: INFO
 #logging.level.com.amazonaws: DEBUG
 
 # Server

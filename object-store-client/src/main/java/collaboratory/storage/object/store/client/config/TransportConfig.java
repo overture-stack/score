@@ -15,30 +15,52 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package collaboratory.storage.object.store.client.upload;
+package collaboratory.storage.object.store.client.config;
 
-import java.io.IOException;
-
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
-import org.springframework.http.client.ClientHttpResponse;
-import org.springframework.web.client.DefaultResponseErrorHandler;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
+import collaboratory.storage.object.store.client.upload.ObjectUploadServiceProxy;
+import collaboratory.storage.object.transport.LocalParallelPartObjectTransport;
+import collaboratory.storage.object.transport.ObjectTransport;
+import collaboratory.storage.object.transport.RemoteParallelPartObjectTransport;
+
+@Data
+@Configuration
+@ConfigurationProperties(prefix = "transport")
 @Slf4j
-public class RetryableResponseErrorHandler extends DefaultResponseErrorHandler {
+public class TransportConfig {
 
-  @Override
-  public void handleError(ClientHttpResponse response) throws IOException {
-    switch (response.getStatusCode()) {
-    case NOT_FOUND:
-    case BAD_REQUEST:
-    case INTERNAL_SERVER_ERROR:
-      log.warn("Endpoint Error");
-      throw new NotRetryableException();
-    default:
-      log.warn("Retryable exception: {}", response.getStatusCode());
-      throw new RetryableException();
+  private String fileFrom;
+  private int memory;
+  private int parallel;
 
+  @Autowired
+  ObjectUploadServiceProxy proxy;
+
+  @Bean
+  public ObjectTransport.Builder TransportBuilder() {
+    ObjectTransport.Builder builder;
+    if (fileFrom != null && fileFrom.equals("local")) {
+      log.debug("Transport: {}", "local");
+      builder = LocalParallelPartObjectTransport.builder()
+          .withMemory(memory * 1024 * 1024 * 1024)
+          .withNumberOfWorkerThreads(parallel)
+          .withProxy(proxy);
+    } else {
+      log.debug("Transport: {}", "Remote");
+      builder =
+          RemoteParallelPartObjectTransport.builder()
+              .withMemory(memory * 1024 * 1024 * 1024)
+              .withNumberOfWorkerThreads(parallel)
+              .withProxy(proxy);
     }
+    return builder;
+
   }
 }

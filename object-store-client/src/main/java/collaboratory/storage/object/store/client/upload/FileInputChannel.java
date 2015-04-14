@@ -17,28 +17,51 @@
  */
 package collaboratory.storage.object.store.client.upload;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.channels.Channels;
+import java.nio.channels.WritableByteChannel;
 
-import lombok.extern.slf4j.Slf4j;
+import lombok.AllArgsConstructor;
+import collaboratory.storage.object.store.core.model.InputChannel;
 
-import org.springframework.http.client.ClientHttpResponse;
-import org.springframework.web.client.DefaultResponseErrorHandler;
+import com.google.common.hash.Hashing;
+import com.google.common.hash.HashingOutputStream;
 
-@Slf4j
-public class RetryableResponseErrorHandler extends DefaultResponseErrorHandler {
+@AllArgsConstructor
+public class FileInputChannel implements InputChannel {
+
+  private final File file;
+  private final long offset;
+  private final long length;
+  private String md5;
 
   @Override
-  public void handleError(ClientHttpResponse response) throws IOException {
-    switch (response.getStatusCode()) {
-    case NOT_FOUND:
-    case BAD_REQUEST:
-    case INTERNAL_SERVER_ERROR:
-      log.warn("Endpoint Error");
-      throw new NotRetryableException();
-    default:
-      log.warn("Retryable exception: {}", response.getStatusCode());
-      throw new RetryableException();
-
-    }
+  public void reset() throws IOException {
   }
+
+  @Override
+  public void writeTo(OutputStream os) throws IOException {
+
+    FileInputStream is = new FileInputStream(file);
+    HashingOutputStream hos = new HashingOutputStream(Hashing.md5(), os);
+    WritableByteChannel toChannel = Channels.newChannel(hos);
+    is.getChannel().transferTo(offset, length, toChannel);
+    is.close();
+    toChannel.close();
+    md5 = hos.hash().toString();
+  }
+
+  @Override
+  public long getlength() {
+    return length;
+  }
+
+  @Override
+  public String getMd5() {
+    return md5;
+  }
+
 }

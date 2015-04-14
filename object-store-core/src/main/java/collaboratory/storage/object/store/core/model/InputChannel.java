@@ -15,30 +15,19 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package collaboratory.storage.object.store.client.upload;
+package collaboratory.storage.object.store.core.model;
 
 import java.io.IOException;
+import java.io.OutputStream;
 
-import lombok.extern.slf4j.Slf4j;
+public interface InputChannel {
 
-import org.springframework.http.client.ClientHttpResponse;
-import org.springframework.web.client.DefaultResponseErrorHandler;
+  public void writeTo(OutputStream os) throws IOException;
 
-@Slf4j
-public class RetryableResponseErrorHandler extends DefaultResponseErrorHandler {
+  public void reset() throws IOException;
 
-  @Override
-  public void handleError(ClientHttpResponse response) throws IOException {
-    switch (response.getStatusCode()) {
-    case NOT_FOUND:
-    case BAD_REQUEST:
-    case INTERNAL_SERVER_ERROR:
-      log.warn("Endpoint Error");
-      throw new NotRetryableException();
-    default:
-      log.warn("Retryable exception: {}", response.getStatusCode());
-      throw new RetryableException();
+  public long getlength();
 
-    }
-  }
+  public String getMd5();
+
 }

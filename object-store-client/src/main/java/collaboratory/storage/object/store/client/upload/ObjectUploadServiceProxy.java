@@ -17,7 +17,6 @@
  */
 package collaboratory.storage.object.store.client.upload;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 
@@ -35,6 +34,8 @@ import org.springframework.retry.support.RetryTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import collaboratory.storage.object.store.client.config.ClientProperties;
+import collaboratory.storage.object.store.core.model.InputChannel;
 import collaboratory.storage.object.store.core.model.Part;
 import collaboratory.storage.object.store.core.model.UploadProgress;
 import collaboratory.storage.object.store.core.model.UploadSpecification;
@@ -46,6 +47,9 @@ public class ObjectUploadServiceProxy {
 
   @Value("${collaboratory.upload.endpoint}")
   private String endpoint;
+
+  @Autowired
+  private ClientProperties properties;
 
   @Autowired
   @Qualifier("upload-rest-template")
@@ -69,24 +73,50 @@ public class ObjectUploadServiceProxy {
 
   }
 
-  public void uploadPart(File file, Part part, String objectId, String uploadId) throws IOException {
+  public void uploadPart(InputChannel channel, Part part, String objectId, String uploadId) throws IOException {
     retry.execute(new RetryCallback<Void, IOException>() {
 
       @Override
       public Void doWithRetry(RetryContext ctx) throws IOException {
         // TODO: Change the implementation
-        String etag = ChannelUtils.UploadObject(file, new URL(part.getUrl()), part.getOffset(), part.getPartSize());
-        // TODO: calculate md5
+        log.debug("URL: {}", part.getUrl());
         try {
-          finalizeUploadPart(objectId, uploadId, part.getPartNumber(), etag, etag);
-        } catch (NotRetryableException e) {
-          log.warn("Checkum failed for part: {}", part, e);
-          throw new RetryableException();
+          String etag = ChannelUtils.UploadObject(channel, new URL(part.getUrl()));
+          try {
+            finalizeUploadPart(objectId, uploadId, part.getPartNumber(), channel.getMd5(), etag);
+          } catch (NotRetryableException e) {
+            log.warn("Checkum failed for part: {}", part, e);
+            throw new RetryableException();
+          }
+        } catch (Exception e) {
+          log.warn("Fail to send part", e);
+          channel.reset();
+          throw e;
         }
         return null;
       }
     });
   }
+
+  // public void uploadPart(File file, Part part, String objectId, String uploadId) throws IOException {
+  // retry.execute(new RetryCallback<Void, IOException>() {
+  //
+  // @Override
+  // public Void doWithRetry(RetryContext ctx) throws IOException {
+  // // TODO: Change the implementation
+  // log.debug("URL: {}", part.getUrl());
+  // String etag = ChannelUtils.UploadObject(file, new URL(part.getUrl()), part.getOffset(), part.getPartSize());
+  // // TODO: calculate md5
+  // try {
+  // finalizeUploadPart(objectId, uploadId, part.getPartNumber(), md5, etag);
+  // } catch (NotRetryableException e) {
+  // log.warn("Checkum failed for part: {}", part, e);
+  // throw new RetryableException();
+  // }
+  // return null;
+  // }
+  // });
+  // }
 
   public UploadSpecification initiateUpload(String objectId, long length) throws IOException {
     return retry.execute(new RetryCallback<UploadSpecification, IOException>() {
@@ -122,12 +152,15 @@ public class ObjectUploadServiceProxy {
 
       @Override
       public Void doWithRetry(RetryContext ctx) throws IOException {
-        HttpEntity<Object> requestEntity = new HttpEntity<Object>(defaultHeaders());
-        req.exchange(
-            endpoint + "/upload/{object-id}/parts?uploadId={upload-id}&partNumber={partNumber}&md5={md5}&etag={etag}",
-            HttpMethod.POST, requestEntity,
-            Void.class, objectId, uploadId, partNumber, md5, etag);
-        return null;
+        if (md5.equals(etag)) {
+          HttpEntity<Object> requestEntity = new HttpEntity<Object>(defaultHeaders());
+          req.exchange(
+              endpoint + "/upload/{object-id}/parts?uploadId={upload-id}&partNumber={partNumber}&md5={md5}&etag={etag}",
+              HttpMethod.POST, requestEntity,
+              Void.class, objectId, uploadId, partNumber, md5, etag);
+          return null;
+        }
+        throw new NotRetryableException();
       }
     });
   }
@@ -178,7 +211,7 @@ public class ObjectUploadServiceProxy {
 
   // TODO: integrate AuthorizationService
   private String getToken() {
-    return "token";
+    return properties.getKeyToken();
   }
 
 }

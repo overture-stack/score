@@ -18,27 +18,47 @@
 package collaboratory.storage.object.store.client.upload;
 
 import java.io.IOException;
+import java.io.OutputStream;
+import java.io.PipedInputStream;
 
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import collaboratory.storage.object.store.core.model.InputChannel;
 
-import org.springframework.http.client.ClientHttpResponse;
-import org.springframework.web.client.DefaultResponseErrorHandler;
+import com.google.api.client.util.IOUtils;
+import com.google.common.hash.Hashing;
+import com.google.common.hash.HashingOutputStream;
 
 @Slf4j
-public class RetryableResponseErrorHandler extends DefaultResponseErrorHandler {
+@AllArgsConstructor
+public class PipedInputChannel implements InputChannel {
+
+  private final PipedInputStream is;
+  private final long offset;
+  private final long length;
+  private String md5 = null;
 
   @Override
-  public void handleError(ClientHttpResponse response) throws IOException {
-    switch (response.getStatusCode()) {
-    case NOT_FOUND:
-    case BAD_REQUEST:
-    case INTERNAL_SERVER_ERROR:
-      log.warn("Endpoint Error");
-      throw new NotRetryableException();
-    default:
-      log.warn("Retryable exception: {}", response.getStatusCode());
-      throw new RetryableException();
-
-    }
+  public void reset() throws IOException {
+    log.warn("cannot be reset");
+    throw new NotRetryableException();
   }
+
+  @Override
+  public void writeTo(OutputStream os) throws IOException {
+    HashingOutputStream hos = new HashingOutputStream(Hashing.md5(), os);
+    IOUtils.copy(is, hos);
+    md5 = hos.hash().toString();
+  }
+
+  @Override
+  public long getlength() {
+    return length;
+  }
+
+  @Override
+  public String getMd5() {
+    return md5;
+  }
+
 }

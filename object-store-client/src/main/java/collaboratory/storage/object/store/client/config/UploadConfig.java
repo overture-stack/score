@@ -21,7 +21,6 @@ import java.io.IOException;
 
 import lombok.Data;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -31,11 +30,8 @@ import org.springframework.retry.support.RetryTemplate;
 import org.springframework.web.client.RestTemplate;
 
 import collaboratory.storage.object.store.client.upload.NotRetryableException;
-import collaboratory.storage.object.store.client.upload.ObjectUploadServiceProxy;
 import collaboratory.storage.object.store.client.upload.RetryableException;
 import collaboratory.storage.object.store.client.upload.RetryableResponseErrorHandler;
-import collaboratory.storage.object.transport.ObjectTransport;
-import collaboratory.storage.object.transport.SequentialPartObjectTransport;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
@@ -84,14 +80,4 @@ public class UploadConfig {
 
   }
 
-  @Autowired
-  ObjectUploadServiceProxy proxy;
-
-  @Bean
-  public ObjectTransport.Builder TransportBuilder() {
-    SequentialPartObjectTransport.Builder builder = SequentialPartObjectTransport.builder();
-    builder.withProxy(proxy);
-    return builder;
-
-  }
 }
