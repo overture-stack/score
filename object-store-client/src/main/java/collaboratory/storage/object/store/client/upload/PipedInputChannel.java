@@ -61,4 +61,13 @@ public class PipedInputChannel implements InputChannel {
     return md5;
   }
 
+  @Override
+  public void close() {
+    try {
+      is.close();
+    } catch (IOException e) {
+      log.warn("fail to close the input pipe", e);
+    }
+  }
+
 }

@@ -27,12 +27,11 @@ import com.google.common.collect.ImmutableList.Builder;
 public class SimplePartCalculator implements ObjectPartCalculator {
 
   private static final int MAX_NUM_PART = 10000;
-  // minimum size for S3
-  private static final int PART_SIZE = 5242880;
+  private static final int MIN_PART_SIZE = 20 * 1024 * 1024;
 
   @Override
   public List<Part> divide(long fileSize) {
-    int defaultPartSize = Math.max(PART_SIZE, (int) fileSize / MAX_NUM_PART + 1);
+    int defaultPartSize = Math.max(MIN_PART_SIZE, (int) fileSize / MAX_NUM_PART + 1);
     long filePosition = 0;
     Builder<Part> parts = ImmutableList.builder();
     for (int i = 1; filePosition < fileSize; ++i) {

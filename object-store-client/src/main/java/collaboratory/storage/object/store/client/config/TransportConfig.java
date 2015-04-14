@@ -27,6 +27,7 @@ import org.springframework.context.annotation.Configuration;
 
 import collaboratory.storage.object.store.client.upload.ObjectUploadServiceProxy;
 import collaboratory.storage.object.transport.LocalParallelPartObjectTransport;
+import collaboratory.storage.object.transport.MemoryMappedParallelPartObjectTransport;
 import collaboratory.storage.object.transport.ObjectTransport;
 import collaboratory.storage.object.transport.RemoteParallelPartObjectTransport;
 
@@ -37,7 +38,7 @@ import collaboratory.storage.object.transport.RemoteParallelPartObjectTransport;
 public class TransportConfig {
 
   private String fileFrom;
-  private int memory;
+  private long memory;
   private int parallel;
 
   @Autowired
@@ -46,19 +47,29 @@ public class TransportConfig {
   @Bean
   public ObjectTransport.Builder TransportBuilder() {
     ObjectTransport.Builder builder;
-    if (fileFrom != null && fileFrom.equals("local")) {
-      log.debug("Transport: {}", "local");
-      builder = LocalParallelPartObjectTransport.builder()
+    switch (fileFrom) {
+    case "memory":
+      log.debug("Transport: {}", "Memory");
+      builder = MemoryMappedParallelPartObjectTransport.builder()
           .withMemory(memory * 1024 * 1024 * 1024)
           .withNumberOfWorkerThreads(parallel)
           .withProxy(proxy);
-    } else {
+      break;
+    case "remote":
       log.debug("Transport: {}", "Remote");
       builder =
           RemoteParallelPartObjectTransport.builder()
               .withMemory(memory * 1024 * 1024 * 1024)
               .withNumberOfWorkerThreads(parallel)
               .withProxy(proxy);
+      break;
+    default:
+      log.debug("Transport: {}", "local");
+      builder = LocalParallelPartObjectTransport.builder()
+          .withMemory(memory * 1024 * 1024 * 1024)
+          .withNumberOfWorkerThreads(parallel)
+          .withProxy(proxy);
+
     }
     return builder;
 

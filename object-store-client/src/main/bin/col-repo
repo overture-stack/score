@@ -1,17 +1,13 @@
 #!/bin/bash -e
 #
-# Copyright 2014(c) The Ontario Institute for Cancer Research. All rights reserved.
+# Copyright 2015(c) The Ontario Institute for Cancer Research. All rights reserved.
 #
 # Description:
-#   Bam slicing tool for bam files managed in DCC repository
 #
 # Usage:
-#   To list the bam files in DCC repository: ./dcc-repo ls
-#   To perform bam slicing: ./dcc-repo view --uuid <UUID>
 #
 # Example:
-#   ./dcc-repo view --uuid UUID00001 20:1-1000
 
-DCC_REPO_HOME=`dirname $0`/..; export DCC_REPO_HOME
-CLIENT_DIR="$(cd ${DCC_REPO_HOME} && pwd -P)"
-exec java -Xmx3G -Dlogging.file=${DCC_REPO_HOME}/logs/client.log -Dspring.profiles.active=override -Dclient.directory=${CLIENT_DIR} -cp ${DCC_REPO_HOME}/conf:${DCC_REPO_HOME}/lib/object-store-client.jar org.springframework.boot.loader.JarLauncher "$@"
+COL_HOME=`dirname $0`/..; export COL_HOME
+CLIENT_DIR="$(cd ${COL_HOME} && pwd -P)"
+exec java -Xms2G -Xmx3G -Dlogging.file=${COL_HOME}/logs/client.log -Dspring.profiles.active=override -Dclient.directory=${CLIENT_DIR} -cp ${COL_HOME}/conf:${COL_HOME}/lib/object-store-client.jar org.springframework.boot.loader.JarLauncher "$@"

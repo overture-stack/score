@@ -44,14 +44,13 @@ public class FileInputChannel implements InputChannel {
 
   @Override
   public void writeTo(OutputStream os) throws IOException {
-
-    FileInputStream is = new FileInputStream(file);
-    HashingOutputStream hos = new HashingOutputStream(Hashing.md5(), os);
-    WritableByteChannel toChannel = Channels.newChannel(hos);
-    is.getChannel().transferTo(offset, length, toChannel);
-    is.close();
-    toChannel.close();
-    md5 = hos.hash().toString();
+    try (FileInputStream is = new FileInputStream(file)) {
+      HashingOutputStream hos = new HashingOutputStream(Hashing.md5(), os);
+      WritableByteChannel toChannel = Channels.newChannel(hos);
+      is.getChannel().transferTo(offset, length, toChannel);
+      toChannel.close();
+      md5 = hos.hash().toString();
+    }
   }
 
   @Override
@@ -62,6 +61,11 @@ public class FileInputChannel implements InputChannel {
   @Override
   public String getMd5() {
     return md5;
+  }
+
+  @Override
+  public void close() {
+    // TODO Auto-generated method stub
   }
 
 }

@@ -15,21 +15,57 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package collaboratory.storage.object.store.core.model;
+package collaboratory.storage.object.store.client.upload;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.MappedByteBuffer;
+import java.nio.channels.Channels;
+import java.nio.channels.WritableByteChannel;
 
-public interface InputChannel {
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import collaboratory.storage.object.store.core.model.InputChannel;
 
-  public void writeTo(OutputStream os) throws IOException;
+import com.google.common.hash.Hashing;
+import com.google.common.hash.HashingOutputStream;
 
-  public void reset() throws IOException;
+@Slf4j
+@AllArgsConstructor
+public class MemoryMappedInputChannel implements InputChannel {
 
-  public long getlength();
+  private final MappedByteBuffer buffer;
+  private final long offset;
+  private final long length;
+  private String md5 = null;
 
-  public String getMd5();
+  @Override
+  public void reset() throws IOException {
+    log.warn("cannot be reset");
+    throw new NotRetryableException();
+  }
 
-  void close();
+  @Override
+  public void writeTo(OutputStream os) throws IOException {
+    try (HashingOutputStream hos = new HashingOutputStream(Hashing.md5(), os)) {
+      WritableByteChannel writeChannel = Channels.newChannel(hos);
+      writeChannel.write(buffer);
+      md5 = hos.hash().toString();
+    }
+  }
+
+  @Override
+  public long getlength() {
+    return length;
+  }
+
+  @Override
+  public String getMd5() {
+    return md5;
+  }
+
+  @Override
+  public void close() {
+  }
 
 }

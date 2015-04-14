@@ -82,17 +82,16 @@ public class RemoteParallelPartObjectTransport implements ObjectTransport {
           proxy.uploadPart(new FileInputChannel(file, part.getOffset(), part.getPartSize(), null), part,
               objectId, uploadId);
           progress.incrementByteWritten(part.getPartSize());
+          progress.incrementByteRead(part.getPartSize());
           progress.updateProgress(1);
           return part;
         }
       }));
-      progress.incrementByteRead(part.getPartSize());
     }
 
     executor.shutdown();
     executor.awaitTermination(maxUploadDuration, TimeUnit.DAYS);
     try {
-      progress.display();
       takeCareOfException(results.build());
       proxy.finalizeUpload(objectId, uploadId);
     } finally {
@@ -134,7 +133,7 @@ public class RemoteParallelPartObjectTransport implements ObjectTransport {
       return this;
     }
 
-    public RemoteParallelBuilder withMemory(int memory) {
+    public RemoteParallelBuilder withMemory(long memory) {
       this.memory = memory;
       return this;
     }

@@ -18,8 +18,7 @@
 package collaboratory.storage.object.transport;
 
 import java.io.File;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
+import java.io.FileInputStream;
 import java.io.RandomAccessFile;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.Channels;
@@ -33,28 +32,23 @@ import java.util.concurrent.TimeUnit;
 
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import collaboratory.storage.object.store.client.upload.PipedInputChannel;
+import collaboratory.storage.object.store.client.upload.MemoryMappedInputChannel;
 import collaboratory.storage.object.store.core.model.Part;
 
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableList;
-import com.google.common.io.ByteSource;
 import com.google.common.io.ByteStreams;
-import com.google.common.io.Files;
 
 @Slf4j
-public class LocalParallelPartObjectTransport extends RemoteParallelPartObjectTransport {
+public class MemoryMappedParallelPartObjectTransport extends RemoteParallelPartObjectTransport {
 
-  private LocalParallelPartObjectTransport(RemoteParallelBuilder builder) {
+  private MemoryMappedParallelPartObjectTransport(RemoteParallelBuilder builder) {
     super(builder);
   }
 
   @Override
   @SneakyThrows
   public void send(File file) {
-    // ExecutorService executor = new ThreadPoolExecutor(nThreads, nThreads,
-    // 0L, TimeUnit.MILLISECONDS,
-    // new ArrayBlockingQueue<Runnable>(getCapacity(), false));
 
     log.debug("Number of Concurrency: {}", nThreads);
     ExecutorService executor = Executors.newFixedThreadPool(nThreads);
@@ -62,30 +56,28 @@ public class LocalParallelPartObjectTransport extends RemoteParallelPartObjectTr
     getMaximumReadSpeed(file);
     progress.start();
     for (final Part part : parts) {
-      final PipedOutputStream pos = new PipedOutputStream();
-      final PipedInputStream pis = new PipedInputStream(pos, part.getPartSize());
+      try (FileInputStream fis = new FileInputStream(file)) {
+        final MappedByteBuffer buffer =
+            fis.getChannel().map(FileChannel.MapMode.READ_ONLY, part.getOffset(), part.getPartSize());
+        buffer.load();
+        results.add(executor.submit(new Callable<Part>() {
 
-      results.add(executor.submit(new Callable<Part>() {
-
-        @Override
-        public Part call() throws Exception {
-          proxy.uploadPart(new PipedInputChannel(pis, 0, part.getPartSize(), null), part, objectId, uploadId);
-          progress.incrementByteWritten(part.getPartSize());
-          progress.updateProgress(1);
-          memory.addAndGet(part.getPartSize());
-          return part;
-        }
-      }));
-
-      ByteSource source = Files.asByteSource(file);
-      source.slice(part.getOffset(), part.getPartSize()).copyTo(pos);
-      pos.close();
+          @Override
+          public Part call() throws Exception {
+            proxy.uploadPart(new MemoryMappedInputChannel(buffer, 0, part.getPartSize(), null), part, objectId,
+                uploadId);
+            progress.incrementByteWritten(part.getPartSize());
+            progress.updateProgress(1);
+            memory.addAndGet(part.getPartSize());
+            return part;
+          }
+        }));
+      }
       progress.incrementByteRead(part.getPartSize());
-      progress.updateProgress(0);
       long remaining = memory.addAndGet(-part.getPartSize());
       log.debug("Remaining Memory : {}", remaining);
       while (memory.get() < 0) {
-        TimeUnit.SECONDS.sleep(1);
+        TimeUnit.MILLISECONDS.sleep(100);
       }
     }
     executor.shutdown();
@@ -99,21 +91,21 @@ public class LocalParallelPartObjectTransport extends RemoteParallelPartObjectTr
 
   }
 
-  public static LocalParallelBuilder builder() {
-    return new LocalParallelBuilder();
+  public static MemoryMappedParallelBuilder builder() {
+    return new MemoryMappedParallelBuilder();
   }
 
-  public static class LocalParallelBuilder extends RemoteParallelBuilder {
+  public static class MemoryMappedParallelBuilder extends RemoteParallelBuilder {
 
     @Override
     public ObjectTransport build() {
       checkArgumentsNotNull();
-      return new LocalParallelPartObjectTransport(this);
+      return new MemoryMappedParallelPartObjectTransport(this);
     }
 
   }
 
-  private static final int MIN_READ = 100 * 1024 * 1024;
+  private static final long MIN_READ = 100 * 1024 * 1024;
 
   @SneakyThrows
   protected void getMaximumReadSpeed(File file) {

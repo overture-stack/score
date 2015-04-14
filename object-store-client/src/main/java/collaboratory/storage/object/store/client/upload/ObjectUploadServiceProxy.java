@@ -89,7 +89,7 @@ public class ObjectUploadServiceProxy {
             throw new RetryableException();
           }
         } catch (Exception e) {
-          log.warn("Fail to send part", e);
+          log.warn("Fail to send part for part number: {}", part.getPartNumber(), e);
           channel.reset();
           throw e;
         }
