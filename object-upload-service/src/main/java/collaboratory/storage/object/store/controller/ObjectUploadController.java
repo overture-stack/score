@@ -60,6 +60,15 @@ public class ObjectUploadController {
     return uploadService.initiateUpload(objectId, fileSize);
   }
 
+  @RequestMapping(method = RequestMethod.DELETE, value = "/{object-id}/parts")
+  public void deletePart(
+      @RequestHeader(value = "access-token", required = true) final String accessToken,
+      @PathVariable(value = "object-id") String objectId,
+      @RequestParam(value = "partNumber", required = true) int partNumber,
+      @RequestParam(value = "uploadId", required = true) String uploadId) {
+    uploadService.deletePart(objectId, uploadId, partNumber);
+  }
+
   @RequestMapping(method = RequestMethod.POST, value = "/{object-id}/parts")
   public void finalizePartUpload(
       @RequestHeader(value = "access-token", required = true) final String accessToken,
@@ -83,16 +92,20 @@ public class ObjectUploadController {
   @RequestMapping(method = RequestMethod.POST, value = "/{object-id}/recovery")
   public void tryRecover(
       @RequestHeader(value = "access-token", required = true) final String accessToken,
-      @PathVariable(value = "object-id") String objectId
+      @PathVariable(value = "object-id") String objectId,
+      @RequestParam(value = "fileSize", required = true) long fileSize
       ) {
-    uploadService.recover(objectId);
+    uploadService.recover(objectId, fileSize);
   }
 
   @RequestMapping(method = RequestMethod.GET, value = "/{object-id}/status")
-  public @ResponseBody UploadProgress getUploadProgress(@RequestHeader("access-token") final String accessToken,
-      @PathVariable("object-id") String objectId) {
+  public @ResponseBody UploadProgress getUploadProgress(
+      @RequestHeader(value = "access-token", required = true) final String accessToken,
+      @PathVariable(value = "object-id") String objectId,
+      @RequestParam(value = "fileSize", required = true) long fileSize
+      ) {
     // TODO: if object id/upload id does not exist, throw not found exception
-    return uploadService.getUploadProgress(objectId, uploadService.getUploadId(objectId));
+    return uploadService.getUploadStatus(objectId, uploadService.getUploadId(objectId), fileSize);
   }
 
   @RequestMapping(method = RequestMethod.GET, value = "/{object-id}")

@@ -19,20 +19,21 @@ package collaboratory.storage.object.store.client.upload;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.Channels;
 import java.nio.channels.WritableByteChannel;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import collaboratory.storage.object.store.core.model.InputChannel;
 
 import com.google.common.hash.Hashing;
 import com.google.common.hash.HashingOutputStream;
 
 @Slf4j
 @AllArgsConstructor
-public class MemoryMappedInputChannel implements InputChannel {
+public class MemoryMappedInputChannel extends AbstractInputChannel {
 
   private final MappedByteBuffer buffer;
   private final long offset;
@@ -65,7 +66,20 @@ public class MemoryMappedInputChannel implements InputChannel {
   }
 
   @Override
+  @SuppressWarnings("restriction")
   public void close() {
+    Method getCleanerMethod;
+    try {
+      getCleanerMethod = buffer.getClass().getMethod("cleaner", new Class[0]);
+      getCleanerMethod.setAccessible(true);
+      sun.misc.Cleaner cleaner = (sun.misc.Cleaner)
+          getCleanerMethod.invoke(buffer, new Object[0]);
+      cleaner.clean();
+    } catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException
+        | InvocationTargetException e) {
+      log.warn("fail to unmap memory", e);
+
+    }
   }
 
 }

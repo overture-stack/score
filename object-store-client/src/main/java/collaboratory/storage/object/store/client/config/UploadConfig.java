@@ -24,6 +24,8 @@ import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.client.ClientHttpRequestFactory;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.retry.backoff.ExponentialBackOffPolicy;
 import org.springframework.retry.policy.SimpleRetryPolicy;
 import org.springframework.retry.support.RetryTemplate;
@@ -46,14 +48,23 @@ public class UploadConfig {
   // private int retryTimeout;
   private static final long MIN_TERNVAL = 1000;
 
+  private static final int MAX_TIMEOUT = 5 * 60 * 1000;
+
   // TODO:
   // - http://codereview.stackexchange.com/questions/62108/efficiently-use-resttemplate-for-http-request-timeout
   // - http://stackoverflow.com/questions/13837012/spring-resttemplate-timeout
   @Bean(name = "upload-rest-template")
   public RestTemplate uploadTemplate() {
-    RestTemplate req = new RestTemplate();
+    RestTemplate req = new RestTemplate(clientHttpRequestFactory());
     req.setErrorHandler(new RetryableResponseErrorHandler());
     return req;
+  }
+
+  private ClientHttpRequestFactory clientHttpRequestFactory() {
+    HttpComponentsClientHttpRequestFactory factory = new HttpComponentsClientHttpRequestFactory();
+    factory.setReadTimeout(MAX_TIMEOUT);
+    factory.setConnectTimeout(MAX_TIMEOUT);
+    return factory;
   }
 
   @Bean(name = "upload-retry-template")

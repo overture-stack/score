@@ -20,8 +20,6 @@ package collaboratory.storage.object.store.client.upload;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
-import java.util.Set;
-import java.util.function.Predicate;
 
 import javax.annotation.PostConstruct;
 
@@ -32,13 +30,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import collaboratory.storage.object.store.core.model.CompletedPart;
 import collaboratory.storage.object.store.core.model.Part;
 import collaboratory.storage.object.store.core.model.UploadProgress;
 import collaboratory.storage.object.store.core.model.UploadSpecification;
 import collaboratory.storage.object.transport.ObjectTransport;
-
-import com.google.common.collect.Sets;
 
 @Slf4j
 @Component
@@ -69,8 +64,8 @@ public class ObjectUpload {
       } catch (NotRetryableException e) {
         // TODO: server side check data integrity, if data integrity is not recoverable (i.e. NotRetryable), startupload
         // again else try resume
-        log.warn("Upload is not completed fully. Checking data integrity. Please wait...");
-        redo = !proxy.isUploadDataRecoverable(objectId);
+        log.warn("Upload is not completed successfully. Checking data integrity. Please wait...");
+        redo = !proxy.isUploadDataRecoverable(objectId, file.length());
       }
   }
 
@@ -86,7 +81,7 @@ public class ObjectUpload {
   private void resumeIfPossible(File file, String objectId) {
     UploadProgress progress = null;
     try {
-      progress = proxy.getProgress(objectId);
+      progress = proxy.getProgress(objectId, file.length());
     } catch (NotRetryableException e) {
       log.info("New upload: {}", objectId);
       startUpload(file, objectId);
@@ -98,23 +93,15 @@ public class ObjectUpload {
 
   private void resume(File file, UploadProgress progress, String objectId) {
     log.info("Resume from the previous upload...");
-    final Set<Integer> completedPartNumber = Sets.newHashSet();
-
-    for (CompletedPart part : progress.getCompletedParts()) {
-      completedPartNumber.add(part.getPartNumber());
-    }
 
     List<Part> parts = progress.getParts();
-    int total = parts.size();
-    parts.removeIf(new Predicate<Part>() {
-
-      @Override
-      public boolean test(Part part) {
-        return completedPartNumber.contains(part.getPartNumber());
-      }
-    });
-    // TODO: run checksum on the completed part on a separate thread
-    uploadParts(parts, file, progress.getObjectId(), progress.getUploadId(), new ProgressBar(total, parts.size()));
+    int total = progress.getParts().size();
+    int completedTotal = 0;
+    for (Part part : parts) {
+      if (part.getMd5() != null) completedTotal++;
+    }
+    uploadParts(parts, file, progress.getObjectId(), progress.getUploadId(), new ProgressBar(total, total
+        - completedTotal));
 
   }
 

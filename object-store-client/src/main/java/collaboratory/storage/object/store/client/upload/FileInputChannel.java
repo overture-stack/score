@@ -25,13 +25,12 @@ import java.nio.channels.Channels;
 import java.nio.channels.WritableByteChannel;
 
 import lombok.AllArgsConstructor;
-import collaboratory.storage.object.store.core.model.InputChannel;
 
 import com.google.common.hash.Hashing;
 import com.google.common.hash.HashingOutputStream;
 
 @AllArgsConstructor
-public class FileInputChannel implements InputChannel {
+public class FileInputChannel extends AbstractInputChannel {
 
   private final File file;
   private final long offset;

@@ -21,6 +21,7 @@ import java.io.File;
 import java.util.List;
 
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import collaboratory.storage.object.store.client.upload.FileInputChannel;
 import collaboratory.storage.object.store.client.upload.ObjectUploadServiceProxy;
 import collaboratory.storage.object.store.client.upload.ProgressBar;
@@ -28,6 +29,7 @@ import collaboratory.storage.object.store.core.model.Part;
 
 import com.google.common.base.Preconditions;
 
+@Slf4j
 public class SequentialPartObjectTransport implements ObjectTransport {
 
   final private ObjectUploadServiceProxy proxy;
@@ -49,11 +51,29 @@ public class SequentialPartObjectTransport implements ObjectTransport {
   public void send(File file) {
     progress.start();
     for (Part part : parts) {
+      log.debug("processing part: {}", part);
+      FileInputChannel channel = new FileInputChannel(file, part.getOffset(), part.getPartSize(), null);
+
+      boolean resend = false;
+      if (part.getMd5() != null) {
+        if (channel.isValidMd5(part.getMd5())) {
+          progress.updateChecksum(1);
+          continue;
+        }
+        proxy.deletePart(objectId, uploadId, part);
+        channel.reset();
+        resend = true;
+      }
+
       progress.incrementByteRead(part.getPartSize());
-      proxy
-          .uploadPart(new FileInputChannel(file, part.getOffset(), part.getPartSize(), null), part, objectId, uploadId);
+      proxy.uploadPart(channel, part, objectId, uploadId);
       progress.incrementByteWritten(part.getPartSize());
-      progress.updateProgress(1);
+
+      if (resend) {
+        progress.updateChecksum(1);
+      } else {
+        progress.updateProgress(1);
+      }
     }
     proxy.finalizeUpload(objectId, uploadId);
     progress.end();

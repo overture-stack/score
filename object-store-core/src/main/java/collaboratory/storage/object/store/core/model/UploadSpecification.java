@@ -32,4 +32,5 @@ public class UploadSpecification {
   private String objectId;
   private String uploadId;
   private List<Part> parts;
+  private long objectSize;
 }

@@ -18,6 +18,7 @@
 package collaboratory.storage.object.transport;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -32,6 +33,7 @@ import lombok.SneakyThrows;
 import collaboratory.storage.object.store.client.upload.FileInputChannel;
 import collaboratory.storage.object.store.client.upload.ObjectUploadServiceProxy;
 import collaboratory.storage.object.store.client.upload.ProgressBar;
+import collaboratory.storage.object.store.core.model.InputChannel;
 import collaboratory.storage.object.store.core.model.Part;
 
 import com.google.api.client.util.Preconditions;
@@ -67,9 +69,6 @@ public class RemoteParallelPartObjectTransport implements ObjectTransport {
   @Override
   @SneakyThrows
   public void send(File file) {
-    // ExecutorService executor = new ThreadPoolExecutor(nThreads, nThreads,
-    // 0L, TimeUnit.MILLISECONDS,
-    // new ArrayBlockingQueue<Runnable>(getCapacity(), true));
     ExecutorService executor = Executors.newFixedThreadPool(nThreads);
 
     ImmutableList.Builder<Future<Part>> results = ImmutableList.builder();
@@ -79,11 +78,20 @@ public class RemoteParallelPartObjectTransport implements ObjectTransport {
 
         @Override
         public Part call() throws Exception {
-          proxy.uploadPart(new FileInputChannel(file, part.getOffset(), part.getPartSize(), null), part,
-              objectId, uploadId);
+          FileInputChannel channel = new FileInputChannel(file, part.getOffset(), part.getPartSize(), null);
+          if (part.getMd5() != null) {
+            if (resent(channel, part)) {
+              proxy.uploadPart(channel, part, objectId,
+                  uploadId);
+            }
+            progress.updateChecksum(1);
+          } else {
+            proxy.uploadPart(channel, part, objectId,
+                uploadId);
+            progress.updateProgress(1);
+          }
           progress.incrementByteWritten(part.getPartSize());
-          progress.incrementByteRead(part.getPartSize());
-          progress.updateProgress(1);
+          memory.addAndGet(part.getPartSize());
           return part;
         }
       }));
@@ -97,7 +105,15 @@ public class RemoteParallelPartObjectTransport implements ObjectTransport {
     } finally {
       progress.end();
     }
+  }
 
+  protected boolean resent(InputChannel channel, Part part) throws IOException {
+    if (channel.isValidMd5(part.getMd5())) {
+      return false;
+    }
+    proxy.deletePart(objectId, uploadId, part);
+    channel.reset();
+    return true;
   }
 
   protected void takeCareOfException(List<Future<Part>> results) throws Throwable {

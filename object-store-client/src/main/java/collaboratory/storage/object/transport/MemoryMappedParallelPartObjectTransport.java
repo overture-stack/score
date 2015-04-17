@@ -64,10 +64,19 @@ public class MemoryMappedParallelPartObjectTransport extends RemoteParallelPartO
 
           @Override
           public Part call() throws Exception {
-            proxy.uploadPart(new MemoryMappedInputChannel(buffer, 0, part.getPartSize(), null), part, objectId,
-                uploadId);
+            MemoryMappedInputChannel channel = new MemoryMappedInputChannel(buffer, 0, part.getPartSize(), null);
+            if (part.getMd5() != null) {
+              if (resent(channel, part)) {
+                proxy.uploadPart(channel, part, objectId,
+                    uploadId);
+              }
+              progress.updateChecksum(1);
+            } else {
+              proxy.uploadPart(channel, part, objectId,
+                  uploadId);
+              progress.updateProgress(1);
+            }
             progress.incrementByteWritten(part.getPartSize());
-            progress.updateProgress(1);
             memory.addAndGet(part.getPartSize());
             return part;
           }

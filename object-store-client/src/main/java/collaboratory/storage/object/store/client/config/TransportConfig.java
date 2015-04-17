@@ -30,6 +30,7 @@ import collaboratory.storage.object.transport.LocalParallelPartObjectTransport;
 import collaboratory.storage.object.transport.MemoryMappedParallelPartObjectTransport;
 import collaboratory.storage.object.transport.ObjectTransport;
 import collaboratory.storage.object.transport.RemoteParallelPartObjectTransport;
+import collaboratory.storage.object.transport.SequentialPartObjectTransport;
 
 @Data
 @Configuration
@@ -61,6 +62,12 @@ public class TransportConfig {
           RemoteParallelPartObjectTransport.builder()
               .withMemory(memory * 1024 * 1024 * 1024)
               .withNumberOfWorkerThreads(parallel)
+              .withProxy(proxy);
+      break;
+    case "sequential":
+      log.debug("Transport: {}", "Sequential");
+      builder =
+          SequentialPartObjectTransport.builder()
               .withProxy(proxy);
       break;
     default:

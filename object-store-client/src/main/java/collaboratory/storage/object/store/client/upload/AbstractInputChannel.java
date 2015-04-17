@@ -1,3 +1,12 @@
+package collaboratory.storage.object.store.client.upload;
+
+import java.io.IOException;
+
+import lombok.extern.slf4j.Slf4j;
+import collaboratory.storage.object.store.core.model.InputChannel;
+
+import com.google.common.io.ByteStreams;
+
 /*
  * Copyright (c) 2015 The Ontario Institute for Cancer Research. All rights reserved.                             
  *                                                                                                               
@@ -15,33 +24,18 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package collaboratory.storage.object.store.service;
-
-import java.util.List;
-
-import lombok.extern.slf4j.Slf4j;
-import collaboratory.storage.object.store.core.model.Part;
-
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableList.Builder;
 
 @Slf4j
-public class SimplePartCalculator implements ObjectPartCalculator {
-
-  private static final int MAX_NUM_PART = 10000;
-  private static final int MIN_PART_SIZE = 20 * 1024 * 1024; // 20MB
+public abstract class AbstractInputChannel implements InputChannel {
 
   @Override
-  public List<Part> divide(long fileSize) {
-    int defaultPartSize = Math.max(MIN_PART_SIZE, (int) (fileSize / MAX_NUM_PART) + 1);
-    log.debug("Part Size: {}", defaultPartSize);
-    long filePosition = 0;
-    Builder<Part> parts = ImmutableList.builder();
-    for (int i = 1; filePosition < fileSize; ++i) {
-      int partSize = (int) Math.min(defaultPartSize, fileSize - filePosition);
-      parts.add(new Part(i, partSize, filePosition, null, null));
-      filePosition += partSize;
+  public boolean isValidMd5(String expectedMd5) throws IOException {
+    writeTo(ByteStreams.nullOutputStream());
+    if (!getMd5().equals(expectedMd5)) {
+      log.warn("md5 failed. Expected: {}, Actual: {}. Resend part number = {}", expectedMd5, getMd5());
+      return false;
     }
-    return parts.build();
+    return true;
   }
+
 }

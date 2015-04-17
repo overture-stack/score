@@ -31,5 +31,4 @@ public class UploadProgress {
   private String objectId;
   private String uploadId;
   private List<Part> parts;
-  private List<CompletedPart> completedParts;
 }

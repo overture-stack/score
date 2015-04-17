@@ -3,6 +3,7 @@ package collaboratory.storage.object.store.client.upload;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 import lombok.extern.slf4j.Slf4j;
@@ -12,21 +13,25 @@ import com.google.common.base.Stopwatch;
 @Slf4j
 public class ProgressBar {
 
-  private final AtomicLong totalIncr = new AtomicLong();
-  private final AtomicLong nByteWritten = new AtomicLong();
-  private final AtomicLong nByteRead = new AtomicLong();
+  private final AtomicInteger totalIncr = new AtomicInteger(0);
+  private final AtomicInteger checksumTotalIncr = new AtomicInteger(0);
+  private final AtomicLong nByteWritten = new AtomicLong(0);
+  private final AtomicLong nByteRead = new AtomicLong(0);
 
-  private final long total;
+  private final int total;
   private final Stopwatch stopwatch;
   private long byteReadPerSec;
   private long byteWrittenPerSec;
   private long percent;
   private ScheduledExecutorService progressMonitor;
   private final long DELAY = 1L;
+  private final int checksumTotal;
+  private int checksumPercent = 100;
 
-  public ProgressBar(long total, int numJobs) {
+  public ProgressBar(int total, int numJobs) {
     this.total = total;
-    totalIncr.set(total - numJobs);
+    this.checksumTotal = total - numJobs;
+    updateProgress(total - numJobs);
     stopwatch = Stopwatch.createUnstarted();
     System.err.println("Number of upload parts remaining: " + numJobs);
 
@@ -62,6 +67,10 @@ public class ProgressBar {
     byteWrittenPerSec = nByteWritten.addAndGet(incr) / duration() * 1000;
   }
 
+  public void updateChecksum(int incr) {
+    checksumPercent = checksumTotalIncr.addAndGet(incr) * 100 / checksumTotal;
+  }
+
   private long duration() {
     return stopwatch.elapsed(TimeUnit.MILLISECONDS) + 1;
   }
@@ -88,7 +97,8 @@ public class ProgressBar {
       }
     }
 
-    bar.append("]   " + percent + "%, Write/sec= " + format(byteWrittenPerSec) + ", Read/sec= "
+    bar.append("]   " + percent + "%, Checksum= " + checksumPercent + "%, Write/sec= " + format(byteWrittenPerSec)
+        + ", Read/sec= "
         + format(byteReadPerSec));
     System.err.print("\r" + bar.toString());
   }

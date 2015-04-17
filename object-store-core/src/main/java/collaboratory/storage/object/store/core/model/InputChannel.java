@@ -30,6 +30,8 @@ public interface InputChannel {
 
   public String getMd5();
 
+  public boolean isValidMd5(String expectedMd5) throws IOException;
+
   void close();
 
 }

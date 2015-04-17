@@ -23,7 +23,6 @@ import java.io.PipedInputStream;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import collaboratory.storage.object.store.core.model.InputChannel;
 
 import com.google.api.client.util.IOUtils;
 import com.google.common.hash.Hashing;
@@ -31,7 +30,7 @@ import com.google.common.hash.HashingOutputStream;
 
 @Slf4j
 @AllArgsConstructor
-public class PipedInputChannel implements InputChannel {
+public class PipedInputChannel extends AbstractInputChannel {
 
   private final PipedInputStream is;
   private final long offset;

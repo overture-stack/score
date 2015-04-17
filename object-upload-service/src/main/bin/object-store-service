@@ -1,0 +1,8 @@
+#!/bin/bash -e
+#
+# Copyright 2015(c) The Ontario Institute for Cancer Research. All rights reserved.
+#
+
+COL_HOME=`dirname $0`/..; export COL_HOME
+
+exec java -Xmx6G ${CERT_JAVA_FLAG} -Dspring.config.location=${COL_HOME}/conf/ -DLOG_FILE="${COL_HOME}/log/object-store-service.log" -Dspring.profiles.active=override -jar ${COL_HOME}/lib/object-upload-service.jar

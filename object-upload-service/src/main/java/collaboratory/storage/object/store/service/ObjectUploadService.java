@@ -21,7 +21,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
-import collaboratory.storage.object.store.core.model.CompletedPart;
 import collaboratory.storage.object.store.core.model.Part;
 import collaboratory.storage.object.store.core.model.UploadProgress;
 import collaboratory.storage.object.store.core.model.UploadSpecification;
@@ -101,7 +100,7 @@ public class ObjectUploadService {
       for (Part part : parts) {
         insertPartUploadUrl(objectKey, result.getUploadId(), part, expirationDate);
       }
-      UploadSpecification spec = new UploadSpecification(objectKey, objectId, result.getUploadId(), parts);
+      UploadSpecification spec = new UploadSpecification(objectKey, objectId, result.getUploadId(), parts, fileSize);
       stateStore.create(spec);
       return spec;
     } catch (AmazonServiceException e) {
@@ -175,6 +174,7 @@ public class ObjectUploadService {
   }
 
   public void finalizeUpload(String objectId, String uploadId) {
+    log.debug("finalizing upload id: {}", uploadId);
     if (stateStore.isCompleted(objectId, uploadId)) {
       try {
         List<PartETag> etags = stateStore.getUploadStatePartEtags(objectId, uploadId);
@@ -190,12 +190,14 @@ public class ObjectUploadService {
             meta);
         stateStore.delete(objectId, uploadId);
       } catch (AmazonServiceException e) {
+        log.error("Service problem: {}", e);
         throw new RetryableException(e);
       } catch (IOException e) {
         log.error("Serialization problem: {}", e);
         throw new InternalUnrecoverableError();
       }
     } else {
+      log.error("Upload cannot be finalize because it is not completed.");
       throw new NotRetryableException(new IOException("Object cannot be finalized it"));
     }
   }
@@ -212,10 +214,13 @@ public class ObjectUploadService {
     }
   }
 
-  public UploadProgress getUploadProgress(String objectId, String uploadId) {
+  public UploadProgress getUploadStatus(String objectId, String uploadId, long fileSize) {
     UploadSpecification spec = stateStore.loadUploadSpecification(objectId, uploadId);
-    return new UploadProgress(objectId, uploadId, spec.getParts(),
-        stateStore.retrieveCompletedParts(objectId, uploadId));
+    if (spec.getObjectSize() == fileSize) {
+      stateStore.markCompletedParts(objectId, uploadId, spec.getParts());
+      return new UploadProgress(objectId, uploadId, spec.getParts());
+    }
+    throw new NotRetryableException();
   }
 
   public void cancelAllUpload() {
@@ -245,16 +250,19 @@ public class ObjectUploadService {
     }
   }
 
-  public void recover(String objectId) {
+  public void recover(String objectId, long fileSize) {
 
     String uploadId = getUploadId(objectId);
-    UploadProgress progress = getUploadProgress(objectId, uploadId);
+    List<PartETag> etags = stateStore.getUploadStatePartEtags(objectId, uploadId);
     String objectKey = ObjectStoreUtil.getObjectKey(dataDir, objectId);
-    for (CompletedPart part : progress.getCompletedParts()) {
-      if (!isPartExist(objectKey, uploadId, part.getPartNumber(), part.getEtag())) {
-        stateStore.deleletePart(objectId, uploadId, part.getPartNumber());
-      }
-    }
+    // TODO:
+    // if (!isPartExist(objectKey, uploadId, part.getPartNumber(), part.getEtag())) {
+    // stateStore.deleletePart(objectId, uploadId, part.getPartNumber());
+    // }
 
+  }
+
+  public void deletePart(String objectId, String uploadId, int partNumber) {
+    stateStore.deleletePart(objectId, uploadId, partNumber);
   }
 }

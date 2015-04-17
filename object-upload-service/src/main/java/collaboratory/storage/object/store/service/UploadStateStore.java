@@ -19,12 +19,17 @@ package collaboratory.storage.object.store.service;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
 
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 import org.apache.commons.lang.StringUtils;
+import org.codehaus.jackson.JsonParseException;
+import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -62,6 +67,7 @@ public class UploadStateStore {
   private static final String DIRECTORY_SEPARATOR = "/";
   private static final String META = ".meta";
   private static final String PART = "part";
+  private static final Integer MAX_KEYS = 5000;
 
   @Autowired
   private AmazonS3 s3Client;
@@ -83,6 +89,8 @@ public class UploadStateStore {
           new ByteArrayInputStream(content), meta);
     } catch (AmazonServiceException e) {
       throw new RetryableException(e);
+    } catch (JsonParseException | JsonMappingException e) {
+      throw new NotRetryableException(e);
     } catch (IOException e) {
       log.error("Fail to create meta file", e);
       throw new NotRetryableException(e);
@@ -107,6 +115,8 @@ public class UploadStateStore {
       } else {
         throw new IdNotFoundException(uploadId);
       }
+    } catch (JsonParseException | JsonMappingException e) {
+      throw new NotRetryableException(e);
     }
 
   }
@@ -124,66 +134,84 @@ public class UploadStateStore {
     return true;
   }
 
-  private boolean isUploadPartCompleted(String objectId, String uploadId, int partNumber) {
-    try {
-      s3Client.getObjectMetadata(bucketName,
-          getUploadStateKey(objectId, uploadId, getLexicographicalOrderUploadPartName(partNumber)));
-    } catch (AmazonS3Exception ex) {
-      if (ex.getStatusCode() == HttpStatus.NOT_FOUND.value()) {
-        return false;
-      }
-      throw new RetryableException(ex);
-    }
-    return true;
-  }
-
   @SneakyThrows
-  public List<CompletedPart> retrieveCompletedParts(String objectId, String uploadId) {
-
+  public void markCompletedParts(String objectId, String uploadId, List<Part> parts) {
+    if (parts == null || parts.size() == 0) return;
     try {
       ListObjectsRequest listObjectsRequest = new ListObjectsRequest()
           .withBucketName(bucketName)
+          .withMaxKeys(MAX_KEYS)
           .withPrefix(getUploadStateKey(objectId, uploadId, PART));
       ObjectMapper mapper = new ObjectMapper();
-      ObjectListing objectListing;
-      Builder<CompletedPart> completedParts = ImmutableList.builder();
+      ObjectListing objectListing = null;
+      Collections.sort(parts, new Comparator<Part>() {
+
+        @Override
+        public int compare(Part p1, Part p2) {
+          return p1.getPartNumber() - p2.getPartNumber();
+        }
+      });
+
+      Iterator<Part> partItr = parts.iterator();
       do {
         objectListing = s3Client.listObjects(listObjectsRequest);
+        Part part = null;
         for (S3ObjectSummary objectSummary : objectListing.getObjectSummaries()) {
-          S3Object obj = s3Client.getObject(objectSummary.getBucketName(), objectSummary.getKey());
-          try (S3ObjectInputStream inputStream = obj.getObjectContent()) {
-            CompletedPart part = mapper.readValue(inputStream, CompletedPart.class);
-            completedParts.add(part);
-          }
+          String json = extractJson(objectSummary.getKey(), objectId, uploadId);
+          CompletedPart completedPart = mapper.readValue(json, CompletedPart.class);
+          do {
+            if (partItr.hasNext()) {
+              part = partItr.next();
+            } else {
+              return;
+            }
+          } while (completedPart.getPartNumber() != part.getPartNumber());
+          part.setMd5(completedPart.getMd5());
         }
         listObjectsRequest.setMarker(objectListing.getNextMarker());
       } while (objectListing.isTruncated());
-
-      return completedParts.build();
     } catch (AmazonServiceException e) {
       throw new RetryableException(e);
+    } catch (JsonParseException | JsonMappingException e) {
+      throw new NotRetryableException(e);
     }
-
-  }
-
-  @SneakyThrows
-  public List<Part> retrieveIncompletedParts(String objectId, String uploadId, boolean isCompleted) {
-    UploadSpecification spec = loadUploadSpecification(objectId, uploadId);
-    Builder<Part> incompletedParts = ImmutableList.builder();
-    for (Part part : spec.getParts()) {
-      if (isUploadPartCompleted(objectId, uploadId, part.getPartNumber()) == isCompleted) {
-        incompletedParts.add(part);
-      }
-    }
-    return incompletedParts.build();
   }
 
   public boolean isCompleted(String objectId, String uploadId) {
     UploadSpecification spec = loadUploadSpecification(objectId, uploadId);
-    for (Part part : spec.getParts()) {
-      if (!isUploadPartCompleted(objectId, uploadId, part.getPartNumber())) {
-        return false;
+    Collections.sort(spec.getParts(), new Comparator<Part>() {
+
+      @Override
+      public int compare(Part p1, Part p2) {
+        return p1.getPartNumber() - p2.getPartNumber();
       }
+    });
+
+    ListObjectsRequest listObjectsRequest = new ListObjectsRequest()
+        .withBucketName(bucketName)
+        .withMaxKeys(MAX_KEYS)
+        .withPrefix(getUploadStateKey(objectId, uploadId, PART));
+    ObjectListing objectListing;
+    Iterator<Part> partIterator = spec.getParts().iterator();
+
+    if (partIterator.hasNext()) {
+      Part part = partIterator.next();
+      do {
+        objectListing = s3Client.listObjects(listObjectsRequest);
+        for (S3ObjectSummary objectSummary : objectListing.getObjectSummaries()) {
+          int partNumber = extractPartNumber(objectId, uploadId, objectSummary.getKey());
+          if (part.getPartNumber() != partNumber) {
+            return false;
+          }
+          if (partIterator.hasNext()) {
+            part = partIterator.next();
+          } else {
+            return true;
+          }
+        }
+        listObjectsRequest.setMarker(objectListing.getNextMarker());
+      } while (objectListing.isTruncated());
+      return false;
     }
     return true;
   }
@@ -193,16 +221,17 @@ public class UploadStateStore {
     ObjectMapper mapper = new ObjectMapper();
     try {
       log.debug("Finalize part for object id: {}, upload id: {}, md5: {}, eTag: {}", objectId, uploadId, md5, eTag);
-      byte[] content = mapper.writeValueAsBytes(new CompletedPart(partNumber, md5, eTag));
+      String json = mapper.writeValueAsString(new CompletedPart(partNumber, md5, eTag));
       ObjectMetadata meta = new ObjectMetadata();
-      meta.setContentLength(content.length);
+      meta.setContentLength(0);
       s3Client.putObject(bucketName,
-          getUploadStateKey(objectId, uploadId, getLexicographicalOrderUploadPartName(partNumber)),
-          new ByteArrayInputStream(content), meta);
+          getUploadStateKey(objectId, uploadId, getLexicographicalOrderUploadPartName(partNumber, json)),
+          new ByteArrayInputStream(new byte[0]), meta);
     } catch (AmazonServiceException e) {
       log.error("Storage failed", e);
       throw new RetryableException(e);
-
+    } catch (JsonParseException | JsonMappingException e) {
+      throw new NotRetryableException(e);
     } catch (IOException e) {
       log.error("Fail to finalize part", e);
       throw new InternalUnrecoverableError();
@@ -214,6 +243,7 @@ public class UploadStateStore {
   public List<PartETag> getUploadStatePartEtags(String objectId, String uploadId) {
     ListObjectsRequest listObjectsRequest = new ListObjectsRequest()
         .withBucketName(bucketName)
+        .withMaxKeys(MAX_KEYS)
         .withPrefix(getUploadStateKey(objectId, uploadId, PART));
     ObjectMapper mapper = new ObjectMapper();
     ObjectListing objectListing;
@@ -222,18 +252,17 @@ public class UploadStateStore {
       do {
         objectListing = s3Client.listObjects(listObjectsRequest);
         for (S3ObjectSummary objectSummary : objectListing.getObjectSummaries()) {
-          log.debug("ETag: {}", objectSummary.getETag());
-          S3Object obj = s3Client.getObject(objectSummary.getBucketName(), objectSummary.getKey());
-          try (S3ObjectInputStream inputStream = obj.getObjectContent()) {
-            CompletedPart part = mapper.readValue(inputStream, CompletedPart.class);
-            etags.add(new PartETag(part.getPartNumber(), part.getEtag()));
-          }
+          String json = extractJson(objectSummary.getKey(), objectId, uploadId);
+          CompletedPart part = mapper.readValue(json, CompletedPart.class);
+          etags.add(new PartETag(part.getPartNumber(), part.getEtag()));
         }
         listObjectsRequest.setMarker(objectListing.getNextMarker());
       } while (objectListing.isTruncated());
       return etags;
     } catch (AmazonServiceException e) {
       throw new RetryableException(e);
+    } catch (JsonParseException | JsonMappingException e) {
+      throw new NotRetryableException(e);
     }
   }
 
@@ -263,25 +292,23 @@ public class UploadStateStore {
   }
 
   public String getUploadId(String objectId) {
-
     ListObjectsRequest req = new ListObjectsRequest()
         .withBucketName(bucketName)
+        .withMaxKeys(MAX_KEYS)
+        .withDelimiter(DIRECTORY_SEPARATOR)
         .withPrefix(getUploadStateKey(objectId, ""));
-
     try {
       ObjectListing objectListing;
       do {
         objectListing = s3Client.listObjects(req);
-        for (S3ObjectSummary objectSummary : objectListing.getObjectSummaries()) {
-          log.debug("Found object upload key: {}", objectSummary.getKey());
-          String uploadId = getUploadIdFromMeta(objectId, objectSummary.getKey());
-          // TODO: look for .meta
+        for (String prefix : objectListing.getCommonPrefixes()) {
+          log.debug("Found object upload key: {}", prefix);
+          String uploadId = getUploadIdFromMeta(objectId, prefix);
           if (isMetaAvailable(objectId, uploadId)) {
             return uploadId;
           }
         }
         req.setMarker(objectListing.getNextMarker());
-
       } while (objectListing.isTruncated());
     } catch (AmazonServiceException e) {
       throw new RetryableException(e);
@@ -292,7 +319,7 @@ public class UploadStateStore {
 
   private String getUploadIdFromMeta(String objectId, String objectUploadKey) {
     return StringUtils.removeEnd(StringUtils.removeStart(objectUploadKey, getUploadStateKey(objectId, "")),
-        DIRECTORY_SEPARATOR + META);
+        DIRECTORY_SEPARATOR);
   }
 
   private String getUploadStateKey(String objectId, String uploadId) {
@@ -315,14 +342,39 @@ public class UploadStateStore {
         .toString();
   }
 
-  private String getLexicographicalOrderUploadPartName(int partNumber) {
-    return String.format("%s-%08x", PART, (0xFFFFFFFF & partNumber));
+  private String getLexicographicalOrderUploadPartName(int partNumber, String json) {
+    return String.format("%s-%08x|%s", PART, (0xFFFFFFFF & partNumber), json);
+  }
+
+  private String extractJson(String key, String objectId, String uploadId, int partNumber) {
+    return StringUtils.removeStart(key,
+        getUploadStateKey(objectId, uploadId, String.format("%s-%08X|", PART, (0xFFFFFFFF & partNumber))));
+  }
+
+  private int extractPartNumber(String objectId, String uploadId, String partKey) {
+    String hexNumber =
+        StringUtils.substringBetween(StringUtils.removeStart(partKey, getUploadStateKey(objectId, uploadId)), PART
+            + "-", "|");
+    return Integer.parseInt(hexNumber, 16);
+  }
+
+  private String extractJson(String key, String objectId, String uploadId) {
+    return StringUtils.substringAfter(StringUtils.removeStart(key, getUploadStateKey(objectId, uploadId)), "|");
   }
 
   public void deleletePart(String objectId, String uploadId, int partNumber) {
+    ListObjectsRequest listObjectsRequest = new ListObjectsRequest()
+        .withBucketName(bucketName)
+        .withPrefix(getUploadStateKey(objectId, uploadId, getLexicographicalOrderUploadPartName(partNumber, "")));
     try {
-      s3Client.deleteObject(bucketName,
-          getUploadStateKey(objectId, uploadId, getLexicographicalOrderUploadPartName(partNumber)));
+      ObjectListing objectListing;
+      do {
+        objectListing = s3Client.listObjects(listObjectsRequest);
+        for (S3ObjectSummary objectSummary : objectListing.getObjectSummaries()) {
+          s3Client.deleteObject(bucketName, objectSummary.getKey());
+        }
+        listObjectsRequest.setMarker(objectListing.getNextMarker());
+      } while (objectListing.isTruncated());
     } catch (AmazonServiceException e) {
       throw new RetryableException(e);
     }

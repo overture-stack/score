@@ -30,4 +30,5 @@ final public class Part {
   int partSize;
   long offset;
   String url;
+  String md5;
 }

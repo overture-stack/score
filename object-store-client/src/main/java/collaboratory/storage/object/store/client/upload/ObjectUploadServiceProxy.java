@@ -28,6 +28,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.client.ClientHttpRequestFactory;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.retry.RetryCallback;
 import org.springframework.retry.RetryContext;
 import org.springframework.retry.support.RetryTemplate;
@@ -45,6 +47,8 @@ import collaboratory.storage.object.store.core.util.ChannelUtils;
 @Slf4j
 public class ObjectUploadServiceProxy {
 
+  private static final int MAX_TIMEOUT = 5 * 60 * 1000;
+
   @Value("${collaboratory.upload.endpoint}")
   private String endpoint;
 
@@ -59,15 +63,15 @@ public class ObjectUploadServiceProxy {
   @Qualifier("upload-retry-template")
   private RetryTemplate retry;
 
-  public UploadProgress getProgress(String objectId) throws IOException {
+  public UploadProgress getProgress(String objectId, long fileSize) throws IOException {
     return retry.execute(new RetryCallback<UploadProgress, IOException>() {
 
       @Override
       public UploadProgress doWithRetry(RetryContext ctx) throws IOException {
         HttpEntity<Object> requestEntity = new HttpEntity<Object>(defaultHeaders());
-        return req.exchange(endpoint + "/upload/{object-id}/status", HttpMethod.GET,
+        return req.exchange(endpoint + "/upload/{object-id}/status?fileSize={file-size}", HttpMethod.GET,
             requestEntity,
-            UploadProgress.class, objectId).getBody();
+            UploadProgress.class, objectId, fileSize).getBody();
       }
     });
 
@@ -97,26 +101,6 @@ public class ObjectUploadServiceProxy {
       }
     });
   }
-
-  // public void uploadPart(File file, Part part, String objectId, String uploadId) throws IOException {
-  // retry.execute(new RetryCallback<Void, IOException>() {
-  //
-  // @Override
-  // public Void doWithRetry(RetryContext ctx) throws IOException {
-  // // TODO: Change the implementation
-  // log.debug("URL: {}", part.getUrl());
-  // String etag = ChannelUtils.UploadObject(file, new URL(part.getUrl()), part.getOffset(), part.getPartSize());
-  // // TODO: calculate md5
-  // try {
-  // finalizeUploadPart(objectId, uploadId, part.getPartNumber(), md5, etag);
-  // } catch (NotRetryableException e) {
-  // log.warn("Checkum failed for part: {}", part, e);
-  // throw new RetryableException();
-  // }
-  // return null;
-  // }
-  // });
-  // }
 
   public UploadSpecification initiateUpload(String objectId, long length) throws IOException {
     return retry.execute(new RetryCallback<UploadSpecification, IOException>() {
@@ -184,7 +168,22 @@ public class ObjectUploadServiceProxy {
     });
   }
 
-  public boolean isUploadDataRecoverable(String objectId) throws IOException {
+  public void deletePart(String objectId, String uploadId, Part part) throws IOException {
+    retry.execute(new RetryCallback<Void, IOException>() {
+
+      @Override
+      public Void doWithRetry(RetryContext ctx) throws IOException {
+        HttpEntity<Object> requestEntity = new HttpEntity<Object>(defaultHeaders());
+        req.exchange(
+            endpoint + "/upload/{object-id}/parts?uploadId={upload-id}&partNumber={partNumber}",
+            HttpMethod.DELETE, requestEntity,
+            Void.class, objectId, uploadId, part.getPartNumber());
+        return null;
+      }
+    });
+  }
+
+  public boolean isUploadDataRecoverable(String objectId, long fileSize) throws IOException {
     return retry.execute(new RetryCallback<Boolean, IOException>() {
 
       @Override
@@ -192,9 +191,9 @@ public class ObjectUploadServiceProxy {
         try {
           HttpEntity<Object> requestEntity = new HttpEntity<Object>(defaultHeaders());
           req.exchange(
-              endpoint + "/upload/{object-id}/recovery",
+              endpoint + "/upload/{object-id}/recovery?fileSize={file-size}",
               HttpMethod.POST, requestEntity,
-              Boolean.class, objectId);
+              Boolean.class, objectId, fileSize);
         } catch (NotRetryableException e) {
           return false;
         }
@@ -214,4 +213,10 @@ public class ObjectUploadServiceProxy {
     return properties.getKeyToken();
   }
 
+  private ClientHttpRequestFactory clientHttpRequestFactory() {
+    HttpComponentsClientHttpRequestFactory factory = new HttpComponentsClientHttpRequestFactory();
+    factory.setReadTimeout(MAX_TIMEOUT);
+    factory.setConnectTimeout(MAX_TIMEOUT);
+    return factory;
+  }
 }
