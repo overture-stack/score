@@ -53,7 +53,7 @@ public class MemoryMappedParallelPartObjectTransport extends RemoteParallelPartO
     log.debug("Number of Concurrency: {}", nThreads);
     ExecutorService executor = Executors.newFixedThreadPool(nThreads);
     ImmutableList.Builder<Future<Part>> results = ImmutableList.builder();
-    getMaximumReadSpeed(file);
+    // getMaximumReadSpeed(file);
     progress.start();
     for (final Part part : parts) {
       try (FileInputStream fis = new FileInputStream(file)) {
