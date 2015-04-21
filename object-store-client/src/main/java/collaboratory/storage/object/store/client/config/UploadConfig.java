@@ -24,8 +24,8 @@ import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.client.ClientHttpRequestFactory;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.retry.backoff.ExponentialBackOffPolicy;
 import org.springframework.retry.policy.SimpleRetryPolicy;
 import org.springframework.retry.support.RetryTemplate;
@@ -60,10 +60,28 @@ public class UploadConfig {
     return req;
   }
 
-  private ClientHttpRequestFactory clientHttpRequestFactory() {
+  @Bean(name = "upload-data-template")
+  public RestTemplate uploadDataTemplate() {
+    RestTemplate req = new RestTemplate(streamingClientHttpRequestFactory());
+    req.setErrorHandler(new RetryableResponseErrorHandler());
+    return req;
+  }
+
+  private HttpComponentsClientHttpRequestFactory clientHttpRequestFactory() {
     HttpComponentsClientHttpRequestFactory factory = new HttpComponentsClientHttpRequestFactory();
     factory.setReadTimeout(MAX_TIMEOUT);
     factory.setConnectTimeout(MAX_TIMEOUT);
+
+    return factory;
+  }
+
+  private SimpleClientHttpRequestFactory streamingClientHttpRequestFactory() {
+    SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+    factory.setReadTimeout(MAX_TIMEOUT);
+    factory.setConnectTimeout(MAX_TIMEOUT);
+    factory.setOutputStreaming(true);
+    factory.setBufferRequestBody(false);
+
     return factory;
   }
 

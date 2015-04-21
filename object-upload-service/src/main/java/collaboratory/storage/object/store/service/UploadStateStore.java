@@ -46,8 +46,6 @@ import collaboratory.storage.object.store.exception.RetryableException;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.AmazonS3Exception;
-import com.amazonaws.services.s3.model.DeleteObjectsRequest;
-import com.amazonaws.services.s3.model.DeleteObjectsRequest.KeyVersion;
 import com.amazonaws.services.s3.model.GetObjectRequest;
 import com.amazonaws.services.s3.model.ListObjectsRequest;
 import com.amazonaws.services.s3.model.ObjectListing;
@@ -56,8 +54,6 @@ import com.amazonaws.services.s3.model.PartETag;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectInputStream;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.Lists;
 
 @Slf4j
@@ -267,28 +263,31 @@ public class UploadStateStore {
   }
 
   public void delete(String objectId, String uploadId) {
+    // TODO: we need a cronjob type of processs to take care of the cleanup
     s3Client.deleteObject(bucketName, getUploadStateKey(objectId, uploadId, META));
-    ListObjectsRequest listObjectsRequest = new ListObjectsRequest()
-        .withBucketName(bucketName)
-        .withPrefix(getUploadStateKey(objectId, uploadId, PART));
-    ObjectListing objectListing;
-    try {
-      do {
-        objectListing = s3Client.listObjects(listObjectsRequest);
-        Builder<KeyVersion> keys = ImmutableList.builder();
-        for (S3ObjectSummary objectSummary : objectListing.getObjectSummaries()) {
-          keys.add(new KeyVersion(objectSummary.getKey()));
-        }
-        DeleteObjectsRequest deletes = new DeleteObjectsRequest(bucketName).withKeys(keys.build());
-        if (!deletes.getKeys().isEmpty()) {
-          s3Client.deleteObjects(deletes);
-        }
-        listObjectsRequest.setMarker(objectListing.getNextMarker());
-      } while (objectListing.isTruncated());
-      s3Client.deleteObject(bucketName, getUploadStateKey(objectId, uploadId));
-    } catch (AmazonServiceException e) {
-      throw new RetryableException(e);
-    }
+
+    // ListObjectsRequest listObjectsRequest = new ListObjectsRequest()
+    // .withBucketName(bucketName)
+    // .withMaxKey(MAX_KEYS)
+    // .withPrefix(getUploadStateKey(objectId, uploadId, PART));
+    // ObjectListing objectListing;
+    // try {
+    // do {
+    // objectListing = s3Client.listObjects(listObjectsRequest);
+    // Builder<KeyVersion> keys = ImmutableList.builder();
+    // for (S3ObjectSummary objectSummary : objectListing.getObjectSummaries()) {
+    // keys.add(new KeyVersion(objectSummary.getKey()));
+    // }
+    // DeleteObjectsRequest deletes = new DeleteObjectsRequest(bucketName).withKeys(keys.build());
+    // if (!deletes.getKeys().isEmpty()) {
+    // s3Client.deleteObjects(deletes);
+    // }
+    // listObjectsRequest.setMarker(objectListing.getNextMarker());
+    // } while (objectListing.isTruncated());
+    // s3Client.deleteObject(bucketName, getUploadStateKey(objectId, uploadId));
+    // } catch (AmazonServiceException e) {
+    // throw new RetryableException(e);
+    // }
   }
 
   public String getUploadId(String objectId) {

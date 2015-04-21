@@ -18,7 +18,7 @@
 package collaboratory.storage.object.store.client.upload;
 
 import java.io.IOException;
-import java.net.URL;
+import java.net.URI;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -28,12 +28,16 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.client.ClientHttpRequest;
 import org.springframework.http.client.ClientHttpRequestFactory;
+import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.retry.RetryCallback;
 import org.springframework.retry.RetryContext;
 import org.springframework.retry.support.RetryTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RequestCallback;
+import org.springframework.web.client.ResponseExtractor;
 import org.springframework.web.client.RestTemplate;
 
 import collaboratory.storage.object.store.client.config.ClientProperties;
@@ -41,7 +45,6 @@ import collaboratory.storage.object.store.core.model.InputChannel;
 import collaboratory.storage.object.store.core.model.Part;
 import collaboratory.storage.object.store.core.model.UploadProgress;
 import collaboratory.storage.object.store.core.model.UploadSpecification;
-import collaboratory.storage.object.store.core.util.ChannelUtils;
 
 @Service
 @Slf4j
@@ -58,6 +61,10 @@ public class ObjectUploadServiceProxy {
   @Autowired
   @Qualifier("upload-rest-template")
   private RestTemplate req;
+
+  @Autowired
+  @Qualifier("upload-data-template")
+  private RestTemplate dataUploadreq;
 
   @Autowired
   @Qualifier("upload-retry-template")
@@ -84,18 +91,38 @@ public class ObjectUploadServiceProxy {
       public Void doWithRetry(RetryContext ctx) throws IOException {
         // TODO: Change the implementation
         log.debug("URL: {}", part.getUrl());
+
+        final RequestCallback callback = new RequestCallback() {
+
+          @Override
+          public void doWithRequest(final ClientHttpRequest request) throws IOException {
+            request.getHeaders().setContentLength(channel.getlength());
+            channel.writeTo(request.getBody());
+          }
+        };
+
+        final ResponseExtractor<HttpHeaders> headersExtractor = new ResponseExtractor<HttpHeaders>() {
+
+          @Override
+          public HttpHeaders extractData(ClientHttpResponse response) throws IOException {
+            return response.getHeaders();
+          }
+        };
+
         try {
-          String etag = ChannelUtils.UploadObject(channel, new URL(part.getUrl()));
+          HttpHeaders headers =
+              dataUploadreq.execute(new URI(part.getUrl()), HttpMethod.PUT, callback, headersExtractor);
           try {
-            finalizeUploadPart(objectId, uploadId, part.getPartNumber(), channel.getMd5(), etag);
+            finalizeUploadPart(objectId, uploadId, part.getPartNumber(), channel.getMd5(), headers.getETag()
+                .replaceAll("^\"|\"$", ""));
           } catch (NotRetryableException e) {
-            log.warn("Checkum failed for part: {}", part, e);
+            log.warn("Checkum failed for part: {}, MD5: {}, ETAG: {}", part, channel.getMd5(), headers.getETag(), e);
             throw new RetryableException();
           }
-        } catch (Exception e) {
+        } catch (Throwable e) {
           log.warn("Fail to send part for part number: {}", part.getPartNumber(), e);
           channel.reset();
-          throw e;
+          throw new RetryableException();
         }
         return null;
       }

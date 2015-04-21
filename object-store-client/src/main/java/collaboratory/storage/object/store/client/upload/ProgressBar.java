@@ -13,6 +13,7 @@ import com.google.common.base.Stopwatch;
 @Slf4j
 public class ProgressBar {
 
+  private static final int MAX_LENGTH = 200;
   private final AtomicInteger totalIncr = new AtomicInteger(0);
   private final AtomicInteger checksumTotalIncr = new AtomicInteger(0);
   private final AtomicLong nByteWritten = new AtomicLong(0);
@@ -85,7 +86,7 @@ public class ProgressBar {
 
   public synchronized void display() {
 
-    StringBuilder bar = new StringBuilder("[");
+    StringBuilder bar = new StringBuilder("\r[");
 
     for (int i = 0; i < 100; i++) {
       if (i < (percent)) {
@@ -100,7 +101,12 @@ public class ProgressBar {
     bar.append("]   " + percent + "%, Checksum= " + checksumPercent + "%, Write/sec= " + format(byteWrittenPerSec)
         + ", Read/sec= "
         + format(byteReadPerSec));
-    System.err.print("\r" + bar.toString());
+    int remaining = MAX_LENGTH - bar.length();
+    remaining = remaining < 1 ? 0 : remaining;
+    for (int i = 0; i < remaining; i++)
+      bar.append(" ");
+
+    System.err.print(bar.toString());
   }
 
   private String format(long size) {
