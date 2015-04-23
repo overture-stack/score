@@ -16,4 +16,4 @@ keytool -exportcert -alias appliance -file ${DCC_HOME}/appliance-public.cer -key
 keytool -importcert -keystore ${DCC_HOME}/client.jks -alias appliance -file ${DCC_HOME}/appliance-public.cer -storepass password -noprompt
 
 mv ${DCC_HOME}/appliance.jks ${DCC_HOME}/../src/main/cert/
-mv ${DCC_HOME}/client.jks ${DCC_HOME}/../../dcc-repository-client/src/main/resources/
+mv ${DCC_HOME}/client.jks ${DCC_HOME}/../../object-store-client/src/main/resources/

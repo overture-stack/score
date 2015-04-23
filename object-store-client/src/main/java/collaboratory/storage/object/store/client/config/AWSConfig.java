@@ -43,6 +43,7 @@ import com.amazonaws.services.s3.AmazonS3Client;
 @Configuration
 public class AWSConfig {
 
+  // TODO: remove this once rados gateway uses properly SSL certificates
   static {
     HttpsURLConnection.setDefaultHostnameVerifier(new HostnameVerifier()
     {

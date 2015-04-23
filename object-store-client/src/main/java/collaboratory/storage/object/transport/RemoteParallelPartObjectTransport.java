@@ -30,6 +30,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import collaboratory.storage.object.store.client.upload.FileInputChannel;
 import collaboratory.storage.object.store.client.upload.ObjectUploadServiceProxy;
 import collaboratory.storage.object.store.client.upload.ProgressBar;
@@ -39,6 +40,7 @@ import collaboratory.storage.object.store.core.model.Part;
 import com.google.api.client.util.Preconditions;
 import com.google.common.collect.ImmutableList;
 
+@Slf4j
 @AllArgsConstructor
 public class RemoteParallelPartObjectTransport implements ObjectTransport {
 
@@ -56,6 +58,7 @@ public class RemoteParallelPartObjectTransport implements ObjectTransport {
 
   protected RemoteParallelPartObjectTransport(RemoteParallelBuilder builder) {
 
+    log.debug("Transport Configuraiton: {}", builder);
     this.proxy = builder.proxy;
     this.progress = builder.progressBar;
     this.parts = builder.parts;

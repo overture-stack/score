@@ -18,10 +18,18 @@
 package collaboratory.storage.object.store.client.config;
 
 import java.io.IOException;
+import java.security.KeyStore;
 
 import lombok.Data;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.apache.http.client.HttpClient;
+import org.apache.http.conn.ssl.SSLContexts;
+import org.apache.http.conn.ssl.X509HostnameVerifier;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.client.HttpClients;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
@@ -40,15 +48,21 @@ import com.google.common.collect.ImmutableMap.Builder;
 
 @Data
 @Configuration
-@ConfigurationProperties(prefix = "collaboratory.upload")
+@Slf4j
 public class UploadConfig {
 
-  private String endpoint;
-  private int retryNumber;
-  // private int retryTimeout;
   private static final long MIN_TERNVAL = 1000;
 
   private static final int MAX_TIMEOUT = 5 * 60 * 1000;
+
+  @Autowired
+  private ClientProperties properties;
+
+  @Autowired
+  private KeyStore truststore;
+
+  @Autowired
+  private X509HostnameVerifier hostnameVerifier;
 
   // TODO:
   // - http://codereview.stackexchange.com/questions/62108/efficiently-use-resttemplate-for-http-request-timeout
@@ -62,6 +76,7 @@ public class UploadConfig {
 
   @Bean(name = "upload-data-template")
   public RestTemplate uploadDataTemplate() {
+    // TODO: SSL enabled on the storage side
     RestTemplate req = new RestTemplate(streamingClientHttpRequestFactory());
     req.setErrorHandler(new RetryableResponseErrorHandler());
     return req;
@@ -71,8 +86,20 @@ public class UploadConfig {
     HttpComponentsClientHttpRequestFactory factory = new HttpComponentsClientHttpRequestFactory();
     factory.setReadTimeout(MAX_TIMEOUT);
     factory.setConnectTimeout(MAX_TIMEOUT);
+    factory.setHttpClient(sslClient());
 
     return factory;
+  }
+
+  @SneakyThrows
+  private HttpClient sslClient() {
+    HttpClientBuilder client = HttpClients.custom();
+    if (properties.isStrictSsl()) {
+      client.setSslcontext(SSLContexts.custom().loadTrustMaterial(truststore).useTLS().build());
+      client.setHostnameVerifier(hostnameVerifier);
+
+    }
+    return client.build();
   }
 
   private SimpleClientHttpRequestFactory streamingClientHttpRequestFactory() {
@@ -89,7 +116,8 @@ public class UploadConfig {
   public RetryTemplate retryTemplate() {
     RetryTemplate retry = new RetryTemplate();
 
-    int maxAttempts = retryNumber < 0 ? Integer.MAX_VALUE : retryNumber;
+    int maxAttempts =
+        properties.getUpload().getRetryNumber() < 0 ? Integer.MAX_VALUE : properties.getUpload().getRetryNumber();
 
     Builder<Class<? extends Throwable>, Boolean> exceptions = ImmutableMap.builder();
     exceptions.put(NotRetryableException.class, Boolean.FALSE);
@@ -109,4 +137,13 @@ public class UploadConfig {
 
   }
 
+  @Bean(name = "endpoint")
+  public String endpoint() {
+    String scheme = "http://";
+    if (properties.isStrictSsl()) {
+      scheme = "https://";
+    }
+    return scheme + properties.getUpload().getServiceHostname() + ":" + properties.getUpload().getServicePort();
+
+  }
 }

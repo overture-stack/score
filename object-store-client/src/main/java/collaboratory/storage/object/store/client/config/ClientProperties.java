@@ -35,7 +35,7 @@ public class ClientProperties {
 
   private TokenProperties token = new TokenProperties();
   private SSLProperties ssl = new SSLProperties();
-  private LaunchProperties launch = new LaunchProperties();
+  private UploadProperties upload = new UploadProperties();
 
   private boolean strictSsl = true;
 
@@ -65,14 +65,12 @@ public class ClientProperties {
   }
 
   @Data
-  public static class LaunchProperties {
+  public static class UploadProperties {
 
-    private String ami = "TO_BE_DETERMINED";
-    private String instanceType = "m3.xlarge";
-    private int numberOfInstances = 1;
-    private String ipRange = "0.0.0.0/0";
-    private int proxyPort = 5431;
-    private String vpcId;
+    private String serviceHostname = "TO_BE_DETERMINED";
+    private int servicePort = 5431;
+    private int retryNumber = 1;
+    private int retryTimeout = 1;
 
   }
 }

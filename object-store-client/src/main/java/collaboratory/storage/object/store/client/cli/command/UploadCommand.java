@@ -33,7 +33,6 @@ public class UploadCommand extends AbstractClientCommand {
   @Override
   @SneakyThrows
   public int execute() {
-
     println("Start uploading file: %s", filePath);
     log.info("file: {}", filePath);
     File upload = new File(filePath);

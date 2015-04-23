@@ -20,6 +20,7 @@ package collaboratory.storage.object.store.client.upload;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.function.Predicate;
 
 import javax.annotation.PostConstruct;
 
@@ -44,7 +45,7 @@ public class ObjectUpload {
   @Autowired
   private ObjectTransport.Builder transportBuilder;
 
-  @Value("${collaboratory.upload.retryNumber}")
+  @Value("${client.upload.retryNumber}")
   private int retryNumber;
 
   @PostConstruct
@@ -58,7 +59,8 @@ public class ObjectUpload {
         if (redo) {
           startUpload(file, objectId);
         } else {
-          resumeIfPossible(file, objectId);
+          // only perform checksum the first time of the resume
+          resumeIfPossible(file, objectId, retry == 0 ? true : false);
         }
         return;
       } catch (NotRetryableException e) {
@@ -78,7 +80,7 @@ public class ObjectUpload {
   }
 
   @SneakyThrows
-  private void resumeIfPossible(File file, String objectId) {
+  private void resumeIfPossible(File file, String objectId, boolean checksum) {
     UploadProgress progress = null;
     try {
       progress = proxy.getProgress(objectId, file.length());
@@ -87,14 +89,24 @@ public class ObjectUpload {
       startUpload(file, objectId);
       return;
     }
-    resume(file, progress, objectId);
+    resume(file, progress, objectId, checksum);
 
   }
 
-  private void resume(File file, UploadProgress progress, String objectId) {
+  private void resume(File file, UploadProgress progress, String objectId, boolean checksum) {
     log.info("Resume from the previous upload...");
 
     List<Part> parts = progress.getParts();
+    if (!checksum) {
+      parts.removeIf(new Predicate<Part>() {
+
+        @Override
+        public boolean test(Part part) {
+          return part.getMd5() != null;
+        }
+      });
+    }
+
     int total = progress.getParts().size();
     int completedTotal = 0;
     for (Part part : parts) {

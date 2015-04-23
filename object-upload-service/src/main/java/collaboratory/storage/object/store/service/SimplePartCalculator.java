@@ -31,9 +31,15 @@ public class SimplePartCalculator implements ObjectPartCalculator {
   private static final int MAX_NUM_PART = 10000;
   private static final int MIN_PART_SIZE = 20 * 1024 * 1024; // 20MB
 
+  private final int minPartSize;
+
+  public SimplePartCalculator(int minPartSize) {
+    this.minPartSize = Math.max(minPartSize, MIN_PART_SIZE);
+  }
+
   @Override
   public List<Part> divide(long fileSize) {
-    int defaultPartSize = Math.max(MIN_PART_SIZE, (int) (fileSize / MAX_NUM_PART) + 1);
+    int defaultPartSize = Math.max(minPartSize, (int) (fileSize / MAX_NUM_PART) + 1);
     log.debug("Part Size: {}", defaultPartSize);
     long filePosition = 0;
     Builder<Part> parts = ImmutableList.builder();

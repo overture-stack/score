@@ -71,8 +71,8 @@ public class S3Config {
 
   private ClientConfiguration clientConfiguration() {
     ClientConfiguration clientConfiguration = new ClientConfiguration();
-    if (isSecured) {
-      clientConfiguration.setProtocol(Protocol.HTTPS);
+    if (!isSecured) {
+      clientConfiguration.setProtocol(Protocol.HTTP);
     }
     clientConfiguration
         .setRetryPolicy(PredefinedRetryPolicies

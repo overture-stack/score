@@ -10,11 +10,11 @@ logging.level.collaboratory: DEBUG
 # Server
 server:
   port: 5431
-  #ssl:
-  #  key-store: src/main/cert/appliance.jks
-  #  key-store-type: JKS
-  #  key-store-password: password
-  #  key-alias: appliance
+  ssl:
+    key-store: src/main/cert/appliance.jks
+    key-store-type: JKS
+    key-store-password: password
+    key-alias: appliance
   
 s3:
   #OICR
@@ -23,12 +23,12 @@ s3:
   #secretKey: 36c1aec6a9014fee95b0459d43d6bc6e
   
   #Sinai Center
-  endpoint: http://142.1.177.10:9080
-  accessKey: 29c65c06a9de4e35b8baa4a0fc12193e
-  secretKey: 536d4ff664cc4509a7fce5b9a604e1aa
+  #endpoint: https://www.cancercollaboratory.org:9080
+  #accessKey: 29c65c06a9de4e35b8baa4a0fc12193e
+  #secretKey: 536d4ff664cc4509a7fce5b9a604e1aa
 
-  #endpoint:
-  secured: false
+  endpoint:
+  secured: true
 
 collaboratory:
   bucket.name: oicr.collaboratory
@@ -36,9 +36,10 @@ collaboratory:
   data.directory: data
   upload.expiration: 14
 
+
 upload:
-  strict: false
   retry.limit: 1000
+  partsize: 20000000
 ---
 spring:
   profiles: prod

@@ -20,6 +20,7 @@ package collaboratory.storage.object.transport;
 import java.io.File;
 import java.util.List;
 
+import lombok.Data;
 import collaboratory.storage.object.store.client.upload.ObjectUploadServiceProxy;
 import collaboratory.storage.object.store.client.upload.ProgressBar;
 import collaboratory.storage.object.store.core.model.Part;
@@ -46,6 +47,7 @@ public interface ObjectTransport {
     public Builder withProxy(ObjectUploadServiceProxy proxy);
   }
 
+  @Data
   public abstract class AbstractBuilder implements Builder {
 
     protected ObjectUploadServiceProxy proxy;

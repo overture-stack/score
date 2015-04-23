@@ -24,7 +24,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -52,9 +51,6 @@ public class ObjectUploadServiceProxy {
 
   private static final int MAX_TIMEOUT = 5 * 60 * 1000;
 
-  @Value("${collaboratory.upload.endpoint}")
-  private String endpoint;
-
   @Autowired
   private ClientProperties properties;
 
@@ -65,6 +61,10 @@ public class ObjectUploadServiceProxy {
   @Autowired
   @Qualifier("upload-data-template")
   private RestTemplate dataUploadreq;
+
+  @Autowired
+  @Qualifier("endpoint")
+  private String endpoint;
 
   @Autowired
   @Qualifier("upload-retry-template")

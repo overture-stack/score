@@ -52,9 +52,6 @@ public class LocalParallelPartObjectTransport extends RemoteParallelPartObjectTr
   @Override
   @SneakyThrows
   public void send(File file) {
-    // ExecutorService executor = new ThreadPoolExecutor(nThreads, nThreads,
-    // 0L, TimeUnit.MILLISECONDS,
-    // new ArrayBlockingQueue<Runnable>(getCapacity(), false));
 
     log.debug("Number of Concurrency: {}", nThreads);
     ExecutorService executor = Executors.newFixedThreadPool(nThreads);

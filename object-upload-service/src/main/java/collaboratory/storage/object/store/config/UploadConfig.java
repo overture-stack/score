@@ -17,6 +17,7 @@
  */
 package collaboratory.storage.object.store.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -29,6 +30,9 @@ import collaboratory.storage.object.store.service.UploadStateStore;
 @EnableAutoConfiguration
 public class UploadConfig {
 
+  @Value("${upload.partsize}")
+  private int partSize;
+
   @Bean
   public UploadStateStore stateStore() {
     return new UploadStateStore();
@@ -36,7 +40,7 @@ public class UploadConfig {
 
   @Bean
   public ObjectPartCalculator calculator() {
-    return new SimplePartCalculator();
+    return new SimplePartCalculator(partSize);
 
   }
 }

@@ -21,10 +21,13 @@ import java.io.InputStream;
 import java.security.KeyStore;
 
 import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLException;
 import javax.net.ssl.TrustManagerFactory;
 
 import lombok.SneakyThrows;
 
+import org.apache.http.conn.ssl.AbstractVerifier;
+import org.apache.http.conn.ssl.X509HostnameVerifier;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -40,7 +43,8 @@ public class SSLClientConfig {
   private ClientProperties properties;
 
   @SneakyThrows
-  private KeyStore trustStore() {
+  @Bean
+  public KeyStore trustStore() {
     SSLProperties ssl = properties.getSsl();
     if (ssl.getTrustName() != null && ssl.getTrustStore() != null) {
       InputStream is = ssl.getTrustStore().getInputStream();
@@ -66,15 +70,33 @@ public class SSLClientConfig {
   }
 
   @Bean
+  public X509HostnameVerifier verifier() {
+    return new AbstractVerifier() {
+
+      @Override
+      public void verify(String host, String[] cns, String[] subjectAlts) throws SSLException {
+        for (String cn : cns) {
+          if (cn.equals(properties.getSsl().getTrustName())) {
+            return;
+          }
+        }
+        verify(host, cns, subjectAlts, true);
+      }
+
+    };
+  }
+
+  @Bean
   @SneakyThrows
   public KeyManagerFactory keyManagerFactory() {
-    KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
-    if (properties.getSsl().getKeyStore() == null) {
-      kmf.init(null, null);
-      return kmf;
-    }
-    kmf.init(keyStore(), properties.getSsl().getKeyStorePassword().toCharArray());
-    return kmf;
+    return null;
+    // KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+    // if (properties.getSsl().getKeyStore() == null) {
+    // kmf.init(null, null);
+    // return kmf;
+    // }
+    // kmf.init(keyStore(), properties.getSsl().getKeyStorePassword().toCharArray());
+    // return kmf;
   }
 
   @Bean
