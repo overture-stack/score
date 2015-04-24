@@ -49,8 +49,7 @@ public class MemoryMappedParallelPartObjectTransport extends RemoteParallelPartO
   @Override
   @SneakyThrows
   public void send(File file) {
-
-    log.debug("Number of Concurrency: {}", nThreads);
+    log.debug("send file: {}", file.getPath());
     ExecutorService executor = Executors.newFixedThreadPool(nThreads);
     ImmutableList.Builder<Future<Part>> results = ImmutableList.builder();
     // getMaximumReadSpeed(file);
@@ -94,10 +93,12 @@ public class MemoryMappedParallelPartObjectTransport extends RemoteParallelPartO
     try {
       takeCareOfException(results.build());
       proxy.finalizeUpload(objectId, uploadId);
-    } finally {
-      progress.end();
+    } catch (Throwable e) {
+      progress.end(false);
+      throw e;
     }
 
+    progress.end(false);
   }
 
   public static MemoryMappedParallelBuilder builder() {

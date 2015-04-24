@@ -76,7 +76,7 @@ public class SequentialPartObjectTransport implements ObjectTransport {
       }
     }
     proxy.finalizeUpload(objectId, uploadId);
-    progress.end();
+    progress.end(false);
   }
 
   public static ObjectTransport.Builder builder() {

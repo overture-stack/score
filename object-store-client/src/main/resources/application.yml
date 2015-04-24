@@ -1,7 +1,6 @@
 #
 # Collaboratory Client - Configuration
 #
-logging.level.collaboratory: DEBUG
 client.directory: ${user.home}
 
 spring:
@@ -10,10 +9,14 @@ spring:
 spring:
   profiles: default
 
+logging:
+  level:
+    collaboratory: INFO
+
 transport:
   fileFrom: memory
   memory: 1
-  parallel: 2
+  parallel: 20
 
 client:
   strictSsl: true
@@ -41,3 +44,13 @@ logging:
 ---
 spring:
   profiles: override
+
+---
+spring:
+  profiles: debug
+
+logging:
+  level:
+    collaboratory: DEBUG
+    springframework.retry: DEBUG
+    springframework.web: DEBUG

@@ -130,11 +130,11 @@ public class ObjectUploadServiceProxy {
   }
 
   public UploadSpecification initiateUpload(String objectId, long length) throws IOException {
+    log.debug("Initiate upload, object-id: {}", objectId);
     return retry.execute(new RetryCallback<UploadSpecification, IOException>() {
 
       @Override
       public UploadSpecification doWithRetry(RetryContext ctx) throws IOException {
-        log.debug("Retry #: {}", ctx.getRetryCount());
         HttpEntity<Object> requestEntity = new HttpEntity<Object>(defaultHeaders());
         return req.exchange(endpoint + "/upload/{object-id}/uploads?fileSize={file-size}", HttpMethod.POST,
             requestEntity,
@@ -144,7 +144,7 @@ public class ObjectUploadServiceProxy {
   }
 
   public void finalizeUpload(String objectId, String uploadId) throws IOException {
-
+    log.debug("finalize upload, object-id: {}, upload-id: {}", objectId, uploadId);
     retry.execute(new RetryCallback<Void, IOException>() {
 
       @Override
@@ -159,6 +159,7 @@ public class ObjectUploadServiceProxy {
 
   public void finalizeUploadPart(String objectId, String uploadId, int partNumber, String md5, String etag)
       throws IOException {
+    log.debug("finalize upload part, object-id: {}, upload-id: {}, part-number: {}", objectId, uploadId, partNumber);
     retry.execute(new RetryCallback<Void, IOException>() {
 
       @Override
@@ -177,6 +178,7 @@ public class ObjectUploadServiceProxy {
   }
 
   public boolean isObjectExist(String objectId) throws IOException {
+    log.debug("Object exists object-id: {}", objectId);
     return retry.execute(new RetryCallback<Boolean, IOException>() {
 
       @Override
@@ -196,6 +198,7 @@ public class ObjectUploadServiceProxy {
   }
 
   public void deletePart(String objectId, String uploadId, Part part) throws IOException {
+    log.debug("Delete part object-id: {}, upload-id: {}, part: {}", objectId, uploadId, part);
     retry.execute(new RetryCallback<Void, IOException>() {
 
       @Override
@@ -211,6 +214,7 @@ public class ObjectUploadServiceProxy {
   }
 
   public boolean isUploadDataRecoverable(String objectId, long fileSize) throws IOException {
+    log.debug("Recover upload, object-id: {}", objectId);
     return retry.execute(new RetryCallback<Boolean, IOException>() {
 
       @Override

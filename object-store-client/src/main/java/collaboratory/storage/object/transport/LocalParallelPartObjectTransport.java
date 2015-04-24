@@ -90,9 +90,11 @@ public class LocalParallelPartObjectTransport extends RemoteParallelPartObjectTr
     try {
       takeCareOfException(results.build());
       proxy.finalizeUpload(objectId, uploadId);
-    } finally {
-      progress.end();
+    } catch (Throwable e) {
+      progress.end(true);
+      throw e;
     }
+    progress.end(false);
 
   }
 

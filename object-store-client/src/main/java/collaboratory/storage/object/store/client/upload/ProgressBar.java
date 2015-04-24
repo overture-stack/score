@@ -13,7 +13,10 @@ import com.google.common.base.Stopwatch;
 @Slf4j
 public class ProgressBar {
 
-  private static final int MAX_LENGTH = 200;
+  /**
+   * 
+   */
+  private static final int PADDING = 14;
   private final AtomicInteger totalIncr = new AtomicInteger(0);
   private final AtomicInteger checksumTotalIncr = new AtomicInteger(0);
   private final AtomicLong nByteWritten = new AtomicLong(0);
@@ -50,7 +53,7 @@ public class ProgressBar {
     }, DELAY, DELAY, TimeUnit.SECONDS);
   }
 
-  public void end() {
+  public void end(boolean incompleted) {
     if (stopwatch.isRunning()) {
       stopwatch.stop();
     }
@@ -61,6 +64,9 @@ public class ProgressBar {
       log.debug("cannot stop the stopwatch", e);
     }
     System.err.println();
+    if (incompleted) {
+      System.err.println("Upload has been interrupted. Some parts are missing. Waiting to resubmission...");
+    }
     System.err.println("Total Time for upload (min): " + (stopwatch.elapsed(TimeUnit.MINUTES) + 1));
   }
 
@@ -101,9 +107,8 @@ public class ProgressBar {
     bar.append("]   " + percent + "%, Checksum= " + checksumPercent + "%, Write/sec= " + format(byteWrittenPerSec)
         + ", Read/sec= "
         + format(byteReadPerSec));
-    int remaining = MAX_LENGTH - bar.length();
-    remaining = remaining < 1 ? 0 : remaining;
-    for (int i = 0; i < remaining; i++)
+
+    for (int i = 0; i < PADDING; i++)
       bar.append(" ");
 
     System.err.print(bar.toString());

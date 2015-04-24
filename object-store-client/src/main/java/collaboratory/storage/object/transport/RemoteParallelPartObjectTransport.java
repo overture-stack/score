@@ -105,9 +105,11 @@ public class RemoteParallelPartObjectTransport implements ObjectTransport {
     try {
       takeCareOfException(results.build());
       proxy.finalizeUpload(objectId, uploadId);
-    } finally {
-      progress.end();
+    } catch (Throwable e) {
+      progress.end(true);
+      throw e;
     }
+    progress.end(false);
   }
 
   protected boolean resent(InputChannel channel, Part part) throws IOException {
@@ -124,6 +126,7 @@ public class RemoteParallelPartObjectTransport implements ObjectTransport {
       try {
         result.get();
       } catch (ExecutionException e) {
+        log.debug("Fail to submit part", e.getCause());
         throw e.getCause();
       }
     }
