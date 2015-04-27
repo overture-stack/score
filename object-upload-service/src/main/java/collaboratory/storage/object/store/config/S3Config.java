@@ -1,9 +1,5 @@
 package collaboratory.storage.object.store.config;
 
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLSession;
-
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
@@ -19,6 +15,7 @@ import com.amazonaws.auth.profile.ProfileCredentialsProvider;
 import com.amazonaws.retry.PredefinedRetryPolicies;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.S3ClientOptions;
 
 /**
  * S3 configuration.
@@ -37,18 +34,6 @@ public class S3Config {
   private String endpoint;
   private boolean isSecured;
 
-  static {
-    HttpsURLConnection.setDefaultHostnameVerifier(new HostnameVerifier()
-    {
-
-      @Override
-      public boolean verify(String hostname, SSLSession session)
-      {
-        return true;
-      }
-    });
-  }
-
   @Bean
   public AmazonS3 s3() {
     AmazonS3 s3Client = null;
@@ -58,13 +43,15 @@ public class S3Config {
           clientConfiguration());
     } else {
       s3Client = new AmazonS3Client(new ProfileCredentialsProvider(), clientConfiguration());
-
     }
 
     if (endpoint != null && !endpoint.isEmpty()) {
       log.debug("OS Endpoint: {}", endpoint);
       s3Client.setEndpoint(endpoint);
+    } else {
+      s3Client.setEndpoint("s3-external-1.amazonaws.com");
     }
+    s3Client.setS3ClientOptions(new S3ClientOptions().withPathStyleAccess(true));
 
     return s3Client;
   }

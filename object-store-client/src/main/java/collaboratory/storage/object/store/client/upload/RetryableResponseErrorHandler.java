@@ -33,7 +33,7 @@ public class RetryableResponseErrorHandler extends DefaultResponseErrorHandler {
     case NOT_FOUND:
     case BAD_REQUEST:
     case INTERNAL_SERVER_ERROR:
-      log.warn("Endpoint Error");
+      log.warn("Not Retryable Endpoint");
       throw new NotRetryableException();
     default:
       log.warn("Retryable exception: {}", response.getStatusCode());

@@ -94,7 +94,7 @@ public class MemoryMappedParallelPartObjectTransport extends RemoteParallelPartO
       takeCareOfException(results.build());
       proxy.finalizeUpload(objectId, uploadId);
     } catch (Throwable e) {
-      progress.end(false);
+      progress.end(true);
       throw e;
     }
 

@@ -3,9 +3,6 @@ spring:
 ---
 spring:
   profiles: default
-  
-logging.level.collaboratory: DEBUG
-#logging.level.com.amazonaws: DEBUG
 
 # Server
 server:
@@ -17,6 +14,7 @@ server:
     key-alias: appliance
   
 s3:
+  secured: true
   #OICR
   #endpoint: http://10.5.73.101
   #accessKey: c6525e9b10804c1c9306d7051b10a3b3
@@ -28,7 +26,6 @@ s3:
   #secretKey: 536d4ff664cc4509a7fce5b9a604e1aa
 
   endpoint:
-  secured: true
 
 collaboratory:
   bucket.name: oicr.collaboratory
@@ -44,7 +41,13 @@ upload:
 spring:
   profiles: prod
   
-logging.level.org.hibernate: WARN
+s3:
+  secured: true
+  #Sinai Center
+  endpoint: https://www.cancercollaboratory.org:9080
+  accessKey: 29c65c06a9de4e35b8baa4a0fc12193e
+  secretKey: 536d4ff664cc4509a7fce5b9a604e1aa
+
 endpoints:
   dump.enabled: false
   env.enabled: false

@@ -97,7 +97,6 @@ public class UploadConfig {
     if (properties.isStrictSsl()) {
       client.setSslcontext(SSLContexts.custom().loadTrustMaterial(truststore).useTLS().build());
       client.setHostnameVerifier(hostnameVerifier);
-
     }
     return client.build();
   }

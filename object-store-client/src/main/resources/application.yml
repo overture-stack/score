@@ -9,14 +9,10 @@ spring:
 spring:
   profiles: default
 
-logging:
-  level:
-    collaboratory: INFO
-
 transport:
   fileFrom: memory
   memory: 1
-  parallel: 20
+  parallel: 2
 
 client:
   strictSsl: true
@@ -34,23 +30,27 @@ client:
     trustStoreType: JKS
     trustStorePassword: password
     trustName: repository.icgc.org
-    #keyStore: file:///${client.directory}/cert/client.jks
-    #keyStoreType: JKS
-    #keyStorePassword: password
-    #keyAlias: client
     
 logging:
   file: target/logs/client.log
 ---
 spring:
-  profiles: override
+  profiles: prod
+
+client:
+  strictSsl: true
+
+transport:
+  parallel: 20
 
 ---
 spring:
   profiles: debug
+  profiles.include: prod
 
 logging:
   level:
     collaboratory: DEBUG
     springframework.retry: DEBUG
     springframework.web: DEBUG
+    com.amazonaws.services: DEBUG

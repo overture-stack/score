@@ -28,9 +28,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.client.ClientHttpRequest;
-import org.springframework.http.client.ClientHttpRequestFactory;
 import org.springframework.http.client.ClientHttpResponse;
-import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.retry.RetryCallback;
 import org.springframework.retry.RetryContext;
 import org.springframework.retry.support.RetryTemplate;
@@ -90,7 +88,7 @@ public class ObjectUploadServiceProxy {
       @Override
       public Void doWithRetry(RetryContext ctx) throws IOException {
         // TODO: Change the implementation
-        log.debug("URL: {}", part.getUrl());
+        log.debug("Upload Part URL: {}", part.getUrl());
 
         final RequestCallback callback = new RequestCallback() {
 
@@ -244,10 +242,4 @@ public class ObjectUploadServiceProxy {
     return properties.getKeyToken();
   }
 
-  private ClientHttpRequestFactory clientHttpRequestFactory() {
-    HttpComponentsClientHttpRequestFactory factory = new HttpComponentsClientHttpRequestFactory();
-    factory.setReadTimeout(MAX_TIMEOUT);
-    factory.setConnectTimeout(MAX_TIMEOUT);
-    return factory;
-  }
 }
