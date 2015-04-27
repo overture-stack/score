@@ -21,8 +21,6 @@ s3:
   #Sinai Center
   #endpoint: https://www.cancercollaboratory.org:9080
 
-  endpoint:
-
 collaboratory:
   bucket.name: oicr.collaboratory
   upload.directory: upload
