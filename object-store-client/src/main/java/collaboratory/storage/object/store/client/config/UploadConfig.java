@@ -107,7 +107,6 @@ public class UploadConfig {
     factory.setConnectTimeout(MAX_TIMEOUT);
     factory.setOutputStreaming(true);
     factory.setBufferRequestBody(false);
-
     return factory;
   }
 

@@ -71,11 +71,11 @@ public class TransportConfig {
               .withProxy(proxy);
       break;
     default:
-      log.debug("Transport: {}", "local");
       builder = LocalParallelPartObjectTransport.builder()
           .withMemory(memory * 1024 * 1024 * 1024)
           .withNumberOfWorkerThreads(parallel)
           .withProxy(proxy);
+      log.debug("Transport: {}, Builder: {}", "local", builder);
 
     }
     return builder;

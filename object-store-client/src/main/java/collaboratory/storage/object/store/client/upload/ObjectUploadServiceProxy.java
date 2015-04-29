@@ -96,6 +96,7 @@ public class ObjectUploadServiceProxy {
           public void doWithRequest(final ClientHttpRequest request) throws IOException {
             request.getHeaders().setContentLength(channel.getlength());
             channel.writeTo(request.getBody());
+            request.getBody().close();
           }
         };
 

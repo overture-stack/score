@@ -123,8 +123,8 @@ public class ObjectUpload {
         .withProgressBar(progressBar)
         .withParts(parts)
         .withObjectId(objectId)
-        .withUploadId(uploadId)
-        .build()
-        .send(file);
+        .withUploadId(uploadId);
+    log.debug("Transport Configuration: {}", transportBuilder);
+    transportBuilder.build().send(file);
   }
 }

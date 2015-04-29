@@ -58,7 +58,6 @@ public class RemoteParallelPartObjectTransport implements ObjectTransport {
 
   protected RemoteParallelPartObjectTransport(RemoteParallelBuilder builder) {
 
-    log.debug("Transport Configuraiton: {}", builder);
     this.proxy = builder.proxy;
     this.progress = builder.progressBar;
     this.parts = builder.parts;
