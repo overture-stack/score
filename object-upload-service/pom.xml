@@ -63,11 +63,11 @@
 			<artifactId>guava</artifactId>
 		</dependency>
 
-		<dependency>
+<!-- 		<dependency>
 			<groupId>com.fasterxml</groupId>
 			<artifactId>jackson-xml-databind</artifactId>
 			<version>0.6.2</version>
-		</dependency>
+		</dependency> -->
 
 
 		<!-- Test -->

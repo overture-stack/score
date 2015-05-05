@@ -115,7 +115,7 @@ public class ObjectUploadServiceProxy {
             finalizeUploadPart(objectId, uploadId, part.getPartNumber(), channel.getMd5(), headers.getETag()
                 .replaceAll("^\"|\"$", ""));
           } catch (NotRetryableException e) {
-            log.warn("Checkum failed for part: {}, MD5: {}, ETAG: {}", part, channel.getMd5(), headers.getETag(), e);
+            log.warn("Checksum failed for part: {}, MD5: {}, ETAG: {}", part, channel.getMd5(), headers.getETag(), e);
             throw new RetryableException();
           }
         } catch (Throwable e) {

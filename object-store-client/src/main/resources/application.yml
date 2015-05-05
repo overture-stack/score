@@ -40,9 +40,6 @@ spring:
 client:
   strictSsl: true
 
-transport:
-  parallel: 20
-
 ---
 spring:
   profiles: debug

@@ -20,8 +20,6 @@ package collaboratory.storage.object.store.health;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.annotation.Nullable;
-
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,6 +35,7 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.Lists;
+import com.sun.istack.Nullable;
 
 @Component
 public class ObjectUploadServiceHealth implements HealthIndicator {

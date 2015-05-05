@@ -15,75 +15,26 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package collaboratory.storage.object.transport;
+package collaboratory.storage.object.store.service;
 
-import java.io.File;
-import java.util.List;
+import java.util.Date;
 
-import collaboratory.storage.object.store.client.upload.ObjectUploadServiceProxy;
-import collaboratory.storage.object.store.client.upload.ProgressBar;
+import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.beans.factory.annotation.Value;
+
 import collaboratory.storage.object.store.core.model.Part;
 
-/**
- * 
- */
-public interface ObjectTransport {
+@Slf4j
+public class BenchmarkURLGenerator implements UploadURLGenerator {
 
-  public void send(File file);
+  @Value("${benchmark.endpoint}")
+  private String endpoint;
 
-  public interface Builder {
-
-    public ObjectTransport build();
-
-    public Builder withProgressBar(ProgressBar progressBar);
-
-    public Builder withParts(List<Part> parts);
-
-    public Builder withObjectId(String objectId);
-
-    public Builder withUploadId(String uploadId);
-
-    public Builder withProxy(ObjectUploadServiceProxy proxy);
+  @Override
+  public String getUploadPartUrl(String bucketName, String objectKey, String uploadId, Part part, Date expiration) {
+    log.info("Benchmark mode is on");
+    return endpoint + "/upload/" + objectKey + "?partNumber=" + String.valueOf(part.getPartNumber()) + "&uploadId="
+        + uploadId;
   }
-
-  public abstract class AbstractBuilder implements Builder {
-
-    protected ObjectUploadServiceProxy proxy;
-    protected ProgressBar progressBar;
-    protected List<Part> parts;
-    protected String objectId;
-    protected String uploadId;
-
-    @Override
-    public Builder withProgressBar(ProgressBar progressBar) {
-      this.progressBar = progressBar;
-      return this;
-    }
-
-    @Override
-    public Builder withParts(List<Part> parts) {
-      this.parts = parts;
-      return this;
-    }
-
-    @Override
-    public Builder withObjectId(String objectId) {
-      this.objectId = objectId;
-      return this;
-    }
-
-    @Override
-    public Builder withUploadId(String uploadId) {
-      this.uploadId = uploadId;
-      return this;
-    }
-
-    @Override
-    public Builder withProxy(ObjectUploadServiceProxy proxy) {
-      this.proxy = proxy;
-      return this;
-    }
-
-  }
-
 }

@@ -50,3 +50,18 @@ endpoints:
   dump.enabled: false
   env.enabled: false
   info.enabled: false
+
+---
+spring:
+  profiles: benchmark
+
+# Server
+server:
+  ssl:
+    key-store-type: JKS
+
+s3:
+  secured: false
+  #Sinai Center
+  #endpoint: http://www.cancercollaboratory.org:9081
+  endpoint: 

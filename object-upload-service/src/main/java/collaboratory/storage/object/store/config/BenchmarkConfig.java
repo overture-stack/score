@@ -15,75 +15,41 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package collaboratory.storage.object.transport;
+package collaboratory.storage.object.store.config;
 
-import java.io.File;
-import java.util.List;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 
-import collaboratory.storage.object.store.client.upload.ObjectUploadServiceProxy;
-import collaboratory.storage.object.store.client.upload.ProgressBar;
-import collaboratory.storage.object.store.core.model.Part;
+import collaboratory.storage.object.store.service.BenchmarkURLGenerator;
+import collaboratory.storage.object.store.service.ObjectPartCalculator;
+import collaboratory.storage.object.store.service.SimplePartCalculator;
+import collaboratory.storage.object.store.service.UploadStateStore;
+import collaboratory.storage.object.store.service.UploadURLGenerator;
 
-/**
- * 
- */
-public interface ObjectTransport {
+@Configuration
+@EnableAutoConfiguration
+@Profile("benchmark")
+public class BenchmarkConfig {
 
-  public void send(File file);
+  @Value("${upload.partsize}")
+  private int partSize;
 
-  public interface Builder {
-
-    public ObjectTransport build();
-
-    public Builder withProgressBar(ProgressBar progressBar);
-
-    public Builder withParts(List<Part> parts);
-
-    public Builder withObjectId(String objectId);
-
-    public Builder withUploadId(String uploadId);
-
-    public Builder withProxy(ObjectUploadServiceProxy proxy);
+  @Bean
+  public UploadStateStore stateStore() {
+    return new UploadStateStore();
   }
 
-  public abstract class AbstractBuilder implements Builder {
-
-    protected ObjectUploadServiceProxy proxy;
-    protected ProgressBar progressBar;
-    protected List<Part> parts;
-    protected String objectId;
-    protected String uploadId;
-
-    @Override
-    public Builder withProgressBar(ProgressBar progressBar) {
-      this.progressBar = progressBar;
-      return this;
-    }
-
-    @Override
-    public Builder withParts(List<Part> parts) {
-      this.parts = parts;
-      return this;
-    }
-
-    @Override
-    public Builder withObjectId(String objectId) {
-      this.objectId = objectId;
-      return this;
-    }
-
-    @Override
-    public Builder withUploadId(String uploadId) {
-      this.uploadId = uploadId;
-      return this;
-    }
-
-    @Override
-    public Builder withProxy(ObjectUploadServiceProxy proxy) {
-      this.proxy = proxy;
-      return this;
-    }
+  @Bean
+  public ObjectPartCalculator calculator() {
+    return new SimplePartCalculator(partSize);
 
   }
 
+  @Bean
+  public UploadURLGenerator url() {
+    return new BenchmarkURLGenerator();
+  }
 }

@@ -21,13 +21,17 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 
+import collaboratory.storage.object.store.service.AmazonURLGenerator;
 import collaboratory.storage.object.store.service.ObjectPartCalculator;
 import collaboratory.storage.object.store.service.SimplePartCalculator;
 import collaboratory.storage.object.store.service.UploadStateStore;
+import collaboratory.storage.object.store.service.UploadURLGenerator;
 
 @Configuration
 @EnableAutoConfiguration
+@Profile({ "prod", "default", "debug" })
 public class UploadConfig {
 
   @Value("${upload.partsize}")
@@ -42,5 +46,10 @@ public class UploadConfig {
   public ObjectPartCalculator calculator() {
     return new SimplePartCalculator(partSize);
 
+  }
+
+  @Bean
+  public UploadURLGenerator url() {
+    return new AmazonURLGenerator();
   }
 }

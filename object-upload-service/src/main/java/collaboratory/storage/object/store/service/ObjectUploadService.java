@@ -54,6 +54,9 @@ import com.amazonaws.services.s3.model.transform.Unmarshallers.ListPartsResultUn
 public class ObjectUploadService {
 
   @Autowired
+  private UploadURLGenerator urlGenerator;
+
+  @Autowired
   private AmazonS3 s3Client;
 
   @Value("${collaboratory.bucket.name}")
@@ -98,7 +101,7 @@ public class ObjectUploadService {
       LocalDateTime now = LocalDateTime.now();
       Date expirationDate = Date.from(now.plusDays(expiration).atZone(ZoneId.systemDefault()).toInstant());
       for (Part part : parts) {
-        insertPartUploadUrl(objectKey, result.getUploadId(), part, expirationDate);
+        part.setUrl(urlGenerator.getUploadPartUrl(bucketName, objectKey, result.getUploadId(), part, expirationDate));
       }
       UploadSpecification spec = new UploadSpecification(objectKey, objectId, result.getUploadId(), parts, fileSize);
       stateStore.create(spec);
@@ -162,15 +165,6 @@ public class ObjectUploadService {
     } else {
       throw new NotRetryableException(new IOException("Invalid etag"));
     }
-  }
-
-  private void insertPartUploadUrl(String objectKey, String uploadId, Part part, Date expiration) {
-    GeneratePresignedUrlRequest req =
-        new GeneratePresignedUrlRequest(bucketName, objectKey, HttpMethod.PUT);
-    req.setExpiration(expiration);
-    req.addRequestParameter("partNumber", String.valueOf(part.getPartNumber()));
-    req.addRequestParameter("uploadId", uploadId);
-    part.setUrl(s3Client.generatePresignedUrl(req).toString());
   }
 
   public void finalizeUpload(String objectId, String uploadId) {
