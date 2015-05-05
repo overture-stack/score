@@ -63,5 +63,4 @@ server:
 s3:
   secured: false
   #Sinai Center
-  #endpoint: http://www.cancercollaboratory.org:9081
-  endpoint: 
+  endpoint: http://www.cancercollaboratory.org:9081
