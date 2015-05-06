@@ -64,7 +64,6 @@ public class FileInputChannel extends AbstractInputChannel {
 
   @Override
   public void close() {
-    // TODO Auto-generated method stub
   }
 
 }

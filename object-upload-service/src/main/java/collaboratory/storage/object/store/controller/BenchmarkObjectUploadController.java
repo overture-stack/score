@@ -129,7 +129,6 @@ public class BenchmarkObjectUploadController extends ObjectUploadController {
   @RequestMapping(method = RequestMethod.GET, value = "/{object-id}")
   public @ResponseBody ObjectMetadata getObjectMetadata(@RequestHeader("access-token") final String accessToken,
       @PathVariable("object-id") String objectId) {
-    // TODO: if object id exist, throw not found exception
     return uploadService.getObjectMetadata(objectId);
   }
 

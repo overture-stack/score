@@ -154,7 +154,6 @@ public class ObjectUploadService {
   @SneakyThrows
   public void finalizeUploadPart(String objectId, String uploadId, int partNumber, String md5, String eTag) {
     if (md5 != null && eTag != null && !md5.isEmpty() && !eTag.isEmpty()) {
-      // TODO: re-enable after apply ceph fix: http://tracker.ceph.com/issues/10271
       if (isPartExist(ObjectStoreUtil.getObjectKey(dataDir, objectId), uploadId, partNumber, eTag)) {
         stateStore.finalizeUploadPart(objectId, uploadId, partNumber, md5,
             eTag);

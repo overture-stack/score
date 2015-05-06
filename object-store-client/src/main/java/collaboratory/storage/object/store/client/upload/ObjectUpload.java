@@ -64,8 +64,6 @@ public class ObjectUpload {
         }
         return;
       } catch (NotRetryableException e) {
-        // TODO: server side check data integrity, if data integrity is not recoverable (i.e. NotRetryable), startupload
-        // again else try resume
         log.warn("Upload is not completed successfully in the last execution. Checking data integrity. Please wait...");
         redo = !proxy.isUploadDataRecoverable(objectId, file.length());
       }

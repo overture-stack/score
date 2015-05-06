@@ -266,28 +266,6 @@ public class UploadStateStore {
     // TODO: we need a cronjob type of processs to take care of the cleanup
     s3Client.deleteObject(bucketName, getUploadStateKey(objectId, uploadId, META));
 
-    // ListObjectsRequest listObjectsRequest = new ListObjectsRequest()
-    // .withBucketName(bucketName)
-    // .withMaxKey(MAX_KEYS)
-    // .withPrefix(getUploadStateKey(objectId, uploadId, PART));
-    // ObjectListing objectListing;
-    // try {
-    // do {
-    // objectListing = s3Client.listObjects(listObjectsRequest);
-    // Builder<KeyVersion> keys = ImmutableList.builder();
-    // for (S3ObjectSummary objectSummary : objectListing.getObjectSummaries()) {
-    // keys.add(new KeyVersion(objectSummary.getKey()));
-    // }
-    // DeleteObjectsRequest deletes = new DeleteObjectsRequest(bucketName).withKeys(keys.build());
-    // if (!deletes.getKeys().isEmpty()) {
-    // s3Client.deleteObjects(deletes);
-    // }
-    // listObjectsRequest.setMarker(objectListing.getNextMarker());
-    // } while (objectListing.isTruncated());
-    // s3Client.deleteObject(bucketName, getUploadStateKey(objectId, uploadId));
-    // } catch (AmazonServiceException e) {
-    // throw new RetryableException(e);
-    // }
   }
 
   public String getUploadId(String objectId) {

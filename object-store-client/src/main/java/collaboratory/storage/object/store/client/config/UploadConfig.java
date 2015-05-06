@@ -72,7 +72,6 @@ public class UploadConfig {
 
   @Bean(name = "upload-data-template")
   public RestTemplate uploadDataTemplate() {
-    // TODO: SSL enabled on the storage side
     RestTemplate req = new RestTemplate(streamingClientHttpRequestFactory());
     req.setErrorHandler(new RetryableResponseErrorHandler());
     return req;

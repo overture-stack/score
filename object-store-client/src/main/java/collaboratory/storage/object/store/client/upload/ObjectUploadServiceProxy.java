@@ -85,7 +85,6 @@ public class ObjectUploadServiceProxy {
 
       @Override
       public Void doWithRetry(RetryContext ctx) throws IOException {
-        // TODO: Change the implementation
         log.debug("Upload Part URL: {}", part.getUrl());
 
         final RequestCallback callback = new RequestCallback() {

@@ -100,7 +100,6 @@ public class ClientKeyTool {
 
   @SneakyThrows
   private KeyPair createKeyPair() {
-    // TODO Auto-generated method stub
     KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
     keyGen.initialize(2048, sr);
     KeyPair keyPair = keyGen.generateKeyPair();
