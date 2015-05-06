@@ -17,17 +17,14 @@
  */
 package collaboratory.storage.object.store.exception;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 @ResponseStatus(HttpStatus.NOT_FOUND)
-@Data
-@AllArgsConstructor
 public class IdNotFoundException extends RuntimeException {
 
-  private final String id;
+  public IdNotFoundException(String message) {
+    super(message);
+  }
 
 }

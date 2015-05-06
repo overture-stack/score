@@ -345,11 +345,6 @@ public class UploadStateStore {
     return String.format("%s-%08x|%s", PART, (0xFFFFFFFF & partNumber), json);
   }
 
-  private String extractJson(String key, String objectId, String uploadId, int partNumber) {
-    return StringUtils.removeStart(key,
-        getUploadStateKey(objectId, uploadId, String.format("%s-%08X|", PART, (0xFFFFFFFF & partNumber))));
-  }
-
   private int extractPartNumber(String objectId, String uploadId, String partKey) {
     String hexNumber =
         StringUtils.substringBetween(StringUtils.removeStart(partKey, getUploadStateKey(objectId, uploadId)), PART

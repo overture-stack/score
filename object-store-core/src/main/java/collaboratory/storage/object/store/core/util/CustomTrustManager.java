@@ -29,9 +29,6 @@ import javax.net.ssl.X509TrustManager;
 
 public class CustomTrustManager implements X509TrustManager {
 
-  private X509TrustManager defaultTrustManager;
-  private X509TrustManager localTrustManager;
-
   public CustomTrustManager(String appKeyStoreLocation) throws NoSuchAlgorithmException, KeyStoreException {
     TrustManagerFactory trustManagerFactory =
         TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());

@@ -128,10 +128,9 @@ public class ObjectUploadService {
         signedReq.addRequestParameter("max-parts", String.valueOf(1));
         signedReq.addRequestParameter("part-number-marker", String.valueOf(partNumber - 1));
 
-        String xml;
-        xml = req.getForObject(s3Client.generatePresignedUrl(signedReq).toURI(), String.class);
         String correctXml =
-            xml.replaceAll("ListMultipartUploadResult", "ListPartsResult");
+            req.getForObject(s3Client.generatePresignedUrl(signedReq).toURI(), String.class).replaceAll(
+                "ListMultipartUploadResult", "ListPartsResult");
         log.debug("xml: {}", correctXml);
         // TODO: make this better by rewriting ListPartsResultUnmarshaller
         parts = new ListPartsResultUnmarshaller().unmarshall(new
@@ -245,15 +244,9 @@ public class ObjectUploadService {
   }
 
   public void recover(String objectId, long fileSize) {
-
-    String uploadId = getUploadId(objectId);
-    List<PartETag> etags = stateStore.getUploadStatePartEtags(objectId, uploadId);
-    String objectKey = ObjectStoreUtil.getObjectKey(dataDir, objectId);
-    // TODO:
-    // if (!isPartExist(objectKey, uploadId, part.getPartNumber(), part.getEtag())) {
-    // stateStore.deleletePart(objectId, uploadId, part.getPartNumber());
-    // }
-
+    if (fileSize != stateStore.loadUploadSpecification(objectId, getUploadId(objectId)).getObjectSize()) {
+      throw new NotRetryableException();
+    }
   }
 
   public void deletePart(String objectId, String uploadId, int partNumber) {

@@ -18,9 +18,7 @@
 package collaboratory.storage.object.store.client.upload;
 
 import lombok.AllArgsConstructor;
-import lombok.Data;
 
-@Data
 @AllArgsConstructor
 public class NotRetryableException extends RuntimeException {
 

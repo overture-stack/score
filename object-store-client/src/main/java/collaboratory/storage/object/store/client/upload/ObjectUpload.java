@@ -97,6 +97,10 @@ public class ObjectUpload {
     log.info("Resume from the previous upload...");
 
     List<Part> parts = progress.getParts();
+    int completedTotal = numCompletedParts(parts);
+    int total = parts.size();
+
+    // remove completed parts if don't require checksumming
     if (!checksum) {
       parts.removeIf(new Predicate<Part>() {
 
@@ -107,13 +111,17 @@ public class ObjectUpload {
       });
     }
 
-    int total = progress.getParts().size();
+    uploadParts(parts, file, progress.getObjectId(), progress.getUploadId(), new ProgressBar(total, total
+        - completedTotal));
+
+  }
+
+  private int numCompletedParts(List<Part> parts) {
     int completedTotal = 0;
     for (Part part : parts) {
       if (part.getMd5() != null) completedTotal++;
     }
-    uploadParts(parts, file, progress.getObjectId(), progress.getUploadId(), new ProgressBar(total, total
-        - completedTotal));
+    return completedTotal;
 
   }
 

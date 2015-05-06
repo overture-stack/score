@@ -22,7 +22,6 @@ import java.security.KeyStore;
 
 import lombok.Data;
 import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
 
 import org.apache.http.client.HttpClient;
 import org.apache.http.conn.ssl.SSLContexts;
@@ -48,10 +47,7 @@ import com.google.common.collect.ImmutableMap.Builder;
 
 @Data
 @Configuration
-@Slf4j
 public class UploadConfig {
-
-  private static final long MIN_TERNVAL = 1000;
 
   private static final int MAX_TIMEOUT = 5 * 60 * 1000;
 
