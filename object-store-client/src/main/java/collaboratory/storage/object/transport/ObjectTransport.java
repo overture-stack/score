@@ -25,7 +25,7 @@ import collaboratory.storage.object.store.client.upload.ProgressBar;
 import collaboratory.storage.object.store.core.model.Part;
 
 /**
- * 
+ * A transport for data upload
  */
 public interface ObjectTransport {
 

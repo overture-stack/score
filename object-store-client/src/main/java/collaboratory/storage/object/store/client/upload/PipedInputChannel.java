@@ -28,6 +28,9 @@ import com.google.api.client.util.IOUtils;
 import com.google.common.hash.Hashing;
 import com.google.common.hash.HashingOutputStream;
 
+/**
+ * Channels that use pipe
+ */
 @Slf4j
 @AllArgsConstructor
 public class PipedInputChannel extends AbstractInputChannel {

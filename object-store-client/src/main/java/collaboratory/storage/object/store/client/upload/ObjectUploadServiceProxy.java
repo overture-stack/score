@@ -43,6 +43,9 @@ import collaboratory.storage.object.store.core.model.Part;
 import collaboratory.storage.object.store.core.model.UploadProgress;
 import collaboratory.storage.object.store.core.model.UploadSpecification;
 
+/**
+ * responsible for interacting with object upload service
+ */
 @Service
 @Slf4j
 public class ObjectUploadServiceProxy {

@@ -44,9 +44,12 @@ public class ClientMain implements CommandLineRunner {
     new SpringApplicationBuilder(ClientMain.class).showBanner(false).run(args);
   }
 
+  /**
+   * handle user parameters
+   */
   @Override
   public void run(String... params) throws Exception {
-    // HACK: delete all args with - from the left
+    // delete all args with - from the left
     String[] args = filterSpringConfigurations(params);
 
     JCommander cli = new JCommander();

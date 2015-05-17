@@ -19,6 +19,9 @@ package collaboratory.storage.object.store.client.upload;
 
 import lombok.AllArgsConstructor;
 
+/**
+ * exceptions for not retryable operations such as checksum failure
+ */
 @AllArgsConstructor
 public class NotRetryableException extends RuntimeException {
 

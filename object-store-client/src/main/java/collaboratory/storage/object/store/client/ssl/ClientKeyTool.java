@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 The Ontario Institute for Cancer Research. All rights reserved.                             
+ * Copyright (c) 2015 The Ontario Institute for Cancer Research. All rights reserved.                             
  *                                                                                                               
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
  * You should have received a copy of the GNU General Public License along with                                  
@@ -15,7 +15,7 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package collaboratory.storage.object.store.client.launch;
+package collaboratory.storage.object.store.client.ssl;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -47,13 +47,16 @@ import org.joda.time.LocalDate;
 
 import collaboratory.storage.object.store.client.config.ClientProperties.SSLProperties;
 
+/**
+ * a tool to generate client side certificate
+ */
 public class ClientKeyTool {
 
   private static final String SHA256_WITH_RSA_ENCRYPTION = "SHA256WithRSAEncryption";
   private final static X500Name x500Name = new X500NameBuilder(BCStyle.INSTANCE)
       .addRDN(BCStyle.OU, "Software Development")
       .addRDN(BCStyle.O, "OICR")
-      .addRDN(BCStyle.CN, "repository.icgc.org")
+      .addRDN(BCStyle.CN, "www.collaboratory.org")
       .addRDN(BCStyle.C, "CA")
       .addRDN(BCStyle.L, "Ontario").build();
   private static final String BC = org.bouncycastle.jce.provider.BouncyCastleProvider.PROVIDER_NAME;

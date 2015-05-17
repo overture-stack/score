@@ -26,12 +26,15 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import collaboratory.storage.object.store.client.upload.ObjectUploadServiceProxy;
-import collaboratory.storage.object.transport.LocalParallelPartObjectTransport;
 import collaboratory.storage.object.transport.MemoryMappedParallelPartObjectTransport;
 import collaboratory.storage.object.transport.ObjectTransport;
-import collaboratory.storage.object.transport.RemoteParallelPartObjectTransport;
+import collaboratory.storage.object.transport.ParallelPartObjectTransport;
+import collaboratory.storage.object.transport.PipedParallelPartObjectTransport;
 import collaboratory.storage.object.transport.SequentialPartObjectTransport;
 
+/**
+ * Configurations for data transport
+ */
 @Data
 @Configuration
 @ConfigurationProperties(prefix = "transport")
@@ -59,7 +62,7 @@ public class TransportConfig {
     case "remote":
       log.debug("Transport: {}", "Remote");
       builder =
-          RemoteParallelPartObjectTransport.builder()
+          ParallelPartObjectTransport.builder()
               .withMemory(memory * 1024 * 1024 * 1024)
               .withNumberOfWorkerThreads(parallel)
               .withProxy(proxy);
@@ -71,7 +74,7 @@ public class TransportConfig {
               .withProxy(proxy);
       break;
     default:
-      builder = LocalParallelPartObjectTransport.builder()
+      builder = PipedParallelPartObjectTransport.builder()
           .withMemory(memory * 1024 * 1024 * 1024)
           .withNumberOfWorkerThreads(parallel)
           .withProxy(proxy);

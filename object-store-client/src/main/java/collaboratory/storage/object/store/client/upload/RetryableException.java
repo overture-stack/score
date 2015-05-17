@@ -19,6 +19,9 @@ package collaboratory.storage.object.store.client.upload;
 
 import lombok.AllArgsConstructor;
 
+/**
+ * exceptions that allow retry
+ */
 @AllArgsConstructor
 public class RetryableException extends RuntimeException {
 

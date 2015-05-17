@@ -35,6 +35,9 @@ import org.springframework.context.annotation.Lazy;
 
 import collaboratory.storage.object.store.client.config.ClientProperties.SSLProperties;
 
+/**
+ * Configurations for SSL
+ */
 @Lazy
 @Configuration
 public class SSLClientConfig {

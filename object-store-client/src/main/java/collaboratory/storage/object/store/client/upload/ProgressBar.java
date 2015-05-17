@@ -10,6 +10,9 @@ import lombok.extern.slf4j.Slf4j;
 
 import com.google.common.base.Stopwatch;
 
+/**
+ * progress bar for keeping track of the upload progress
+ */
 @Slf4j
 public class ProgressBar {
 

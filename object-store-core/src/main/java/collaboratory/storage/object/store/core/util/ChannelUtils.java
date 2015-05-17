@@ -34,7 +34,6 @@ public final class ChannelUtils {
     UploadObject(upload, url, 0, upload.length());
   }
 
-  // TODO: http://codereview.stackexchange.com/questions/45819/httpurlconnection-response-code-handling
   public static String UploadObject(File upload, URL url, long offset, long length) throws IOException
   {
     HttpURLConnection connection = (HttpURLConnection) url.openConnection();
@@ -46,11 +45,6 @@ public final class ChannelUtils {
     fis.getChannel().transferTo(offset, length, toChannel);
     fis.close();
     toChannel.close();
-    // Map<String, List<String>> map = connection.getHeaderFields();
-    // for (Map.Entry<String, List<String>> entry : map.entrySet()) {
-    // System.out.println("Key : " + entry.getKey()
-    // + " ,Value : " + entry.getValue());
-    // }
 
     if (connection.getResponseCode() == 200) {
       if (connection.getHeaderField("ETag").isEmpty()) {

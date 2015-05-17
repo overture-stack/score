@@ -29,6 +29,9 @@ import lombok.AllArgsConstructor;
 import com.google.common.hash.Hashing;
 import com.google.common.hash.HashingOutputStream;
 
+/**
+ * Channels based on File
+ */
 @AllArgsConstructor
 public class FileInputChannel extends AbstractInputChannel {
 

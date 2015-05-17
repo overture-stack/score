@@ -40,12 +40,15 @@ import collaboratory.storage.object.store.core.model.Part;
 import com.google.api.client.util.Preconditions;
 import com.google.common.collect.ImmutableList;
 
+/**
+ * The default transport for parallel upload
+ */
 @Slf4j
 @AllArgsConstructor
-public class RemoteParallelPartObjectTransport implements ObjectTransport {
+public class ParallelPartObjectTransport implements ObjectTransport {
 
   private static final int MIN_WORKER = 10;
-  private static final long MIN_MEMORY = 1024 * 1024;
+  private static final long MIN_MEMORY = 1024L * 1024L;
 
   final protected ObjectUploadServiceProxy proxy;
   final protected int nThreads;
@@ -56,7 +59,7 @@ public class RemoteParallelPartObjectTransport implements ObjectTransport {
   final protected AtomicLong memory;
   final protected int maxUploadDuration;
 
-  protected RemoteParallelPartObjectTransport(RemoteParallelBuilder builder) {
+  protected ParallelPartObjectTransport(RemoteParallelBuilder builder) {
 
     this.proxy = builder.proxy;
     this.progress = builder.progressBar;
@@ -82,7 +85,7 @@ public class RemoteParallelPartObjectTransport implements ObjectTransport {
         public Part call() throws Exception {
           FileInputChannel channel = new FileInputChannel(file, part.getOffset(), part.getPartSize(), null);
           if (part.getMd5() != null) {
-            if (resent(channel, part)) {
+            if (isCorrupted(channel, part)) {
               proxy.uploadPart(channel, part, objectId,
                   uploadId);
             }
@@ -111,7 +114,7 @@ public class RemoteParallelPartObjectTransport implements ObjectTransport {
     progress.end(false);
   }
 
-  protected boolean resent(InputChannel channel, Part part) throws IOException {
+  protected boolean isCorrupted(InputChannel channel, Part part) throws IOException {
     if (channel.isValidMd5(part.getMd5())) {
       return false;
     }
@@ -167,7 +170,7 @@ public class RemoteParallelPartObjectTransport implements ObjectTransport {
     @Override
     public ObjectTransport build() {
       checkArgumentsNotNull();
-      return new RemoteParallelPartObjectTransport(this);
+      return new ParallelPartObjectTransport(this);
     }
 
     protected void checkArgumentsNotNull() {

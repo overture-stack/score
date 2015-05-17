@@ -1,12 +1,3 @@
-package collaboratory.storage.object.store.client.upload;
-
-import java.io.IOException;
-
-import lombok.extern.slf4j.Slf4j;
-import collaboratory.storage.object.store.core.model.InputChannel;
-
-import com.google.common.io.ByteStreams;
-
 /*
  * Copyright (c) 2015 The Ontario Institute for Cancer Research. All rights reserved.                             
  *                                                                                                               
@@ -25,6 +16,18 @@ import com.google.common.io.ByteStreams;
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+package collaboratory.storage.object.store.client.upload;
+
+import java.io.IOException;
+
+import lombok.extern.slf4j.Slf4j;
+import collaboratory.storage.object.store.core.model.InputChannel;
+
+import com.google.common.io.ByteStreams;
+
+/**
+ * Abstract channel for data upload
+ */
 @Slf4j
 public abstract class AbstractInputChannel implements InputChannel {
 

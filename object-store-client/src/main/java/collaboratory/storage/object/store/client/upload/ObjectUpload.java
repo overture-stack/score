@@ -36,6 +36,9 @@ import collaboratory.storage.object.store.core.model.UploadProgress;
 import collaboratory.storage.object.store.core.model.UploadSpecification;
 import collaboratory.storage.object.transport.ObjectTransport;
 
+/**
+ * main class to handle uploading objects
+ */
 @Slf4j
 @Component
 public class ObjectUpload {

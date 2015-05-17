@@ -45,6 +45,9 @@ import collaboratory.storage.object.store.client.upload.RetryableResponseErrorHa
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
 
+/**
+ * Configurations for connections for uploads
+ */
 @Data
 @Configuration
 public class UploadConfig {
@@ -60,9 +63,6 @@ public class UploadConfig {
   @Autowired
   private X509HostnameVerifier hostnameVerifier;
 
-  // TODO:
-  // - http://codereview.stackexchange.com/questions/62108/efficiently-use-resttemplate-for-http-request-timeout
-  // - http://stackoverflow.com/questions/13837012/spring-resttemplate-timeout
   @Bean(name = "upload-rest-template")
   public RestTemplate uploadTemplate() {
     RestTemplate req = new RestTemplate(clientHttpRequestFactory());

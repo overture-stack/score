@@ -31,4 +31,8 @@ final public class Part {
   long offset;
   String url;
   String md5;
+
+  public boolean isCompleted() {
+    return md5 != null;
+  }
 }

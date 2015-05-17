@@ -29,6 +29,9 @@ import collaboratory.storage.object.store.core.model.Part;
 
 import com.google.common.base.Preconditions;
 
+/**
+ * A data transport for sequential upload
+ */
 @Slf4j
 public class SequentialPartObjectTransport implements ObjectTransport {
 

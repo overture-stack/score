@@ -20,11 +20,6 @@ package collaboratory.storage.object.transport;
 import java.io.File;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
-import java.io.RandomAccessFile;
-import java.nio.MappedByteBuffer;
-import java.nio.channels.Channels;
-import java.nio.channels.FileChannel;
-import java.nio.channels.WritableByteChannel;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -36,16 +31,17 @@ import lombok.extern.slf4j.Slf4j;
 import collaboratory.storage.object.store.client.upload.PipedInputChannel;
 import collaboratory.storage.object.store.core.model.Part;
 
-import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteSource;
-import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
 
+/**
+ * A data transport using piped input channels for parallel upload
+ */
 @Slf4j
-public class LocalParallelPartObjectTransport extends RemoteParallelPartObjectTransport {
+public class PipedParallelPartObjectTransport extends ParallelPartObjectTransport {
 
-  private LocalParallelPartObjectTransport(RemoteParallelBuilder builder) {
+  private PipedParallelPartObjectTransport(RemoteParallelBuilder builder) {
     super(builder);
   }
 
@@ -56,7 +52,6 @@ public class LocalParallelPartObjectTransport extends RemoteParallelPartObjectTr
     log.debug("Number of Concurrency: {}", nThreads);
     ExecutorService executor = Executors.newFixedThreadPool(nThreads);
     ImmutableList.Builder<Future<Part>> results = ImmutableList.builder();
-    getMaximumReadSpeed(file);
     progress.start();
     for (final Part part : parts) {
       final PipedOutputStream pos = new PipedOutputStream();
@@ -107,23 +102,9 @@ public class LocalParallelPartObjectTransport extends RemoteParallelPartObjectTr
     @Override
     public ObjectTransport build() {
       checkArgumentsNotNull();
-      return new LocalParallelPartObjectTransport(this);
+      return new PipedParallelPartObjectTransport(this);
     }
 
   }
 
-  private static final int MIN_READ = 100 * 1024 * 1024;
-
-  @SneakyThrows
-  protected void getMaximumReadSpeed(File file) {
-    Stopwatch watch = Stopwatch.createStarted();
-    RandomAccessFile memoryMappedFile = new RandomAccessFile(file, "r");
-    long bytesReadInBytes = file.length() > MIN_READ ? MIN_READ : file.length();
-    MappedByteBuffer in =
-        memoryMappedFile.getChannel().map(FileChannel.MapMode.READ_ONLY, 0, bytesReadInBytes);
-    WritableByteChannel writeChannel = Channels.newChannel(ByteStreams.nullOutputStream());
-    writeChannel.write(in);
-    watch.stop();
-    System.err.println("Maximum Read Speed (B/s): " + bytesReadInBytes / watch.elapsed(TimeUnit.MILLISECONDS) * 1000);
-  }
 }

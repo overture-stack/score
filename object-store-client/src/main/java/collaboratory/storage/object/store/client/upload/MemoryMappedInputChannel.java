@@ -31,6 +31,9 @@ import lombok.extern.slf4j.Slf4j;
 import com.google.common.hash.Hashing;
 import com.google.common.hash.HashingOutputStream;
 
+/**
+ * Channel based on memory mapped buffer
+ */
 @Slf4j
 @AllArgsConstructor
 public class MemoryMappedInputChannel extends AbstractInputChannel {

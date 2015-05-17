@@ -6,6 +6,9 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.Resource;
 
+/**
+ * Configurations for user profile and preferences
+ */
 @Data
 @Configuration
 @ConfigurationProperties(prefix = "client")

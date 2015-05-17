@@ -19,11 +19,8 @@ package collaboratory.storage.object.transport;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.RandomAccessFile;
 import java.nio.MappedByteBuffer;
-import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
-import java.nio.channels.WritableByteChannel;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -35,12 +32,13 @@ import lombok.extern.slf4j.Slf4j;
 import collaboratory.storage.object.store.client.upload.MemoryMappedInputChannel;
 import collaboratory.storage.object.store.core.model.Part;
 
-import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableList;
-import com.google.common.io.ByteStreams;
 
+/**
+ * A data transport using memory mapped channels for parallel upload
+ */
 @Slf4j
-public class MemoryMappedParallelPartObjectTransport extends RemoteParallelPartObjectTransport {
+public class MemoryMappedParallelPartObjectTransport extends ParallelPartObjectTransport {
 
   private MemoryMappedParallelPartObjectTransport(RemoteParallelBuilder builder) {
     super(builder);
@@ -52,7 +50,6 @@ public class MemoryMappedParallelPartObjectTransport extends RemoteParallelPartO
     log.debug("send file: {}", file.getPath());
     ExecutorService executor = Executors.newFixedThreadPool(nThreads);
     ImmutableList.Builder<Future<Part>> results = ImmutableList.builder();
-    // getMaximumReadSpeed(file);
     progress.start();
     for (final Part part : parts) {
       try (FileInputStream fis = new FileInputStream(file)) {
@@ -64,8 +61,8 @@ public class MemoryMappedParallelPartObjectTransport extends RemoteParallelPartO
           @Override
           public Part call() throws Exception {
             MemoryMappedInputChannel channel = new MemoryMappedInputChannel(buffer, 0, part.getPartSize(), null);
-            if (part.getMd5() != null) {
-              if (resent(channel, part)) {
+            if (part.isCompleted()) {
+              if (isCorrupted(channel, part)) {
                 proxy.uploadPart(channel, part, objectId,
                     uploadId);
               }
@@ -86,6 +83,8 @@ public class MemoryMappedParallelPartObjectTransport extends RemoteParallelPartO
       log.debug("Remaining Memory : {}", remaining);
       while (memory.get() < 0) {
         TimeUnit.MILLISECONDS.sleep(100);
+        // suggest to release buffers that are not longer needed
+        System.gc();
       }
     }
     executor.shutdown();
@@ -113,20 +112,5 @@ public class MemoryMappedParallelPartObjectTransport extends RemoteParallelPartO
       return new MemoryMappedParallelPartObjectTransport(this);
     }
 
-  }
-
-  private static final long MIN_READ = 100 * 1024 * 1024;
-
-  @SneakyThrows
-  protected void getMaximumReadSpeed(File file) {
-    Stopwatch watch = Stopwatch.createStarted();
-    RandomAccessFile memoryMappedFile = new RandomAccessFile(file, "r");
-    long bytesReadInBytes = file.length() > MIN_READ ? MIN_READ : file.length();
-    MappedByteBuffer in =
-        memoryMappedFile.getChannel().map(FileChannel.MapMode.READ_ONLY, 0, bytesReadInBytes);
-    WritableByteChannel writeChannel = Channels.newChannel(ByteStreams.nullOutputStream());
-    writeChannel.write(in);
-    watch.stop();
-    System.err.println("Maximum Read Speed (B/s): " + bytesReadInBytes / watch.elapsed(TimeUnit.MILLISECONDS) * 1000);
   }
 }

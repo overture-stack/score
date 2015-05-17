@@ -24,6 +24,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.web.client.DefaultResponseErrorHandler;
 
+/**
+ * responsible to translate server side errors to client side errors
+ */
 @Slf4j
 public class RetryableResponseErrorHandler extends DefaultResponseErrorHandler {
 
