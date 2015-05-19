@@ -22,7 +22,7 @@ import java.util.Date;
 import collaboratory.storage.object.store.core.model.Part;
 
 /**
- * 
+ * an interface to represent a upload url generator
  */
 public interface UploadURLGenerator {
 

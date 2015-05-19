@@ -27,6 +27,9 @@ import com.amazonaws.HttpMethod;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest;
 
+/**
+ * To generate presigned url for s3-like object storage
+ */
 public class AmazonURLGenerator implements UploadURLGenerator {
 
   @Autowired

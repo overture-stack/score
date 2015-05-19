@@ -18,7 +18,7 @@ import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.S3ClientOptions;
 
 /**
- * S3 configuration.
+ * S3/Ceph Object Gateway configuration.
  */
 @Configuration
 @Data

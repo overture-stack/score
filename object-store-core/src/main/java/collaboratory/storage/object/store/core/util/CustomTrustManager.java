@@ -27,6 +27,9 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
 
+/**
+ * define a trust manager that only accept
+ */
 public class CustomTrustManager implements X509TrustManager {
 
   public CustomTrustManager(String appKeyStoreLocation) throws NoSuchAlgorithmException, KeyStoreException {

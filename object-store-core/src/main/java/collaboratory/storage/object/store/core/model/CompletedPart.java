@@ -21,6 +21,9 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * An entity to represent a completed part
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

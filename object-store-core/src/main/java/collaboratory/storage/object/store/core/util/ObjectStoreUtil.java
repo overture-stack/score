@@ -17,6 +17,9 @@
  */
 package collaboratory.storage.object.store.core.util;
 
+/**
+ * Helpers functions for the object store
+ */
 public class ObjectStoreUtil {
 
   public static String getObjectKey(String dataDir, String objectId) {

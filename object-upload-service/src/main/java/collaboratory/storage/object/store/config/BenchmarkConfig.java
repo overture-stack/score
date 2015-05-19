@@ -29,6 +29,9 @@ import collaboratory.storage.object.store.service.SimplePartCalculator;
 import collaboratory.storage.object.store.service.UploadStateStore;
 import collaboratory.storage.object.store.service.UploadURLGenerator;
 
+/**
+ * Configurations used for benchmarking the object store service
+ */
 @Configuration
 @EnableAutoConfiguration
 @Profile("benchmark")

@@ -29,6 +29,9 @@ import collaboratory.storage.object.store.service.SimplePartCalculator;
 import collaboratory.storage.object.store.service.UploadStateStore;
 import collaboratory.storage.object.store.service.UploadURLGenerator;
 
+/**
+ * Upload Service Configuration
+ */
 @Configuration
 @EnableAutoConfiguration
 @Profile({ "prod", "default", "debug" })

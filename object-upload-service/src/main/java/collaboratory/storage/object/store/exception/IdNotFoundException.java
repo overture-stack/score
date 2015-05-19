@@ -20,6 +20,9 @@ package collaboratory.storage.object.store.exception;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
+/**
+ * an exception to represent a "ID Not Found"
+ */
 @ResponseStatus(HttpStatus.NOT_FOUND)
 public class IdNotFoundException extends RuntimeException {
 

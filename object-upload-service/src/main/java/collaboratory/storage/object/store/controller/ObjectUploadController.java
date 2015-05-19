@@ -54,6 +54,9 @@ import com.google.common.hash.HashingOutputStream;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.CountingInputStream;
 
+/**
+ * A controller to expose RESTful API for upload
+ */
 @Setter
 @RestController
 @RequestMapping("/upload")

@@ -54,6 +54,9 @@ import com.google.common.hash.HashingOutputStream;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.CountingInputStream;
 
+/**
+ * An emulator for S3 upload for benchmarking purpose only
+ */
 @Setter
 @RestController
 @RequestMapping("/upload")

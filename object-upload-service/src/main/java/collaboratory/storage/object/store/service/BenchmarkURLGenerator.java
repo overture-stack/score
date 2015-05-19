@@ -25,6 +25,9 @@ import org.springframework.beans.factory.annotation.Value;
 
 import collaboratory.storage.object.store.core.model.Part;
 
+/**
+ * To generate url for benchmarking
+ */
 @Slf4j
 public class BenchmarkURLGenerator implements UploadURLGenerator {
 

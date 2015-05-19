@@ -25,6 +25,9 @@ import collaboratory.storage.object.store.core.model.Part;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
 
+/**
+ * a simple way to divide an object into multi parts
+ */
 @Slf4j
 public class SimplePartCalculator implements ObjectPartCalculator {
 

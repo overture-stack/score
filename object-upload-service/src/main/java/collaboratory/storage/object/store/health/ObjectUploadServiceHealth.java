@@ -37,6 +37,9 @@ import com.google.common.collect.Collections2;
 import com.google.common.collect.Lists;
 import com.sun.istack.Nullable;
 
+/**
+ * check health for object upload service
+ */
 @Component
 public class ObjectUploadServiceHealth implements HealthIndicator {
 
@@ -67,8 +70,6 @@ public class ObjectUploadServiceHealth implements HealthIndicator {
     if (tokens.size() != 1) {
       builder.outOfService();
     } else {
-      // check if the user provided token when launching the AMI is valid to be used
-      boolean foundRepository = true;
 
       // check if the aws account can access the bucket
       boolean foundBucket = true;
@@ -77,14 +78,14 @@ public class ObjectUploadServiceHealth implements HealthIndicator {
       } catch (Exception e) {
         foundBucket = false;
       }
-      if (foundRepository && foundBucket) {
+
+      if (foundBucket) {
         builder.up();
       } else {
         builder.outOfService();
       }
 
       builder
-          .withDetail("foundRepository", foundRepository)
           .withDetail("foundBucket", foundBucket);
     }
     return builder.build();

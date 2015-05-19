@@ -56,6 +56,9 @@ import com.amazonaws.services.s3.model.S3ObjectInputStream;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.google.common.collect.Lists;
 
+/**
+ * It captures the state of a particular upload
+ */
 @Slf4j
 public class UploadStateStore {
 

@@ -12,6 +12,10 @@ import java.nio.channels.WritableByteChannel;
 
 import collaboratory.storage.object.store.core.model.InputChannel;
 
+/**
+ * @deprecated
+ */
+@Deprecated
 public final class ChannelUtils {
 
   public static void channelCopy(final ReadableByteChannel src,

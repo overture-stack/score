@@ -21,6 +21,9 @@ import java.util.List;
 
 import collaboratory.storage.object.store.core.model.Part;
 
+/**
+ * an interface to represent a way to calculate the part size gvien the file size
+ */
 public interface ObjectPartCalculator {
 
   public List<Part> divide(long fileSize);

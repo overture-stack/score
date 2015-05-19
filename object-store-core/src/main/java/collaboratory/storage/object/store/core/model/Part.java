@@ -21,6 +21,9 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * An entity to represent a part that the client will be uploaded
+ */
 @AllArgsConstructor
 @NoArgsConstructor
 @Data

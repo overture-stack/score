@@ -48,6 +48,9 @@ import com.amazonaws.services.s3.model.PartETag;
 import com.amazonaws.services.s3.model.PartSummary;
 import com.amazonaws.services.s3.model.transform.Unmarshallers.ListPartsResultUnmarshaller;
 
+/**
+ * A service for object upload
+ */
 @Service
 @Setter
 @Slf4j
