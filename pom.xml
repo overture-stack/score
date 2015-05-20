@@ -579,12 +579,6 @@
 				<scope>test</scope>
 			</dependency>
 
-			<!-- JSR 305 annotations -->
-			<dependency>
-				<groupId>com.google.code.findbugs</groupId>
-				<artifactId>jsr305</artifactId>
-			</dependency>
-
 			<!-- Logging -->
 			<dependency>
 				<groupId>ch.qos.logback</groupId>
@@ -704,6 +698,7 @@
 	</dependencyManagement>
 
 	<build>
+		<defaultGoal>install</defaultGoal>
 		<plugins>
 			<plugin>
 				<artifactId>maven-compiler-plugin</artifactId>
