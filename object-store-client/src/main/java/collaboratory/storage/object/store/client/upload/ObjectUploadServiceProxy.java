@@ -41,7 +41,7 @@ import collaboratory.storage.object.store.client.config.ClientProperties;
 import collaboratory.storage.object.store.core.model.InputChannel;
 import collaboratory.storage.object.store.core.model.Part;
 import collaboratory.storage.object.store.core.model.UploadProgress;
-import collaboratory.storage.object.store.core.model.UploadSpecification;
+import collaboratory.storage.object.store.core.model.ObjectSpecification;
 
 /**
  * responsible for interacting with object upload service
@@ -128,16 +128,16 @@ public class ObjectUploadServiceProxy {
     });
   }
 
-  public UploadSpecification initiateUpload(String objectId, long length) throws IOException {
+  public ObjectSpecification initiateUpload(String objectId, long length) throws IOException {
     log.debug("Initiate upload, object-id: {}", objectId);
-    return retry.execute(new RetryCallback<UploadSpecification, IOException>() {
+    return retry.execute(new RetryCallback<ObjectSpecification, IOException>() {
 
       @Override
-      public UploadSpecification doWithRetry(RetryContext ctx) throws IOException {
+      public ObjectSpecification doWithRetry(RetryContext ctx) throws IOException {
         HttpEntity<Object> requestEntity = new HttpEntity<Object>(defaultHeaders());
         return req.exchange(endpoint + "/upload/{object-id}/uploads?fileSize={file-size}", HttpMethod.POST,
             requestEntity,
-            UploadSpecification.class, objectId, length).getBody();
+            ObjectSpecification.class, objectId, length).getBody();
       }
     });
   }

@@ -1,0 +1,66 @@
+spring:
+  profiles.active: default
+---
+spring:
+  profiles: default
+
+# Server
+server:
+  port: 5431
+  ssl:
+    key-store: src/main/cert/appliance.jks
+    key-store-type: JKS
+    key-store-password: password
+    key-alias: appliance
+  
+s3:
+  secured: true
+  #OICR
+  #endpoint: http://10.5.73.101
+  
+  #Sinai Center
+  #endpoint: https://www.cancercollaboratory.org:9080
+
+collaboratory:
+  bucket.name: oicr.collaboratory
+  upload.directory: upload
+  data.directory: data
+  upload.expiration: 14
+
+
+upload:
+  retry.limit: 1000
+  partsize: 20000000
+
+---
+spring:
+  profiles: prod
+  
+# Server
+server:
+  ssl:
+    key-store-type: JKS
+
+s3:
+  secured: true
+  #Sinai Center
+  endpoint: https://www.cancercollaboratory.org:9080
+
+endpoints:
+  dump.enabled: false
+  env.enabled: false
+  info.enabled: false
+
+---
+spring:
+  profiles: benchmark
+
+# Server
+server:
+  ssl:
+    key-store-type: JKS
+
+s3:
+  secured: false
+  #Sinai Center
+  endpoint: http://www.cancercollaboratory.org:9081

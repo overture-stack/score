@@ -15,22 +15,44 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package collaboratory.storage.object.store.core.model;
+package collaboratory.storage.object.store.config;
 
-import java.util.List;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import collaboratory.storage.object.store.service.upload.BenchmarkURLGenerator;
+import collaboratory.storage.object.store.service.upload.ObjectPartCalculator;
+import collaboratory.storage.object.store.service.upload.SimplePartCalculator;
+import collaboratory.storage.object.store.service.upload.UploadStateStore;
+import collaboratory.storage.object.store.service.upload.UploadURLGenerator;
 
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
-public class UploadSpecification {
+/**
+ * Configurations used for benchmarking the object store service
+ */
+@Configuration
+@EnableAutoConfiguration
+@Profile("benchmark")
+public class BenchmarkConfig {
 
-  private String objectKey;
-  private String objectId;
-  private String uploadId;
-  private List<Part> parts;
-  private long objectSize;
+  @Value("${upload.partsize}")
+  private int partSize;
+
+  @Bean
+  public UploadStateStore stateStore() {
+    return new UploadStateStore();
+  }
+
+  @Bean
+  public ObjectPartCalculator calculator() {
+    return new SimplePartCalculator(partSize);
+
+  }
+
+  @Bean
+  public UploadURLGenerator url() {
+    return new BenchmarkURLGenerator();
+  }
 }
