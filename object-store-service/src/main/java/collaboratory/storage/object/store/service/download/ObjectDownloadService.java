@@ -23,6 +23,7 @@ import java.time.ZoneId;
 import java.util.Date;
 import java.util.List;
 
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import org.codehaus.jackson.JsonParseException;
@@ -30,6 +31,7 @@ import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
 
 import collaboratory.storage.object.store.core.model.ObjectSpecification;
 import collaboratory.storage.object.store.core.model.Part;
@@ -50,6 +52,8 @@ import com.amazonaws.services.s3.model.S3ObjectInputStream;
  * service responsible for object download (full or partial)
  */
 @Slf4j
+@Service
+@Setter
 public class ObjectDownloadService {
 
   @Autowired

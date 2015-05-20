@@ -20,17 +20,23 @@ s3:
   
   #Sinai Center
   #endpoint: https://www.cancercollaboratory.org:9080
+  
+ 
 
 collaboratory:
   bucket.name: oicr.collaboratory
   upload.directory: upload
   data.directory: data
   upload.expiration: 14
+  download.expiration: 14
 
 
 upload:
   retry.limit: 1000
   partsize: 20000000
+  
+download:
+
 
 ---
 spring:

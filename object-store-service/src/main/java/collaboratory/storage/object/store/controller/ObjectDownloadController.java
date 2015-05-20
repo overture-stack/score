@@ -53,7 +53,7 @@ public class ObjectDownloadController {
     return downloadService.download(objectId);
   }
 
-  @RequestMapping(method = RequestMethod.GET, value = "/{object-id}")
+  @RequestMapping(method = RequestMethod.GET, value = "/{object-id}/parts")
   public @ResponseBody ObjectSpecification downloadPartialObject(
       @RequestHeader(value = "access-token", required = true) final String accessToken,
       @PathVariable(value = "object-id") String objectId,

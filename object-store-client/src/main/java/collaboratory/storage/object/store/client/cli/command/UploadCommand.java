@@ -31,7 +31,7 @@ import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 
 /**
- * Hande upload command line arguments
+ * Handle upload command line arguments
  */
 @Component
 @Parameters(separators = "=", commandDescription = "file upload")

@@ -20,7 +20,7 @@
 	<modules>
 		<module>object-store-core</module>
 		<module>object-store-client</module>
-		<module>object-upload-service</module>
+		<module>object-store-service</module>
 	</modules>
 
 	<scm>
