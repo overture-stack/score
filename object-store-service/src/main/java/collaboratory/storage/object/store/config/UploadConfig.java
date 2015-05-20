@@ -27,7 +27,7 @@ import collaboratory.storage.object.store.service.upload.AmazonURLGenerator;
 import collaboratory.storage.object.store.service.upload.ObjectPartCalculator;
 import collaboratory.storage.object.store.service.upload.SimplePartCalculator;
 import collaboratory.storage.object.store.service.upload.UploadStateStore;
-import collaboratory.storage.object.store.service.upload.UploadURLGenerator;
+import collaboratory.storage.object.store.service.upload.ObjectURLGenerator;
 
 /**
  * Upload Service Configuration
@@ -52,7 +52,7 @@ public class UploadConfig {
   }
 
   @Bean
-  public UploadURLGenerator url() {
+  public ObjectURLGenerator url() {
     return new AmazonURLGenerator();
   }
 }

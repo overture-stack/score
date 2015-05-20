@@ -30,7 +30,7 @@ import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest;
 /**
  * To generate presigned url for s3-like object storage
  */
-public class AmazonURLGenerator implements UploadURLGenerator {
+public class AmazonURLGenerator implements ObjectURLGenerator {
 
   @Autowired
   private AmazonS3 s3Client;
@@ -45,4 +45,13 @@ public class AmazonURLGenerator implements UploadURLGenerator {
     return s3Client.generatePresignedUrl(req).toString();
   }
 
+  @Override
+  public String getDownloadPartUrl(String bucketName, String objectKey, Part part, Date expiration) {
+    GeneratePresignedUrlRequest req =
+        new GeneratePresignedUrlRequest(bucketName, objectKey, HttpMethod.GET);
+    req.putCustomRequestHeader("Range",
+        String.valueOf(part.getOffset()) + "-" + String.valueOf(part.getOffset() + part.getPartSize() - 1));
+    req.setExpiration(expiration);
+    return s3Client.generatePresignedUrl(req).toString();
+  }
 }

@@ -27,7 +27,7 @@ import collaboratory.storage.object.store.service.upload.BenchmarkURLGenerator;
 import collaboratory.storage.object.store.service.upload.ObjectPartCalculator;
 import collaboratory.storage.object.store.service.upload.SimplePartCalculator;
 import collaboratory.storage.object.store.service.upload.UploadStateStore;
-import collaboratory.storage.object.store.service.upload.UploadURLGenerator;
+import collaboratory.storage.object.store.service.upload.ObjectURLGenerator;
 
 /**
  * Configurations used for benchmarking the object store service
@@ -52,7 +52,7 @@ public class BenchmarkConfig {
   }
 
   @Bean
-  public UploadURLGenerator url() {
+  public ObjectURLGenerator url() {
     return new BenchmarkURLGenerator();
   }
 }

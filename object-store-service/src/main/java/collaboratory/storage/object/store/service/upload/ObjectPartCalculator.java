@@ -26,5 +26,7 @@ import collaboratory.storage.object.store.core.model.Part;
  */
 public interface ObjectPartCalculator {
 
+  public List<Part> divide(long offset, long fileSize);
+
   public List<Part> divide(long fileSize);
 }

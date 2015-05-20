@@ -18,6 +18,10 @@
 package collaboratory.storage.object.store.service.download;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.Date;
+import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -28,10 +32,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
 import collaboratory.storage.object.store.core.model.ObjectSpecification;
+import collaboratory.storage.object.store.core.model.Part;
 import collaboratory.storage.object.store.core.util.ObjectStoreUtil;
 import collaboratory.storage.object.store.exception.IdNotFoundException;
 import collaboratory.storage.object.store.exception.NotRetryableException;
 import collaboratory.storage.object.store.exception.RetryableException;
+import collaboratory.storage.object.store.service.upload.ObjectPartCalculator;
+import collaboratory.storage.object.store.service.upload.ObjectURLGenerator;
 
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.s3.AmazonS3;
@@ -48,6 +55,9 @@ public class ObjectDownloadService {
   @Autowired
   private AmazonS3 s3Client;
 
+  @Autowired
+  private ObjectURLGenerator urlGenerator;
+
   @Value("${collaboratory.bucket.name}")
   private String bucketName;
 
@@ -57,8 +67,15 @@ public class ObjectDownloadService {
   @Value("${s3.endpoint}")
   private String endPoint;
 
+  @Value("${collaboratory.download.expiration}")
+  private int expiration;
+
+  @Autowired
+  ObjectPartCalculator partCalculator;
+
   public ObjectSpecification download(String objectId) {
     String objectMetaKey = ObjectStoreUtil.getObjectMetaKey(dataDir, objectId);
+    String objectKey = ObjectStoreUtil.getObjectKey(dataDir, objectId);
 
     try {
       GetObjectRequest req =
@@ -66,8 +83,11 @@ public class ObjectDownloadService {
       S3Object obj = s3Client.getObject(req);
       ObjectMapper mapper = new ObjectMapper();
 
+      ObjectSpecification spec;
       try (S3ObjectInputStream inputStream = obj.getObjectContent()) {
-        return mapper.readValue(inputStream, ObjectSpecification.class);
+        spec = mapper.readValue(inputStream, ObjectSpecification.class);
+        fillUrl(objectKey, spec.getParts());
+        return spec;
       }
     } catch (AmazonServiceException e) {
       if (e.isRetryable()) {
@@ -85,7 +105,20 @@ public class ObjectDownloadService {
 
   public ObjectSpecification download(String objectId, long offset, long length) {
 
-    return null;
+    String objectKey = ObjectStoreUtil.getObjectKey(dataDir, objectId);
+    List<Part> parts = partCalculator.divide(offset, length);
+    fillUrl(objectKey, parts);
+    ObjectSpecification spec = new ObjectSpecification(objectKey, objectId, "", parts, length);
+
+    return spec;
+  }
+
+  private void fillUrl(String objectKey, List<Part> parts) {
+    LocalDateTime now = LocalDateTime.now();
+    Date expirationDate = Date.from(now.plusDays(expiration).atZone(ZoneId.systemDefault()).toInstant());
+    for (Part part : parts) {
+      part.setUrl(urlGenerator.getDownloadPartUrl(bucketName, objectKey, part, expirationDate));
+    }
   }
 
 }

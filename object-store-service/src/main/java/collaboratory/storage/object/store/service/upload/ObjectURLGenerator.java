@@ -24,7 +24,9 @@ import collaboratory.storage.object.store.core.model.Part;
 /**
  * an interface to represent a upload url generator
  */
-public interface UploadURLGenerator {
+public interface ObjectURLGenerator {
 
   public String getUploadPartUrl(String bucketName, String objectKey, String uploadId, Part part, Date expiration);
+
+  public String getDownloadPartUrl(String bucketName, String objectKey, Part part, Date expiration);
 }

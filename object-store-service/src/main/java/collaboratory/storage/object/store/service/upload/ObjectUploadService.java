@@ -21,9 +21,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
+import collaboratory.storage.object.store.core.model.ObjectSpecification;
 import collaboratory.storage.object.store.core.model.Part;
 import collaboratory.storage.object.store.core.model.UploadProgress;
-import collaboratory.storage.object.store.core.model.ObjectSpecification;
 import collaboratory.storage.object.store.core.util.ObjectStoreUtil;
 import collaboratory.storage.object.store.exception.IdNotFoundException;
 import collaboratory.storage.object.store.exception.InternalUnrecoverableError;
@@ -57,7 +57,7 @@ import com.amazonaws.services.s3.model.transform.Unmarshallers.ListPartsResultUn
 public class ObjectUploadService {
 
   @Autowired
-  private UploadURLGenerator urlGenerator;
+  private ObjectURLGenerator urlGenerator;
 
   @Autowired
   private AmazonS3 s3Client;

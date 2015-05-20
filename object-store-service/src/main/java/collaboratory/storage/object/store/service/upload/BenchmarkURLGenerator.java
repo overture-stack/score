@@ -29,7 +29,7 @@ import collaboratory.storage.object.store.core.model.Part;
  * To generate url for benchmarking
  */
 @Slf4j
-public class BenchmarkURLGenerator implements UploadURLGenerator {
+public class BenchmarkURLGenerator implements ObjectURLGenerator {
 
   @Value("${benchmark.endpoint}")
   private String endpoint;
@@ -39,5 +39,17 @@ public class BenchmarkURLGenerator implements UploadURLGenerator {
     log.info("Benchmark mode is on");
     return endpoint + "/upload/" + objectKey + "?partNumber=" + String.valueOf(part.getPartNumber()) + "&uploadId="
         + uploadId;
+  }
+
+  /*
+   * (non-Javadoc)
+   * 
+   * @see collaboratory.storage.object.store.service.upload.ObjectURLGenerator#getdownloadPartUrl(java.lang.String,
+   * java.lang.String, collaboratory.storage.object.store.core.model.Part, java.util.Date)
+   */
+  @Override
+  public String getDownloadPartUrl(String bucketName, String objectKey, Part part, Date expiration) {
+    // TODO Auto-generated method stub
+    return null;
   }
 }
