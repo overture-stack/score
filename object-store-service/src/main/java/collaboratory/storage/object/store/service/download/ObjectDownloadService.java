@@ -78,8 +78,10 @@ public class ObjectDownloadService {
   ObjectPartCalculator partCalculator;
 
   public ObjectSpecification download(String objectId) {
+    log.debug("Download object id: {}", objectId);
     String objectMetaKey = ObjectStoreUtil.getObjectMetaKey(dataDir, objectId);
     String objectKey = ObjectStoreUtil.getObjectKey(dataDir, objectId);
+    log.debug("Download meta key: {}", objectMetaKey);
 
     try {
       GetObjectRequest req =
@@ -94,6 +96,7 @@ public class ObjectDownloadService {
         return spec;
       }
     } catch (AmazonServiceException e) {
+      log.error("Amazon service throws an exception", e);
       if (e.isRetryable()) {
         throw new RetryableException(e);
       } else {

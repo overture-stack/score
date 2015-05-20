@@ -40,11 +40,11 @@ public class ProgressBar {
     this.checksumTotal = total - numJobs;
     updateProgress(total - numJobs);
     stopwatch = Stopwatch.createUnstarted();
-    System.err.println("Number of upload parts remaining: " + numJobs);
 
   }
 
   public void start() {
+    System.err.println("Number of upload parts remaining: " + (total - checksumTotal));
     stopwatch.start();
     progressMonitor = Executors.newSingleThreadScheduledExecutor();
     progressMonitor.scheduleWithFixedDelay(new Runnable() {
