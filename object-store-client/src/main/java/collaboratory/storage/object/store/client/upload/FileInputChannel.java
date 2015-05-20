@@ -30,7 +30,7 @@ import com.google.common.hash.Hashing;
 import com.google.common.hash.HashingOutputStream;
 
 /**
- * Channels based on File
+ * A data Channel based on {@link java.io.File File}
  */
 @AllArgsConstructor
 public class FileInputChannel extends AbstractInputChannel {

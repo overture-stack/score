@@ -32,7 +32,7 @@ import com.google.common.hash.Hashing;
 import com.google.common.hash.HashingOutputStream;
 
 /**
- * Channel based on memory mapped buffer
+ * Channel based on {@link java.nio.MappedByteBuffer memory mapped buffer}
  */
 @Slf4j
 @AllArgsConstructor
@@ -43,12 +43,18 @@ public class MemoryMappedInputChannel extends AbstractInputChannel {
   private final long length;
   private String md5 = null;
 
+  /**
+   * it is not possible to reset a memory mapped buffer
+   */
   @Override
   public void reset() throws IOException {
     log.warn("cannot be reset");
     throw new NotRetryableException();
   }
 
+  /**
+   * Write to a given outputstream and calculate the hash once it is fully written
+   */
   @Override
   public void writeTo(OutputStream os) throws IOException {
     try (HashingOutputStream hos = new HashingOutputStream(Hashing.md5(), os)) {
@@ -68,6 +74,9 @@ public class MemoryMappedInputChannel extends AbstractInputChannel {
     return md5;
   }
 
+  /**
+   * buffer needs to be closed proactively so it won't trigger out-of-memory error
+   */
   @Override
   @SuppressWarnings("restriction")
   public void close() {

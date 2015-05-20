@@ -84,7 +84,7 @@ public class ParallelPartObjectTransport implements ObjectTransport {
         @Override
         public Part call() throws Exception {
           FileInputChannel channel = new FileInputChannel(file, part.getOffset(), part.getPartSize(), null);
-          if (part.getMd5() != null) {
+          if (part.isCompleted()) {
             if (isCorrupted(channel, part)) {
               proxy.uploadPart(channel, part, objectId,
                   uploadId);

@@ -29,8 +29,15 @@ import collaboratory.storage.object.store.core.model.Part;
  */
 public interface ObjectTransport {
 
+  /**
+   * Send a given file to collaboratory
+   * @param file
+   */
   public void send(File file);
 
+  /**
+   * A builder interface for the data transport
+   */
   public interface Builder {
 
     public ObjectTransport build();

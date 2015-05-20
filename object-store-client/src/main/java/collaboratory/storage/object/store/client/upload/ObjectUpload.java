@@ -56,6 +56,14 @@ public class ObjectUpload {
     retryNumber = retryNumber < 0 ? Integer.MAX_VALUE : retryNumber;
   }
 
+  /**
+   * the only public method for client to call to upload data to collaboratory
+   * 
+   * @param file The file to be uploaded
+   * @param objectId The object id that is used to associate the file in the collaboratory
+   * @param redo If redo the upload is required
+   * @throws IOException
+   */
   public void upload(File file, String objectId, boolean redo) throws IOException {
     for (int retry = 0; retry < retryNumber; retry++)
       try {
@@ -72,6 +80,9 @@ public class ObjectUpload {
       }
   }
 
+  /**
+   * Start a upload given the object id
+   */
   @SneakyThrows
   private void startUpload(File file, String objectId) {
     log.info("Start a new upload...");
@@ -80,6 +91,10 @@ public class ObjectUpload {
         .getParts().size()));
   }
 
+  /**
+   * Resume a upload if it is possible. Otherwise, it will start a new upload. Resume might not be possible if the
+   * upload progress cannot be retrieved.
+   */
   @SneakyThrows
   private void resumeIfPossible(File file, String objectId, boolean checksum) {
     UploadProgress progress = null;
@@ -94,6 +109,10 @@ public class ObjectUpload {
 
   }
 
+  /**
+   * Resume a upload given the upload progress. Checksum is required only for the first attempt for each process
+   * execution.
+   */
   private void resume(File file, UploadProgress progress, String objectId, boolean checksum) {
     log.info("Resume from the previous upload...");
 
@@ -117,6 +136,9 @@ public class ObjectUpload {
 
   }
 
+  /**
+   * Calculate the number of completed parts
+   */
   private int numCompletedParts(List<Part> parts) {
     int completedTotal = 0;
     for (Part part : parts) {
@@ -126,6 +148,9 @@ public class ObjectUpload {
 
   }
 
+  /**
+   * start upload parts using a specific configured data transport
+   */
   @SneakyThrows
   private void uploadParts(List<Part> parts, File file, String objectId, String uploadId, ProgressBar progressBar) {
     transportBuilder.withProxy(proxy)
