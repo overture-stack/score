@@ -44,7 +44,7 @@ import collaboratory.storage.object.transport.ObjectTransport;
 public class ObjectUpload {
 
   @Autowired
-  private ObjectUploadServiceProxy proxy;
+  private ObjectStoreServiceProxy proxy;
   @Autowired
   private ObjectTransport.Builder transportBuilder;
 
@@ -157,7 +157,7 @@ public class ObjectUpload {
         .withProgressBar(progressBar)
         .withParts(parts)
         .withObjectId(objectId)
-        .withUploadId(uploadId);
+        .withSessionId(uploadId);
     log.debug("Transport Configuration: {}", transportBuilder);
     transportBuilder.build().send(file);
   }

@@ -10,7 +10,7 @@ import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
 
-import collaboratory.storage.object.store.core.model.InputChannel;
+import collaboratory.storage.object.store.core.model.DataChannel;
 
 /**
  * @deprecated
@@ -60,7 +60,7 @@ public final class ChannelUtils {
     }
   }
 
-  public static String UploadObject(InputChannel channel, URL url) throws IOException
+  public static String UploadObject(DataChannel channel, URL url) throws IOException
   {
     HttpURLConnection connection = (HttpURLConnection) url.openConnection();
     connection.setDoOutput(true);

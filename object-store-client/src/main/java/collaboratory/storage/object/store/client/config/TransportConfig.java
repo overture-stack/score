@@ -25,7 +25,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import collaboratory.storage.object.store.client.upload.ObjectUploadServiceProxy;
+import collaboratory.storage.object.store.client.upload.ObjectStoreServiceProxy;
 import collaboratory.storage.object.transport.MemoryMappedParallelPartObjectTransport;
 import collaboratory.storage.object.transport.ObjectTransport;
 import collaboratory.storage.object.transport.ParallelPartObjectTransport;
@@ -46,7 +46,7 @@ public class TransportConfig {
   private int parallel;
 
   @Autowired
-  ObjectUploadServiceProxy proxy;
+  ObjectStoreServiceProxy proxy;
 
   @Bean
   public ObjectTransport.Builder TransportBuilder() {

@@ -15,53 +15,43 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package collaboratory.storage.object.store.client.upload;
+package collaboratory.storage.object.transport;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.nio.MappedByteBuffer;
-import java.nio.channels.Channels;
-import java.nio.channels.WritableByteChannel;
+import java.io.PipedInputStream;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import collaboratory.storage.object.store.client.upload.NotRetryableException;
 
+import com.google.api.client.util.IOUtils;
 import com.google.common.hash.Hashing;
 import com.google.common.hash.HashingOutputStream;
 
 /**
- * Channel based on {@link java.nio.MappedByteBuffer memory mapped buffer}
+ * Channels that use pipe
  */
 @Slf4j
 @AllArgsConstructor
-public class MemoryMappedInputChannel extends AbstractInputChannel {
+public class PipedDataChannel extends AbstractDataChannel {
 
-  private final MappedByteBuffer buffer;
+  private final PipedInputStream is;
   private final long offset;
   private final long length;
   private String md5 = null;
 
-  /**
-   * it is not possible to reset a memory mapped buffer
-   */
   @Override
   public void reset() throws IOException {
     log.warn("cannot be reset");
     throw new NotRetryableException();
   }
 
-  /**
-   * Write to a given outputstream and calculate the hash once it is fully written
-   */
   @Override
   public void writeTo(OutputStream os) throws IOException {
-    try (HashingOutputStream hos = new HashingOutputStream(Hashing.md5(), os)) {
-      WritableByteChannel writeChannel = Channels.newChannel(hos);
-      writeChannel.write(buffer);
-      md5 = hos.hash().toString();
-    }
+    HashingOutputStream hos = new HashingOutputStream(Hashing.md5(), os);
+    IOUtils.copy(is, hos);
+    md5 = hos.hash().toString();
   }
 
   @Override
@@ -74,23 +64,12 @@ public class MemoryMappedInputChannel extends AbstractInputChannel {
     return md5;
   }
 
-  /**
-   * buffer needs to be closed proactively so it won't trigger out-of-memory error
-   */
   @Override
-  @SuppressWarnings("restriction")
   public void close() {
-    Method getCleanerMethod;
     try {
-      getCleanerMethod = buffer.getClass().getMethod("cleaner", new Class[0]);
-      getCleanerMethod.setAccessible(true);
-      sun.misc.Cleaner cleaner = (sun.misc.Cleaner)
-          getCleanerMethod.invoke(buffer, new Object[0]);
-      cleaner.clean();
-    } catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException
-        | InvocationTargetException e) {
-      log.warn("fail to unmap memory", e);
-
+      is.close();
+    } catch (IOException e) {
+      log.warn("fail to close the input pipe", e);
     }
   }
 

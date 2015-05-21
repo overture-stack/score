@@ -21,6 +21,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import org.codehaus.jackson.annotate.JsonIgnore;
+
 /**
  * An entity to represent a part that the client will be uploaded
  */
@@ -30,11 +32,12 @@ import lombok.NoArgsConstructor;
 final public class Part {
 
   int partNumber;
-  int partSize;
+  long partSize;
   long offset;
   String url;
   String md5;
 
+  @JsonIgnore
   public boolean isCompleted() {
     return md5 != null;
   }

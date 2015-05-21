@@ -19,8 +19,10 @@ package collaboratory.storage.object.transport;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.RandomAccessFile;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
+import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -29,7 +31,6 @@ import java.util.concurrent.TimeUnit;
 
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import collaboratory.storage.object.store.client.upload.MemoryMappedInputChannel;
 import collaboratory.storage.object.store.core.model.Part;
 
 import com.google.common.collect.ImmutableList;
@@ -60,7 +61,7 @@ public class MemoryMappedParallelPartObjectTransport extends ParallelPartObjectT
 
           @Override
           public Part call() throws Exception {
-            MemoryMappedInputChannel channel = new MemoryMappedInputChannel(buffer, 0, part.getPartSize(), null);
+            MemoryMappedDataChannel channel = new MemoryMappedDataChannel(buffer, 0, part.getPartSize(), null);
             if (part.isCompleted()) {
               if (isCorrupted(channel, part)) {
                 proxy.uploadPart(channel, part, objectId,
@@ -98,6 +99,69 @@ public class MemoryMappedParallelPartObjectTransport extends ParallelPartObjectT
     }
 
     progress.end(false);
+  }
+
+  @Override
+  @SneakyThrows
+  public void receive(File outputDir) {
+    File filename = new File(outputDir, objectId);
+    log.debug("receive file: {}", filename.getPath());
+    ExecutorService executor = Executors.newFixedThreadPool(nThreads);
+    ImmutableList.Builder<Future<Part>> results = ImmutableList.builder();
+    progress.start();
+    try (RandomAccessFile fis = new RandomAccessFile(filename, "rw")) {
+      fis.setLength(calculateTotalSize(parts));
+      for (final Part part : parts) {
+        final MappedByteBuffer buffer =
+            fis.getChannel().map(FileChannel.MapMode.READ_WRITE, part.getOffset(), part.getPartSize());
+        results.add(executor.submit(new Callable<Part>() {
+
+          @Override
+          public Part call() throws Exception {
+            MemoryMappedDataChannel channel =
+                new MemoryMappedDataChannel(buffer, part.getOffset(), part.getPartSize(), null);
+            if (part.isCompleted()) {
+              if (isCorrupted(channel, part)) {
+                proxy.downloadPart(channel, part, objectId);
+              }
+              progress.updateChecksum(1);
+            } else {
+              proxy.downloadPart(channel, part, objectId);
+              progress.updateProgress(1);
+            }
+            progress.incrementByteRead(part.getPartSize());
+            memory.addAndGet(part.getPartSize());
+            return part;
+          }
+        }));
+        progress.incrementByteWritten(part.getPartSize());
+        long remaining = memory.addAndGet(-part.getPartSize());
+        log.debug("Remaining Memory : {}", remaining);
+        while (memory.get() < 0) {
+          TimeUnit.MILLISECONDS.sleep(100);
+          // suggest to release buffers that are not longer needed
+          System.gc();
+        }
+      }
+    }
+    executor.shutdown();
+    executor.awaitTermination(super.maxUploadDuration, TimeUnit.DAYS);
+    try {
+      takeCareOfException(results.build());
+    } catch (Throwable e) {
+      progress.end(true);
+      throw e;
+    }
+
+    progress.end(false);
+  }
+
+  private long calculateTotalSize(List<Part> parts) {
+    long total = 0;
+    for (Part part : parts) {
+      total += part.getPartSize();
+    }
+    return total;
   }
 
   public static MemoryMappedParallelBuilder builder() {

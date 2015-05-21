@@ -38,17 +38,18 @@ import org.springframework.web.client.ResponseExtractor;
 import org.springframework.web.client.RestTemplate;
 
 import collaboratory.storage.object.store.client.config.ClientProperties;
-import collaboratory.storage.object.store.core.model.InputChannel;
+import collaboratory.storage.object.store.core.model.DataChannel;
+import collaboratory.storage.object.store.core.model.ObjectSpecification;
 import collaboratory.storage.object.store.core.model.Part;
 import collaboratory.storage.object.store.core.model.UploadProgress;
-import collaboratory.storage.object.store.core.model.ObjectSpecification;
+import collaboratory.storage.object.store.core.util.ObjectStoreUtil;
 
 /**
  * responsible for interacting with object upload service
  */
 @Service
 @Slf4j
-public class ObjectUploadServiceProxy {
+public class ObjectStoreServiceProxy {
 
   @Autowired
   private ClientProperties properties;
@@ -83,7 +84,49 @@ public class ObjectUploadServiceProxy {
 
   }
 
-  public void uploadPart(InputChannel channel, Part part, String objectId, String uploadId) throws IOException {
+  public void downloadPart(DataChannel channel, Part part, String objectId) throws IOException {
+    retry.execute(new RetryCallback<Void, IOException>() {
+
+      @Override
+      public Void doWithRetry(RetryContext ctx) throws IOException {
+        log.debug("Download Part URL: {}", part.getUrl());
+
+        final RequestCallback callback = new RequestCallback() {
+
+          @Override
+          public void doWithRequest(final ClientHttpRequest request) throws IOException {
+            // request.getHeaders().setContentLength(channel.getlength());
+            request.getHeaders().set(HttpHeaders.RANGE, ObjectStoreUtil.getRange(part));
+          }
+        };
+
+        final ResponseExtractor<HttpHeaders> headersExtractor = new ResponseExtractor<HttpHeaders>() {
+
+          @Override
+          public HttpHeaders extractData(ClientHttpResponse response) throws IOException {
+            channel.writeTo(response.getBody());
+            return response.getHeaders();
+          }
+        };
+
+        try {
+          HttpHeaders headers =
+              dataUploadreq.execute(new URI(part.getUrl()), HttpMethod.GET, callback, headersExtractor);
+          String tag = headers.getETag()
+              .replaceAll("^\"|\"$", "");
+          log.info("ETag: {}", tag);
+        } catch (Throwable e) {
+          log.warn("Fail to send part for part number: {}", part.getPartNumber(), e);
+          channel.reset();
+          throw new RetryableException();
+        }
+        return null;
+      }
+    });
+
+  }
+
+  public void uploadPart(DataChannel channel, Part part, String objectId, String uploadId) throws IOException {
     retry.execute(new RetryCallback<Void, IOException>() {
 
       @Override
@@ -192,6 +235,20 @@ public class ObjectUploadServiceProxy {
           return false;
         }
         return true;
+      }
+    });
+  }
+
+  public ObjectSpecification getDownloadSpecification(String objectId) throws IOException {
+    log.debug("Endpoint: {}", endpoint);
+    return retry.execute(new RetryCallback<ObjectSpecification, IOException>() {
+
+      @Override
+      public ObjectSpecification doWithRetry(RetryContext ctx) throws IOException {
+        HttpEntity<Object> requestEntity = new HttpEntity<Object>(defaultHeaders());
+        return req.exchange(endpoint + "/download/{object-id}", HttpMethod.GET,
+            requestEntity,
+            ObjectSpecification.class, objectId).getBody();
       }
     });
   }

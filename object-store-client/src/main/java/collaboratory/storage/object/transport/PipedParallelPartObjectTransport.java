@@ -28,7 +28,6 @@ import java.util.concurrent.TimeUnit;
 
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import collaboratory.storage.object.store.client.upload.PipedInputChannel;
 import collaboratory.storage.object.store.core.model.Part;
 
 import com.google.common.collect.ImmutableList;
@@ -55,13 +54,13 @@ public class PipedParallelPartObjectTransport extends ParallelPartObjectTranspor
     progress.start();
     for (final Part part : parts) {
       final PipedOutputStream pos = new PipedOutputStream();
-      final PipedInputStream pis = new PipedInputStream(pos, part.getPartSize());
+      final PipedInputStream pis = new PipedInputStream(pos, (int) part.getPartSize());
 
       results.add(executor.submit(new Callable<Part>() {
 
         @Override
         public Part call() throws Exception {
-          proxy.uploadPart(new PipedInputChannel(pis, 0, part.getPartSize(), null), part, objectId, uploadId);
+          proxy.uploadPart(new PipedDataChannel(pis, 0, part.getPartSize(), null), part, objectId, uploadId);
           progress.incrementByteWritten(part.getPartSize());
           progress.updateProgress(1);
           memory.addAndGet(part.getPartSize());

@@ -15,61 +15,35 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package collaboratory.storage.object.store.client.upload;
+
+package collaboratory.storage.object.transport;
 
 import java.io.IOException;
-import java.io.OutputStream;
-import java.io.PipedInputStream;
+import java.io.InputStream;
 
-import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import collaboratory.storage.object.store.core.model.DataChannel;
 
-import com.google.api.client.util.IOUtils;
-import com.google.common.hash.Hashing;
-import com.google.common.hash.HashingOutputStream;
+import com.google.common.io.ByteStreams;
 
 /**
- * Channels that use pipe
+ * Abstract channel for data upload
  */
 @Slf4j
-@AllArgsConstructor
-public class PipedInputChannel extends AbstractInputChannel {
-
-  private final PipedInputStream is;
-  private final long offset;
-  private final long length;
-  private String md5 = null;
+public abstract class AbstractDataChannel implements DataChannel {
 
   @Override
-  public void reset() throws IOException {
-    log.warn("cannot be reset");
-    throw new NotRetryableException();
-  }
-
-  @Override
-  public void writeTo(OutputStream os) throws IOException {
-    HashingOutputStream hos = new HashingOutputStream(Hashing.md5(), os);
-    IOUtils.copy(is, hos);
-    md5 = hos.hash().toString();
-  }
-
-  @Override
-  public long getlength() {
-    return length;
-  }
-
-  @Override
-  public String getMd5() {
-    return md5;
-  }
-
-  @Override
-  public void close() {
-    try {
-      is.close();
-    } catch (IOException e) {
-      log.warn("fail to close the input pipe", e);
+  public boolean isValidMd5(String expectedMd5) throws IOException {
+    writeTo(ByteStreams.nullOutputStream());
+    if (!getMd5().equals(expectedMd5)) {
+      log.warn("md5 failed. Expected: {}, Actual: {}. Resend part number = {}", expectedMd5, getMd5());
+      return false;
     }
+    return true;
   }
 
+  @Override
+  public void writeTo(InputStream is) throws IOException {
+    throw new AssertionError("Not implemented");
+  }
 }
