@@ -61,8 +61,8 @@ endpoints:
 auth:
   server:
     url: https://localhost:8443/oauth/check_token
-    clientId: store
-    clientsecret: storeP@ss
+    clientId: resource
+    clientsecret: pass
 ---
 spring:
   profiles: benchmark

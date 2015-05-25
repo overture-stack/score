@@ -96,7 +96,20 @@ public class OAuthResourceConfig extends ResourceServerConfigurerAdapter {
     // FIXME: Configure access to resources by token scope
 
     // @formatter:off
-    http.authorizeRequests().anyRequest().authenticated();
+    http
+      .authorizeRequests()
+      .antMatchers("/upload/**")
+      .access("#oauth2.hasScope('os.upload')")
+      .and()
+      
+      .authorizeRequests()
+      .antMatchers("/download/**")
+      .access("#oauth2.hasScope('os.download')")
+      .and()
+      
+      .authorizeRequests()
+      .anyRequest()
+      .authenticated();
     // @formatter:on
   }
 
