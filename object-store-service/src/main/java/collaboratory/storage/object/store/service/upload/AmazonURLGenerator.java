@@ -20,8 +20,10 @@ package collaboratory.storage.object.store.service.upload;
 import java.util.Date;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 
 import collaboratory.storage.object.store.core.model.Part;
+import collaboratory.storage.object.store.core.util.ObjectStoreUtil;
 
 import com.amazonaws.HttpMethod;
 import com.amazonaws.services.s3.AmazonS3;
@@ -49,8 +51,7 @@ public class AmazonURLGenerator implements ObjectURLGenerator {
   public String getDownloadPartUrl(String bucketName, String objectKey, Part part, Date expiration) {
     GeneratePresignedUrlRequest req =
         new GeneratePresignedUrlRequest(bucketName, objectKey, HttpMethod.GET);
-    req.putCustomRequestHeader("Range",
-        String.valueOf(part.getOffset()) + "-" + String.valueOf(part.getOffset() + part.getPartSize() - 1));
+    req.putCustomRequestHeader(HttpHeaders.RANGE, ObjectStoreUtil.getRange(part));
     req.setExpiration(expiration);
     return s3Client.generatePresignedUrl(req).toString();
   }

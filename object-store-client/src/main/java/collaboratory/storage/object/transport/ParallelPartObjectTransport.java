@@ -31,10 +31,9 @@ import java.util.concurrent.atomic.AtomicLong;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import collaboratory.storage.object.store.client.upload.FileInputChannel;
-import collaboratory.storage.object.store.client.upload.ObjectUploadServiceProxy;
+import collaboratory.storage.object.store.client.upload.ObjectStoreServiceProxy;
 import collaboratory.storage.object.store.client.upload.ProgressBar;
-import collaboratory.storage.object.store.core.model.InputChannel;
+import collaboratory.storage.object.store.core.model.DataChannel;
 import collaboratory.storage.object.store.core.model.Part;
 
 import com.google.api.client.util.Preconditions;
@@ -50,7 +49,7 @@ public class ParallelPartObjectTransport implements ObjectTransport {
   private static final int MIN_WORKER = 10;
   private static final long MIN_MEMORY = 1024L * 1024L;
 
-  final protected ObjectUploadServiceProxy proxy;
+  final protected ObjectStoreServiceProxy proxy;
   final protected int nThreads;
   final protected ProgressBar progress;
   final protected List<Part> parts;
@@ -83,7 +82,7 @@ public class ParallelPartObjectTransport implements ObjectTransport {
 
         @Override
         public Part call() throws Exception {
-          FileInputChannel channel = new FileInputChannel(file, part.getOffset(), part.getPartSize(), null);
+          FileDataChannel channel = new FileDataChannel(file, part.getOffset(), part.getPartSize(), null);
           if (part.isCompleted()) {
             if (isCorrupted(channel, part)) {
               proxy.uploadPart(channel, part, objectId,
@@ -114,7 +113,7 @@ public class ParallelPartObjectTransport implements ObjectTransport {
     progress.end(false);
   }
 
-  protected boolean isCorrupted(InputChannel channel, Part part) throws IOException {
+  protected boolean isCorrupted(DataChannel channel, Part part) throws IOException {
     if (channel.isValidMd5(part.getMd5())) {
       return false;
     }
@@ -185,5 +184,11 @@ public class ParallelPartObjectTransport implements ObjectTransport {
       maxUploadDuration = maxUploadDuration < 1 ? Integer.MAX_VALUE : maxUploadDuration;
 
     }
+  }
+
+  @Override
+  public void receive(File file) {
+    throw new AssertionError("Please implement it");
+
   }
 }

@@ -18,14 +18,17 @@
 package collaboratory.storage.object.store.core.model;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 
 /**
- * An interface to represent a channel that performs checksum and send data to the outputstream
+ * An interface to represent a channel that performs checksum and send data to a respective stream
  */
-public interface InputChannel {
+public interface DataChannel {
 
   public void writeTo(OutputStream os) throws IOException;
+
+  public void writeTo(InputStream is) throws IOException;
 
   public void reset() throws IOException;
 

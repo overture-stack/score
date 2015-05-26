@@ -15,13 +15,16 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package collaboratory.storage.object.store.client.upload;
+package collaboratory.storage.object.transport;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.channels.Channels;
+import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
 
 import lombok.AllArgsConstructor;
@@ -33,7 +36,7 @@ import com.google.common.hash.HashingOutputStream;
  * A data Channel based on {@link java.io.File File}
  */
 @AllArgsConstructor
-public class FileInputChannel extends AbstractInputChannel {
+public class FileDataChannel extends AbstractDataChannel {
 
   private final File file;
   private final long offset;
@@ -52,6 +55,15 @@ public class FileInputChannel extends AbstractInputChannel {
       is.getChannel().transferTo(offset, length, toChannel);
       toChannel.close();
       md5 = hos.hash().toString();
+    }
+  }
+
+  @Override
+  public void writeTo(InputStream is) throws IOException {
+
+    try (FileOutputStream os = new FileOutputStream(file)) {
+      ReadableByteChannel fromChannel = Channels.newChannel(is);
+      os.getChannel().transferFrom(fromChannel, offset, length);
     }
   }
 

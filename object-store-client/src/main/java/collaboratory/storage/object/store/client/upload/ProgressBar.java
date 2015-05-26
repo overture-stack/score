@@ -11,7 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import com.google.common.base.Stopwatch;
 
 /**
- * progress bar for keeping track of the upload progress
+ * progress bar for keeping track of the upload/download progress
  */
 @Slf4j
 public class ProgressBar {
@@ -44,7 +44,7 @@ public class ProgressBar {
   }
 
   public void start() {
-    System.err.println("Number of upload parts remaining: " + (total - checksumTotal));
+    System.err.println("Number of parts remaining: " + (total - checksumTotal));
     stopwatch.start();
     progressMonitor = Executors.newSingleThreadScheduledExecutor();
     progressMonitor.scheduleWithFixedDelay(new Runnable() {
@@ -68,9 +68,9 @@ public class ProgressBar {
     }
     System.err.println();
     if (incompleted) {
-      System.err.println("Upload has been interrupted. Some parts are missing. Waiting to resubmission...");
+      System.err.println("Data transfer has been interrupted. Some parts are missing. Waiting to resubmission...");
     }
-    System.err.println("Total Time for upload (min): " + (stopwatch.elapsed(TimeUnit.MINUTES) + 1));
+    System.err.println("Total Execution Time (min): " + (stopwatch.elapsed(TimeUnit.MINUTES) + 1));
   }
 
   public void incrementByteWritten(long incr) {

@@ -17,6 +17,8 @@
  */
 package collaboratory.storage.object.store.core.util;
 
+import collaboratory.storage.object.store.core.model.Part;
+
 /**
  * Helpers functions for the object store
  */
@@ -30,4 +32,8 @@ public class ObjectStoreUtil {
     return dataDir + "/" + objectId + ".meta";
   }
 
+  public static String getRange(Part part) {
+    return String.valueOf("bytes=" + part.getOffset()) + "-"
+        + String.valueOf(part.getOffset() + part.getPartSize() - 1L);
+  }
 }

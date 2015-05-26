@@ -19,6 +19,7 @@ package collaboratory.storage.object.store.client.download;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.List;
 
 import javax.annotation.PostConstruct;
@@ -30,9 +31,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import collaboratory.storage.object.store.client.upload.ObjectStoreServiceProxy;
 import collaboratory.storage.object.store.client.upload.ProgressBar;
 import collaboratory.storage.object.store.core.model.ObjectSpecification;
 import collaboratory.storage.object.store.core.model.Part;
+import collaboratory.storage.object.transport.ObjectTransport;
 
 /**
  * main class to handle uploading objects
@@ -42,7 +45,10 @@ import collaboratory.storage.object.store.core.model.Part;
 public class ObjectDownload {
 
   @Autowired
-  private ObjectDownloadServiceProxy proxy;
+  private ObjectStoreServiceProxy proxy;
+
+  @Autowired
+  private ObjectTransport.Builder transportBuilder;
 
   @Value("${client.upload.retryNumber}")
   private int retryNumber;
@@ -68,10 +74,12 @@ public class ObjectDownload {
    * Start a upload given the object id
    */
   @SneakyThrows
-  private void startNewDownload(File file, String objectId) {
+  private void startNewDownload(File dir, String objectId) {
     log.info("Start a new download...");
+    Files.createDirectory(dir.toPath());
     ObjectSpecification spec = proxy.getDownloadSpecification(objectId);
-    downloadParts(spec.getParts(), file, objectId, spec.getUploadId(), new ProgressBar(spec.getParts().size(), spec
+    // TODO: assign session id
+    downloadParts(spec.getParts(), dir, objectId, spec.getUploadId(), new ProgressBar(spec.getParts().size(), spec
         .getParts().size()));
   }
 
@@ -79,7 +87,14 @@ public class ObjectDownload {
    * start upload parts using a specific configured data transport
    */
   @SneakyThrows
-  private void downloadParts(List<Part> parts, File file, String objectId, String uploadId, ProgressBar progressBar) {
-    log.debug("Parts: {}", parts);
+  private void downloadParts(List<Part> parts, File file, String objectId, String sessionId, ProgressBar progressBar) {
+    transportBuilder.withProxy(proxy)
+        .withProgressBar(progressBar)
+        .withParts(parts)
+        .withObjectId(objectId)
+        .withSessionId(sessionId);
+    log.debug("Transport Configuration: {}", transportBuilder);
+    transportBuilder.build().receive(file);
   }
+
 }

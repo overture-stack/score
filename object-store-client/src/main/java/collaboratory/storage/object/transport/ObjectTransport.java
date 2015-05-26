@@ -20,7 +20,7 @@ package collaboratory.storage.object.transport;
 import java.io.File;
 import java.util.List;
 
-import collaboratory.storage.object.store.client.upload.ObjectUploadServiceProxy;
+import collaboratory.storage.object.store.client.upload.ObjectStoreServiceProxy;
 import collaboratory.storage.object.store.client.upload.ProgressBar;
 import collaboratory.storage.object.store.core.model.Part;
 
@@ -35,6 +35,8 @@ public interface ObjectTransport {
    */
   public void send(File file);
 
+  public void receive(File file);
+
   /**
    * A builder interface for the data transport
    */
@@ -48,14 +50,14 @@ public interface ObjectTransport {
 
     public Builder withObjectId(String objectId);
 
-    public Builder withUploadId(String uploadId);
+    public Builder withSessionId(String uploadId);
 
-    public Builder withProxy(ObjectUploadServiceProxy proxy);
+    public Builder withProxy(ObjectStoreServiceProxy proxy);
   }
 
   public abstract class AbstractBuilder implements Builder {
 
-    protected ObjectUploadServiceProxy proxy;
+    protected ObjectStoreServiceProxy proxy;
     protected ProgressBar progressBar;
     protected List<Part> parts;
     protected String objectId;
@@ -80,13 +82,13 @@ public interface ObjectTransport {
     }
 
     @Override
-    public Builder withUploadId(String uploadId) {
+    public Builder withSessionId(String uploadId) {
       this.uploadId = uploadId;
       return this;
     }
 
     @Override
-    public Builder withProxy(ObjectUploadServiceProxy proxy) {
+    public Builder withProxy(ObjectStoreServiceProxy proxy) {
       this.proxy = proxy;
       return this;
     }
