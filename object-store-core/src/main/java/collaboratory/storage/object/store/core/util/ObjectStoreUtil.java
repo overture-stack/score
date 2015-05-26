@@ -32,7 +32,7 @@ public class ObjectStoreUtil {
     return dataDir + "/" + objectId + ".meta";
   }
 
-  public static String getRange(Part part) {
+  public static String getHttpRangeValue(Part part) {
     return String.valueOf("bytes=" + part.getOffset()) + "-"
         + String.valueOf(part.getOffset() + part.getPartSize() - 1L);
   }

@@ -51,7 +51,7 @@ public class AmazonURLGenerator implements ObjectURLGenerator {
   public String getDownloadPartUrl(String bucketName, String objectKey, Part part, Date expiration) {
     GeneratePresignedUrlRequest req =
         new GeneratePresignedUrlRequest(bucketName, objectKey, HttpMethod.GET);
-    req.putCustomRequestHeader(HttpHeaders.RANGE, ObjectStoreUtil.getRange(part));
+    req.putCustomRequestHeader(HttpHeaders.RANGE, ObjectStoreUtil.getHttpRangeValue(part));
     req.setExpiration(expiration);
     return s3Client.generatePresignedUrl(req).toString();
   }

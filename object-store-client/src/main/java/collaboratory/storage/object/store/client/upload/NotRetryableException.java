@@ -25,4 +25,8 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 public class NotRetryableException extends RuntimeException {
 
+  public NotRetryableException(Throwable message) {
+    super(message);
+  }
+
 }

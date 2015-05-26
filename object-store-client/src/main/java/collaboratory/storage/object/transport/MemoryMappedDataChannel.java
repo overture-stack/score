@@ -17,10 +17,10 @@
  */
 package collaboratory.storage.object.transport;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.Channels;
@@ -39,9 +39,9 @@ import com.google.common.hash.HashingOutputStream;
  */
 @Slf4j
 @AllArgsConstructor
-public class MemoryMappedDataChannel extends AbstractDataChannel {
+public class MemoryMappedDataChannel extends AbstractDataChannel implements Closeable {
 
-  private final MappedByteBuffer buffer;
+  private MappedByteBuffer buffer;
   private final long offset;
   private final long length;
   private String md5 = null;
@@ -69,13 +69,10 @@ public class MemoryMappedDataChannel extends AbstractDataChannel {
 
   @Override
   public void writeTo(InputStream is) throws IOException {
-    log.debug("Capacity: {}", buffer.capacity());
-    log.debug("beginning remaining: {}", buffer.remaining());
     ReadableByteChannel readChannel = Channels.newChannel(is);
     while (buffer.hasRemaining()) {
       readChannel.read(buffer);
     }
-    log.debug("final remaining: {}", buffer.remaining());
   }
 
   @Override
@@ -92,20 +89,23 @@ public class MemoryMappedDataChannel extends AbstractDataChannel {
    * buffer needs to be closed proactively so it won't trigger out-of-memory error
    */
   @Override
-  @SuppressWarnings("restriction")
   public void close() {
-    Method getCleanerMethod;
-    try {
-      getCleanerMethod = buffer.getClass().getMethod("cleaner", new Class[0]);
-      getCleanerMethod.setAccessible(true);
-      sun.misc.Cleaner cleaner = (sun.misc.Cleaner)
-          getCleanerMethod.invoke(buffer, new Object[0]);
-      cleaner.clean();
-    } catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException
-        | InvocationTargetException e) {
-      log.warn("fail to unmap memory", e);
-
+    if (!buffer.isDirect()) {
+      log.info("This is not a direct a buffer");
+      return;
     }
+    buffer.force();
+    try {
+      // sun.misc.Cleaner cl = ((sun.nio.ch.DirectBuffer) buffer).cleaner();
+      // if (cl != null) cl.clean();
+      Method cleaner = buffer.getClass().getMethod("cleaner");
+      cleaner.setAccessible(true);
+      Method clean = Class.forName("sun.misc.Cleaner").getMethod("clean");
+      clean.setAccessible(true);
+      clean.invoke(cleaner.invoke(buffer));
+    } catch (Exception e) {
+      log.warn("fail to unmap memory", e);
+    }
+    buffer = null;
   }
-
 }

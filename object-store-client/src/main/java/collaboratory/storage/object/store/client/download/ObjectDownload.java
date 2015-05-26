@@ -21,6 +21,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
+import java.util.function.Predicate;
 
 import javax.annotation.PostConstruct;
 
@@ -31,6 +32,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import collaboratory.storage.object.store.client.upload.NotRetryableException;
 import collaboratory.storage.object.store.client.upload.ObjectStoreServiceProxy;
 import collaboratory.storage.object.store.client.upload.ProgressBar;
 import collaboratory.storage.object.store.core.model.ObjectSpecification;
@@ -48,6 +50,9 @@ public class ObjectDownload {
   private ObjectStoreServiceProxy proxy;
 
   @Autowired
+  private DownloadStateStore downloadStateStore;
+
+  @Autowired
   private ObjectTransport.Builder transportBuilder;
 
   @Value("${client.upload.retryNumber}")
@@ -59,7 +64,7 @@ public class ObjectDownload {
   }
 
   /**
-   * the only public method for client to call to upload data to collaboratory
+   * the only public method for client to call to download data to collaboratory
    * 
    * @param file The file to be uploaded
    * @param objectId The object id that is used to associate the file in the collaboratory
@@ -67,7 +72,65 @@ public class ObjectDownload {
    * @throws IOException
    */
   public void download(File outputDirectory, String objectId, boolean redo) throws IOException {
-    startNewDownload(outputDirectory, objectId);
+    for (int retry = 0; retry < retryNumber; retry++)
+      try {
+        if (redo) {
+          startNewDownload(outputDirectory, objectId);
+        } else {
+          // only perform checksum the first time of the resume
+          resumeIfPossible(outputDirectory, objectId, retry == 0 ? true : false);
+        }
+        return;
+      } catch (NotRetryableException e) {
+        log.warn(
+            "Download is not completed successfully in the last execution. Checking data integrity. Please wait...", e);
+        // TODO: check if download is recoverable
+        redo = true;
+        // redo = !proxy.isUploadDataRecoverable(objectId, file.length());
+      }
+  }
+
+  private void resumeIfPossible(File outputDirectory, String objectId, boolean checksum) throws IOException {
+    try {
+      List<Part> parts = downloadStateStore.getProgress(outputDirectory, objectId);
+      resume(parts, outputDirectory, objectId, checksum);
+    } catch (IOException e) {
+      log.info("New download: {}", objectId);
+
+    }
+  }
+
+  private void resume(List<Part> parts, File outputDirectory, String objectId, boolean checksum) {
+    log.info("Resume from the previous download...");
+
+    int completedTotal = numCompletedParts(parts);
+    int total = parts.size();
+
+    if (!checksum) {
+      parts.removeIf(new Predicate<Part>() {
+
+        @Override
+        public boolean test(Part part) {
+          return part.getMd5() != null;
+        }
+      });
+    }
+
+    downloadParts(parts, outputDirectory, objectId, objectId, new ProgressBar(total, total
+        - completedTotal));
+
+  }
+
+  /**
+   * Calculate the number of completed parts
+   */
+  private int numCompletedParts(List<Part> parts) {
+    int completedTotal = 0;
+    for (Part part : parts) {
+      if (part.getMd5() != null) completedTotal++;
+    }
+    return completedTotal;
+
   }
 
   /**
@@ -78,6 +141,7 @@ public class ObjectDownload {
     log.info("Start a new download...");
     Files.createDirectory(dir.toPath());
     ObjectSpecification spec = proxy.getDownloadSpecification(objectId);
+    downloadStateStore.init(dir, spec);
     // TODO: assign session id
     downloadParts(spec.getParts(), dir, objectId, spec.getUploadId(), new ProgressBar(spec.getParts().size(), spec
         .getParts().size()));

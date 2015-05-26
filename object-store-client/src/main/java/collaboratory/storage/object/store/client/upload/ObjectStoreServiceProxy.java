@@ -17,6 +17,7 @@
  */
 package collaboratory.storage.object.store.client.upload;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 
@@ -38,11 +39,15 @@ import org.springframework.web.client.ResponseExtractor;
 import org.springframework.web.client.RestTemplate;
 
 import collaboratory.storage.object.store.client.config.ClientProperties;
+import collaboratory.storage.object.store.client.download.DownloadStateStore;
 import collaboratory.storage.object.store.core.model.DataChannel;
 import collaboratory.storage.object.store.core.model.ObjectSpecification;
 import collaboratory.storage.object.store.core.model.Part;
 import collaboratory.storage.object.store.core.model.UploadProgress;
 import collaboratory.storage.object.store.core.util.ObjectStoreUtil;
+
+import com.google.common.hash.Hashing;
+import com.google.common.hash.HashingInputStream;
 
 /**
  * responsible for interacting with object upload service
@@ -70,6 +75,9 @@ public class ObjectStoreServiceProxy {
   @Qualifier("upload-retry-template")
   private RetryTemplate retry;
 
+  @Autowired
+  private DownloadStateStore downloadStateStore;
+
   public UploadProgress getProgress(String objectId, long fileSize) throws IOException {
     return retry.execute(new RetryCallback<UploadProgress, IOException>() {
 
@@ -84,7 +92,7 @@ public class ObjectStoreServiceProxy {
 
   }
 
-  public void downloadPart(DataChannel channel, Part part, String objectId) throws IOException {
+  public void downloadPart(DataChannel channel, Part part, String objectId, File outputDir) throws IOException {
     retry.execute(new RetryCallback<Void, IOException>() {
 
       @Override
@@ -96,7 +104,7 @@ public class ObjectStoreServiceProxy {
           @Override
           public void doWithRequest(final ClientHttpRequest request) throws IOException {
             // request.getHeaders().setContentLength(channel.getlength());
-            request.getHeaders().set(HttpHeaders.RANGE, ObjectStoreUtil.getRange(part));
+            request.getHeaders().set(HttpHeaders.RANGE, ObjectStoreUtil.getHttpRangeValue(part));
           }
         };
 
@@ -104,17 +112,21 @@ public class ObjectStoreServiceProxy {
 
           @Override
           public HttpHeaders extractData(ClientHttpResponse response) throws IOException {
-            channel.writeTo(response.getBody());
-            return response.getHeaders();
+            try (HashingInputStream his = new HashingInputStream(Hashing.md5(), response.getBody())) {
+              channel.writeTo(his);
+              response.getHeaders().set(HttpHeaders.ETAG, his.hash().toString());
+              return response.getHeaders();
+            }
           }
         };
 
         try {
           HttpHeaders headers =
               dataUploadreq.execute(new URI(part.getUrl()), HttpMethod.GET, callback, headersExtractor);
-          String tag = headers.getETag()
-              .replaceAll("^\"|\"$", "");
-          log.info("ETag: {}", tag);
+          part.setMd5(cleanUpETag(headers.getETag()));
+          // TODO: try catch here for commit
+          downloadStateStore.commit(outputDir, objectId, part);
+
         } catch (Throwable e) {
           log.warn("Fail to send part for part number: {}", part.getPartNumber(), e);
           channel.reset();
@@ -124,6 +136,10 @@ public class ObjectStoreServiceProxy {
       }
     });
 
+  }
+
+  protected String cleanUpETag(String eTag) {
+    return eTag.replaceAll("^\"|\"$", "");
   }
 
   public void uploadPart(DataChannel channel, Part part, String objectId, String uploadId) throws IOException {
@@ -155,8 +171,8 @@ public class ObjectStoreServiceProxy {
           HttpHeaders headers =
               dataUploadreq.execute(new URI(part.getUrl()), HttpMethod.PUT, callback, headersExtractor);
           try {
-            finalizeUploadPart(objectId, uploadId, part.getPartNumber(), channel.getMd5(), headers.getETag()
-                .replaceAll("^\"|\"$", ""));
+            finalizeUploadPart(objectId, uploadId, part.getPartNumber(), channel.getMd5(),
+                cleanUpETag(headers.getETag()));
           } catch (NotRetryableException e) {
             log.warn("Checksum failed for part: {}, MD5: {}, ETAG: {}", part, channel.getMd5(), headers.getETag(), e);
             throw new RetryableException();

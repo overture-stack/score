@@ -15,12 +15,27 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package collaboratory.storage.object.store.client.download;
+package collaboratory.storage.object.store.client.config;
+
+import lombok.Data;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+import collaboratory.storage.object.store.client.download.DownloadStateStore;
 
 /**
- * 
+ * Configurations for connections for uploads
  */
-public interface DownloadContext {
-  
+@Data
+@Configuration
+public class DownloadConfig {
+
+  private static final int MAX_TIMEOUT = 5 * 60 * 1000;
+
+  @Bean
+  public DownloadStateStore downloadStateStore() {
+    return new DownloadStateStore();
+  }
 
 }

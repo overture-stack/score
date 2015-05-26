@@ -45,6 +45,7 @@ spring:
 # Server
 server:
   ssl:
+    key-store: 
     key-store-type: JKS
 
 s3:

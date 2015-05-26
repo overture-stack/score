@@ -19,6 +19,7 @@ package collaboratory.storage.object.transport;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -122,12 +123,12 @@ public class ParallelPartObjectTransport implements ObjectTransport {
     return true;
   }
 
-  protected void takeCareOfException(List<Future<Part>> results) throws Throwable {
-    for (Future<Part> result : results) {
+  protected <T> void takeCareOfException(Collection<Future<T>> results) throws Throwable {
+    for (Future<T> result : results) {
       try {
         result.get();
       } catch (ExecutionException e) {
-        log.debug("Fail to submit part", e.getCause());
+        log.debug("Fail on the part", e.getCause());
         throw e.getCause();
       }
     }

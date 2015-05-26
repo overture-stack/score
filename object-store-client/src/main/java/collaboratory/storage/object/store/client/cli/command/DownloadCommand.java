@@ -34,7 +34,7 @@ import com.beust.jcommander.Parameters;
  * Handle download command line arguments
  */
 @Component
-@Parameters(separators = "=", commandDescription = "file upload")
+@Parameters(separators = "=", commandDescription = "object to download")
 @Slf4j
 public class DownloadCommand extends AbstractClientCommand {
 
@@ -54,8 +54,9 @@ public class DownloadCommand extends AbstractClientCommand {
   @SneakyThrows
   public int execute() {
     println("Start downloading object: %s", oid);
-    File upload = new File(filePath);
-    downloader.download(upload, oid, isForce);
+    println("Is Force: %s", isForce);
+    File dir = new File(filePath);
+    downloader.download(dir, oid, isForce);
     return SUCCESS_STATUS;
   }
 
