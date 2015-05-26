@@ -201,6 +201,21 @@ public class ObjectStoreServiceProxy {
     });
   }
 
+  public void finalizeDownload(String objectId, String uploadId) throws IOException {
+    log.debug("finalize download, object-id: {}, upload-id: {}", objectId, uploadId);
+    // TODO: delete tmp directory
+    retry.execute(new RetryCallback<Void, IOException>() {
+
+      @Override
+      public Void doWithRetry(RetryContext ctx) throws IOException {
+        HttpEntity<Object> requestEntity = new HttpEntity<Object>(defaultHeaders());
+        req.exchange(endpoint + "/upload/{object-id}?uploadId={upload-id}", HttpMethod.POST, requestEntity,
+            Void.class, objectId, uploadId);
+        return null;
+      }
+    });
+  }
+
   public void finalizeUpload(String objectId, String uploadId) throws IOException {
     log.debug("finalize upload, object-id: {}, upload-id: {}", objectId, uploadId);
     retry.execute(new RetryCallback<Void, IOException>() {

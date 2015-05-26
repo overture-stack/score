@@ -54,7 +54,6 @@ public class DownloadCommand extends AbstractClientCommand {
   @SneakyThrows
   public int execute() {
     println("Start downloading object: %s", oid);
-    println("Is Force: %s", isForce);
     File dir = new File(filePath);
     downloader.download(dir, oid, isForce);
     return SUCCESS_STATUS;
