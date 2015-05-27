@@ -32,13 +32,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import collaboratory.storage.object.store.client.transport.ObjectStoreServiceProxy;
+import collaboratory.storage.object.store.client.transport.ObjectTransport;
+import collaboratory.storage.object.store.client.transport.ObjectTransport.Mode;
 import collaboratory.storage.object.store.client.upload.NotRetryableException;
 import collaboratory.storage.object.store.client.upload.ProgressBar;
 import collaboratory.storage.object.store.core.model.ObjectSpecification;
 import collaboratory.storage.object.store.core.model.Part;
-import collaboratory.storage.object.transport.ObjectStoreServiceProxy;
-import collaboratory.storage.object.transport.ObjectTransport;
-import collaboratory.storage.object.transport.ObjectTransport.Mode;
 
 /**
  * main class to handle uploading objects
@@ -141,14 +141,24 @@ public class ObjectDownload {
   @SneakyThrows
   private void startNewDownload(File dir, String objectId) {
     log.info("Start a new download...");
-    if (!dir.exists()) {
-      Files.createDirectory(dir.toPath());
-    }
+    cleanupPreviousDownloadIfExist(dir, objectId);
     ObjectSpecification spec = proxy.getDownloadSpecification(objectId);
     downloadStateStore.init(dir, spec);
     // TODO: assign session id
     downloadParts(spec.getParts(), dir, objectId, spec.getUploadId(), new ProgressBar(spec.getParts().size(), spec
         .getParts().size()));
+  }
+
+  @SneakyThrows
+  private void cleanupPreviousDownloadIfExist(File dir, String objectId) {
+    if (!dir.exists()) {
+      Files.createDirectory(dir.toPath());
+    } else {
+      File objFile = DownloadUtils.getDownloadFile(dir, objectId);
+      if (objFile.exists()) {
+        objFile.delete();
+      }
+    }
   }
 
   /**

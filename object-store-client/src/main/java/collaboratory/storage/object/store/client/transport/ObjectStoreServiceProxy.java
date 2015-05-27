@@ -15,7 +15,7 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package collaboratory.storage.object.transport;
+package collaboratory.storage.object.store.client.transport;
 
 import java.io.File;
 import java.io.IOException;
@@ -308,9 +308,13 @@ public class ObjectStoreServiceProxy {
   }
 
   public boolean isDownloadDataRecoverable(File stateDir, String objectId, long fileSize) throws IOException {
-    // check if the states are consistent of the file being downloaded
-    // - check file size is consistent
-    return (fileSize == downloadStateStore.getObjectSize(stateDir, objectId));
+    try {
+      return (fileSize == downloadStateStore.getObjectSize(stateDir, objectId));
+    } catch (Throwable e) {
+      log.error("Download is not recoverable due to: ", e);
+    }
+    return false;
+
   }
 
   public boolean isUploadDataRecoverable(String objectId, long fileSize) throws IOException {

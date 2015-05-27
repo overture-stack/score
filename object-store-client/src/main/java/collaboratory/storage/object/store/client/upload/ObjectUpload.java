@@ -31,12 +31,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import collaboratory.storage.object.store.client.transport.ObjectStoreServiceProxy;
+import collaboratory.storage.object.store.client.transport.ObjectTransport;
+import collaboratory.storage.object.store.client.transport.ObjectTransport.Mode;
 import collaboratory.storage.object.store.core.model.ObjectSpecification;
 import collaboratory.storage.object.store.core.model.Part;
 import collaboratory.storage.object.store.core.model.UploadProgress;
-import collaboratory.storage.object.transport.ObjectStoreServiceProxy;
-import collaboratory.storage.object.transport.ObjectTransport;
-import collaboratory.storage.object.transport.ObjectTransport.Mode;
 
 /**
  * main class to handle uploading objects

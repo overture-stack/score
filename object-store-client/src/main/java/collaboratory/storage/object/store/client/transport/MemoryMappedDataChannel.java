@@ -15,43 +15,64 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package collaboratory.storage.object.transport;
+package collaboratory.storage.object.store.client.transport;
 
+import java.io.Closeable;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.PipedInputStream;
+import java.lang.reflect.Method;
+import java.nio.MappedByteBuffer;
+import java.nio.channels.Channels;
+import java.nio.channels.ReadableByteChannel;
+import java.nio.channels.WritableByteChannel;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import collaboratory.storage.object.store.client.upload.NotRetryableException;
 
-import com.google.api.client.util.IOUtils;
 import com.google.common.hash.Hashing;
 import com.google.common.hash.HashingOutputStream;
 
 /**
- * Channels that use pipe
+ * Channel based on {@link java.nio.MappedByteBuffer memory mapped buffer}
  */
 @Slf4j
 @AllArgsConstructor
-public class PipedDataChannel extends AbstractDataChannel {
+public class MemoryMappedDataChannel extends AbstractDataChannel implements Closeable {
 
-  private final PipedInputStream is;
+  private MappedByteBuffer buffer;
   private final long offset;
   private final long length;
   private String md5 = null;
 
+  /**
+   * it is not possible to reset a memory mapped buffer
+   */
   @Override
   public void reset() throws IOException {
     log.warn("cannot be reset");
     throw new NotRetryableException();
   }
 
+  /**
+   * Write to a given outputstream and calculate the hash once it is fully written
+   */
   @Override
   public void writeTo(OutputStream os) throws IOException {
-    HashingOutputStream hos = new HashingOutputStream(Hashing.md5(), os);
-    IOUtils.copy(is, hos);
-    md5 = hos.hash().toString();
+    try (HashingOutputStream hos = new HashingOutputStream(Hashing.md5(), os)) {
+      WritableByteChannel writeChannel = Channels.newChannel(hos);
+      writeChannel.write(buffer);
+      md5 = hos.hash().toString();
+    }
+  }
+
+  @Override
+  public void writeTo(InputStream is) throws IOException {
+    ReadableByteChannel readChannel = Channels.newChannel(is);
+    while (buffer.hasRemaining()) {
+      readChannel.read(buffer);
+    }
   }
 
   @Override
@@ -64,13 +85,27 @@ public class PipedDataChannel extends AbstractDataChannel {
     return md5;
   }
 
+  /**
+   * buffer needs to be closed proactively so it won't trigger out-of-memory error
+   */
   @Override
   public void close() {
-    try {
-      is.close();
-    } catch (IOException e) {
-      log.warn("fail to close the input pipe", e);
+    if (!buffer.isDirect()) {
+      log.info("This is not a direct a buffer");
+      return;
     }
+    buffer.force();
+    try {
+      // sun.misc.Cleaner cl = ((sun.nio.ch.DirectBuffer) buffer).cleaner();
+      // if (cl != null) cl.clean();
+      Method cleaner = buffer.getClass().getMethod("cleaner");
+      cleaner.setAccessible(true);
+      Method clean = Class.forName("sun.misc.Cleaner").getMethod("clean");
+      clean.setAccessible(true);
+      clean.invoke(cleaner.invoke(buffer));
+    } catch (Exception e) {
+      log.warn("fail to unmap memory", e);
+    }
+    buffer = null;
   }
-
 }

@@ -174,11 +174,6 @@ public class DownloadStateStore {
     }
   }
 
-  /**
-   * @param stateDir
-   * @param objectId
-   * @return
-   */
   public long getObjectSize(File stateDir, String objectId) {
     ObjectSpecification spec = loadSpecification(stateDir, objectId);
     return spec.getObjectSize();
