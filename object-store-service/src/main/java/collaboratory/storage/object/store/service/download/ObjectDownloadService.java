@@ -31,6 +31,7 @@ import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import collaboratory.storage.object.store.core.model.ObjectSpecification;
@@ -84,29 +85,34 @@ public class ObjectDownloadService {
     log.debug("Download meta key: {}", objectMetaKey);
 
     try {
-      GetObjectRequest req =
-          new GetObjectRequest(bucketName, objectMetaKey);
-      S3Object obj = s3Client.getObject(req);
+      S3Object obj = retrieveObject(objectId, objectMetaKey);
       ObjectMapper mapper = new ObjectMapper();
-
       ObjectSpecification spec;
       try (S3ObjectInputStream inputStream = obj.getObjectContent()) {
         spec = mapper.readValue(inputStream, ObjectSpecification.class);
         fillUrl(objectKey, spec.getParts());
         return spec;
       }
-    } catch (AmazonServiceException e) {
-      log.error("Amazon service throws an exception", e);
-      if (e.isRetryable()) {
-        throw new RetryableException(e);
-      } else {
-        throw new IdNotFoundException(objectId);
-      }
     } catch (JsonParseException | JsonMappingException e) {
       throw new NotRetryableException(e);
     } catch (IOException e) {
       log.error("Fail to retrieve meta file", e);
       throw new NotRetryableException(e);
+    }
+  }
+
+  private S3Object retrieveObject(String objectId, String objectMetaKey) {
+    try {
+      GetObjectRequest req =
+          new GetObjectRequest(bucketName, objectMetaKey);
+      return s3Client.getObject(req);
+    } catch (AmazonServiceException e) {
+      log.error("Amazon service throws an exception", e);
+      if (e.getStatusCode() == HttpStatus.NOT_FOUND.value() || !e.isRetryable()) {
+        throw new IdNotFoundException(objectId);
+      } else {
+        throw new RetryableException(e);
+      }
     }
   }
 

@@ -203,19 +203,11 @@ public class ObjectStoreServiceProxy {
     });
   }
 
-  public void finalizeDownload(String objectId, String uploadId) throws IOException {
-    log.debug("finalize download, object-id: {}, upload-id: {}", objectId, uploadId);
-    // TODO: delete tmp directory
-    retry.execute(new RetryCallback<Void, IOException>() {
-
-      @Override
-      public Void doWithRetry(RetryContext ctx) throws IOException {
-        HttpEntity<Object> requestEntity = new HttpEntity<Object>(defaultHeaders());
-        req.exchange(endpoint + "/upload/{object-id}?uploadId={upload-id}", HttpMethod.POST, requestEntity,
-            Void.class, objectId, uploadId);
-        return null;
-      }
-    });
+  public void finalizeDownload(File outDir, String objectId) throws IOException {
+    log.debug("finalize download, object-id: {}", objectId);
+    if (downloadStateStore.canFinalize(outDir, objectId)) {
+      downloadStateStore.close(outDir, objectId);
+    }
   }
 
   public void finalizeUpload(String objectId, String uploadId) throws IOException {
@@ -311,7 +303,7 @@ public class ObjectStoreServiceProxy {
     try {
       return (fileSize == downloadStateStore.getObjectSize(stateDir, objectId));
     } catch (Throwable e) {
-      log.error("Download is not recoverable due to: ", e);
+      log.warn("Download is not recoverable due to: ", e);
     }
     return false;
 

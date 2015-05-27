@@ -36,11 +36,11 @@ public class RetryableResponseErrorHandler extends DefaultResponseErrorHandler {
     case NOT_FOUND:
     case BAD_REQUEST:
     case INTERNAL_SERVER_ERROR:
-      log.warn("Not Retryable Endpoint");
-      throw new NotRetryableException();
+      log.warn("Not Retryable Endpoint: {}", response);
+      throw new NotRetryableException(new IOException("object store service error"));
     default:
-      log.warn("Retryable exception: {}", response.getStatusCode());
-      throw new RetryableException();
+      log.warn("Retryable exception: {}", response);
+      throw new RetryableException(new IOException("object store service error"));
 
     }
   }

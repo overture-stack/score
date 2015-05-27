@@ -169,15 +169,14 @@ public class MemoryMappedParallelPartObjectTransport extends ParallelPartObjectT
       progress.end(true);
     } else {
       try {
+        proxy.finalizeDownload(outputDir, objectId);
         takeCareOfException(results);
       } catch (Throwable e) {
         progress.end(true);
         throw e;
       }
     }
-
     progress.end(false);
-
   }
 
   private long calculateTotalSize(List<Part> parts) {

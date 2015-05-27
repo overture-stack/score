@@ -178,4 +178,18 @@ public class DownloadStateStore {
     ObjectSpecification spec = loadSpecification(stateDir, objectId);
     return spec.getObjectSize();
   }
+
+  public boolean canFinalize(File outDir, String objectId) {
+    ObjectSpecification spec = loadSpecification(outDir, objectId);
+    for (Part part : spec.getParts()) {
+      if (!isCompleted(outDir, objectId, part)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  public void close(File outDir, String objectId) throws IOException {
+    deleteDirectoryIfExist(getObjectStateDir(outDir, objectId));
+  }
 }

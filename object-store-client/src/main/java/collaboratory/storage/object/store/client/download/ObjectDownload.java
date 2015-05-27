@@ -73,10 +73,14 @@ public class ObjectDownload {
    * @throws IOException
    */
   public void download(File outputDirectory, String objectId, boolean redo) throws IOException {
-    for (int retry = 0; retry < retryNumber; retry++)
+    int retry = 0;
+    for (; retry < retryNumber; retry++) {
       try {
         if (redo) {
-          // TODO: delete the file first and init downloadStateStore
+          File objFile = DownloadUtils.getDownloadFile(outputDirectory, objectId);
+          if (objFile.exists()) {
+            objFile.delete();
+          }
           startNewDownload(outputDirectory, objectId);
         } else {
           // only perform checksum the first time of the resume
@@ -90,6 +94,10 @@ public class ObjectDownload {
             !proxy.isDownloadDataRecoverable(outputDirectory, objectId,
                 DownloadUtils.getDownloadFile(outputDirectory, objectId).length());
       }
+    }
+    if (retry == retryNumber) {
+      throw new RuntimeException("Number of retry exhausted");
+    }
   }
 
   private void resumeIfPossible(File outputDirectory, String objectId, boolean checksum) throws IOException {
@@ -141,24 +149,14 @@ public class ObjectDownload {
   @SneakyThrows
   private void startNewDownload(File dir, String objectId) {
     log.info("Start a new download...");
-    cleanupPreviousDownloadIfExist(dir, objectId);
+    if (!dir.exists()) {
+      Files.createDirectories(dir.toPath());
+    }
     ObjectSpecification spec = proxy.getDownloadSpecification(objectId);
     downloadStateStore.init(dir, spec);
     // TODO: assign session id
-    downloadParts(spec.getParts(), dir, objectId, spec.getUploadId(), new ProgressBar(spec.getParts().size(), spec
+    downloadParts(spec.getParts(), dir, objectId, objectId, new ProgressBar(spec.getParts().size(), spec
         .getParts().size()));
-  }
-
-  @SneakyThrows
-  private void cleanupPreviousDownloadIfExist(File dir, String objectId) {
-    if (!dir.exists()) {
-      Files.createDirectory(dir.toPath());
-    } else {
-      File objFile = DownloadUtils.getDownloadFile(dir, objectId);
-      if (objFile.exists()) {
-        objFile.delete();
-      }
-    }
   }
 
   /**
