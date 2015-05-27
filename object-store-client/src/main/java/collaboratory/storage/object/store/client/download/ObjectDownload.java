@@ -38,6 +38,7 @@ import collaboratory.storage.object.store.core.model.ObjectSpecification;
 import collaboratory.storage.object.store.core.model.Part;
 import collaboratory.storage.object.transport.ObjectStoreServiceProxy;
 import collaboratory.storage.object.transport.ObjectTransport;
+import collaboratory.storage.object.transport.ObjectTransport.Mode;
 
 /**
  * main class to handle uploading objects
@@ -75,6 +76,7 @@ public class ObjectDownload {
     for (int retry = 0; retry < retryNumber; retry++)
       try {
         if (redo) {
+          // TODO: delete the file first and init downloadStateStore
           startNewDownload(outputDirectory, objectId);
         } else {
           // only perform checksum the first time of the resume
@@ -84,9 +86,9 @@ public class ObjectDownload {
       } catch (NotRetryableException e) {
         log.warn(
             "Download is not completed successfully in the last execution. Checking data integrity. Please wait...", e);
-        // TODO: check if download is recoverable
-        redo = true;
-        // redo = !proxy.isUploadDataRecoverable(objectId, file.length());
+        redo =
+            !proxy.isDownloadDataRecoverable(outputDirectory, objectId,
+                DownloadUtils.getDownloadFile(outputDirectory, objectId).length());
       }
   }
 
@@ -139,7 +141,9 @@ public class ObjectDownload {
   @SneakyThrows
   private void startNewDownload(File dir, String objectId) {
     log.info("Start a new download...");
-    Files.createDirectory(dir.toPath());
+    if (!dir.exists()) {
+      Files.createDirectory(dir.toPath());
+    }
     ObjectSpecification spec = proxy.getDownloadSpecification(objectId);
     downloadStateStore.init(dir, spec);
     // TODO: assign session id
@@ -156,6 +160,7 @@ public class ObjectDownload {
         .withProgressBar(progressBar)
         .withParts(parts)
         .withObjectId(objectId)
+        .withTransportMode(Mode.DOWNLOAD)
         .withSessionId(sessionId);
     log.debug("Transport Configuration: {}", transportBuilder);
     transportBuilder.build().receive(file);

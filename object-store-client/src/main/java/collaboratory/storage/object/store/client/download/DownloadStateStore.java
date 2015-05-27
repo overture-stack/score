@@ -21,7 +21,11 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
@@ -41,6 +45,9 @@ public class DownloadStateStore {
     try {
       byte[] content = mapper.writeValueAsBytes(spec);
       File objectStateDir = getObjectStateDir(stateDir, spec.getObjectId());
+
+      deleteDirectoryIfExist(objectStateDir);
+
       Files.createDirectories(objectStateDir.toPath());
       File specFile = new File(objectStateDir, getSpecificationName());
       Files.copy(new ByteArrayInputStream(content), specFile.toPath());
@@ -48,6 +55,31 @@ public class DownloadStateStore {
       log.error("Fail to create meta file", e);
       throw new NotRetryableException(e);
     }
+  }
+
+  /**
+   * @param objectStateDir
+   * @throws IOException
+   */
+  private void deleteDirectoryIfExist(File objectStateDir) throws IOException {
+    if (objectStateDir.exists()) {
+      Files.walkFileTree(objectStateDir.toPath(), new SimpleFileVisitor<Path>() {
+
+        @Override
+        public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+          Files.delete(file);
+          return FileVisitResult.CONTINUE;
+        }
+
+        @Override
+        public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+          Files.delete(dir);
+          return FileVisitResult.CONTINUE;
+        }
+
+      });
+    }
+
   }
 
   private File getObjectStateDir(File stateDir, String objectId) {
@@ -119,7 +151,7 @@ public class DownloadStateStore {
     return part;
   }
 
-  private ObjectSpecification loadSpecification(File stateDir, String objectId) {
+  public ObjectSpecification loadSpecification(File stateDir, String objectId) {
     File objectStateDir = getObjectStateDir(stateDir, objectId);
     File specFile = new File(objectStateDir, getSpecificationName());
 
@@ -131,5 +163,24 @@ public class DownloadStateStore {
       throw new NotRetryableException(e);
     }
     return spec;
+  }
+
+  public void deletePart(File stateDir, String objectId, Part part) {
+    File partStateFile = new File(getObjectStateDir(stateDir, objectId), getPartName(part));
+    try {
+      partStateFile.delete();
+    } catch (Throwable e) {
+      throw new NotRetryableException(e);
+    }
+  }
+
+  /**
+   * @param stateDir
+   * @param objectId
+   * @return
+   */
+  public long getObjectSize(File stateDir, String objectId) {
+    ObjectSpecification spec = loadSpecification(stateDir, objectId);
+    return spec.getObjectSize();
   }
 }

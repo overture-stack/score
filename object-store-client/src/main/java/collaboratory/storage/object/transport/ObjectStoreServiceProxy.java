@@ -286,7 +286,12 @@ public class ObjectStoreServiceProxy {
     });
   }
 
-  public void deletePart(String objectId, String uploadId, Part part) throws IOException {
+  public void deleteDownloadPart(File stateDir, String objectId, Part part) {
+    downloadStateStore.deletePart(stateDir, objectId, part);
+
+  }
+
+  public void deleteUploadPart(String objectId, String uploadId, Part part) throws IOException {
     log.debug("Delete part object-id: {}, upload-id: {}, part: {}", objectId, uploadId, part);
     retry.execute(new RetryCallback<Void, IOException>() {
 
@@ -300,6 +305,12 @@ public class ObjectStoreServiceProxy {
         return null;
       }
     });
+  }
+
+  public boolean isDownloadDataRecoverable(File stateDir, String objectId, long fileSize) throws IOException {
+    // check if the states are consistent of the file being downloaded
+    // - check file size is consistent
+    return (fileSize == downloadStateStore.getObjectSize(stateDir, objectId));
   }
 
   public boolean isUploadDataRecoverable(String objectId, long fileSize) throws IOException {

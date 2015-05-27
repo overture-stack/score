@@ -66,7 +66,7 @@ public class MemoryMappedParallelPartObjectTransport extends ParallelPartObjectT
           public Part call() throws Exception {
             MemoryMappedDataChannel channel = new MemoryMappedDataChannel(buffer, 0, part.getPartSize(), null);
             if (part.isCompleted()) {
-              if (isCorrupted(channel, part)) {
+              if (isCorrupted(channel, part, file)) {
                 proxy.uploadPart(channel, part, objectId,
                     uploadId);
               }
@@ -130,7 +130,7 @@ public class MemoryMappedParallelPartObjectTransport extends ParallelPartObjectT
               MemoryMappedDataChannel memoryChannel =
                   new MemoryMappedDataChannel(buffer, part.getOffset(), part.getPartSize(), null);
               if (part.isCompleted()) {
-                if (isCorrupted(memoryChannel, part)) {
+                if (isCorrupted(memoryChannel, part, outputDir)) {
                   proxy.downloadPart(memoryChannel, part, objectId, outputDir);
                 }
                 progress.updateChecksum(1);

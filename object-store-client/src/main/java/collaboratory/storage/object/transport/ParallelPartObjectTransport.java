@@ -55,6 +55,7 @@ public class ParallelPartObjectTransport implements ObjectTransport {
   final protected List<Part> parts;
   final protected String objectId;
   final protected String uploadId;
+  final protected Mode mode;
   final protected AtomicLong memory;
   final protected int maxUploadDuration;
 
@@ -68,6 +69,7 @@ public class ParallelPartObjectTransport implements ObjectTransport {
     this.nThreads = builder.nThreads;
     this.memory = new AtomicLong(builder.memory);
     this.maxUploadDuration = builder.maxUploadDuration;
+    this.mode = builder.mode;
   }
 
   @Override
@@ -84,7 +86,7 @@ public class ParallelPartObjectTransport implements ObjectTransport {
         public Part call() throws Exception {
           FileDataChannel channel = new FileDataChannel(file, part.getOffset(), part.getPartSize(), null);
           if (part.isCompleted()) {
-            if (isCorrupted(channel, part)) {
+            if (isCorrupted(channel, part, file)) {
               proxy.uploadPart(channel, part, objectId,
                   uploadId);
             }
@@ -113,11 +115,19 @@ public class ParallelPartObjectTransport implements ObjectTransport {
     progress.end(false);
   }
 
-  protected boolean isCorrupted(DataChannel channel, Part part) throws IOException {
+  // TODO: should remove file parameter
+  protected boolean isCorrupted(DataChannel channel, Part part, File file) throws IOException {
     if (channel.isValidMd5(part.getMd5())) {
       return false;
     }
-    proxy.deletePart(objectId, uploadId, part);
+    switch (mode) {
+    case UPLOAD:
+      proxy.deleteUploadPart(objectId, uploadId, part);
+      break;
+    case DOWNLOAD:
+      proxy.deleteDownloadPart(file, objectId, part);
+
+    }
     channel.reset();
     return true;
   }
@@ -178,6 +188,7 @@ public class ParallelPartObjectTransport implements ObjectTransport {
       Preconditions.checkNotNull(objectId);
       Preconditions.checkNotNull(uploadId);
       Preconditions.checkNotNull(progressBar);
+      Preconditions.checkNotNull(mode);
 
       nThreads = nThreads < MIN_WORKER ? MIN_WORKER : nThreads;
       memory = memory < MIN_MEMORY ? MIN_MEMORY : memory;

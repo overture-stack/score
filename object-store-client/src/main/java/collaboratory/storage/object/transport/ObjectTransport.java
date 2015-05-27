@@ -28,6 +28,10 @@ import collaboratory.storage.object.store.core.model.Part;
  */
 public interface ObjectTransport {
 
+  enum Mode {
+    UPLOAD, DOWNLOAD
+  };
+
   /**
    * Send a given file to collaboratory
    * @param file
@@ -52,6 +56,8 @@ public interface ObjectTransport {
     public Builder withSessionId(String uploadId);
 
     public Builder withProxy(ObjectStoreServiceProxy proxy);
+
+    public Builder withTransportMode(Mode mode);
   }
 
   public abstract class AbstractBuilder implements Builder {
@@ -61,6 +67,7 @@ public interface ObjectTransport {
     protected List<Part> parts;
     protected String objectId;
     protected String uploadId;
+    protected Mode mode;
 
     @Override
     public Builder withProgressBar(ProgressBar progressBar) {
@@ -77,6 +84,12 @@ public interface ObjectTransport {
     @Override
     public Builder withObjectId(String objectId) {
       this.objectId = objectId;
+      return this;
+    }
+
+    @Override
+    public Builder withTransportMode(Mode mode) {
+      this.mode = mode;
       return this;
     }
 

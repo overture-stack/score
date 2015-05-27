@@ -61,7 +61,7 @@ public class SequentialPartObjectTransport implements ObjectTransport {
           progress.updateChecksum(1);
           continue;
         }
-        proxy.deletePart(objectId, uploadId, part);
+        proxy.deleteUploadPart(objectId, uploadId, part);
         channel.reset();
         resend = true;
       }
