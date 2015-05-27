@@ -74,14 +74,14 @@ public class UploadConfig {
   @Autowired
   private X509HostnameVerifier hostnameVerifier;
 
-  @Bean(name = "upload-rest-template")
+  @Bean(name = "object-store-service-template")
   public RestTemplate uploadTemplate() {
     RestTemplate req = new RestTemplate(clientHttpRequestFactory());
     req.setErrorHandler(new RetryableResponseErrorHandler());
     return req;
   }
 
-  @Bean(name = "upload-data-template")
+  @Bean(name = "object-store-template")
   public RestTemplate uploadDataTemplate() {
     RestTemplate req = new RestTemplate(streamingClientHttpRequestFactory());
     req.setErrorHandler(new RetryableResponseErrorHandler());
@@ -118,7 +118,7 @@ public class UploadConfig {
     return factory;
   }
 
-  @Bean(name = "upload-retry-template")
+  @Bean(name = "service-retry-template")
   public RetryTemplate retryTemplate() {
     RetryTemplate retry = new RetryTemplate();
 

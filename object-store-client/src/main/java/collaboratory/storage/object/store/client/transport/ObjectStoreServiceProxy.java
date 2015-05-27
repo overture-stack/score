@@ -62,11 +62,11 @@ public class ObjectStoreServiceProxy {
   private ClientProperties properties;
 
   @Autowired
-  @Qualifier("upload-rest-template")
+  @Qualifier("object-store-service-template")
   private RestTemplate req;
 
   @Autowired
-  @Qualifier("upload-data-template")
+  @Qualifier("object-store-template")
   private RestTemplate dataUploadreq;
 
   @Autowired
@@ -74,7 +74,7 @@ public class ObjectStoreServiceProxy {
   private String endpoint;
 
   @Autowired
-  @Qualifier("upload-retry-template")
+  @Qualifier("service-retry-template")
   private RetryTemplate retry;
 
   @Autowired

@@ -25,13 +25,11 @@ import org.springframework.context.annotation.Configuration;
 import collaboratory.storage.object.store.client.download.DownloadStateStore;
 
 /**
- * Configurations for connections for uploads
+ * Configurations for connections for downloads
  */
 @Data
 @Configuration
 public class DownloadConfig {
-
-  private static final int MAX_TIMEOUT = 5 * 60 * 1000;
 
   @Bean
   public DownloadStateStore downloadStateStore() {
