@@ -17,18 +17,25 @@
  */
 package collaboratory.storage.object.store.client.config;
 
+import static java.lang.String.format;
+import static java.util.Collections.singletonList;
+import static javax.ws.rs.core.HttpHeaders.AUTHORIZATION;
+
 import java.io.IOException;
 import java.security.KeyStore;
 
 import lombok.Data;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 
 import org.apache.http.client.HttpClient;
 import org.apache.http.conn.ssl.SSLContexts;
 import org.apache.http.conn.ssl.X509HostnameVerifier;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.message.BasicHeader;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
@@ -48,11 +55,15 @@ import com.google.common.collect.ImmutableMap.Builder;
 /**
  * Configurations for connections for uploads
  */
+@Slf4j
 @Data
 @Configuration
 public class UploadConfig {
 
   private static final int MAX_TIMEOUT = 5 * 60 * 1000;
+
+  @Value("${accessToken:undefined}")
+  private String accessToken;
 
   @Autowired
   private ClientProperties properties;
@@ -93,6 +104,8 @@ public class UploadConfig {
       client.setSslcontext(SSLContexts.custom().loadTrustMaterial(truststore).useTLS().build());
       client.setHostnameVerifier(hostnameVerifier);
     }
+    configueOAuth(client);
+
     return client.build();
   }
 
@@ -139,4 +152,12 @@ public class UploadConfig {
     return scheme + properties.getUpload().getServiceHostname() + ":" + properties.getUpload().getServicePort();
 
   }
+
+  private void configueOAuth(HttpClientBuilder client) {
+    if (!accessToken.equals("undefined")) {
+      log.debug("Setting access token: {}", accessToken);
+      client.setDefaultHeaders(singletonList(new BasicHeader(AUTHORIZATION, format("Bearer %s", accessToken))));
+    }
+  }
+
 }

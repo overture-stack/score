@@ -51,3 +51,8 @@ logging:
     springframework.retry: DEBUG
     springframework.web: DEBUG
     com.amazonaws.services: DEBUG
+---
+spring:
+  profiles: secure
+  
+accessToken: "CHANGE_ME"

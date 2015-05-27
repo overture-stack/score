@@ -58,6 +58,12 @@ endpoints:
   env.enabled: false
   info.enabled: false
 
+# OAuth authentication server
+auth:
+  server:
+    url: https://localhost:8443/oauth/check_token
+    clientId: resource
+    clientsecret: pass
 ---
 spring:
   profiles: benchmark
@@ -71,3 +77,8 @@ s3:
   secured: false
   #Sinai Center
   endpoint: http://www.cancercollaboratory.org:9081
+
+---
+# Strict SSL certificates are disabled in this profile
+spring:
+  profiles: dev
