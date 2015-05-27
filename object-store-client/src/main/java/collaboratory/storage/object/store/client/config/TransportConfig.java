@@ -25,8 +25,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import collaboratory.storage.object.store.client.upload.ObjectStoreServiceProxy;
 import collaboratory.storage.object.transport.MemoryMappedParallelPartObjectTransport;
+import collaboratory.storage.object.transport.ObjectStoreServiceProxy;
 import collaboratory.storage.object.transport.ObjectTransport;
 import collaboratory.storage.object.transport.ParallelPartObjectTransport;
 import collaboratory.storage.object.transport.PipedParallelPartObjectTransport;

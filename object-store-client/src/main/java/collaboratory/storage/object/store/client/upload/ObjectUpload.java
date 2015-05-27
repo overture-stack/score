@@ -34,6 +34,7 @@ import org.springframework.stereotype.Component;
 import collaboratory.storage.object.store.core.model.Part;
 import collaboratory.storage.object.store.core.model.UploadProgress;
 import collaboratory.storage.object.store.core.model.ObjectSpecification;
+import collaboratory.storage.object.transport.ObjectStoreServiceProxy;
 import collaboratory.storage.object.transport.ObjectTransport;
 
 /**

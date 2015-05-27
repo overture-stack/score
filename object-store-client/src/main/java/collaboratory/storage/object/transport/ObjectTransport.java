@@ -20,7 +20,6 @@ package collaboratory.storage.object.transport;
 import java.io.File;
 import java.util.List;
 
-import collaboratory.storage.object.store.client.upload.ObjectStoreServiceProxy;
 import collaboratory.storage.object.store.client.upload.ProgressBar;
 import collaboratory.storage.object.store.core.model.Part;
 

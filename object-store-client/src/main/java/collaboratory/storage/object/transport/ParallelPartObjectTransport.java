@@ -32,7 +32,6 @@ import java.util.concurrent.atomic.AtomicLong;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import collaboratory.storage.object.store.client.upload.ObjectStoreServiceProxy;
 import collaboratory.storage.object.store.client.upload.ProgressBar;
 import collaboratory.storage.object.store.core.model.DataChannel;
 import collaboratory.storage.object.store.core.model.Part;

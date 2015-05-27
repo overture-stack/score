@@ -33,10 +33,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import collaboratory.storage.object.store.client.upload.NotRetryableException;
-import collaboratory.storage.object.store.client.upload.ObjectStoreServiceProxy;
 import collaboratory.storage.object.store.client.upload.ProgressBar;
 import collaboratory.storage.object.store.core.model.ObjectSpecification;
 import collaboratory.storage.object.store.core.model.Part;
+import collaboratory.storage.object.transport.ObjectStoreServiceProxy;
 import collaboratory.storage.object.transport.ObjectTransport;
 
 /**

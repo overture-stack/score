@@ -15,7 +15,7 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package collaboratory.storage.object.store.client.upload;
+package collaboratory.storage.object.transport;
 
 import java.io.File;
 import java.io.IOException;
@@ -40,6 +40,8 @@ import org.springframework.web.client.RestTemplate;
 
 import collaboratory.storage.object.store.client.config.ClientProperties;
 import collaboratory.storage.object.store.client.download.DownloadStateStore;
+import collaboratory.storage.object.store.client.upload.NotRetryableException;
+import collaboratory.storage.object.store.client.upload.RetryableException;
 import collaboratory.storage.object.store.core.model.DataChannel;
 import collaboratory.storage.object.store.core.model.ObjectSpecification;
 import collaboratory.storage.object.store.core.model.Part;
