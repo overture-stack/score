@@ -91,7 +91,6 @@ public class MemoryMappedDataChannel extends AbstractDataChannel implements Clos
   @Override
   public void close() {
     if (!buffer.isDirect()) {
-      log.info("This is not a direct a buffer");
       return;
     }
     buffer.force();

@@ -34,9 +34,9 @@ import org.springframework.stereotype.Component;
 
 import collaboratory.storage.object.store.client.transport.ObjectStoreServiceProxy;
 import collaboratory.storage.object.store.client.transport.ObjectTransport;
+import collaboratory.storage.object.store.client.transport.ProgressBar;
 import collaboratory.storage.object.store.client.transport.ObjectTransport.Mode;
 import collaboratory.storage.object.store.client.upload.NotRetryableException;
-import collaboratory.storage.object.store.client.upload.ProgressBar;
 import collaboratory.storage.object.store.core.model.ObjectSpecification;
 import collaboratory.storage.object.store.core.model.Part;
 

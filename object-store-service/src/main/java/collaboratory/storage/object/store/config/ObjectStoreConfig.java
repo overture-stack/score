@@ -18,7 +18,6 @@
 package collaboratory.storage.object.store.config;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -30,11 +29,9 @@ import collaboratory.storage.object.store.service.upload.SimplePartCalculator;
 import collaboratory.storage.object.store.service.upload.UploadStateStore;
 
 /**
- * Upload Service Configuration
+ * Object Store Service Configuration
  */
 @Configuration
-@EnableAutoConfiguration(exclude = { org.springframework.boot.autoconfigure.security.SecurityAutoConfiguration.class,
-    org.springframework.boot.actuate.autoconfigure.ManagementSecurityAutoConfiguration.class })
 @Profile({ "prod", "default", "debug" })
 public class ObjectStoreConfig {
 

@@ -1,4 +1,4 @@
-package collaboratory.storage.object.store.client.upload;
+package collaboratory.storage.object.store.client.transport;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -27,12 +27,13 @@ public class ProgressBar {
 
   private final int total;
   private final Stopwatch stopwatch;
-  private long byteReadPerSec;
-  private long byteWrittenPerSec;
-  private long percent;
   private ScheduledExecutorService progressMonitor;
   private final long DELAY = 1L;
   private final int checksumTotal;
+
+  private long byteReadPerSec;
+  private long byteWrittenPerSec;
+  private long percent;
   private int checksumPercent = 100;
 
   public ProgressBar(int total, int numJobs) {
@@ -79,6 +80,7 @@ public class ProgressBar {
 
   public void updateChecksum(int incr) {
     checksumPercent = checksumTotalIncr.addAndGet(incr) * 100 / checksumTotal;
+    log.debug("checksum percent: {}", checksumPercent);
   }
 
   private long duration() {

@@ -66,7 +66,9 @@ public class MemoryMappedParallelPartObjectTransport extends ParallelPartObjectT
           public Part call() throws Exception {
             MemoryMappedDataChannel channel = new MemoryMappedDataChannel(buffer, 0, part.getPartSize(), null);
             if (part.isCompleted()) {
+              log.debug("Checksumming part: {}", part);
               if (isCorrupted(channel, part, file)) {
+                log.debug("Fail checksumm. Reupload part: {}", part);
                 proxy.uploadPart(channel, part, objectId,
                     uploadId);
               }

@@ -1,14 +1,15 @@
 package collaboratory.storage.object.store;
 
 import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Configuration;
 
 /**
  * Application entry point.
  */
-@Configuration
 @ComponentScan
+@EnableAutoConfiguration(exclude = { org.springframework.boot.autoconfigure.security.SecurityAutoConfiguration.class,
+    org.springframework.boot.actuate.autoconfigure.ManagementSecurityAutoConfiguration.class })
 public class ObjectStoreMain {
 
   public static void main(String... args) {

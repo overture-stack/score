@@ -32,7 +32,6 @@ import java.util.concurrent.atomic.AtomicLong;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import collaboratory.storage.object.store.client.upload.ProgressBar;
 import collaboratory.storage.object.store.core.model.DataChannel;
 import collaboratory.storage.object.store.core.model.Part;
 
@@ -120,6 +119,8 @@ public class ParallelPartObjectTransport implements ObjectTransport {
     if (channel.isValidMd5(part.getMd5())) {
       return false;
     }
+    log.debug("Part is corrupted: {}", part);
+
     switch (mode) {
     case UPLOAD:
       proxy.deleteUploadPart(objectId, uploadId, part);
