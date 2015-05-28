@@ -25,17 +25,18 @@ import org.springframework.context.annotation.Profile;
 
 import collaboratory.storage.object.store.service.upload.AmazonURLGenerator;
 import collaboratory.storage.object.store.service.upload.ObjectPartCalculator;
+import collaboratory.storage.object.store.service.upload.ObjectURLGenerator;
 import collaboratory.storage.object.store.service.upload.SimplePartCalculator;
 import collaboratory.storage.object.store.service.upload.UploadStateStore;
-import collaboratory.storage.object.store.service.upload.ObjectURLGenerator;
 
 /**
  * Upload Service Configuration
  */
 @Configuration
-@EnableAutoConfiguration
+@EnableAutoConfiguration(exclude = { org.springframework.boot.autoconfigure.security.SecurityAutoConfiguration.class,
+    org.springframework.boot.actuate.autoconfigure.ManagementSecurityAutoConfiguration.class })
 @Profile({ "prod", "default", "debug" })
-public class UploadConfig {
+public class ObjectStoreConfig {
 
   @Value("${upload.partsize}")
   private int partSize;

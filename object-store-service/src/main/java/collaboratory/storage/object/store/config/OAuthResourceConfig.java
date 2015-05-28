@@ -45,7 +45,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
  * Resource service configuration file.<br>
  * Protects resources with access token obtained at the authorization server.
  */
-@Profile("prod")
+@Profile("secure")
 @Configuration
 @EnableWebSecurity
 @EnableResourceServer
@@ -96,20 +96,20 @@ public class OAuthResourceConfig extends ResourceServerConfigurerAdapter {
     // FIXME: Configure access to resources by token scope
 
     // @formatter:off
-    http
-      .authorizeRequests()
-      .antMatchers("/upload/**")
-      .access("#oauth2.hasScope('os.upload')")
-      .and()
-      
-      .authorizeRequests()
-      .antMatchers("/download/**")
-      .access("#oauth2.hasScope('os.download')")
-      .and()
-      
-      .authorizeRequests()
-      .anyRequest()
-      .authenticated();
+//    http
+//      .authorizeRequests()
+//      .antMatchers("/upload/**")
+//      .access("#oauth2.hasScope('os.upload')")
+//      .and()
+//      
+//      .authorizeRequests()
+//      .antMatchers("/download/**")
+//      .access("#oauth2.hasScope('os.download')")
+//      .and()
+//      
+//      .authorizeRequests()
+//      .anyRequest()
+//      .authenticated();
     // @formatter:on
   }
 
