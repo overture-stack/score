@@ -58,12 +58,6 @@ endpoints:
   env.enabled: false
   info.enabled: false
 
-# OAuth authentication server
-auth:
-  server:
-    url: https://localhost:8443/oauth/check_token
-    clientId: resource
-    clientsecret: pass
 ---
 spring:
   profiles: benchmark
@@ -82,3 +76,14 @@ s3:
 # Strict SSL certificates are disabled in this profile
 spring:
   profiles: dev
+---
+spring:
+  profiles: secure
+  
+# OAuth authentication server
+auth:
+  server:
+    url: https://localhost:8443/oauth/check_token
+    clientId: resource
+    clientsecret: pass
+      

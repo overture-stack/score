@@ -25,6 +25,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.actuate.autoconfigure.ManagementSecurityAutoConfiguration;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.security.SecurityAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -45,72 +48,82 @@ import org.springframework.web.filter.OncePerRequestFilter;
  * Resource service configuration file.<br>
  * Protects resources with access token obtained at the authorization server.
  */
-@Profile("prod")
 @Configuration
-@EnableWebSecurity
-@EnableResourceServer
-public class OAuthResourceConfig extends ResourceServerConfigurerAdapter {
+public class SecurityConfig {
 
-  private TokenExtractor tokenExtractor = new BearerTokenExtractor();
+  @Configuration
+  @EnableAutoConfiguration(exclude = { SecurityAutoConfiguration.class, ManagementSecurityAutoConfiguration.class })
+  protected static class DefaultSecurityConfig {}
 
-  @Override
-  public void configure(HttpSecurity http) throws Exception {
-    http.addFilterAfter(new OncePerRequestFilter() {
+  @Profile("secure")
+  @Configuration
+  @EnableWebSecurity
+  @EnableResourceServer
+  @EnableAutoConfiguration
+  protected static class EnabledSecurityConfig extends ResourceServerConfigurerAdapter {
 
-      @Override
-      protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
-          throws ServletException, IOException {
-        // We don't want to allow access to a resource with no token so clear
-        // the security context in case it is actually an OAuth2Authentication
-        if (tokenExtractor.extract(request) == null) {
-          SecurityContextHolder.clearContext();
+    private TokenExtractor tokenExtractor = new BearerTokenExtractor();
+
+    @Override
+    public void configure(HttpSecurity http) throws Exception {
+      http.addFilterAfter(new OncePerRequestFilter() {
+
+        @Override
+        protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
+            FilterChain filterChain)
+            throws ServletException, IOException {
+          // We don't want to allow access to a resource with no token so clear
+          // the security context in case it is actually an OAuth2Authentication
+          if (tokenExtractor.extract(request) == null) {
+            SecurityContextHolder.clearContext();
+          }
+          filterChain.doFilter(request, response);
         }
-        filterChain.doFilter(request, response);
-      }
 
-    }, AbstractPreAuthenticatedProcessingFilter.class);
+      }, AbstractPreAuthenticatedProcessingFilter.class);
 
-    http.csrf().disable();
-    configureAuthorization(http);
-  }
+      http.csrf().disable();
+      configureAuthorization(http);
+    }
 
-  @Bean
-  public AccessTokenConverter accessTokenConverter() {
-    return new DefaultAccessTokenConverter();
-  }
+    @Bean
+    public AccessTokenConverter accessTokenConverter() {
+      return new DefaultAccessTokenConverter();
+    }
 
-  @Bean
-  public RemoteTokenServices remoteTokenServices(final @Value("${auth.server.url}") String checkTokenUrl,
-      final @Value("${auth.server.clientId}") String clientId,
-      final @Value("${auth.server.clientsecret}") String clientSecret) {
-    final RemoteTokenServices remoteTokenServices = new RemoteTokenServices();
-    remoteTokenServices.setCheckTokenEndpointUrl(checkTokenUrl);
-    remoteTokenServices.setClientId(clientId);
-    remoteTokenServices.setClientSecret(clientSecret);
-    remoteTokenServices.setAccessTokenConverter(accessTokenConverter());
+    @Bean
+    public RemoteTokenServices remoteTokenServices(final @Value("${auth.server.url}") String checkTokenUrl,
+        final @Value("${auth.server.clientId}") String clientId,
+        final @Value("${auth.server.clientsecret}") String clientSecret) {
+      final RemoteTokenServices remoteTokenServices = new RemoteTokenServices();
+      remoteTokenServices.setCheckTokenEndpointUrl(checkTokenUrl);
+      remoteTokenServices.setClientId(clientId);
+      remoteTokenServices.setClientSecret(clientSecret);
+      remoteTokenServices.setAccessTokenConverter(accessTokenConverter());
 
-    return remoteTokenServices;
-  }
+      return remoteTokenServices;
+    }
 
-  private static void configureAuthorization(HttpSecurity http) throws Exception {
-    // FIXME: Configure access to resources by token scope
+    private static void configureAuthorization(HttpSecurity http) throws Exception {
+      // FIXME: Configure access to resources by token scope
 
-    // @formatter:off
-    http
-      .authorizeRequests()
-      .antMatchers("/upload/**")
-      .access("#oauth2.hasScope('os.upload')")
-      .and()
-      
-      .authorizeRequests()
-      .antMatchers("/download/**")
-      .access("#oauth2.hasScope('os.download')")
-      .and()
-      
-      .authorizeRequests()
-      .anyRequest()
-      .authenticated();
-    // @formatter:on
+      // @formatter:off
+      http
+        .authorizeRequests()
+        .antMatchers("/upload/**")
+        .access("#oauth2.hasScope('os.upload')")
+        .and()
+        
+        .authorizeRequests()
+        .antMatchers("/download/**")
+        .access("#oauth2.hasScope('os.download')")
+        .and()
+        
+        .authorizeRequests()
+        .anyRequest()
+        .authenticated();
+      // @formatter:on
+    }
   }
 
 }
