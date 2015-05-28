@@ -33,7 +33,7 @@ import collaboratory.storage.object.store.service.upload.UploadStateStore;
  */
 @Configuration
 @Profile({ "prod", "default", "debug" })
-public class UploadConfig {
+public class ObjectStoreConfig {
 
   @Value("${upload.partsize}")
   private int partSize;
