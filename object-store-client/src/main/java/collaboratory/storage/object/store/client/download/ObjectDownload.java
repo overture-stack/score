@@ -19,9 +19,9 @@ package collaboratory.storage.object.store.client.download;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.util.List;
-import java.util.function.Predicate;
 
 import javax.annotation.PostConstruct;
 
@@ -34,8 +34,8 @@ import org.springframework.stereotype.Component;
 
 import collaboratory.storage.object.store.client.transport.ObjectStoreServiceProxy;
 import collaboratory.storage.object.store.client.transport.ObjectTransport;
-import collaboratory.storage.object.store.client.transport.ProgressBar;
 import collaboratory.storage.object.store.client.transport.ObjectTransport.Mode;
+import collaboratory.storage.object.store.client.transport.ProgressBar;
 import collaboratory.storage.object.store.client.upload.NotRetryableException;
 import collaboratory.storage.object.store.core.model.ObjectSpecification;
 import collaboratory.storage.object.store.core.model.Part;
@@ -72,7 +72,8 @@ public class ObjectDownload {
    * @param redo If redo the upload is required
    * @throws IOException
    */
-  public void download(File outputDirectory, String objectId, boolean redo) throws IOException {
+  public void download(File outputDirectory, String objectId, long offset, long length, boolean redo)
+      throws IOException {
     int retry = 0;
     for (; retry < retryNumber; retry++) {
       try {
@@ -81,7 +82,7 @@ public class ObjectDownload {
           if (objFile.exists()) {
             objFile.delete();
           }
-          startNewDownload(outputDirectory, objectId);
+          startNewDownload(outputDirectory, objectId, offset, length);
         } else {
           // only perform checksum the first time of the resume
           resumeIfPossible(outputDirectory, objectId, retry == 0 ? true : false);
@@ -90,9 +91,12 @@ public class ObjectDownload {
       } catch (NotRetryableException e) {
         log.warn(
             "Download is not completed successfully in the last execution. Checking data integrity. Please wait...", e);
-        redo =
-            !proxy.isDownloadDataRecoverable(outputDirectory, objectId,
-                DownloadUtils.getDownloadFile(outputDirectory, objectId).length());
+        if (proxy.isDownloadDataRecoverable(outputDirectory, objectId,
+            DownloadUtils.getDownloadFile(outputDirectory, objectId).length())) {
+          redo = false;
+        } else {
+
+        }
       }
     }
     if (retry == retryNumber) {
@@ -116,18 +120,8 @@ public class ObjectDownload {
     int completedTotal = numCompletedParts(parts);
     int total = parts.size();
 
-    if (!checksum) {
-      parts.removeIf(new Predicate<Part>() {
-
-        @Override
-        public boolean test(Part part) {
-          return part.getMd5() != null;
-        }
-      });
-    }
-
     downloadParts(parts, outputDirectory, objectId, objectId, new ProgressBar(total, total
-        - completedTotal));
+        - completedTotal), checksum);
 
   }
 
@@ -147,28 +141,34 @@ public class ObjectDownload {
    * Start a upload given the object id
    */
   @SneakyThrows
-  private void startNewDownload(File dir, String objectId) {
+  private void startNewDownload(File dir, String objectId, long offset, long length) {
     log.info("Start a new download...");
+    File objFile = DownloadUtils.getDownloadFile(dir, objectId);
+    if (objFile.exists()) {
+      throw new NotRetryableException(new FileAlreadyExistsException(objFile.getPath()));
+    }
     if (!dir.exists()) {
       Files.createDirectories(dir.toPath());
     }
-    ObjectSpecification spec = proxy.getDownloadSpecification(objectId);
+    ObjectSpecification spec = proxy.getDownloadSpecification(objectId, offset, length);
     downloadStateStore.init(dir, spec);
     // TODO: assign session id
     downloadParts(spec.getParts(), dir, objectId, objectId, new ProgressBar(spec.getParts().size(), spec
-        .getParts().size()));
+        .getParts().size()), false);
   }
 
   /**
    * start upload parts using a specific configured data transport
    */
   @SneakyThrows
-  private void downloadParts(List<Part> parts, File file, String objectId, String sessionId, ProgressBar progressBar) {
+  private void downloadParts(List<Part> parts, File file, String objectId, String sessionId, ProgressBar progressBar,
+      boolean checksum) {
     transportBuilder.withProxy(proxy)
         .withProgressBar(progressBar)
         .withParts(parts)
         .withObjectId(objectId)
         .withTransportMode(Mode.DOWNLOAD)
+        .withChecksum(checksum)
         .withSessionId(sessionId);
     log.debug("Transport Configuration: {}", transportBuilder);
     transportBuilder.build().receive(file);

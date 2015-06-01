@@ -126,6 +126,7 @@ public class UploadConfig {
         properties.getUpload().getRetryNumber() < 0 ? Integer.MAX_VALUE : properties.getUpload().getRetryNumber();
 
     Builder<Class<? extends Throwable>, Boolean> exceptions = ImmutableMap.builder();
+    exceptions.put(Error.class, Boolean.FALSE);
     exceptions.put(NotRetryableException.class, Boolean.FALSE);
     exceptions.put(RetryableException.class, Boolean.TRUE);
     exceptions.put(IOException.class, Boolean.TRUE);

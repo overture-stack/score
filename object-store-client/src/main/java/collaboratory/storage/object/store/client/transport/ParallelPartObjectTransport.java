@@ -18,8 +18,12 @@
 package collaboratory.storage.object.store.client.transport;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.nio.channels.FileChannel;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -32,11 +36,13 @@ import java.util.concurrent.atomic.AtomicLong;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import collaboratory.storage.object.store.client.download.DownloadUtils;
 import collaboratory.storage.object.store.core.model.DataChannel;
 import collaboratory.storage.object.store.core.model.Part;
 
 import com.google.api.client.util.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Ordering;
 
 /**
  * The default transport for parallel upload
@@ -57,6 +63,7 @@ public class ParallelPartObjectTransport implements ObjectTransport {
   final protected Mode mode;
   final protected AtomicLong memory;
   final protected int maxUploadDuration;
+  final protected boolean checksum;
 
   protected ParallelPartObjectTransport(RemoteParallelBuilder builder) {
 
@@ -69,6 +76,7 @@ public class ParallelPartObjectTransport implements ObjectTransport {
     this.memory = new AtomicLong(builder.memory);
     this.maxUploadDuration = builder.maxUploadDuration;
     this.mode = builder.mode;
+    this.checksum = builder.checksum;
   }
 
   @Override
@@ -96,7 +104,7 @@ public class ParallelPartObjectTransport implements ObjectTransport {
             progress.updateProgress(1);
           }
           progress.incrementByteWritten(part.getPartSize());
-          memory.addAndGet(part.getPartSize());
+          progress.incrementByteRead(part.getPartSize());
           return part;
         }
       }));
@@ -104,6 +112,7 @@ public class ParallelPartObjectTransport implements ObjectTransport {
 
     executor.shutdown();
     executor.awaitTermination(maxUploadDuration, TimeUnit.DAYS);
+    progress.stop();
     try {
       takeCareOfException(results.build());
       proxy.finalizeUpload(objectId, uploadId);
@@ -114,8 +123,80 @@ public class ParallelPartObjectTransport implements ObjectTransport {
     progress.end(false);
   }
 
+  @Override
+  @SneakyThrows
+  public void receive(File outputDir) {
+    long fileSize = DownloadUtils.calculateTotalSize(parts);
+    log.debug("downloading object id: {}, size:{}", objectId, fileSize);
+    ExecutorService executor = Executors.newFixedThreadPool(nThreads);
+    ImmutableList.Builder<Future<Part>> results = ImmutableList.builder();
+
+    // This is used to calculate
+    if (!Ordering.natural().isOrdered(parts)) {
+      Collections.sort(parts);
+    }
+
+    progress.start();
+    for (final Part part : parts) {
+      results.add(executor.submit(new Callable<Part>() {
+
+        @Override
+        public Part call() throws Exception {
+          FileDataChannel channel =
+              new FileDataChannel(getPartFileName(outputDir, part), part.getOffset(), part.getPartSize(), null);
+
+          if (part.isCompleted()) {
+            if (checksum && isCorrupted(channel, part, outputDir)) {
+              proxy.downloadPart(channel, part, objectId, outputDir);
+            }
+            progress.updateChecksum(1);
+          } else {
+            proxy.downloadPart(channel, part, objectId, outputDir);
+            progress.updateProgress(1);
+          }
+          progress.incrementByteRead(part.getPartSize());
+          progress.incrementByteWritten(part.getPartSize());
+          return part;
+        }
+      }));
+    }
+
+    executor.shutdown();
+    executor.awaitTermination(maxUploadDuration, TimeUnit.DAYS);
+
+    try {
+      mergeToFile(parts, outputDir);
+    } catch (IOException e) {
+      log.error("Fail to create the final output file for object-id {}", objectId, e);
+      throw new Error(e);
+    }
+
+    progress.stop();
+    try {
+      takeCareOfException(results.build());
+      proxy.finalizeDownload(outputDir, objectId);
+      try {
+        cleanup(parts, outputDir);
+      } catch (Throwable e) {
+        // No rethrow because the download is successful but deleting the part files are not
+        log.warn("Fail to clean up part files for object id: {} at path: {}", objectId, outputDir.getAbsolutePath());
+        log.warn("Please delete the temporary files at {}", outputDir.getAbsolutePath());
+      }
+    } catch (Throwable e) {
+      progress.end(true);
+      throw e;
+    }
+    progress.end(false);
+  }
+
+  private void cleanup(List<Part> parts, File outputDir) {
+    for (Part part : parts) {
+      getPartFileName(outputDir, part).delete();
+    }
+  }
+
   // TODO: should remove file parameter
-  protected boolean isCorrupted(DataChannel channel, Part part, File file) throws IOException {
+  protected boolean isCorrupted(DataChannel channel, Part part, File outputDir) throws IOException {
     if (channel.isValidMd5(part.getMd5())) {
       return false;
     }
@@ -126,7 +207,7 @@ public class ParallelPartObjectTransport implements ObjectTransport {
       proxy.deleteUploadPart(objectId, uploadId, part);
       break;
     case DOWNLOAD:
-      proxy.deleteDownloadPart(file, objectId, part);
+      proxy.deleteDownloadPart(outputDir, objectId, part);
 
     }
     channel.reset();
@@ -142,10 +223,6 @@ public class ParallelPartObjectTransport implements ObjectTransport {
         throw e.getCause();
       }
     }
-  }
-
-  protected void getReadSpeed() {
-
   }
 
   protected int getCapacity() {
@@ -198,9 +275,23 @@ public class ParallelPartObjectTransport implements ObjectTransport {
     }
   }
 
-  @Override
-  public void receive(File file) {
-    throw new AssertionError("Please implement it");
-
+  private void mergeToFile(List<Part> parts, File outputDir) throws IOException {
+    // appending parts to objectFile
+    try (RandomAccessFile fos = new RandomAccessFile(DownloadUtils.getDownloadFile(outputDir, objectId), "rw")) {
+      fos.setLength(DownloadUtils.calculateTotalSize(parts));
+      FileChannel target = fos.getChannel();
+      for (Part part : parts) {
+        File partFile = getPartFileName(outputDir, part);
+        try (FileInputStream fis = new FileInputStream(partFile)) {
+          fis.getChannel().transferTo(0, partFile.length(), target);
+        }
+      }
+    }
   }
+
+  @SneakyThrows
+  private File getPartFileName(File outDir, Part part) {
+    return new File(outDir, "." + objectId + "-" + String.valueOf(part.getPartNumber()));
+  }
+
 }

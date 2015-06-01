@@ -196,7 +196,8 @@ public class ObjectStoreServiceProxy {
       @Override
       public ObjectSpecification doWithRetry(RetryContext ctx) throws IOException {
         HttpEntity<Object> requestEntity = new HttpEntity<Object>(defaultHeaders());
-        return req.exchange(endpoint + "/upload/{object-id}/uploads?fileSize={file-size}", HttpMethod.POST,
+        return req.exchange(endpoint + "/upload/{object-id}/uploads?fileSize={file-size}",
+            HttpMethod.POST,
             requestEntity,
             ObjectSpecification.class, objectId, length).getBody();
       }
@@ -207,6 +208,8 @@ public class ObjectStoreServiceProxy {
     log.debug("finalize download, object-id: {}", objectId);
     if (downloadStateStore.canFinalize(outDir, objectId)) {
       downloadStateStore.close(outDir, objectId);
+    } else {
+      throw new NotRetryableException(new IOException("Fail download finalization"));
     }
   }
 
@@ -264,16 +267,16 @@ public class ObjectStoreServiceProxy {
     });
   }
 
-  public ObjectSpecification getDownloadSpecification(String objectId) throws IOException {
+  public ObjectSpecification getDownloadSpecification(String objectId, long offset, long length) throws IOException {
     log.debug("Endpoint: {}", endpoint);
     return retry.execute(new RetryCallback<ObjectSpecification, IOException>() {
 
       @Override
       public ObjectSpecification doWithRetry(RetryContext ctx) throws IOException {
         HttpEntity<Object> requestEntity = new HttpEntity<Object>(defaultHeaders());
-        return req.exchange(endpoint + "/download/{object-id}", HttpMethod.GET,
+        return req.exchange(endpoint + "/download/{object-id}?offset={offset}&length={length}", HttpMethod.GET,
             requestEntity,
-            ObjectSpecification.class, objectId).getBody();
+            ObjectSpecification.class, objectId, offset, length).getBody();
       }
     });
   }

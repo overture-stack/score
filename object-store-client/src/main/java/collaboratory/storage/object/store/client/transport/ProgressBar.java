@@ -57,7 +57,7 @@ public class ProgressBar {
     }, DELAY, DELAY, TimeUnit.SECONDS);
   }
 
-  public void end(boolean incompleted) {
+  public void stop() {
     if (stopwatch.isRunning()) {
       stopwatch.stop();
     }
@@ -68,6 +68,10 @@ public class ProgressBar {
       log.debug("cannot stop the stopwatch", e);
     }
     System.err.println();
+    System.err.println("Performing data integrity check, please wait...");
+  }
+
+  public void end(boolean incompleted) {
     if (incompleted) {
       System.err.println("Data transfer has been interrupted. Some parts are missing. Waiting to resubmission...");
     }
@@ -80,7 +84,6 @@ public class ProgressBar {
 
   public void updateChecksum(int incr) {
     checksumPercent = checksumTotalIncr.addAndGet(incr) * 100 / checksumTotal;
-    log.debug("checksum percent: {}", checksumPercent);
   }
 
   private long duration() {

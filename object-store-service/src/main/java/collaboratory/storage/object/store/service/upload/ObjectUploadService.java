@@ -17,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
@@ -84,8 +85,15 @@ public class ObjectUploadService {
   public void init() {
   }
 
-  public ObjectSpecification initiateUpload(String objectId, long fileSize) {
-    // TODO: check if the object already exists
+  public ObjectSpecification initiateUpload(String objectId, long fileSize, boolean overwritten) {
+    String objectKey = ObjectStoreUtil.getObjectKey(dataDir, objectId);
+    log.debug("initiate upload for object key: {}, overwritten: {}", objectKey, overwritten);
+    if (!overwritten) {
+      if (exists(objectId)) {
+        throw new InternalUnrecoverableError("Object should not be overwritten.");
+      }
+    }
+
     try {
       String uploadId = getUploadId(objectId);
       stateStore.delete(objectId, uploadId);
@@ -93,7 +101,6 @@ public class ObjectUploadService {
       log.info("No upload ID found. Initiate upload...");
     }
 
-    String objectKey = ObjectStoreUtil.getObjectKey(dataDir, objectId);
     InitiateMultipartUploadRequest req = new InitiateMultipartUploadRequest(
         bucketName, objectKey);
     try {
@@ -112,6 +119,21 @@ public class ObjectUploadService {
     } catch (AmazonServiceException e) {
       throw new RetryableException(e);
     }
+  }
+
+  public boolean exists(String objectId) {
+    String objectKey = ObjectStoreUtil.getObjectKey(dataDir, objectId);
+    try {
+      s3Client.getObjectMetadata(bucketName, objectKey);
+      return true;
+    } catch (AmazonServiceException e) {
+      if (e.getStatusCode() != HttpStatus.NOT_FOUND.value()) {
+        throw new RetryableException(e);
+      }
+      log.info("Object key not found: {}", objectKey);
+      return false;
+    }
+
   }
 
   private boolean isPartExist(String objectKey, String uploadId, int partNumber, String eTag) {

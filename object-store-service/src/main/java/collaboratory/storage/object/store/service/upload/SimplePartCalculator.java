@@ -46,14 +46,15 @@ public class SimplePartCalculator implements ObjectPartCalculator {
   }
 
   @Override
-  public List<Part> divide(long filePosition, long fileSize) {
-    int defaultPartSize = Math.max(minPartSize, (int) (fileSize / MAX_NUM_PART) + 1);
+  public List<Part> divide(long offset, long objectLength) {
+    int defaultPartSize = Math.max(minPartSize, (int) (objectLength / MAX_NUM_PART) + 1);
     log.debug("Part Size: {}", defaultPartSize);
     Builder<Part> parts = ImmutableList.builder();
-    for (int i = 1; filePosition < fileSize; ++i) {
-      int partSize = (int) Math.min(defaultPartSize, fileSize - filePosition);
-      parts.add(new Part(i, partSize, filePosition, null, null));
-      filePosition += partSize;
+    long currentTotalLength = 0;
+    for (int i = 1; currentTotalLength < objectLength; ++i) {
+      int partSize = (int) Math.min(defaultPartSize, objectLength - currentTotalLength);
+      parts.add(new Part(i, partSize, offset + currentTotalLength, null, null));
+      currentTotalLength += partSize;
     }
     return parts.build();
   }

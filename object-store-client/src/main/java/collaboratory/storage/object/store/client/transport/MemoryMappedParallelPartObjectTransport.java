@@ -19,11 +19,12 @@ package collaboratory.storage.object.store.client.transport;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
+import java.util.Collections;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -31,11 +32,15 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import lombok.Data;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import collaboratory.storage.object.store.client.download.DownloadUtils;
+import collaboratory.storage.object.store.client.upload.NotRetryableException;
 import collaboratory.storage.object.store.core.model.Part;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Ordering;
 
 /**
  * A data transport using memory mapped channels for parallel upload/download
@@ -67,7 +72,7 @@ public class MemoryMappedParallelPartObjectTransport extends ParallelPartObjectT
             MemoryMappedDataChannel channel = new MemoryMappedDataChannel(buffer, 0, part.getPartSize(), null);
             if (part.isCompleted()) {
               log.debug("Checksumming part: {}", part);
-              if (isCorrupted(channel, part, file)) {
+              if (checksum && isCorrupted(channel, part, file)) {
                 log.debug("Fail checksumm. Reupload part: {}", part);
                 proxy.uploadPart(channel, part, objectId,
                     uploadId);
@@ -95,6 +100,7 @@ public class MemoryMappedParallelPartObjectTransport extends ParallelPartObjectT
     }
     executor.shutdown();
     executor.awaitTermination(super.maxUploadDuration, TimeUnit.DAYS);
+    progress.stop();
     try {
       takeCareOfException(results.build());
       proxy.finalizeUpload(objectId, uploadId);
@@ -102,7 +108,6 @@ public class MemoryMappedParallelPartObjectTransport extends ParallelPartObjectT
       progress.end(true);
       throw e;
     }
-
     progress.end(false);
   }
 
@@ -110,29 +115,46 @@ public class MemoryMappedParallelPartObjectTransport extends ParallelPartObjectT
   @SneakyThrows
   public void receive(File outputDir) {
     File filename = new File(outputDir, objectId);
-    log.debug("receive file: {}", filename.getPath());
+    long fileSize = DownloadUtils.calculateTotalSize(parts);
+    log.debug("downloading object to file: {}, size:{}", filename.getPath(), fileSize);
     ExecutorService executor = Executors.newFixedThreadPool(nThreads);
     LinkedList<Future<MemoryMappedDataChannel>> results = new LinkedList<Future<MemoryMappedDataChannel>>();
     progress.start();
     try (RandomAccessFile fis = new RandomAccessFile(filename, "rw")) {
-      fis.setLength(calculateTotalSize(parts));
+      fis.setLength(fileSize);
+    }
+
+    // This is used to calculate
+    if (!Ordering.natural().isOrdered(parts)) {
+      Collections.sort(parts);
     }
 
     boolean hasError = false;
     boolean shouldThrottled = false;
+    long prevLength = 0;
+    long offset = 0;
     for (final Part part : parts) {
+      offset += prevLength;
+      prevLength = part.getPartSize();
+
+      final long currOffset = offset;
       results.add(executor.submit(new Callable<MemoryMappedDataChannel>() {
 
         @Override
         public MemoryMappedDataChannel call() throws Exception {
           try (RandomAccessFile rf = new RandomAccessFile(filename, "rw")) {
             try (FileChannel channel = rf.getChannel()) {
+              // TODO: the actual position to position the data block into the file might be different from the original
+              // position
+
+              // 1. Experiment with part number as the position in the file
               final MappedByteBuffer buffer =
-                  channel.map(FileChannel.MapMode.READ_WRITE, part.getOffset(), part.getPartSize());
+                  channel.map(FileChannel.MapMode.READ_WRITE, currOffset, part.getPartSize());
               MemoryMappedDataChannel memoryChannel =
                   new MemoryMappedDataChannel(buffer, part.getOffset(), part.getPartSize(), null);
+
               if (part.isCompleted()) {
-                if (isCorrupted(memoryChannel, part, outputDir)) {
+                if (checksum && isCorrupted(memoryChannel, part, outputDir)) {
                   proxy.downloadPart(memoryChannel, part, objectId, outputDir);
                 }
                 progress.updateChecksum(1);
@@ -167,12 +189,15 @@ public class MemoryMappedParallelPartObjectTransport extends ParallelPartObjectT
 
     executor.shutdown();
     executor.awaitTermination(super.maxUploadDuration, TimeUnit.DAYS);
+
+    progress.stop();
     if (hasError) {
       progress.end(true);
+      throw new NotRetryableException(new IOException("some parts failed to download."));
     } else {
       try {
-        proxy.finalizeDownload(outputDir, objectId);
         takeCareOfException(results);
+        proxy.finalizeDownload(outputDir, objectId);
       } catch (Throwable e) {
         progress.end(true);
         throw e;
@@ -181,18 +206,11 @@ public class MemoryMappedParallelPartObjectTransport extends ParallelPartObjectT
     progress.end(false);
   }
 
-  private long calculateTotalSize(List<Part> parts) {
-    long total = 0;
-    for (Part part : parts) {
-      total += part.getPartSize();
-    }
-    return total;
-  }
-
   public static MemoryMappedParallelBuilder builder() {
     return new MemoryMappedParallelBuilder();
   }
 
+  @Data
   public static class MemoryMappedParallelBuilder extends RemoteParallelBuilder {
 
     @Override
@@ -200,6 +218,5 @@ public class MemoryMappedParallelPartObjectTransport extends ParallelPartObjectT
       checkArgumentsNotNull();
       return new MemoryMappedParallelPartObjectTransport(this);
     }
-
   }
 }

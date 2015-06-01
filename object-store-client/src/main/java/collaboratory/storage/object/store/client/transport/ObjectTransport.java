@@ -57,6 +57,8 @@ public interface ObjectTransport {
     public Builder withProxy(ObjectStoreServiceProxy proxy);
 
     public Builder withTransportMode(Mode mode);
+
+    public Builder withChecksum(boolean checksum);
   }
 
   public abstract class AbstractBuilder implements Builder {
@@ -67,6 +69,7 @@ public interface ObjectTransport {
     protected String objectId;
     protected String uploadId;
     protected Mode mode;
+    protected boolean checksum;
 
     @Override
     public Builder withProgressBar(ProgressBar progressBar) {
@@ -101,6 +104,12 @@ public interface ObjectTransport {
     @Override
     public Builder withProxy(ObjectStoreServiceProxy proxy) {
       this.proxy = proxy;
+      return this;
+    }
+
+    @Override
+    public Builder withChecksum(boolean checksum) {
+      this.checksum = checksum;
       return this;
     }
 

@@ -47,6 +47,12 @@ public class DownloadCommand extends AbstractClientCommand {
   @Parameter(names = "--object-id", description = "object id to download", required = true)
   private String oid;
 
+  @Parameter(names = "--offset", description = "the offset to set for download", required = false)
+  private long offset = 0;
+
+  @Parameter(names = "--length", description = "the length of the download", required = false)
+  private long length = -1;
+
   @Autowired
   private ObjectDownload downloader;
 
@@ -55,7 +61,7 @@ public class DownloadCommand extends AbstractClientCommand {
   public int execute() {
     println("Start downloading object: %s", oid);
     File dir = new File(filePath);
-    downloader.download(dir, oid, isForce);
+    downloader.download(dir, oid, offset, length, isForce);
     return SUCCESS_STATUS;
   }
 

@@ -18,10 +18,21 @@
 package collaboratory.storage.object.store.client.download;
 
 import java.io.File;
+import java.util.List;
+
+import collaboratory.storage.object.store.core.model.Part;
 
 public class DownloadUtils {
 
   public static File getDownloadFile(File outputDir, String objectId) {
     return new File(outputDir, objectId);
+  }
+
+  public static long calculateTotalSize(List<Part> parts) {
+    long total = 0;
+    for (Part part : parts) {
+      total += part.getPartSize();
+    }
+    return total;
   }
 }

@@ -36,8 +36,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 
 import collaboratory.storage.object.store.core.model.CompletedPart;
-import collaboratory.storage.object.store.core.model.Part;
 import collaboratory.storage.object.store.core.model.ObjectSpecification;
+import collaboratory.storage.object.store.core.model.Part;
 import collaboratory.storage.object.store.exception.IdNotFoundException;
 import collaboratory.storage.object.store.exception.InternalUnrecoverableError;
 import collaboratory.storage.object.store.exception.NotRetryableException;
@@ -82,7 +82,6 @@ public class UploadStateStore {
    * @param spec
    */
   public void create(ObjectSpecification spec) {
-    log.debug("Upload Specification : {}", spec);
     ObjectMapper mapper = new ObjectMapper();
     try {
       byte[] content = mapper.writeValueAsBytes(spec);

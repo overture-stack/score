@@ -24,6 +24,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.web.client.DefaultResponseErrorHandler;
 
+import com.amazonaws.util.IOUtils;
+
 /**
  * responsible to translate server side errors to client side errors
  */
@@ -35,11 +37,14 @@ public class RetryableResponseErrorHandler extends DefaultResponseErrorHandler {
     switch (response.getStatusCode()) {
     case NOT_FOUND:
     case BAD_REQUEST:
-    case INTERNAL_SERVER_ERROR:
-      log.warn("Not Retryable Endpoint: {}", response);
+      log.warn("Not Retryable Endpoint: {}", response.getStatusText());
       throw new NotRetryableException(new IOException("object store service error"));
+    case INTERNAL_SERVER_ERROR:
+      ;
+      log.warn("Server error. Stop processing: {}", response.getStatusText());
+      throw new Error(new IOException("Object store service error: " + IOUtils.toString(response.getBody())));
     default:
-      log.warn("Retryable exception: {}", response);
+      log.warn("Retryable exception: {}", response.getStatusText());
       throw new RetryableException(new IOException("object store service error"));
 
     }

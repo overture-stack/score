@@ -29,4 +29,11 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 @AllArgsConstructor
 public class InternalUnrecoverableError extends Error {
 
+  /**
+   * @param string
+   */
+  public InternalUnrecoverableError(String message) {
+    super(message);
+  }
+
 }

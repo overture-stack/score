@@ -29,7 +29,7 @@ import org.codehaus.jackson.annotate.JsonIgnore;
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
-final public class Part {
+final public class Part implements Comparable<Part> {
 
   int partNumber;
   long partSize;
@@ -40,5 +40,11 @@ final public class Part {
   @JsonIgnore
   public boolean isCompleted() {
     return md5 != null;
+  }
+
+  @JsonIgnore
+  @Override
+  public int compareTo(Part otherPart) {
+    return this.partNumber - otherPart.partNumber;
   }
 }

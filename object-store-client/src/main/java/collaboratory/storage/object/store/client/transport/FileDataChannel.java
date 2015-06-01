@@ -51,19 +51,19 @@ public class FileDataChannel extends AbstractDataChannel {
   public void writeTo(OutputStream os) throws IOException {
     try (FileInputStream is = new FileInputStream(file)) {
       HashingOutputStream hos = new HashingOutputStream(Hashing.md5(), os);
-      WritableByteChannel toChannel = Channels.newChannel(hos);
-      is.getChannel().transferTo(offset, length, toChannel);
-      toChannel.close();
+      try (WritableByteChannel toChannel = Channels.newChannel(hos)) {
+        is.getChannel().transferTo(offset, length, toChannel);
+      }
       md5 = hos.hash().toString();
     }
   }
 
   @Override
   public void writeTo(InputStream is) throws IOException {
-
     try (FileOutputStream os = new FileOutputStream(file)) {
-      ReadableByteChannel fromChannel = Channels.newChannel(is);
-      os.getChannel().transferFrom(fromChannel, offset, length);
+      try (ReadableByteChannel fromChannel = Channels.newChannel(is)) {
+        os.getChannel().transferFrom(fromChannel, 0, length);
+      }
     }
   }
 

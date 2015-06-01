@@ -38,6 +38,7 @@ import collaboratory.storage.object.store.core.model.ObjectSpecification;
 import collaboratory.storage.object.store.core.model.Part;
 import collaboratory.storage.object.store.core.util.ObjectStoreUtil;
 import collaboratory.storage.object.store.exception.IdNotFoundException;
+import collaboratory.storage.object.store.exception.InternalUnrecoverableError;
 import collaboratory.storage.object.store.exception.NotRetryableException;
 import collaboratory.storage.object.store.exception.RetryableException;
 import collaboratory.storage.object.store.service.upload.ObjectPartCalculator;
@@ -48,6 +49,7 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.GetObjectRequest;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectInputStream;
+import com.google.common.base.Preconditions;
 
 /**
  * service responsible for object download (full or partial)
@@ -101,10 +103,10 @@ public class ObjectDownloadService {
     }
   }
 
-  private S3Object retrieveObject(String objectId, String objectMetaKey) {
+  private S3Object retrieveObject(String objectId, String objectKey) {
     try {
       GetObjectRequest req =
-          new GetObjectRequest(bucketName, objectMetaKey);
+          new GetObjectRequest(bucketName, objectKey);
       return s3Client.getObject(req);
     } catch (AmazonServiceException e) {
       log.error("Amazon service throws an exception", e);
@@ -117,12 +119,28 @@ public class ObjectDownloadService {
   }
 
   public ObjectSpecification download(String objectId, long offset, long length) {
+    Preconditions.checkArgument(offset > -1);
+    ObjectSpecification objectSpec = download(objectId);
+    if (offset == 0 && length < 0) {
+      return objectSpec;
+    }
+
+    // to retrieve to the end of the file
+    if (length < 0) {
+      length = objectSpec.getObjectSize() - offset;
+    }
+
+    // check if the offset + length > length
+    if ((offset + length) > objectSpec.getObjectSize()) {
+      throw new InternalUnrecoverableError("exceed object size (object id: " + objectId + ", offset: " + offset
+          + ", length: " + length + ")");
+    }
 
     String objectKey = ObjectStoreUtil.getObjectKey(dataDir, objectId);
+
     List<Part> parts = partCalculator.divide(offset, length);
     fillUrl(objectKey, parts);
-    ObjectSpecification spec = new ObjectSpecification(objectKey, objectId, "", parts, length);
-
+    ObjectSpecification spec = new ObjectSpecification(objectKey, objectId, objectId, parts, length);
     return spec;
   }
 

@@ -17,12 +17,8 @@
  */
 package collaboratory.storage.object.store.controller;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
-
-import javax.ws.rs.QueryParam;
 
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -42,13 +38,9 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import collaboratory.storage.object.store.core.model.Part;
-import collaboratory.storage.object.store.core.model.UploadProgress;
 import collaboratory.storage.object.store.core.model.ObjectSpecification;
-import collaboratory.storage.object.store.core.util.ChannelUtils;
 import collaboratory.storage.object.store.service.upload.ObjectUploadService;
 
-import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.google.common.hash.Hashing;
 import com.google.common.hash.HashingOutputStream;
 import com.google.common.io.ByteStreams;
@@ -72,8 +64,9 @@ public class BenchmarkObjectUploadController extends ObjectUploadController {
   public @ResponseBody ObjectSpecification initializeMultipartUpload(
       @RequestHeader(value = "access-token", required = true) final String accessToken,
       @PathVariable(value = "object-id") String objectId,
+      @RequestParam(value = "overwritten", required = false, defaultValue = "false") boolean overwritten,
       @RequestParam(value = "fileSize", required = true) long fileSize) {
-    return uploadService.initiateUpload(objectId, fileSize);
+    return uploadService.initiateUpload(objectId, fileSize, overwritten);
   }
 
   @Override
@@ -84,6 +77,7 @@ public class BenchmarkObjectUploadController extends ObjectUploadController {
       @PathVariable(value = "object-id") String objectId,
       @RequestParam(value = "partNumber", required = true) int partNumber,
       @RequestParam(value = "uploadId", required = true) String uploadId) {
+    // NO-OP
   }
 
   @Override
@@ -96,6 +90,7 @@ public class BenchmarkObjectUploadController extends ObjectUploadController {
       @RequestParam(value = "uploadId", required = true) String uploadId,
       @RequestParam(value = "md5", required = true) String md5,
       @RequestParam(value = "etag", required = true) String eTag) {
+    // NO-OP
   }
 
   @Override
@@ -106,6 +101,7 @@ public class BenchmarkObjectUploadController extends ObjectUploadController {
       @PathVariable(value = "object-id") String objectId,
       @RequestParam(value = "uploadId", required = true) String uploadId
       ) {
+    // NO-OP
   }
 
   @Override
@@ -116,26 +112,9 @@ public class BenchmarkObjectUploadController extends ObjectUploadController {
       @PathVariable(value = "object-id") String objectId,
       @RequestParam(value = "fileSize", required = true) long fileSize
       ) {
+    // NO-OP
   }
 
-  @Override
-  @RequestMapping(method = RequestMethod.GET, value = "/{object-id}/status")
-  public @ResponseBody UploadProgress getUploadProgress(
-      @RequestHeader(value = "access-token", required = true) final String accessToken,
-      @PathVariable(value = "object-id") String objectId,
-      @RequestParam(value = "fileSize", required = true) long fileSize
-      ) {
-    return uploadService.getUploadStatus(objectId, uploadService.getUploadId(objectId), fileSize);
-  }
-
-  @Override
-  @RequestMapping(method = RequestMethod.GET, value = "/{object-id}")
-  public @ResponseBody ObjectMetadata getObjectMetadata(@RequestHeader("access-token") final String accessToken,
-      @PathVariable("object-id") String objectId) {
-    return uploadService.getObjectMetadata(objectId);
-  }
-
-  @Override
   @RequestMapping(method = RequestMethod.PUT, value = "/data/{object-id}")
   public ResponseEntity<?> nullInputStream(
       @PathVariable("object-id") String objectId,
@@ -155,40 +134,4 @@ public class BenchmarkObjectUploadController extends ObjectUploadController {
 
   }
 
-  /**
-   * probably needs to call this asynchronously
-   * @param accessToken
-   * @param objectId
-   * @param uploadId
-   */
-  @Override
-  @RequestMapping(method = RequestMethod.DELETE, value = "/{object-id}")
-  @ResponseStatus(value = HttpStatus.OK)
-  public void cancelUpload(@RequestHeader("access-token") final String accessToken,
-      @PathVariable("object-id") String objectId) {
-    uploadService.cancelUpload(objectId, uploadService.getUploadId(objectId));
-  }
-
-  @Override
-  @RequestMapping(method = RequestMethod.POST, value = "/{object-id}/test")
-  @ResponseStatus(value = HttpStatus.OK)
-  public void test(@PathVariable("object-id") String objectId, @QueryParam("filename") String filename)
-      throws IOException {
-    log.info("filename: {}", filename);
-    File upload = new File(filename);
-    ObjectSpecification spec = uploadService.initiateUpload(objectId, upload.length());
-    for (Part part : spec.getParts()) {
-      String etag = ChannelUtils.UploadObject(upload, new URL(part.getUrl()), part.getOffset(), part.getPartSize());
-      uploadService.finalizeUploadPart(objectId, spec.getUploadId(), part.getPartNumber(), etag, etag);
-    }
-    uploadService.finalizeUpload(objectId, spec.getUploadId());
-  }
-
-  @Override
-  @RequestMapping(method = RequestMethod.POST, value = "/cancel")
-  @ResponseStatus(value = HttpStatus.OK)
-  public void cancelAll()
-      throws IOException {
-    uploadService.cancelAllUpload();
-  }
 }
