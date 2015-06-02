@@ -38,7 +38,7 @@ import com.beust.jcommander.Parameters;
 @Slf4j
 public class DownloadCommand extends AbstractClientCommand {
 
-  @Parameter(names = "--outDir", description = "Path to an output directory", required = true)
+  @Parameter(names = "--out-dir", description = "Path to an output directory", required = true)
   private String filePath;
 
   @Parameter(names = "-f", description = "force to re-upload", required = false)

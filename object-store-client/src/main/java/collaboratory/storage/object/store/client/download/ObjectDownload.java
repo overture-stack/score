@@ -85,7 +85,7 @@ public class ObjectDownload {
           startNewDownload(outputDirectory, objectId, offset, length);
         } else {
           // only perform checksum the first time of the resume
-          resumeIfPossible(outputDirectory, objectId, retry == 0 ? true : false);
+          resumeIfPossible(outputDirectory, objectId, offset, length, retry == 0 ? true : false);
         }
         return;
       } catch (NotRetryableException e) {
@@ -104,13 +104,14 @@ public class ObjectDownload {
     }
   }
 
-  private void resumeIfPossible(File outputDirectory, String objectId, boolean checksum) throws IOException {
+  private void resumeIfPossible(File outputDirectory, String objectId, long offset, long length, boolean checksum)
+      throws IOException {
     try {
       List<Part> parts = downloadStateStore.getProgress(outputDirectory, objectId);
       resume(parts, outputDirectory, objectId, checksum);
-    } catch (IOException e) {
+    } catch (NotRetryableException e) {
       log.info("New download: {}", objectId);
-
+      startNewDownload(outputDirectory, objectId, offset, length);
     }
   }
 
