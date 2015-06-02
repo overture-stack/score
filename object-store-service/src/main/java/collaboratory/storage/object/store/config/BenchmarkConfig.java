@@ -18,22 +18,20 @@
 package collaboratory.storage.object.store.config;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 
 import collaboratory.storage.object.store.service.upload.BenchmarkURLGenerator;
 import collaboratory.storage.object.store.service.upload.ObjectPartCalculator;
+import collaboratory.storage.object.store.service.upload.ObjectURLGenerator;
 import collaboratory.storage.object.store.service.upload.SimplePartCalculator;
 import collaboratory.storage.object.store.service.upload.UploadStateStore;
-import collaboratory.storage.object.store.service.upload.ObjectURLGenerator;
 
 /**
  * Configurations used for benchmarking the object store service
  */
 @Configuration
-@EnableAutoConfiguration
 @Profile("benchmark")
 public class BenchmarkConfig {
 
