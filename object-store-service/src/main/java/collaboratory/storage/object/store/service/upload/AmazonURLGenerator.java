@@ -30,7 +30,7 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest;
 
 /**
- * To generate presigned url for s3-like object storage
+ * Amazon specific: To generate presigned url for s3-like object storage
  */
 public class AmazonURLGenerator implements ObjectURLGenerator {
 
@@ -42,8 +42,10 @@ public class AmazonURLGenerator implements ObjectURLGenerator {
     GeneratePresignedUrlRequest req =
         new GeneratePresignedUrlRequest(bucketName, objectKey, HttpMethod.PUT);
     req.setExpiration(expiration);
+
     req.addRequestParameter("partNumber", String.valueOf(part.getPartNumber()));
     req.addRequestParameter("uploadId", uploadId);
+
     return s3Client.generatePresignedUrl(req).toString();
   }
 
@@ -51,8 +53,9 @@ public class AmazonURLGenerator implements ObjectURLGenerator {
   public String getDownloadPartUrl(String bucketName, String objectKey, Part part, Date expiration) {
     GeneratePresignedUrlRequest req =
         new GeneratePresignedUrlRequest(bucketName, objectKey, HttpMethod.GET);
-    req.putCustomRequestHeader(HttpHeaders.RANGE, ObjectStoreUtil.getHttpRangeValue(part));
     req.setExpiration(expiration);
+
+    req.putCustomRequestHeader(HttpHeaders.RANGE, ObjectStoreUtil.getHttpRangeValue(part));
     return s3Client.generatePresignedUrl(req).toString();
   }
 }

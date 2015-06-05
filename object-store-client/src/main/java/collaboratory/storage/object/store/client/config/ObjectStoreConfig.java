@@ -45,6 +45,7 @@ import org.springframework.retry.policy.SimpleRetryPolicy;
 import org.springframework.retry.support.RetryTemplate;
 import org.springframework.web.client.RestTemplate;
 
+import collaboratory.storage.object.store.client.download.DownloadStateStore;
 import collaboratory.storage.object.store.client.upload.NotRetryableException;
 import collaboratory.storage.object.store.client.upload.RetryableException;
 import collaboratory.storage.object.store.client.upload.RetryableResponseErrorHandler;
@@ -58,7 +59,7 @@ import com.google.common.collect.ImmutableMap.Builder;
 @Slf4j
 @Data
 @Configuration
-public class UploadConfig {
+public class ObjectStoreConfig {
 
   private static final int MAX_TIMEOUT = 5 * 60 * 1000;
 
@@ -73,6 +74,11 @@ public class UploadConfig {
 
   @Autowired
   private X509HostnameVerifier hostnameVerifier;
+
+  @Bean
+  public DownloadStateStore downloadStateStore() {
+    return new DownloadStateStore();
+  }
 
   @Bean(name = "object-store-service-template")
   public RestTemplate uploadTemplate() {
@@ -116,6 +122,7 @@ public class UploadConfig {
     factory.setOutputStreaming(true);
     factory.setBufferRequestBody(false);
     return factory;
+
   }
 
   @Bean(name = "service-retry-template")

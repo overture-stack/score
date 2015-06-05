@@ -5,6 +5,7 @@ client.directory: ${user.home}
 
 spring:
   profiles.active: default
+
 ---
 spring:
   profiles: default
@@ -33,6 +34,7 @@ client:
     
 logging:
   file: target/logs/client.log
+
 ---
 spring:
   profiles: prod

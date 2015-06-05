@@ -27,8 +27,8 @@ collaboratory:
   bucket.name: oicr.collaboratory
   upload.directory: upload
   data.directory: data
-  upload.expiration: 14
-  download.expiration: 14
+  upload.expiration: 7
+  download.expiration: 7
 
 
 upload:
@@ -37,6 +37,22 @@ upload:
   
 download:
 
+---
+spring:
+  profiles: amazon
+  profiles.include: prod
+  
+s3:
+  endpoint: s3-external-1.amazonaws.com
+  masterEncryptionKeyId: MUST-BE-PROVIDED
+
+---
+spring:
+  profiles: collaboratory
+  profiles.include: prod
+
+s3:
+  endpoint: https://www.cancercollaboratory.org:9080
 
 ---
 spring:
@@ -45,13 +61,10 @@ spring:
 # Server
 server:
   ssl:
-    key-store: 
     key-store-type: JKS
 
 s3:
   secured: true
-  #Sinai Center
-  endpoint: https://www.cancercollaboratory.org:9080
 
 endpoints:
   dump.enabled: false
@@ -76,6 +89,7 @@ s3:
 # Strict SSL certificates are disabled in this profile
 spring:
   profiles: dev
+
 ---
 spring:
   profiles: secure

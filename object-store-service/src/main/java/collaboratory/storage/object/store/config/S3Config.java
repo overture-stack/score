@@ -15,7 +15,10 @@ import com.amazonaws.auth.profile.ProfileCredentialsProvider;
 import com.amazonaws.retry.PredefinedRetryPolicies;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.Headers;
 import com.amazonaws.services.s3.S3ClientOptions;
+import com.amazonaws.services.s3.model.InitiateMultipartUploadRequest;
+import com.amazonaws.services.s3.model.SSEAlgorithm;
 
 /**
  * S3/Ceph Object Gateway configuration.
@@ -33,6 +36,7 @@ public class S3Config {
   private String secretKey;
   private String endpoint;
   private boolean isSecured;
+  private String masterEncryptionKeyId;
 
   @Bean
   public AmazonS3 s3() {
@@ -45,12 +49,8 @@ public class S3Config {
       s3Client = new AmazonS3Client(new ProfileCredentialsProvider(), clientConfiguration());
     }
 
-    if (endpoint != null && !endpoint.isEmpty()) {
-      log.debug("OS Endpoint: {}", endpoint);
-      s3Client.setEndpoint(endpoint);
-    } else {
-      s3Client.setEndpoint("s3-external-1.amazonaws.com");
-    }
+    log.debug("Endpoint: {}", endpoint);
+    s3Client.setEndpoint(endpoint);
     s3Client.setS3ClientOptions(new S3ClientOptions().withPathStyleAccess(true));
 
     return s3Client;
@@ -58,7 +58,15 @@ public class S3Config {
 
   private ClientConfiguration clientConfiguration() {
     ClientConfiguration clientConfiguration = new ClientConfiguration();
-    if (!isSecured) {
+
+    log.debug("maskter key id : {}", masterEncryptionKeyId);
+    if (masterEncryptionKeyId != null) {
+      clientConfiguration.setSignerOverride("AWSS3V4SignerType");
+    }
+
+    if (isSecured) {
+      clientConfiguration.setProtocol(Protocol.HTTPS);
+    } else {
       clientConfiguration.setProtocol(Protocol.HTTP);
     }
     clientConfiguration
@@ -66,5 +74,13 @@ public class S3Config {
             .getDefaultRetryPolicyWithCustomMaxRetries(retryLimit));
     return clientConfiguration;
 
+  }
+
+  public void encrypt(InitiateMultipartUploadRequest req) {
+    if (masterEncryptionKeyId != null) {
+      log.debug("Encryption is on. Key: {}", masterEncryptionKeyId);
+      req.putCustomRequestHeader(Headers.SERVER_SIDE_ENCRYPTION, SSEAlgorithm.KMS.getAlgorithm());
+      req.putCustomRequestHeader(Headers.SERVER_SIDE_ENCRYPTION_AWS_KMS_KEYID, masterEncryptionKeyId);
+    }
   }
 }
