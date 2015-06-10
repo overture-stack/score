@@ -32,7 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.codehaus.jackson.map.ObjectMapper;
 
-import collaboratory.storage.object.store.client.upload.NotRetryableException;
+import collaboratory.storage.object.store.client.exception.NotRetryableException;
 import collaboratory.storage.object.store.core.model.ObjectSpecification;
 import collaboratory.storage.object.store.core.model.Part;
 

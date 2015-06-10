@@ -23,7 +23,7 @@ import java.io.PipedInputStream;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import collaboratory.storage.object.store.client.upload.NotRetryableException;
+import collaboratory.storage.object.store.client.exception.NotRetryableException;
 
 import com.google.api.client.util.IOUtils;
 import com.google.common.hash.Hashing;

@@ -24,7 +24,7 @@ s3:
  
 
 collaboratory:
-  bucket.name: oicr.collaboratory
+  bucket.name: oicr.icgc.collaboratory
   upload.directory: upload
   data.directory: data
   upload.expiration: 7

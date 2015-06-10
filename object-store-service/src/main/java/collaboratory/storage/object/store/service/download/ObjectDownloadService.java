@@ -97,6 +97,7 @@ public class ObjectDownloadService {
       }
     } catch (JsonParseException | JsonMappingException e) {
       throw new NotRetryableException(e);
+
     } catch (IOException e) {
       log.error("Fail to retrieve meta file", e);
       throw new NotRetryableException(e);
@@ -111,7 +112,7 @@ public class ObjectDownloadService {
     } catch (AmazonServiceException e) {
       log.error("Amazon service throws an exception", e);
       if (e.getStatusCode() == HttpStatus.NOT_FOUND.value() || !e.isRetryable()) {
-        throw new IdNotFoundException(objectId);
+        throw new InternalUnrecoverableError(new IdNotFoundException(objectId));
       } else {
         throw new RetryableException(e);
       }

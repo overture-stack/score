@@ -95,6 +95,10 @@ public class ObjectUploadService {
       }
     }
 
+    // TODO:
+    // - check with metadata service to see if the object is registered.
+    // - check if object exists already
+
     try {
       String uploadId = getUploadId(objectId);
       stateStore.delete(objectId, uploadId);
@@ -119,6 +123,7 @@ public class ObjectUploadService {
       stateStore.create(spec);
       return spec;
     } catch (AmazonServiceException e) {
+      log.error("fail multipart upload initialization", e);
       throw new RetryableException(e);
     }
   }

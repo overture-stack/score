@@ -42,8 +42,8 @@ import org.springframework.web.client.RestTemplate;
 
 import collaboratory.storage.object.store.client.config.ClientProperties;
 import collaboratory.storage.object.store.client.download.DownloadStateStore;
-import collaboratory.storage.object.store.client.upload.NotRetryableException;
-import collaboratory.storage.object.store.client.upload.RetryableException;
+import collaboratory.storage.object.store.client.exception.NotRetryableException;
+import collaboratory.storage.object.store.client.exception.RetryableException;
 import collaboratory.storage.object.store.core.model.DataChannel;
 import collaboratory.storage.object.store.core.model.ObjectSpecification;
 import collaboratory.storage.object.store.core.model.Part;

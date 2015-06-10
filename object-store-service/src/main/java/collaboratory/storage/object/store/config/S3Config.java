@@ -60,7 +60,7 @@ public class S3Config {
     ClientConfiguration clientConfiguration = new ClientConfiguration();
 
     log.debug("maskter key id : {}", masterEncryptionKeyId);
-    if (masterEncryptionKeyId != null) {
+    if (isEncryptionEnabled()) {
       clientConfiguration.setSignerOverride("AWSS3V4SignerType");
     }
 
@@ -77,10 +77,15 @@ public class S3Config {
   }
 
   public void encrypt(InitiateMultipartUploadRequest req) {
-    if (masterEncryptionKeyId != null) {
+    if (isEncryptionEnabled()) {
       log.debug("Encryption is on. Key: {}", masterEncryptionKeyId);
       req.putCustomRequestHeader(Headers.SERVER_SIDE_ENCRYPTION, SSEAlgorithm.KMS.getAlgorithm());
       req.putCustomRequestHeader(Headers.SERVER_SIDE_ENCRYPTION_AWS_KMS_KEYID, masterEncryptionKeyId);
     }
+  }
+
+  private boolean isEncryptionEnabled() {
+    return masterEncryptionKeyId != null && !masterEncryptionKeyId.isEmpty();
+
   }
 }

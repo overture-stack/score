@@ -31,6 +31,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import collaboratory.storage.object.store.client.exception.NotRetryableException;
 import collaboratory.storage.object.store.client.transport.ObjectStoreServiceProxy;
 import collaboratory.storage.object.store.client.transport.ObjectTransport;
 import collaboratory.storage.object.store.client.transport.ObjectTransport.Mode;

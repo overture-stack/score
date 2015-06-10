@@ -46,9 +46,10 @@ import org.springframework.retry.support.RetryTemplate;
 import org.springframework.web.client.RestTemplate;
 
 import collaboratory.storage.object.store.client.download.DownloadStateStore;
-import collaboratory.storage.object.store.client.upload.NotRetryableException;
-import collaboratory.storage.object.store.client.upload.RetryableException;
-import collaboratory.storage.object.store.client.upload.RetryableResponseErrorHandler;
+import collaboratory.storage.object.store.client.exception.NotResumableException;
+import collaboratory.storage.object.store.client.exception.NotRetryableException;
+import collaboratory.storage.object.store.client.exception.RetryableException;
+import collaboratory.storage.object.store.client.exception.RetryableResponseErrorHandler;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
@@ -134,6 +135,7 @@ public class ObjectStoreConfig {
 
     Builder<Class<? extends Throwable>, Boolean> exceptions = ImmutableMap.builder();
     exceptions.put(Error.class, Boolean.FALSE);
+    exceptions.put(NotResumableException.class, Boolean.FALSE);
     exceptions.put(NotRetryableException.class, Boolean.FALSE);
     exceptions.put(RetryableException.class, Boolean.TRUE);
     exceptions.put(IOException.class, Boolean.TRUE);

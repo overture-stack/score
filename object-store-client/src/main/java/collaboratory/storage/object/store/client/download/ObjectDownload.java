@@ -32,11 +32,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import collaboratory.storage.object.store.client.exception.NotResumableException;
+import collaboratory.storage.object.store.client.exception.NotRetryableException;
 import collaboratory.storage.object.store.client.transport.ObjectStoreServiceProxy;
 import collaboratory.storage.object.store.client.transport.ObjectTransport;
 import collaboratory.storage.object.store.client.transport.ObjectTransport.Mode;
 import collaboratory.storage.object.store.client.transport.ProgressBar;
-import collaboratory.storage.object.store.client.upload.NotRetryableException;
 import collaboratory.storage.object.store.core.model.ObjectSpecification;
 import collaboratory.storage.object.store.core.model.Part;
 
@@ -88,6 +89,9 @@ public class ObjectDownload {
           resumeIfPossible(outputDirectory, objectId, offset, length, retry == 0 ? true : false);
         }
         return;
+      } catch (NotResumableException e) {
+        log.error("Fail to handle download request", e.getCause());
+        throw e;
       } catch (NotRetryableException e) {
         log.warn(
             "Download is not completed successfully in the last execution. Checking data integrity. Please wait...", e);
@@ -146,7 +150,7 @@ public class ObjectDownload {
     log.info("Start a new download...");
     File objFile = DownloadUtils.getDownloadFile(dir, objectId);
     if (objFile.exists()) {
-      throw new NotRetryableException(new FileAlreadyExistsException(objFile.getPath()));
+      throw new NotResumableException(new FileAlreadyExistsException(objFile.getPath()));
     }
     if (!dir.exists()) {
       Files.createDirectories(dir.toPath());
