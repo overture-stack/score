@@ -166,4 +166,8 @@ public class ObjectUpload {
     log.debug("Transport Configuration: {}", transportBuilder);
     transportBuilder.build().send(file);
   }
+
+  public boolean isObjectExist(String oid) throws IOException {
+    return proxy.isObjectExist(oid);
+  }
 }

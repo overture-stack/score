@@ -9,7 +9,7 @@ transport:
   parallel: 6
 
 client:
-  strictSsl: true
+  strictSsl: false
   home: ${client.directory}
 
   upload:
@@ -17,13 +17,6 @@ client:
     servicePort: 5431
     retryNumber: 10
     retryTimeout: 1
-   
-  # SSL
-  ssl:
-    trustStore: classpath:client.jks
-    trustStoreType: JKS
-    trustStorePassword: password
-    trustName: repository.icgc.org
     
 logging:
   file: target/logs/client.log
@@ -35,10 +28,16 @@ spring:
 client:
   strictSsl: true
 
+  # SSL
+  ssl:
+    trustStore: classpath:client.jks
+    trustStoreType: JKS
+    trustStorePassword: password
+    trustName: repository.icgc.org
+
 ---
 spring:
   profiles: debug
-  profiles.include: prod
 
 logging:
   level:

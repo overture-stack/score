@@ -234,7 +234,8 @@ public class ObjectUploadService {
     try {
       return s3Client.getObjectMetadata(bucketName, ObjectStoreUtil.getObjectKey(dataDir, objectId));
     } catch (AmazonServiceException e) {
-      throw new RetryableException(e);
+      log.error("Unable to retrieve object meta data for object id: {}", objectId, e);
+      throw new NotRetryableException(e);
     }
   }
 

@@ -268,18 +268,14 @@ public class ObjectStoreServiceProxy {
 
       @Override
       public Boolean doWithRetry(RetryContext ctx) throws IOException {
-        try {
-          HttpEntity<Object> requestEntity = new HttpEntity<Object>(defaultHeaders());
-          req.exchange(
-              endpoint + "/upload/{object-id}",
-              HttpMethod.GET, requestEntity,
-              Boolean.class, objectId);
-        } catch (Exception e) {
-          return false;
-        }
-        return true;
+        HttpEntity<Object> requestEntity = new HttpEntity<Object>(defaultHeaders());
+        return req.exchange(
+            endpoint + "/upload/{object-id}",
+            HttpMethod.GET, requestEntity,
+            Boolean.class, objectId).getBody();
       }
     });
+
   }
 
   public ObjectSpecification getDownloadSpecification(String objectId, long offset, long length) throws IOException {

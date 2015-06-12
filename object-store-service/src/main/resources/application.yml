@@ -1,17 +1,5 @@
-spring:
-  profiles.active: default
----
-spring:
-  profiles: default
-
-# Server
 server:
   port: 5431
-  ssl:
-    key-store: src/main/cert/appliance.jks
-    key-store-type: JKS
-    key-store-password: password
-    key-alias: appliance
   
 s3:
   secured: true
@@ -21,8 +9,6 @@ s3:
   #Sinai Center
   #endpoint: https://www.cancercollaboratory.org:9080
   
- 
-
 collaboratory:
   bucket.name: oicr.icgc.collaboratory
   upload.directory: upload
@@ -35,8 +21,6 @@ upload:
   retry.limit: 1000
   partsize: 20000000
   
-download:
-
 ---
 spring:
   profiles: amazon
@@ -62,6 +46,9 @@ spring:
 server:
   ssl:
     key-store-type: JKS
+    key-store: src/main/cert/appliance.jks
+    key-store-password: password
+    key-alias: appliance
 
 s3:
   secured: true
@@ -84,11 +71,6 @@ s3:
   secured: false
   #Sinai Center
   endpoint: http://www.cancercollaboratory.org:9081
-
----
-# Strict SSL certificates are disabled in this profile
-spring:
-  profiles: dev
 
 ---
 spring:
