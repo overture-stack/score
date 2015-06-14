@@ -6,11 +6,14 @@ s3:
   #OICR
   #endpoint: http://10.5.73.101
   
+  #amazon
+  endpoint: s3-external-1.amazonaws.com
+  
   #Sinai Center
   #endpoint: https://www.cancercollaboratory.org:9080
   
 collaboratory:
-  bucket.name: oicr.icgc.collaboratory
+  bucket.name: oicr.collaboratory
   upload.directory: upload
   data.directory: data
   upload.expiration: 7
@@ -28,7 +31,10 @@ spring:
   
 s3:
   endpoint: s3-external-1.amazonaws.com
-  masterEncryptionKeyId: MUST-BE-PROVIDED
+  masterEncryptionKeyId: 08f7a205-3957-42c5-aae6-6166251c7565
+
+collaboratory:
+  bucket.name: oicr.icgc.collaboratory
 
 ---
 spring:
@@ -46,9 +52,8 @@ spring:
 server:
   ssl:
     key-store-type: JKS
-    key-store: src/main/cert/appliance.jks
-    key-store-password: password
-    key-alias: appliance
+    key-store: src/main/cert/service.jks
+    key-alias: object-store-service
 
 s3:
   secured: true

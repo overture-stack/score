@@ -135,6 +135,7 @@ public class ObjectUploadService {
       return true;
     } catch (AmazonServiceException e) {
       if (e.getStatusCode() != HttpStatus.NOT_FOUND.value()) {
+        log.error("Fail on amazon client when requesting object id: {}", objectId, e);
         throw new RetryableException(e);
       }
       log.info("Object key not found: {}", objectKey);

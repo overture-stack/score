@@ -17,6 +17,13 @@ client:
     servicePort: 5431
     retryNumber: 10
     retryTimeout: 1
+
+  # SSL
+  ssl:
+    trustStore: classpath:client.jks
+    trustStoreType: JKS
+    trustStorePassword: CLIENT_SECRET
+    trustName: icgc.cancercollaboratory.org
     
 logging:
   file: target/logs/client.log
@@ -28,12 +35,6 @@ spring:
 client:
   strictSsl: true
 
-  # SSL
-  ssl:
-    trustStore: classpath:client.jks
-    trustStoreType: JKS
-    trustStorePassword: password
-    trustName: repository.icgc.org
 
 ---
 spring:

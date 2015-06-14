@@ -74,3 +74,6 @@ logs/
 KeyczarTest.java
 HelperTest.java
 DownloadPartRequest.java
+
+#
+service.jks
