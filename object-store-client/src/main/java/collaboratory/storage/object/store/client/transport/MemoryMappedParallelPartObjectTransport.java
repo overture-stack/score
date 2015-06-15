@@ -51,6 +51,7 @@ public class MemoryMappedParallelPartObjectTransport extends ParallelPartObjectT
 
   private MemoryMappedParallelPartObjectTransport(RemoteParallelBuilder builder) {
     super(builder);
+    log.debug("Transport Settings: {}", builder);
   }
 
   @Override
