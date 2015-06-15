@@ -175,7 +175,6 @@ public class ObjectDownload {
         .withTransportMode(Mode.DOWNLOAD)
         .withChecksum(checksum)
         .withSessionId(sessionId);
-    log.debug("Transport Configuration: {}", transportBuilder);
     transportBuilder.build().receive(file);
   }
 

@@ -163,7 +163,6 @@ public class ObjectUpload {
         .withObjectId(objectId)
         .withTransportMode(Mode.UPLOAD)
         .withSessionId(uploadId);
-    log.debug("Transport Configuration: {}", transportBuilder);
     transportBuilder.build().send(file);
   }
 

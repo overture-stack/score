@@ -34,6 +34,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import collaboratory.storage.object.store.client.download.DownloadUtils;
@@ -233,6 +234,7 @@ public class ParallelPartObjectTransport implements ObjectTransport {
     return new RemoteParallelBuilder();
   }
 
+  @Data
   public static class RemoteParallelBuilder extends ObjectTransport.AbstractBuilder {
 
     private int nThreads;

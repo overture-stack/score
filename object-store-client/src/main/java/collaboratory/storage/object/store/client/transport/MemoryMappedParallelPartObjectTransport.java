@@ -32,7 +32,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-import lombok.Data;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import collaboratory.storage.object.store.client.download.DownloadUtils;
@@ -51,7 +50,7 @@ public class MemoryMappedParallelPartObjectTransport extends ParallelPartObjectT
 
   private MemoryMappedParallelPartObjectTransport(RemoteParallelBuilder builder) {
     super(builder);
-    log.debug("Transport Settings: {}", builder);
+    log.debug("Transport Settings: {}", builder.toString());
   }
 
   @Override
@@ -213,7 +212,6 @@ public class MemoryMappedParallelPartObjectTransport extends ParallelPartObjectT
     return new MemoryMappedParallelBuilder();
   }
 
-  @Data
   public static class MemoryMappedParallelBuilder extends RemoteParallelBuilder {
 
     @Override
