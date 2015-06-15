@@ -15,25 +15,40 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package collaboratory.storage.object.store.client.config;
+package collaboratory.storage.object.store.client.exception;
 
-import lombok.Data;
+import java.io.IOException;
 
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import lombok.extern.slf4j.Slf4j;
 
-import collaboratory.storage.object.store.client.download.DownloadStateStore;
+import org.springframework.http.client.ClientHttpResponse;
+import org.springframework.web.client.DefaultResponseErrorHandler;
+
+import com.amazonaws.util.IOUtils;
 
 /**
- * Configurations for connections for downloads
+ * responsible to translate server side errors to client side errors
  */
-@Data
-@Configuration
-public class DownloadConfig {
+@Slf4j
+public class RetryableResponseErrorHandler extends DefaultResponseErrorHandler {
 
-  @Bean
-  public DownloadStateStore downloadStateStore() {
-    return new DownloadStateStore();
+  @Override
+  public void handleError(ClientHttpResponse response) throws IOException {
+    switch (response.getStatusCode()) {
+    case NOT_FOUND:
+    case BAD_REQUEST:
+      log.warn("Not Retryable Endpoint: {}", response.getStatusText());
+      throw new NotRetryableException(new IOException("object store service error: "
+          + IOUtils.toString(response.getBody())));
+    case INTERNAL_SERVER_ERROR:
+      log.warn("Server error. Stop processing: {}", response.getStatusText());
+      throw new NotResumableException(new IOException("Object store service error: "
+          + IOUtils.toString(response.getBody())));
+    default:
+      log.warn("Retryable exception: {}", response.getStatusText());
+      throw new RetryableException(new IOException("object store service error: "
+          + IOUtils.toString(response.getBody())));
+
+    }
   }
-
 }

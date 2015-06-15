@@ -15,38 +15,18 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package collaboratory.storage.object.store.client.upload;
+package collaboratory.storage.object.store.client.exception;
 
-import java.io.IOException;
-
-import lombok.extern.slf4j.Slf4j;
-
-import org.springframework.http.client.ClientHttpResponse;
-import org.springframework.web.client.DefaultResponseErrorHandler;
-
-import com.amazonaws.util.IOUtils;
+import lombok.AllArgsConstructor;
 
 /**
- * responsible to translate server side errors to client side errors
+ * exceptions for not retryable operations such as checksum failure
  */
-@Slf4j
-public class RetryableResponseErrorHandler extends DefaultResponseErrorHandler {
+@AllArgsConstructor
+public class NotRetryableException extends RuntimeException {
 
-  @Override
-  public void handleError(ClientHttpResponse response) throws IOException {
-    switch (response.getStatusCode()) {
-    case NOT_FOUND:
-    case BAD_REQUEST:
-      log.warn("Not Retryable Endpoint: {}", response.getStatusText());
-      throw new NotRetryableException(new IOException("object store service error"));
-    case INTERNAL_SERVER_ERROR:
-      ;
-      log.warn("Server error. Stop processing: {}", response.getStatusText());
-      throw new Error(new IOException("Object store service error: " + IOUtils.toString(response.getBody())));
-    default:
-      log.warn("Retryable exception: {}", response.getStatusText());
-      throw new RetryableException(new IOException("object store service error"));
-
-    }
+  public NotRetryableException(Throwable message) {
+    super(message);
   }
+
 }

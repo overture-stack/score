@@ -114,59 +114,11 @@
 	<dependencyManagement>
 		<dependencies>
 
-			<dependency>
-				<groupId>org.aspectj</groupId>
-				<artifactId>aspectjrt</artifactId>
-				<version>1.7.3</version>
-			</dependency>
-			<dependency>
-				<groupId>org.aspectj</groupId>
-				<artifactId>aspectjweaver</artifactId>
-				<version>1.8.5</version>
-			</dependency>
-
-			<!-- Dropwizard -->
-			<dependency>
-				<groupId>com.yammer.dropwizard</groupId>
-				<artifactId>dropwizard-core</artifactId>
-				<version>${dropwizard.version}</version>
-				<exclusions>
-					<exclusion>
-						<artifactId>slf4j-api</artifactId>
-						<groupId>org.slf4j</groupId>
-					</exclusion>
-				</exclusions>
-			</dependency>
-
 			<!-- Command line -->
 			<dependency>
 				<groupId>com.beust</groupId>
 				<artifactId>jcommander</artifactId>
 				<version>${jcommander.version}</version>
-			</dependency>
-
-			<!-- JDBC -->
-			<dependency>
-				<groupId>org.postgresql</groupId>
-				<artifactId>postgresql</artifactId>
-				<version>${postgresql.version}</version>
-			</dependency>
-
-			<!-- Mongo -->
-			<dependency>
-				<groupId>org.jongo</groupId>
-				<artifactId>jongo</artifactId>
-				<version>${jongo.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.mongodb</groupId>
-				<artifactId>mongo-hadoop-core</artifactId>
-				<version>${mongo-hadoop.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.mongodb</groupId>
-				<artifactId>mongo-java-driver</artifactId>
-				<version>${mongo.version}</version>
 			</dependency>
 
 			<!-- JSON -->
@@ -207,6 +159,7 @@
 				<artifactId>guava</artifactId>
 				<version>${guava.version}</version>
 			</dependency>
+
 			<dependency>
 				<!-- Guava "optional" dependency -->
 				<groupId>com.google.code.findbugs</groupId>
@@ -244,340 +197,6 @@
 				<version>${super.csv.version}</version>
 			</dependency>
 
-			<!-- Cascading -->
-			<dependency>
-				<groupId>cascading</groupId>
-				<artifactId>cascading-core</artifactId>
-				<version>${cascading.version}</version>
-				<exclusions>
-					<exclusion>
-						<artifactId>slf4j-log4j12</artifactId>
-						<groupId>org.slf4j</groupId>
-					</exclusion>
-					<exclusion>
-						<artifactId>log4j</artifactId>
-						<groupId>log4j</groupId>
-					</exclusion>
-				</exclusions>
-			</dependency>
-			<dependency>
-				<groupId>cascading</groupId>
-				<artifactId>cascading-local</artifactId>
-				<version>${cascading.version}</version>
-				<exclusions>
-					<exclusion>
-						<artifactId>slf4j-log4j12</artifactId>
-						<groupId>org.slf4j</groupId>
-					</exclusion>
-					<exclusion>
-						<artifactId>log4j</artifactId>
-						<groupId>log4j</groupId>
-					</exclusion>
-				</exclusions>
-			</dependency>
-			<dependency>
-				<groupId>cascading</groupId>
-				<artifactId>cascading-hadoop</artifactId>
-				<version>${cascading.version}</version>
-				<exclusions>
-					<exclusion>
-						<artifactId>slf4j-log4j12</artifactId>
-						<groupId>org.slf4j</groupId>
-					</exclusion>
-					<exclusion>
-						<artifactId>log4j</artifactId>
-						<groupId>log4j</groupId>
-					</exclusion>
-					<exclusion>
-						<artifactId>commons-logging</artifactId>
-						<groupId>commons-logging</groupId>
-					</exclusion>
-				</exclusions>
-			</dependency>
-
-			<!-- Hadoop -->
-			<dependency>
-				<groupId>org.apache.hadoop</groupId>
-				<artifactId>hadoop-common</artifactId>
-				<version>${hadoop-cdh.version}</version>
-				<exclusions>
-					<exclusion>
-						<groupId>commons-logging</groupId>
-						<artifactId>commons-logging</artifactId>
-					</exclusion>
-					<exclusion>
-						<groupId>commons-logging</groupId>
-						<artifactId>commons-logging-api</artifactId>
-					</exclusion>
-					<exclusion>
-						<groupId>org.slf4j</groupId>
-						<artifactId>slf4j-log4j12</artifactId>
-					</exclusion>
-					<exclusion>
-						<groupId>org.mockito</groupId>
-						<artifactId>mockito-all</artifactId>
-					</exclusion>
-
-					<!-- DCC-1264 -->
-					<exclusion>
-						<groupId>org.mortbay.jetty</groupId>
-						<artifactId>jetty</artifactId>
-					</exclusion>
-					<exclusion>
-						<groupId>org.mortbay.jetty</groupId>
-						<artifactId>jetty-util</artifactId>
-					</exclusion>
-					<exclusion>
-						<groupId>org.mortbay.jetty</groupId>
-						<artifactId>jsp-2.1</artifactId>
-					</exclusion>
-					<exclusion>
-						<groupId>org.mortbay.jetty</groupId>
-						<artifactId>jsp-api-2.1</artifactId>
-					</exclusion>
-					<exclusion>
-						<groupId>org.mortbay.jetty</groupId>
-						<artifactId>servlet-api-2.1</artifactId>
-					</exclusion>
-					<exclusion>
-						<groupId>javax.servlet</groupId>
-						<artifactId>servlet-api</artifactId>
-					</exclusion>
-					<exclusion>
-						<groupId>javax.servlet.jsp</groupId>
-						<artifactId>jsp-api</artifactId>
-					</exclusion>
-					<exclusion>
-						<groupId>tomcat</groupId>
-						<artifactId>jasper-compiler</artifactId>
-					</exclusion>
-					<exclusion>
-						<groupId>tomcat</groupId>
-						<artifactId>jasper-runtime</artifactId>
-					</exclusion>
-				</exclusions>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.hadoop</groupId>
-				<artifactId>hadoop-annotations</artifactId>
-				<version>${hadoop-cdh.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.hadoop</groupId>
-				<artifactId>hadoop-core</artifactId>
-				<version>${hadoop-mr1-cdh.version}</version>
-				<exclusions>
-					<exclusion>
-						<groupId>commons-logging</groupId>
-						<artifactId>commons-logging</artifactId>
-					</exclusion>
-					<exclusion>
-						<groupId>commons-logging</groupId>
-						<artifactId>commons-logging-api</artifactId>
-					</exclusion>
-					<exclusion>
-						<groupId>org.slf4j</groupId>
-						<artifactId>slf4j-log4j12</artifactId>
-					</exclusion>
-
-					<!-- DCC-1264 -->
-					<exclusion>
-						<groupId>org.mortbay.jetty</groupId>
-						<artifactId>jetty</artifactId>
-					</exclusion>
-					<exclusion>
-						<groupId>org.mortbay.jetty</groupId>
-						<artifactId>jetty-util</artifactId>
-					</exclusion>
-					<exclusion>
-						<groupId>org.mortbay.jetty</groupId>
-						<artifactId>jsp-2.1</artifactId>
-					</exclusion>
-					<exclusion>
-						<groupId>org.mortbay.jetty</groupId>
-						<artifactId>jsp-api-2.1</artifactId>
-					</exclusion>
-					<exclusion>
-						<groupId>org.mortbay.jetty</groupId>
-						<artifactId>servlet-api-2.1</artifactId>
-					</exclusion>
-					<exclusion>
-						<groupId>javax.servlet</groupId>
-						<artifactId>servlet-api</artifactId>
-					</exclusion>
-					<exclusion>
-						<groupId>javax.servlet.jsp</groupId>
-						<artifactId>jsp-api</artifactId>
-					</exclusion>
-					<exclusion>
-						<groupId>tomcat</groupId>
-						<artifactId>jasper-compiler</artifactId>
-					</exclusion>
-					<exclusion>
-						<groupId>tomcat</groupId>
-						<artifactId>jasper-runtime</artifactId>
-					</exclusion>
-				</exclusions>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.hadoop</groupId>
-				<artifactId>hadoop-hdfs</artifactId>
-				<version>${hadoop-cdh.version}</version>
-				<scope>runtime</scope>
-				<exclusions>
-					<exclusion>
-						<groupId>commons-logging</groupId>
-						<artifactId>commons-logging</artifactId>
-					</exclusion>
-					<exclusion>
-						<groupId>commons-logging</groupId>
-						<artifactId>commons-logging-api</artifactId>
-					</exclusion>
-					<exclusion>
-						<groupId>org.slf4j</groupId>
-						<artifactId>slf4j-log4j12</artifactId>
-					</exclusion>
-
-					<!-- DCC-1264 -->
-					<exclusion>
-						<groupId>org.mortbay.jetty</groupId>
-						<artifactId>jetty</artifactId>
-					</exclusion>
-					<exclusion>
-						<groupId>org.mortbay.jetty</groupId>
-						<artifactId>jetty-util</artifactId>
-					</exclusion>
-					<exclusion>
-						<groupId>org.mortbay.jetty</groupId>
-						<artifactId>jsp-2.1</artifactId>
-					</exclusion>
-					<exclusion>
-						<groupId>org.mortbay.jetty</groupId>
-						<artifactId>jsp-api-2.1</artifactId>
-					</exclusion>
-					<exclusion>
-						<groupId>org.mortbay.jetty</groupId>
-						<artifactId>servlet-api-2.1</artifactId>
-					</exclusion>
-					<exclusion>
-						<groupId>javax.servlet</groupId>
-						<artifactId>servlet-api</artifactId>
-					</exclusion>
-					<exclusion>
-						<groupId>javax.servlet.jsp</groupId>
-						<artifactId>jsp-api</artifactId>
-					</exclusion>
-					<exclusion>
-						<groupId>tomcat</groupId>
-						<artifactId>jasper-compiler</artifactId>
-					</exclusion>
-					<exclusion>
-						<groupId>tomcat</groupId>
-						<artifactId>jasper-runtime</artifactId>
-					</exclusion>
-				</exclusions>
-			</dependency>
-			<dependency>
-				<groupId>com.hadoop.gplcompression</groupId>
-				<artifactId>hadoop-lzo</artifactId>
-				<version>0.4.16</version>
-			</dependency>
-
-			<!-- Search -->
-			<dependency>
-				<groupId>org.elasticsearch</groupId>
-				<artifactId>elasticsearch</artifactId>
-				<version>${elasticsearch.version}</version>
-			</dependency>
-
-			<!-- Testing - Mongo -->
-			<dependency>
-				<groupId>de.flapdoodle.embed</groupId>
-				<artifactId>de.flapdoodle.embed.mongo</artifactId>
-				<version>${embed-mongo.version}</version>
-				<scope>test</scope>
-			</dependency>
-			<dependency>
-				<groupId>com.wordnik</groupId>
-				<artifactId>mongo-admin-utils-distribution</artifactId>
-				<version>1.2.0</version>
-				<scope>test</scope>
-				<exclusions>
-					<exclusion>
-						<artifactId>slf4j-log4j12</artifactId>
-						<groupId>org.slf4j</groupId>
-					</exclusion>
-				</exclusions>
-			</dependency>
-
-			<!-- Testing - Cascading -->
-			<dependency>
-				<groupId>cascading</groupId>
-				<artifactId>cascading-core</artifactId>
-				<version>${cascading.version}</version>
-				<classifier>tests</classifier>
-				<scope>test</scope>
-				<exclusions>
-					<exclusion>
-						<groupId>junit</groupId>
-						<artifactId>junit</artifactId>
-					</exclusion>
-					<exclusion>
-						<artifactId>slf4j-log4j12</artifactId>
-						<groupId>org.slf4j</groupId>
-					</exclusion>
-					<exclusion>
-						<artifactId>log4j</artifactId>
-						<groupId>log4j</groupId>
-					</exclusion>
-				</exclusions>
-			</dependency>
-
-			<!-- Testing - Hadoop -->
-			<dependency>
-				<groupId>org.apache.hadoop</groupId>
-				<artifactId>hadoop-test</artifactId>
-				<version>${hadoop-mr1-cdh.version}</version>
-				<scope>test</scope>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.hadoop</groupId>
-				<artifactId>hadoop-minicluster</artifactId>
-				<version>${hadoop-mr1-cdh.version}</version>
-				<scope>test</scope>
-				<exclusions>
-					<exclusion>
-						<artifactId>slf4j-log4j12</artifactId>
-						<groupId>org.slf4j</groupId>
-					</exclusion>
-					<exclusion>
-						<artifactId>mockito-all</artifactId>
-						<groupId>org.mockito</groupId>
-					</exclusion>
-				</exclusions>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.hadoop</groupId>
-				<artifactId>hadoop-common</artifactId>
-				<version>${hadoop-cdh.version}</version>
-				<type>test-jar</type>
-				<scope>test</scope>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.hadoop</groupId>
-				<artifactId>hadoop-hdfs</artifactId>
-				<version>${hadoop-cdh.version}</version>
-				<type>test-jar</type>
-				<scope>test</scope>
-			</dependency>
-
-			<!-- Testing - Utilities -->
-			<dependency>
-				<groupId>com.google.code</groupId>
-				<artifactId>externalsortinginjava</artifactId>
-				<version>0.1.1</version>
-				<scope>test</scope>
-			</dependency>
 
 			<!-- Logging -->
 			<dependency>
@@ -634,7 +253,6 @@
 				<scope>test</scope>
 			</dependency>
 
-			<!-- DCC -->
 			<dependency>
 				<groupId>${project.groupId}</groupId>
 				<artifactId>object-store-core</artifactId>
@@ -667,31 +285,6 @@
 				<version>${aws-java-sdk.version}</version>
 			</dependency>
 
-			<!-- JDBC -->
-			<dependency>
-				<groupId>com.h2database</groupId>
-				<artifactId>h2</artifactId>
-				<version>${h2.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.jdbi</groupId>
-				<artifactId>jdbi</artifactId>
-				<version>${jdbi.version}</version>
-			</dependency>
-
-			<!-- Crypto -->
-			<dependency>
-				<groupId>org.keyczar</groupId>
-				<artifactId>keyczar</artifactId>
-				<version>${keyczar.version}</version>
-			</dependency>
-
-			<!-- JSON -->
-			<dependency>
-				<groupId>com.fasterxml.jackson.dataformat</groupId>
-				<artifactId>jackson-dataformat-csv</artifactId>
-				<version>${jackson.version}</version>
-			</dependency>
 
 		</dependencies>
 
@@ -706,6 +299,7 @@
 					<source>1.8</source>
 					<target>1.8</target>
 				</configuration>
+			        <version>2.5.1</version>
 			</plugin>
 		</plugins>
 	</build>
@@ -720,17 +314,14 @@
 		<spring-security-oauth2.version>2.0.3.RELEASE</spring-security-oauth2.version>
 
 		<!-- Versions - Amazon -->
+		<aws-java-sdk.version>1.9.39</aws-java-sdk.version>
+
+		<!--  For collaboratory (ceph) 
 		<aws-java-sdk.version>1.8.11</aws-java-sdk.version>
+        -->
 
 		<!-- Versions - JSON -->
 		<jackson.version>2.3.0</jackson.version>
-
-		<!-- Versions - Crypto -->
-		<keyczar.version>0.66</keyczar.version>
-
-		<!-- Versions - JDBC -->
-		<jdbi.version>2.55</jdbi.version>
-		<h2.version>1.4.181</h2.version>
 
 		<!-- Versions - Utilities -->
 		<lombok.version>1.12.6</lombok.version>
@@ -754,17 +345,6 @@
 		<install.skipFindbugs>true</install.skipFindbugs>
 		<package.attach>false</package.attach>
 
-		<!-- Versions - Dropwizard -->
-		<dropwizard.version>0.6.2</dropwizard.version>
-
-		<!-- Versions - JDBC -->
-		<postgresql.version>9.2-1004-jdbc4</postgresql.version>
-
-		<!-- Versions - Mongo -->
-		<mongo.version>2.11.4</mongo.version>
-		<mongo-hadoop.version>1.1.0-93d3667</mongo-hadoop.version> <!-- See https://groups.google.com/d/topic/cascading-user/YaZUWr3V-sM/discussion -->
-		<jongo.version>1.1</jongo.version>
-
 		<!-- Versions - JSON -->
 		<jackson.version>2.3.0</jackson.version>
 		<jackson-smile.version>2.3.0</jackson-smile.version>
@@ -777,18 +357,8 @@
 		<typesafe-config.version>1.2.0</typesafe-config.version>
 		<guice.version>3.0</guice.version>
 		<guava.version>17.0</guava.version>
-		<commons-compress.version>1.8</commons-compress.version>
 		<jsr305.version>1.3.9</jsr305.version>
 		<joda-time.version>2.2</joda-time.version>
-		<super.csv.version>2.0.1</super.csv.version>
-		<mail.version>1.4.5</mail.version>
-		<tika-core.version>1.4</tika-core.version>
-
-		<!-- Versions - Genomics -->
-		<picard.version>1.102.0</picard.version>
-
-		<!-- Versions - IMDG -->
-		<hazelcast.version>3.2.3</hazelcast.version>
 
 		<!-- Versions - Logging -->
 		<slf4j.version>1.7.5</slf4j.version>

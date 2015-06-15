@@ -15,18 +15,11 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package collaboratory.storage.object.store.client.upload;
+package collaboratory.storage.object.store.client.exception;
 
-import lombok.AllArgsConstructor;
+public class NotResumableException extends RuntimeException {
 
-/**
- * exceptions for not retryable operations such as checksum failure
- */
-@AllArgsConstructor
-public class NotRetryableException extends RuntimeException {
-
-  public NotRetryableException(Throwable message) {
-    super(message);
+  public NotResumableException(Throwable e) {
+    super(e);
   }
-
 }

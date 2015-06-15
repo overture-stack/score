@@ -3,36 +3,25 @@
 #
 client.directory: ${user.home}
 
-spring:
-  profiles.active: default
----
-spring:
-  profiles: default
-
 transport:
   fileFrom: memory
   memory: 1
-  parallel: 2
+  parallel: 6
 
 client:
-  strictSsl: true
+  strictSsl: false
   home: ${client.directory}
 
   upload:
     serviceHostname: localhost
     servicePort: 5431
-    retryNumber: 100
+    retryNumber: 10
     retryTimeout: 1
-   
-  # SSL
-  ssl:
-    trustStore: classpath:client.jks
-    trustStoreType: JKS
-    trustStorePassword: password
-    trustName: repository.icgc.org
+
     
 logging:
   file: target/logs/client.log
+
 ---
 spring:
   profiles: prod
@@ -40,10 +29,19 @@ spring:
 client:
   strictSsl: true
 
+  upload:
+    serviceHostname: icgc.cancercollaboratory.org
+
+  # SSL
+  ssl:
+    trustStore: classpath:client.jks
+    trustStoreType: JKS
+    trustStorePassword: CLIENT_SECRET
+    trustName: icgc.cancercollaboratory.org
+
 ---
 spring:
   profiles: debug
-  profiles.include: prod
 
 logging:
   level:

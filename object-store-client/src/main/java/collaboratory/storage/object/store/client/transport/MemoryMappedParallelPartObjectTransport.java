@@ -36,7 +36,7 @@ import lombok.Data;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import collaboratory.storage.object.store.client.download.DownloadUtils;
-import collaboratory.storage.object.store.client.upload.NotRetryableException;
+import collaboratory.storage.object.store.client.exception.NotRetryableException;
 import collaboratory.storage.object.store.core.model.Part;
 
 import com.google.common.collect.ImmutableList;
@@ -58,6 +58,7 @@ public class MemoryMappedParallelPartObjectTransport extends ParallelPartObjectT
   public void send(File file) {
     log.debug("send file: {}", file.getPath());
     ExecutorService executor = Executors.newFixedThreadPool(nThreads);
+
     ImmutableList.Builder<Future<Part>> results = ImmutableList.builder();
     progress.start();
     for (final Part part : parts) {
@@ -65,6 +66,7 @@ public class MemoryMappedParallelPartObjectTransport extends ParallelPartObjectT
         final MappedByteBuffer buffer =
             fis.getChannel().map(FileChannel.MapMode.READ_ONLY, part.getOffset(), part.getPartSize());
         buffer.load();
+        progress.incrementByteRead(part.getPartSize());
         results.add(executor.submit(new Callable<Part>() {
 
           @Override
@@ -89,7 +91,6 @@ public class MemoryMappedParallelPartObjectTransport extends ParallelPartObjectT
           }
         }));
       }
-      progress.incrementByteRead(part.getPartSize());
       long remaining = memory.addAndGet(-part.getPartSize());
       log.debug("Remaining Memory : {}", remaining);
       while (memory.get() < 0) {
@@ -163,13 +164,14 @@ public class MemoryMappedParallelPartObjectTransport extends ParallelPartObjectT
                 progress.updateProgress(1);
               }
               progress.incrementByteRead(part.getPartSize());
+              progress.incrementByteWritten(part.getPartSize());
+
               memory.addAndGet(part.getPartSize());
               return memoryChannel;
             }
           }
         }
       }));
-      progress.incrementByteWritten(part.getPartSize());
       long remaining = memory.addAndGet(-part.getPartSize());
       log.debug("Remaining Memory : {}", remaining);
       if (memory.get() < 0L || shouldThrottled) {

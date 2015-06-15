@@ -10,6 +10,9 @@ org.eclipse.jdt.apt.core.prefs
 *.iml
 atlassian-ide-plugin.xml
 
+# Sprint Boot
+application-amazon.properties
+
 # Maven
 target/
 pom.xml.releaseBackup
@@ -71,3 +74,7 @@ logs/
 KeyczarTest.java
 HelperTest.java
 DownloadPartRequest.java
+
+# collaboratory
+service.jks
+application-prod.properties

@@ -19,7 +19,9 @@ package collaboratory.storage.object.store.client.transport;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.net.URI;
+import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -40,14 +42,16 @@ import org.springframework.web.client.RestTemplate;
 
 import collaboratory.storage.object.store.client.config.ClientProperties;
 import collaboratory.storage.object.store.client.download.DownloadStateStore;
-import collaboratory.storage.object.store.client.upload.NotRetryableException;
-import collaboratory.storage.object.store.client.upload.RetryableException;
+import collaboratory.storage.object.store.client.exception.NotRetryableException;
+import collaboratory.storage.object.store.client.exception.RetryableException;
 import collaboratory.storage.object.store.core.model.DataChannel;
 import collaboratory.storage.object.store.core.model.ObjectSpecification;
 import collaboratory.storage.object.store.core.model.Part;
 import collaboratory.storage.object.store.core.model.UploadProgress;
 import collaboratory.storage.object.store.core.util.ObjectStoreUtil;
 
+import com.amazonaws.services.s3.Headers;
+import com.amazonaws.services.s3.model.SSEAlgorithm;
 import com.google.common.hash.Hashing;
 import com.google.common.hash.HashingInputStream;
 
@@ -155,9 +159,11 @@ public class ObjectStoreServiceProxy {
 
           @Override
           public void doWithRequest(final ClientHttpRequest request) throws IOException {
-            request.getHeaders().setContentLength(channel.getlength());
-            channel.writeTo(request.getBody());
-            request.getBody().close();
+            HttpHeaders requestHeader = request.getHeaders();
+            requestHeader.setContentLength(channel.getlength());
+            try (OutputStream os = request.getBody()) {
+              channel.writeTo(os);
+            }
           }
         };
 
@@ -168,13 +174,13 @@ public class ObjectStoreServiceProxy {
             return response.getHeaders();
           }
         };
-
         try {
           HttpHeaders headers =
               dataUploadreq.execute(new URI(part.getUrl()), HttpMethod.PUT, callback, headersExtractor);
+
           try {
             finalizeUploadPart(objectId, uploadId, part.getPartNumber(), channel.getMd5(),
-                cleanUpETag(headers.getETag()));
+                cleanUpETag(headers.getETag()), disableChecksum(headers));
           } catch (NotRetryableException e) {
             log.warn("Checksum failed for part: {}, MD5: {}, ETAG: {}", part, channel.getMd5(), headers.getETag(), e);
             throw new RetryableException();
@@ -185,6 +191,14 @@ public class ObjectStoreServiceProxy {
           throw new RetryableException();
         }
         return null;
+      }
+
+      private boolean disableChecksum(HttpHeaders headers) {
+        List<String> encryption = headers.get(Headers.SERVER_SIDE_ENCRYPTION);
+        if (encryption != null && !encryption.isEmpty()) {
+          return encryption.contains(SSEAlgorithm.KMS.getAlgorithm());
+        }
+        return false;
       }
     });
   }
@@ -227,14 +241,15 @@ public class ObjectStoreServiceProxy {
     });
   }
 
-  public void finalizeUploadPart(String objectId, String uploadId, int partNumber, String md5, String etag)
+  public void finalizeUploadPart(String objectId, String uploadId, int partNumber, String md5, String etag,
+      boolean disableChecksum)
       throws IOException {
     log.debug("finalize upload part, object-id: {}, upload-id: {}, part-number: {}", objectId, uploadId, partNumber);
     retry.execute(new RetryCallback<Void, IOException>() {
 
       @Override
       public Void doWithRetry(RetryContext ctx) throws IOException {
-        if (md5.equals(etag)) {
+        if (disableChecksum || md5.equals(etag)) {
           HttpEntity<Object> requestEntity = new HttpEntity<Object>(defaultHeaders());
           req.exchange(
               endpoint + "/upload/{object-id}/parts?uploadId={upload-id}&partNumber={partNumber}&md5={md5}&etag={etag}",
@@ -253,18 +268,14 @@ public class ObjectStoreServiceProxy {
 
       @Override
       public Boolean doWithRetry(RetryContext ctx) throws IOException {
-        try {
-          HttpEntity<Object> requestEntity = new HttpEntity<Object>(defaultHeaders());
-          req.exchange(
-              endpoint + "/upload/{object-id}",
-              HttpMethod.GET, requestEntity,
-              Boolean.class, objectId);
-        } catch (Exception e) {
-          return false;
-        }
-        return true;
+        HttpEntity<Object> requestEntity = new HttpEntity<Object>(defaultHeaders());
+        return req.exchange(
+            endpoint + "/upload/{object-id}",
+            HttpMethod.GET, requestEntity,
+            Boolean.class, objectId).getBody();
       }
     });
+
   }
 
   public ObjectSpecification getDownloadSpecification(String objectId, long offset, long length) throws IOException {

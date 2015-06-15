@@ -38,8 +38,6 @@ import collaboratory.storage.object.store.core.model.ObjectSpecification;
 import collaboratory.storage.object.store.core.model.UploadProgress;
 import collaboratory.storage.object.store.service.upload.ObjectUploadService;
 
-import com.amazonaws.services.s3.model.ObjectMetadata;
-
 /**
  * A controller to expose RESTful API for upload
  */
@@ -115,9 +113,9 @@ public class ObjectUploadController {
   }
 
   @RequestMapping(method = RequestMethod.GET, value = "/{object-id}")
-  public @ResponseBody ObjectMetadata getObjectMetadata(@RequestHeader("access-token") final String accessToken,
+  public @ResponseBody Boolean isObjectExist(@RequestHeader("access-token") final String accessToken,
       @PathVariable("object-id") String objectId) {
-    return uploadService.getObjectMetadata(objectId);
+    return uploadService.exists(objectId);
   }
 
   @RequestMapping(method = RequestMethod.DELETE, value = "/{object-id}")

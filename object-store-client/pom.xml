@@ -106,17 +106,6 @@
 			<version>${jersey.version}</version>
 		</dependency>
 
-		<!-- JDBC -->
-		<dependency>
-			<groupId>com.h2database</groupId>
-			<artifactId>h2</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.jdbi</groupId>
-			<artifactId>jdbi</artifactId>
-		</dependency>
-
-
 		<!-- JSON -->
 		<dependency>
 			<groupId>com.fasterxml.jackson.jaxrs</groupId>
@@ -187,6 +176,7 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+				<version>${spring-boot.version}</version>
 				<executions>
 					<execution>
 						<goals>

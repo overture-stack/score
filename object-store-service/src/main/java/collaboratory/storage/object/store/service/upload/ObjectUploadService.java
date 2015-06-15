@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
+import collaboratory.storage.object.store.config.S3Config;
 import collaboratory.storage.object.store.core.model.ObjectSpecification;
 import collaboratory.storage.object.store.core.model.Part;
 import collaboratory.storage.object.store.core.model.UploadProgress;
@@ -72,8 +73,8 @@ public class ObjectUploadService {
   @Value("${collaboratory.upload.expiration}")
   private int expiration;
 
-  @Value("${s3.endpoint}")
-  private String endPoint;
+  @Autowired
+  private S3Config s3Conf;
 
   @Autowired
   private UploadStateStore stateStore;
@@ -94,6 +95,10 @@ public class ObjectUploadService {
       }
     }
 
+    // TODO:
+    // - check with metadata service to see if the object is registered.
+    // - check if object exists already
+
     try {
       String uploadId = getUploadId(objectId);
       stateStore.delete(objectId, uploadId);
@@ -104,6 +109,7 @@ public class ObjectUploadService {
     InitiateMultipartUploadRequest req = new InitiateMultipartUploadRequest(
         bucketName, objectKey);
     try {
+      s3Conf.encrypt(req);
       InitiateMultipartUploadResult result = s3Client.initiateMultipartUpload(req);
 
       List<Part> parts = partCalculator.divide(fileSize);
@@ -117,6 +123,7 @@ public class ObjectUploadService {
       stateStore.create(spec);
       return spec;
     } catch (AmazonServiceException e) {
+      log.error("fail multipart upload initialization", e);
       throw new RetryableException(e);
     }
   }
@@ -128,6 +135,7 @@ public class ObjectUploadService {
       return true;
     } catch (AmazonServiceException e) {
       if (e.getStatusCode() != HttpStatus.NOT_FOUND.value()) {
+        log.error("Fail on amazon client when requesting object id: {} from bucket: {}", objectId, bucketName, e);
         throw new RetryableException(e);
       }
       log.info("Object key not found: {}", objectKey);
@@ -139,7 +147,7 @@ public class ObjectUploadService {
   private boolean isPartExist(String objectKey, String uploadId, int partNumber, String eTag) {
     List<PartSummary> parts = null;
     try {
-      if (endPoint == null) {
+      if (s3Conf.getEndpoint() == null) {
         ListPartsRequest req =
             new ListPartsRequest(bucketName, objectKey, uploadId);
         req.setPartNumberMarker(partNumber - 1);
@@ -227,7 +235,8 @@ public class ObjectUploadService {
     try {
       return s3Client.getObjectMetadata(bucketName, ObjectStoreUtil.getObjectKey(dataDir, objectId));
     } catch (AmazonServiceException e) {
-      throw new RetryableException(e);
+      log.error("Unable to retrieve object meta data for object id: {}", objectId, e);
+      throw new NotRetryableException(e);
     }
   }
 

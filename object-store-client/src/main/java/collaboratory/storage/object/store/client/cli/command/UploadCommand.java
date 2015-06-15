@@ -18,6 +18,9 @@
 package collaboratory.storage.object.store.client.cli.command;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.util.Map.Entry;
+import java.util.Properties;
 
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -38,13 +41,16 @@ import com.beust.jcommander.Parameters;
 @Slf4j
 public class UploadCommand extends AbstractClientCommand {
 
-  @Parameter(names = "--file", description = "Path to a file", required = true)
+  @Parameter(names = "--file", description = "Path to a file", required = false)
   private String filePath;
+
+  @Parameter(names = "--manifest", description = "Path to a manifest file", required = true)
+  private File manifest;
 
   @Parameter(names = "-f", description = "force to re-upload", required = false)
   private boolean isForce = false;
 
-  @Parameter(names = "--object-id", description = "object id assigned to the file", required = true)
+  @Parameter(names = "--object-id", description = "object id assigned to the file", required = false)
   private String oid;
 
   @Autowired
@@ -53,11 +59,27 @@ public class UploadCommand extends AbstractClientCommand {
   @Override
   @SneakyThrows
   public int execute() {
-    println("Start uploading file: %s", filePath);
-    log.info("file: {}", filePath);
-    File upload = new File(filePath);
-    uploader.upload(upload, oid, isForce);
+
+    if (filePath != null) {
+      println("Start uploading file: %s", filePath);
+      log.info("file: {}", filePath);
+      File upload = new File(filePath);
+      uploader.upload(upload, oid, isForce);
+      return SUCCESS_STATUS;
+    }
+
+    Properties props = new Properties();
+    props.load(new FileInputStream(manifest));
+    for (Entry<Object, Object> entry : props.entrySet()) {
+      String oid = (String) entry.getKey();
+      File obj = new File((String) entry.getValue());
+      if (!uploader.isObjectExist(oid)) {
+        println("Start uploading object: %s using the object id: %s", obj, oid);
+        uploader.upload(obj, oid, isForce);
+      } else {
+        println("Object id: %s has been uploaded. Skipped.", oid);
+      }
+    }
     return SUCCESS_STATUS;
   }
-
 }

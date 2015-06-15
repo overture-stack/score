@@ -1,19 +1,20 @@
 #!/bin/bash -e
 #
-# Copyright 2014(c) The Ontario Institute for Cancer Research. All rights reserved.
+# Copyright 2015(c) The Ontario Institute for Cancer Research. All rights reserved.
 #
 # Description:
-#   generate certificate for appliance and client
+#   generate certificate for object store service and client
 #
 # Usage:
-#   To generate certificates, ./gencert.sh
+#   To generate certificates, ./gencert.sh <SERVICE-PASSWORD>
 #
 DCC_HOME=`dirname $0`; export DCC_HOME
 
-keytool -genkeypair -alias appliance -keyalg RSA -dname "CN=repository.icgc.org,OU=Software Development,O=OICR,L=Ontario,S=Toronto,C=CA" -keypass password -keystore ${DCC_HOME}/appliance.jks -storepass password -validity 1095
+keytool -genkeypair -alias object-store-service -keyalg RSA -dname "CN=icgc.cancercollaboratory.org,OU=Software Development,O=OICR,L=Ontario,S=Toronto,C=CA" -keypass $1 -keystore ${DCC_HOME}/service.jks -storepass $1 -validity 1095
 
-keytool -exportcert -alias appliance -file ${DCC_HOME}/appliance-public.cer -keystore ${DCC_HOME}/appliance.jks -storepass password
-keytool -importcert -keystore ${DCC_HOME}/client.jks -alias appliance -file ${DCC_HOME}/appliance-public.cer -storepass password -noprompt
+keytool -exportcert -alias object-store-service -file ${DCC_HOME}/service-public.cer -keystore ${DCC_HOME}/service.jks -storepass $1
+keytool -importcert -keystore ${DCC_HOME}/client.jks -alias object-store-service -file ${DCC_HOME}/service-public.cer -storepass CLIENT_SECRET -noprompt
 
-mv ${DCC_HOME}/appliance.jks ${DCC_HOME}/../src/main/cert/
+mv ${DCC_HOME}/service.jks ${DCC_HOME}/../src/main/cert/
 mv ${DCC_HOME}/client.jks ${DCC_HOME}/../../object-store-client/src/main/resources/
+rm ${DCC_HOME}/service-public.cer
