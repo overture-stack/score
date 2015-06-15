@@ -285,12 +285,6 @@
 				<version>${aws-java-sdk.version}</version>
 			</dependency>
 
-			<!-- JSON -->
-			<dependency>
-				<groupId>com.fasterxml.jackson.dataformat</groupId>
-				<artifactId>jackson-dataformat-csv</artifactId>
-				<version>${jackson.version}</version>
-			</dependency>
 
 		</dependencies>
 
@@ -305,6 +299,7 @@
 					<source>1.8</source>
 					<target>1.8</target>
 				</configuration>
+			        <version>2.5.1</version>
 			</plugin>
 		</plugins>
 	</build>
