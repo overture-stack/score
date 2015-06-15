@@ -63,6 +63,10 @@ endpoints:
   env.enabled: false
   info.enabled: false
 
+# Metadata server
+metadata:
+  url: https://meta.icgc.org/entities
+
 ---
 spring:
   profiles: benchmark
