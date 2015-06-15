@@ -30,7 +30,7 @@ import com.amazonaws.util.IOUtils;
  * responsible to translate server side errors to client side errors
  */
 @Slf4j
-public class RetryableResponseErrorHandler extends DefaultResponseErrorHandler {
+public class ServiceRetryableResponseErrorHandler extends DefaultResponseErrorHandler {
 
   @Override
   public void handleError(ClientHttpResponse response) throws IOException {

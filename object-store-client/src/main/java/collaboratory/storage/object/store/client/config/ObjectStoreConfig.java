@@ -46,10 +46,11 @@ import org.springframework.retry.support.RetryTemplate;
 import org.springframework.web.client.RestTemplate;
 
 import collaboratory.storage.object.store.client.download.DownloadStateStore;
+import collaboratory.storage.object.store.client.exception.AmazonS3RetryableResponseErrorHandler;
 import collaboratory.storage.object.store.client.exception.NotResumableException;
 import collaboratory.storage.object.store.client.exception.NotRetryableException;
 import collaboratory.storage.object.store.client.exception.RetryableException;
-import collaboratory.storage.object.store.client.exception.RetryableResponseErrorHandler;
+import collaboratory.storage.object.store.client.exception.ServiceRetryableResponseErrorHandler;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
@@ -84,14 +85,14 @@ public class ObjectStoreConfig {
   @Bean(name = "object-store-service-template")
   public RestTemplate uploadTemplate() {
     RestTemplate req = new RestTemplate(clientHttpRequestFactory());
-    req.setErrorHandler(new RetryableResponseErrorHandler());
+    req.setErrorHandler(new ServiceRetryableResponseErrorHandler());
     return req;
   }
 
   @Bean(name = "object-store-template")
   public RestTemplate uploadDataTemplate() {
     RestTemplate req = new RestTemplate(streamingClientHttpRequestFactory());
-    req.setErrorHandler(new RetryableResponseErrorHandler());
+    req.setErrorHandler(new AmazonS3RetryableResponseErrorHandler());
     return req;
   }
 

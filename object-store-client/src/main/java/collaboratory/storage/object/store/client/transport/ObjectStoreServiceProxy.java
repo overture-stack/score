@@ -67,11 +67,11 @@ public class ObjectStoreServiceProxy {
 
   @Autowired
   @Qualifier("object-store-service-template")
-  private RestTemplate req;
+  private RestTemplate serviceRequest;
 
   @Autowired
   @Qualifier("object-store-template")
-  private RestTemplate dataUploadreq;
+  private RestTemplate dataRequest;
 
   @Autowired
   @Qualifier("endpoint")
@@ -90,7 +90,7 @@ public class ObjectStoreServiceProxy {
       @Override
       public UploadProgress doWithRetry(RetryContext ctx) throws IOException {
         HttpEntity<Object> requestEntity = new HttpEntity<Object>(defaultHeaders());
-        return req.exchange(endpoint + "/upload/{object-id}/status?fileSize={file-size}", HttpMethod.GET,
+        return serviceRequest.exchange(endpoint + "/upload/{object-id}/status?fileSize={file-size}", HttpMethod.GET,
             requestEntity,
             UploadProgress.class, objectId, fileSize).getBody();
       }
@@ -128,7 +128,7 @@ public class ObjectStoreServiceProxy {
 
         try {
           HttpHeaders headers =
-              dataUploadreq.execute(new URI(part.getUrl()), HttpMethod.GET, callback, headersExtractor);
+              dataRequest.execute(new URI(part.getUrl()), HttpMethod.GET, callback, headersExtractor);
           part.setMd5(cleanUpETag(headers.getETag()));
           // TODO: try catch here for commit
           downloadStateStore.commit(outputDir, objectId, part);
@@ -176,7 +176,7 @@ public class ObjectStoreServiceProxy {
         };
         try {
           HttpHeaders headers =
-              dataUploadreq.execute(new URI(part.getUrl()), HttpMethod.PUT, callback, headersExtractor);
+              dataRequest.execute(new URI(part.getUrl()), HttpMethod.PUT, callback, headersExtractor);
 
           try {
             finalizeUploadPart(objectId, uploadId, part.getPartNumber(), channel.getMd5(),
@@ -210,7 +210,7 @@ public class ObjectStoreServiceProxy {
       @Override
       public ObjectSpecification doWithRetry(RetryContext ctx) throws IOException {
         HttpEntity<Object> requestEntity = new HttpEntity<Object>(defaultHeaders());
-        return req.exchange(endpoint + "/upload/{object-id}/uploads?fileSize={file-size}",
+        return serviceRequest.exchange(endpoint + "/upload/{object-id}/uploads?fileSize={file-size}",
             HttpMethod.POST,
             requestEntity,
             ObjectSpecification.class, objectId, length).getBody();
@@ -234,7 +234,7 @@ public class ObjectStoreServiceProxy {
       @Override
       public Void doWithRetry(RetryContext ctx) throws IOException {
         HttpEntity<Object> requestEntity = new HttpEntity<Object>(defaultHeaders());
-        req.exchange(endpoint + "/upload/{object-id}?uploadId={upload-id}", HttpMethod.POST, requestEntity,
+        serviceRequest.exchange(endpoint + "/upload/{object-id}?uploadId={upload-id}", HttpMethod.POST, requestEntity,
             Void.class, objectId, uploadId);
         return null;
       }
@@ -251,7 +251,7 @@ public class ObjectStoreServiceProxy {
       public Void doWithRetry(RetryContext ctx) throws IOException {
         if (disableChecksum || md5.equals(etag)) {
           HttpEntity<Object> requestEntity = new HttpEntity<Object>(defaultHeaders());
-          req.exchange(
+          serviceRequest.exchange(
               endpoint + "/upload/{object-id}/parts?uploadId={upload-id}&partNumber={partNumber}&md5={md5}&etag={etag}",
               HttpMethod.POST, requestEntity,
               Void.class, objectId, uploadId, partNumber, md5, etag);
@@ -269,7 +269,7 @@ public class ObjectStoreServiceProxy {
       @Override
       public Boolean doWithRetry(RetryContext ctx) throws IOException {
         HttpEntity<Object> requestEntity = new HttpEntity<Object>(defaultHeaders());
-        return req.exchange(
+        return serviceRequest.exchange(
             endpoint + "/upload/{object-id}",
             HttpMethod.GET, requestEntity,
             Boolean.class, objectId).getBody();
@@ -285,7 +285,7 @@ public class ObjectStoreServiceProxy {
       @Override
       public ObjectSpecification doWithRetry(RetryContext ctx) throws IOException {
         HttpEntity<Object> requestEntity = new HttpEntity<Object>(defaultHeaders());
-        return req.exchange(endpoint + "/download/{object-id}?offset={offset}&length={length}", HttpMethod.GET,
+        return serviceRequest.exchange(endpoint + "/download/{object-id}?offset={offset}&length={length}", HttpMethod.GET,
             requestEntity,
             ObjectSpecification.class, objectId, offset, length).getBody();
       }
@@ -304,7 +304,7 @@ public class ObjectStoreServiceProxy {
       @Override
       public Void doWithRetry(RetryContext ctx) throws IOException {
         HttpEntity<Object> requestEntity = new HttpEntity<Object>(defaultHeaders());
-        req.exchange(
+        serviceRequest.exchange(
             endpoint + "/upload/{object-id}/parts?uploadId={upload-id}&partNumber={partNumber}",
             HttpMethod.DELETE, requestEntity,
             Void.class, objectId, uploadId, part.getPartNumber());
@@ -331,7 +331,7 @@ public class ObjectStoreServiceProxy {
       public Boolean doWithRetry(RetryContext ctx) throws IOException {
         try {
           HttpEntity<Object> requestEntity = new HttpEntity<Object>(defaultHeaders());
-          req.exchange(
+          serviceRequest.exchange(
               endpoint + "/upload/{object-id}/recovery?fileSize={file-size}",
               HttpMethod.POST, requestEntity,
               Boolean.class, objectId, fileSize);

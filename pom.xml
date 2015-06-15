@@ -314,7 +314,7 @@
 		<spring-security-oauth2.version>2.0.3.RELEASE</spring-security-oauth2.version>
 
 		<!-- Versions - Amazon -->
-		<aws-java-sdk.version>1.9.39</aws-java-sdk.version>
+		<aws-java-sdk.version>1.10.0</aws-java-sdk.version>
 
 		<!--  For collaboratory (ceph) 
 		<aws-java-sdk.version>1.8.11</aws-java-sdk.version>
