@@ -101,6 +101,7 @@ public class MemoryMappedParallelPartObjectTransport extends ParallelPartObjectT
       }
       long remaining = memory.addAndGet(-part.getPartSize());
       log.debug("Remaining Memory : {}", remaining);
+      log.debug("Number of submitted tasks : {}", tasksSubmitted.get());
       while (memory.get() < 0 || tasksSubmitted.get() > queueSize) {
         TimeUnit.MILLISECONDS.sleep(100);
         // suggest to release buffers that are not longer needed
@@ -188,11 +189,12 @@ public class MemoryMappedParallelPartObjectTransport extends ParallelPartObjectT
       }));
       long remaining = memory.addAndGet(-part.getPartSize());
       log.debug("Remaining Memory : {}", remaining);
+      log.debug("Number of tasks submitted: {}", tasksSubmitted.get());
       if (memory.get() < 0L || shouldThrottled || tasksSubmitted.get() > queueSize) {
         shouldThrottled = true;
         try {
-          Future<MemoryMappedDataChannel> work = results.remove();
           log.debug("Garbage collection starts");
+          Future<MemoryMappedDataChannel> work = results.remove();
           work.get().close();
         } catch (ExecutionException e) {
           log.error("Download part failed", e);

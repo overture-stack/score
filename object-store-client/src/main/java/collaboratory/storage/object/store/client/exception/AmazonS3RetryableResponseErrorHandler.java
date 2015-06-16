@@ -24,26 +24,34 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.web.client.DefaultResponseErrorHandler;
 
+import com.amazonaws.services.s3.model.AmazonS3Exception;
 import com.amazonaws.util.IOUtils;
 
 /**
- * responsible to translate server side errors to client side errors
+ * responsible to translate amazon s3 errors to client side errors
  */
 @Slf4j
 public class AmazonS3RetryableResponseErrorHandler extends DefaultResponseErrorHandler {
 
   @Override
   public void handleError(ClientHttpResponse response) throws IOException {
+    AmazonS3Exception e = new AmazonS3Exception("s3 exception", IOUtils.toString(response.getBody()));
     switch (response.getStatusCode()) {
-    case NOT_FOUND:
     case BAD_REQUEST:
+      if (e.getErrorCode() == null || e.getErrorCode().equals("RequestTimeout")) {
+        throw new RetryableException(new IOException("Amazon S3 error: "
+            + IOUtils.toString(response.getBody())));
+      }
+    case NOT_FOUND:
+      throw new NotRetryableException(new IOException("Amazon S3 error: "
+          + IOUtils.toString(response.getBody())));
     case INTERNAL_SERVER_ERROR:
       log.warn("Server error. Stop processing: {}", response.getStatusText());
-      throw new NotResumableException(new IOException("Object store service error: "
+      throw new NotResumableException(new IOException("Amazon S3 error: "
           + IOUtils.toString(response.getBody())));
     default:
       log.warn("Retryable exception: {}", response.getStatusText());
-      throw new RetryableException(new IOException("object store service error: "
+      throw new RetryableException(new IOException("Amazon S3 error: "
           + IOUtils.toString(response.getBody())));
 
     }
