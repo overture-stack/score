@@ -35,6 +35,7 @@ import java.util.concurrent.TimeUnit;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import collaboratory.storage.object.store.client.download.DownloadUtils;
+import collaboratory.storage.object.store.client.exception.NotResumableException;
 import collaboratory.storage.object.store.client.exception.NotRetryableException;
 import collaboratory.storage.object.store.core.model.Part;
 
@@ -183,6 +184,9 @@ public class MemoryMappedParallelPartObjectTransport extends ParallelPartObjectT
         } catch (ExecutionException e) {
           log.error("Download part failed", e);
           hasError = true;
+          if (e.getCause() instanceof NotResumableException) {
+            throw e.getCause();
+          }
         }
         System.gc();
         log.debug("Garbage collection ends");

@@ -124,6 +124,9 @@ public class ObjectUploadService {
       return spec;
     } catch (AmazonServiceException e) {
       log.error("fail multipart upload initialization", e);
+      if (e.getErrorCode().equals("KMS.DisabledException")) {
+        throw new InternalUnrecoverableError(e);
+      }
       throw new RetryableException(e);
     }
   }

@@ -42,6 +42,7 @@ import org.springframework.web.client.RestTemplate;
 
 import collaboratory.storage.object.store.client.config.ClientProperties;
 import collaboratory.storage.object.store.client.download.DownloadStateStore;
+import collaboratory.storage.object.store.client.exception.NotResumableException;
 import collaboratory.storage.object.store.client.exception.NotRetryableException;
 import collaboratory.storage.object.store.client.exception.RetryableException;
 import collaboratory.storage.object.store.core.model.DataChannel;
@@ -132,9 +133,11 @@ public class ObjectStoreServiceProxy {
           part.setMd5(cleanUpETag(headers.getETag()));
           // TODO: try catch here for commit
           downloadStateStore.commit(outputDir, objectId, part);
-
+        } catch (NotResumableException | NotRetryableException e) {
+          log.error("Cannot proceed. Fail to receive part for part number: {}", part.getPartNumber(), e);
+          throw e;
         } catch (Throwable e) {
-          log.warn("Fail to send part for part number: {}", part.getPartNumber(), e);
+          log.warn("Fail to receive part for part number: {}", part.getPartNumber(), e);
           channel.reset();
           throw new RetryableException();
         }
@@ -185,6 +188,9 @@ public class ObjectStoreServiceProxy {
             log.warn("Checksum failed for part: {}, MD5: {}, ETAG: {}", part, channel.getMd5(), headers.getETag(), e);
             throw new RetryableException();
           }
+        } catch (NotResumableException | NotRetryableException e) {
+          log.error("Cannot proceed. Fail to send part for part number: {}", part.getPartNumber(), e);
+          throw e;
         } catch (Throwable e) {
           log.warn("Fail to send part for part number: {}", part.getPartNumber(), e);
           channel.reset();
@@ -251,10 +257,12 @@ public class ObjectStoreServiceProxy {
       public Void doWithRetry(RetryContext ctx) throws IOException {
         if (disableChecksum || md5.equals(etag)) {
           HttpEntity<Object> requestEntity = new HttpEntity<Object>(defaultHeaders());
-          serviceRequest.exchange(
-              endpoint + "/upload/{object-id}/parts?uploadId={upload-id}&partNumber={partNumber}&md5={md5}&etag={etag}",
-              HttpMethod.POST, requestEntity,
-              Void.class, objectId, uploadId, partNumber, md5, etag);
+          serviceRequest
+              .exchange(
+                  endpoint
+                      + "/upload/{object-id}/parts?uploadId={upload-id}&partNumber={partNumber}&md5={md5}&etag={etag}",
+                  HttpMethod.POST, requestEntity,
+                  Void.class, objectId, uploadId, partNumber, md5, etag);
           return null;
         }
         throw new NotRetryableException();
@@ -285,7 +293,8 @@ public class ObjectStoreServiceProxy {
       @Override
       public ObjectSpecification doWithRetry(RetryContext ctx) throws IOException {
         HttpEntity<Object> requestEntity = new HttpEntity<Object>(defaultHeaders());
-        return serviceRequest.exchange(endpoint + "/download/{object-id}?offset={offset}&length={length}", HttpMethod.GET,
+        return serviceRequest.exchange(endpoint + "/download/{object-id}?offset={offset}&length={length}",
+            HttpMethod.GET,
             requestEntity,
             ObjectSpecification.class, objectId, offset, length).getBody();
       }
