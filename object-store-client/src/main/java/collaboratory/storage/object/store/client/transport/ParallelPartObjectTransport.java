@@ -57,6 +57,7 @@ public class ParallelPartObjectTransport implements ObjectTransport {
 
   final protected ObjectStoreServiceProxy proxy;
   final protected int nThreads;
+  final protected int queueSize;
   final protected ProgressBar progress;
   final protected List<Part> parts;
   final protected String objectId;
@@ -74,6 +75,7 @@ public class ParallelPartObjectTransport implements ObjectTransport {
     this.objectId = builder.objectId;
     this.uploadId = builder.uploadId;
     this.nThreads = builder.nThreads;
+    this.queueSize = nThreads * 2;
     this.memory = new AtomicLong(builder.memory);
     this.maxUploadDuration = builder.maxUploadDuration;
     this.mode = builder.mode;

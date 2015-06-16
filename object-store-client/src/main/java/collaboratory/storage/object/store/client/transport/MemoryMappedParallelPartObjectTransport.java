@@ -31,6 +31,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -58,11 +59,13 @@ public class MemoryMappedParallelPartObjectTransport extends ParallelPartObjectT
   @SneakyThrows
   public void send(File file) {
     log.debug("send file: {}", file.getPath());
+    AtomicInteger tasksSubmitted = new AtomicInteger();
     ExecutorService executor = Executors.newFixedThreadPool(nThreads);
 
     ImmutableList.Builder<Future<Part>> results = ImmutableList.builder();
     progress.start();
     for (final Part part : parts) {
+      tasksSubmitted.incrementAndGet();
       try (FileInputStream fis = new FileInputStream(file)) {
         final MappedByteBuffer buffer =
             fis.getChannel().map(FileChannel.MapMode.READ_ONLY, part.getOffset(), part.getPartSize());
@@ -72,29 +75,33 @@ public class MemoryMappedParallelPartObjectTransport extends ParallelPartObjectT
 
           @Override
           public Part call() throws Exception {
-            MemoryMappedDataChannel channel = new MemoryMappedDataChannel(buffer, 0, part.getPartSize(), null);
-            if (part.isCompleted()) {
-              log.debug("Checksumming part: {}", part);
-              if (checksum && isCorrupted(channel, part, file)) {
-                log.debug("Fail checksumm. Reupload part: {}", part);
+            try {
+              MemoryMappedDataChannel channel = new MemoryMappedDataChannel(buffer, 0, part.getPartSize(), null);
+              if (part.isCompleted()) {
+                log.debug("Checksumming part: {}", part);
+                if (checksum && isCorrupted(channel, part, file)) {
+                  log.debug("Fail checksumm. Reupload part: {}", part);
+                  proxy.uploadPart(channel, part, objectId,
+                      uploadId);
+                }
+                progress.updateChecksum(1);
+              } else {
                 proxy.uploadPart(channel, part, objectId,
                     uploadId);
+                progress.updateProgress(1);
               }
-              progress.updateChecksum(1);
-            } else {
-              proxy.uploadPart(channel, part, objectId,
-                  uploadId);
-              progress.updateProgress(1);
+            } finally {
+              progress.incrementByteWritten(part.getPartSize());
+              memory.addAndGet(part.getPartSize());
+              tasksSubmitted.decrementAndGet();
             }
-            progress.incrementByteWritten(part.getPartSize());
-            memory.addAndGet(part.getPartSize());
             return part;
           }
         }));
       }
       long remaining = memory.addAndGet(-part.getPartSize());
       log.debug("Remaining Memory : {}", remaining);
-      while (memory.get() < 0) {
+      while (memory.get() < 0 || tasksSubmitted.get() > queueSize) {
         TimeUnit.MILLISECONDS.sleep(100);
         // suggest to release buffers that are not longer needed
         System.gc();
@@ -120,6 +127,7 @@ public class MemoryMappedParallelPartObjectTransport extends ParallelPartObjectT
     long fileSize = DownloadUtils.calculateTotalSize(parts);
     log.debug("downloading object to file: {}, size:{}", filename.getPath(), fileSize);
     ExecutorService executor = Executors.newFixedThreadPool(nThreads);
+    AtomicInteger tasksSubmitted = new AtomicInteger();
     LinkedList<Future<MemoryMappedDataChannel>> results = new LinkedList<Future<MemoryMappedDataChannel>>();
     progress.start();
     try (RandomAccessFile fis = new RandomAccessFile(filename, "rw")) {
@@ -136,10 +144,12 @@ public class MemoryMappedParallelPartObjectTransport extends ParallelPartObjectT
     long prevLength = 0;
     long offset = 0;
     for (final Part part : parts) {
+
       offset += prevLength;
       prevLength = part.getPartSize();
 
       final long currOffset = offset;
+      tasksSubmitted.incrementAndGet();
       results.add(executor.submit(new Callable<MemoryMappedDataChannel>() {
 
         @Override
@@ -149,33 +159,36 @@ public class MemoryMappedParallelPartObjectTransport extends ParallelPartObjectT
               // TODO: the actual position to position the data block into the file might be different from the original
               // position
 
-              // 1. Experiment with part number as the position in the file
-              final MappedByteBuffer buffer =
-                  channel.map(FileChannel.MapMode.READ_WRITE, currOffset, part.getPartSize());
-              MemoryMappedDataChannel memoryChannel =
-                  new MemoryMappedDataChannel(buffer, part.getOffset(), part.getPartSize(), null);
+              try {
+                // 1. Experiment with part number as the position in the file
+                final MappedByteBuffer buffer =
+                    channel.map(FileChannel.MapMode.READ_WRITE, currOffset, part.getPartSize());
+                MemoryMappedDataChannel memoryChannel =
+                    new MemoryMappedDataChannel(buffer, part.getOffset(), part.getPartSize(), null);
 
-              if (part.isCompleted()) {
-                if (checksum && isCorrupted(memoryChannel, part, outputDir)) {
+                if (part.isCompleted()) {
+                  if (checksum && isCorrupted(memoryChannel, part, outputDir)) {
+                    proxy.downloadPart(memoryChannel, part, objectId, outputDir);
+                  }
+                  progress.updateChecksum(1);
+                } else {
                   proxy.downloadPart(memoryChannel, part, objectId, outputDir);
+                  progress.updateProgress(1);
                 }
-                progress.updateChecksum(1);
-              } else {
-                proxy.downloadPart(memoryChannel, part, objectId, outputDir);
-                progress.updateProgress(1);
+                return memoryChannel;
+              } finally {
+                progress.incrementByteRead(part.getPartSize());
+                progress.incrementByteWritten(part.getPartSize());
+                tasksSubmitted.decrementAndGet();
+                memory.addAndGet(part.getPartSize());
               }
-              progress.incrementByteRead(part.getPartSize());
-              progress.incrementByteWritten(part.getPartSize());
-
-              memory.addAndGet(part.getPartSize());
-              return memoryChannel;
             }
           }
         }
       }));
       long remaining = memory.addAndGet(-part.getPartSize());
       log.debug("Remaining Memory : {}", remaining);
-      if (memory.get() < 0L || shouldThrottled) {
+      if (memory.get() < 0L || shouldThrottled || tasksSubmitted.get() > queueSize) {
         shouldThrottled = true;
         try {
           Future<MemoryMappedDataChannel> work = results.remove();
