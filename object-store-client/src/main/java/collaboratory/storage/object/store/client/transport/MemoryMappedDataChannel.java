@@ -52,7 +52,7 @@ public class MemoryMappedDataChannel extends AbstractDataChannel implements Clos
   @Override
   public void reset() throws IOException {
     log.warn("cannot be reset");
-    throw new NotRetryableException();
+    throw new NotRetryableException(new IOException("Region offset: " + offset + ", length: " + length));
   }
 
   /**

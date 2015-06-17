@@ -108,9 +108,13 @@ public class MemoryMappedParallelPartObjectTransport extends ParallelPartObjectT
         System.gc();
       }
     }
+
+    log.debug("thread pool shut down request ...");
     executor.shutdown();
     executor.awaitTermination(super.maxUploadDuration, TimeUnit.DAYS);
     progress.stop();
+    log.debug("thread pool shut down request completed.");
+
     try {
       takeCareOfException(results.build());
       proxy.finalizeUpload(objectId, uploadId);
