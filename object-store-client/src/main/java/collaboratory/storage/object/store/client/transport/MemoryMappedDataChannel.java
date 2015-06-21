@@ -76,7 +76,7 @@ public class MemoryMappedDataChannel extends AbstractDataChannel implements Clos
   }
 
   @Override
-  public long getlength() {
+  public long getLength() {
     return length;
   }
 
@@ -93,18 +93,20 @@ public class MemoryMappedDataChannel extends AbstractDataChannel implements Clos
     if (!buffer.isDirect()) {
       return;
     }
+    // Don't call this because it will slow down
     buffer.force();
     try {
-      // sun.misc.Cleaner cl = ((sun.nio.ch.DirectBuffer) buffer).cleaner();
-      // if (cl != null) cl.clean();
-      Method cleaner = buffer.getClass().getMethod("cleaner");
-      cleaner.setAccessible(true);
-      Method clean = Class.forName("sun.misc.Cleaner").getMethod("clean");
-      clean.setAccessible(true);
-      clean.invoke(cleaner.invoke(buffer));
-    } catch (Exception e) {
-      log.warn("fail to unmap memory", e);
+      Method cleanerMethod = buffer.getClass().getMethod("cleaner");
+      cleanerMethod.setAccessible(true);
+      Object cleaner = cleanerMethod.invoke(buffer);
+      Method cleanMethod = cleaner.getClass().getMethod("clean");
+      cleanMethod.setAccessible(true);
+      cleanMethod.invoke(cleaner);
+    } catch (Throwable e) {
+      log.error("fail to unmap memory", e);
+      throw new NotRetryableException(e);
+    } finally {
+      buffer = null;
     }
-    buffer = null;
   }
 }

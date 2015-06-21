@@ -30,14 +30,17 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import collaboratory.storage.object.store.client.download.DownloadUtils;
 import collaboratory.storage.object.store.client.exception.NotResumableException;
 import collaboratory.storage.object.store.client.exception.NotRetryableException;
+import collaboratory.storage.object.store.client.exception.RetryableException;
 import collaboratory.storage.object.store.core.model.Part;
 
 import com.google.common.collect.ImmutableList;
@@ -49,6 +52,22 @@ import com.google.common.collect.Ordering;
  */
 @Slf4j
 public class MemoryMappedParallelPartObjectTransport extends ParallelPartObjectTransport {
+
+  @AllArgsConstructor
+  private class FreeMemory implements Runnable {
+
+    final private MemoryMappedDataChannel channel;
+
+    @Override
+    public void run() {
+      try {
+        channel.close();
+      } finally {
+        log.debug("Memory is free: {}", channel.getLength());
+        memory.addAndGet(channel.getLength());
+      }
+    }
+  }
 
   private MemoryMappedParallelPartObjectTransport(RemoteParallelBuilder builder) {
     super(builder);
@@ -130,8 +149,11 @@ public class MemoryMappedParallelPartObjectTransport extends ParallelPartObjectT
   public void receive(File outputDir) {
     File filename = new File(outputDir, objectId);
     long fileSize = DownloadUtils.calculateTotalSize(parts);
+
     log.debug("downloading object to file: {}, size:{}", filename.getPath(), fileSize);
-    ExecutorService executor = Executors.newFixedThreadPool(nThreads);
+    final ExecutorService downloadExecutorService = Executors.newFixedThreadPool(nThreads);
+    final ScheduledExecutorService memoryCollectorService = Executors.newScheduledThreadPool(Math.max(1, nThreads / 2));
+
     AtomicInteger tasksSubmitted = new AtomicInteger();
     LinkedList<Future<MemoryMappedDataChannel>> results = new LinkedList<Future<MemoryMappedDataChannel>>();
     progress.start();
@@ -145,7 +167,6 @@ public class MemoryMappedParallelPartObjectTransport extends ParallelPartObjectT
     }
 
     boolean hasError = false;
-    boolean shouldThrottled = false;
     long prevLength = 0;
     long offset = 0;
     for (final Part part : parts) {
@@ -155,10 +176,11 @@ public class MemoryMappedParallelPartObjectTransport extends ParallelPartObjectT
 
       final long currOffset = offset;
       tasksSubmitted.incrementAndGet();
-      results.add(executor.submit(new Callable<MemoryMappedDataChannel>() {
+      results.push(downloadExecutorService.submit(new Callable<MemoryMappedDataChannel>() {
 
         @Override
         public MemoryMappedDataChannel call() throws Exception {
+          tasksSubmitted.decrementAndGet();
           try (RandomAccessFile rf = new RandomAccessFile(filename, "rw")) {
             try (FileChannel channel = rf.getChannel()) {
               // TODO: the actual position to position the data block into the file might be different from the original
@@ -180,26 +202,35 @@ public class MemoryMappedParallelPartObjectTransport extends ParallelPartObjectT
                   proxy.downloadPart(memoryChannel, part, objectId, outputDir);
                   progress.updateProgress(1);
                 }
+                memoryCollectorService.schedule(new FreeMemory(memoryChannel), 200, TimeUnit.MILLISECONDS);
                 return memoryChannel;
-              } finally {
-                progress.incrementByteRead(part.getPartSize());
-                progress.incrementByteWritten(part.getPartSize());
-                tasksSubmitted.decrementAndGet();
-                memory.addAndGet(part.getPartSize());
+              } catch (RetryableException | NotResumableException | NotRetryableException e) {
+                log.error("fail to receive part: {}", part, e);
+                throw e;
+              } catch (Throwable e) {
+                throw new NotRetryableException(e);
               }
             }
+          } finally {
+            progress.incrementByteRead(part.getPartSize());
+            progress.incrementByteWritten(part.getPartSize());
+
           }
         }
+
       }));
-      long remaining = memory.addAndGet(-part.getPartSize());
-      log.debug("Remaining Memory : {}", remaining);
+      memory.addAndGet(-part.getPartSize());
+      log.debug("Remaining Memory : {}", memory.get());
       log.debug("Number of tasks submitted: {}", tasksSubmitted.get());
-      if (memory.get() < 0L || shouldThrottled || tasksSubmitted.get() > queueSize) {
-        shouldThrottled = true;
+
+      while (memory.get() < 0 || tasksSubmitted.get() > queueSize) {
         try {
-          log.debug("Garbage collection starts");
-          Future<MemoryMappedDataChannel> work = results.remove();
-          work.get().close();
+          if (!results.isEmpty()) {
+            Future<MemoryMappedDataChannel> work = results.removeLast();
+            // check if the work is done properly instead of just waiting
+            work.get();
+          }
+          TimeUnit.MILLISECONDS.sleep(500);
         } catch (ExecutionException e) {
           log.error("Download part failed", e);
           hasError = true;
@@ -207,13 +238,17 @@ public class MemoryMappedParallelPartObjectTransport extends ParallelPartObjectT
             throw e.getCause();
           }
         }
-        System.gc();
-        log.debug("Garbage collection ends");
       }
     }
 
-    executor.shutdown();
-    executor.awaitTermination(super.maxUploadDuration, TimeUnit.DAYS);
+    log.info("all tasks are submitted, waiting for completion...");
+
+    downloadExecutorService.shutdown();
+    downloadExecutorService.awaitTermination(super.maxUploadDuration, TimeUnit.DAYS);
+    memoryCollectorService.shutdown();
+    memoryCollectorService.awaitTermination(super.maxUploadDuration, TimeUnit.DAYS);
+
+    log.info("all tasks are completed");
 
     progress.stop();
     if (hasError) {
@@ -221,8 +256,10 @@ public class MemoryMappedParallelPartObjectTransport extends ParallelPartObjectT
       throw new NotRetryableException(new IOException("some parts failed to download."));
     } else {
       try {
+        log.info("finalizing download...");
         takeCareOfException(results);
         proxy.finalizeDownload(outputDir, objectId);
+        log.info("Download is finalized");
       } catch (Throwable e) {
         progress.end(true);
         throw e;

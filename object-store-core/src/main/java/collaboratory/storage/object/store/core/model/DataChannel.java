@@ -32,7 +32,7 @@ public interface DataChannel {
 
   public void reset() throws IOException;
 
-  public long getlength();
+  public long getLength();
 
   public String getMd5();
 

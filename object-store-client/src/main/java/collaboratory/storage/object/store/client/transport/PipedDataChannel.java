@@ -55,7 +55,7 @@ public class PipedDataChannel extends AbstractDataChannel {
   }
 
   @Override
-  public long getlength() {
+  public long getLength() {
     return length;
   }
 
