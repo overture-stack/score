@@ -17,7 +17,6 @@
  */
 package collaboratory.storage.object.store.client.transport;
 
-import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -39,7 +38,7 @@ import com.google.common.hash.HashingOutputStream;
  */
 @Slf4j
 @AllArgsConstructor
-public class MemoryMappedDataChannel extends AbstractDataChannel implements Closeable {
+public class MemoryMappedDataChannel extends AbstractDataChannel {
 
   private MappedByteBuffer buffer;
   private final long offset;
@@ -89,7 +88,7 @@ public class MemoryMappedDataChannel extends AbstractDataChannel implements Clos
    * buffer needs to be closed proactively so it won't trigger out-of-memory error
    */
   @Override
-  public void close() {
+  public void commitToDisk() {
     if (!buffer.isDirect()) {
       return;
     }

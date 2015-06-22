@@ -78,7 +78,7 @@ public class FileDataChannel extends AbstractDataChannel {
   }
 
   @Override
-  public void close() {
+  public void commitToDisk() {
   }
 
 }

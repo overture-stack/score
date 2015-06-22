@@ -38,6 +38,6 @@ public interface DataChannel {
 
   public boolean isValidMd5(String expectedMd5) throws IOException;
 
-  void close();
+  void commitToDisk();
 
 }
