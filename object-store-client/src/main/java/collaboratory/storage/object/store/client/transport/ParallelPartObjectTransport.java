@@ -52,7 +52,7 @@ import com.google.common.collect.Ordering;
 @AllArgsConstructor
 public class ParallelPartObjectTransport implements ObjectTransport {
 
-  private static final int MIN_WORKER = 10;
+  private static final int MIN_WORKER = 1;
   private static final long MIN_MEMORY = 1024L * 1024L;
 
   final protected ObjectStoreServiceProxy proxy;

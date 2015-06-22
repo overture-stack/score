@@ -1,7 +1,7 @@
-Collaboratory - Object Upload Service
+Collaboratory - Object Store Service
 ===
 
-Object Upload service for the Collaboratory. 
+Object Store Service for the Collaboratory. 
 
 Build
 ---

@@ -17,8 +17,6 @@
  */
 package collaboratory.storage.object.store.client.exception;
 
-import java.io.IOException;
-
 import lombok.AllArgsConstructor;
 
 /**
@@ -27,7 +25,7 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 public class RetryableException extends RuntimeException {
 
-  public RetryableException(IOException e) {
+  public RetryableException(Throwable e) {
     super(e);
   }
 }

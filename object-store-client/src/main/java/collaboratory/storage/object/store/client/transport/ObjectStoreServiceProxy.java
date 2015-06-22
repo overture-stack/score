@@ -139,7 +139,7 @@ public class ObjectStoreServiceProxy {
         } catch (Throwable e) {
           log.warn("Fail to receive part for part number: {}", part.getPartNumber(), e);
           channel.reset();
-          throw new RetryableException();
+          throw new RetryableException(e);
         }
         return null;
       }
@@ -163,7 +163,7 @@ public class ObjectStoreServiceProxy {
           @Override
           public void doWithRequest(final ClientHttpRequest request) throws IOException {
             HttpHeaders requestHeader = request.getHeaders();
-            requestHeader.setContentLength(channel.getlength());
+            requestHeader.setContentLength(channel.getLength());
             try (OutputStream os = request.getBody()) {
               channel.writeTo(os);
             }
@@ -186,7 +186,7 @@ public class ObjectStoreServiceProxy {
                 cleanUpETag(headers.getETag()), disableChecksum(headers));
           } catch (NotRetryableException e) {
             log.warn("Checksum failed for part: {}, MD5: {}, ETAG: {}", part, channel.getMd5(), headers.getETag(), e);
-            throw new RetryableException();
+            throw new RetryableException(e);
           }
         } catch (NotResumableException | NotRetryableException e) {
           log.error("Cannot proceed. Fail to send part for part number: {}", part.getPartNumber(), e);
@@ -194,7 +194,7 @@ public class ObjectStoreServiceProxy {
         } catch (Throwable e) {
           log.warn("Fail to send part for part number: {}", part.getPartNumber(), e);
           channel.reset();
-          throw new RetryableException();
+          throw new RetryableException(e);
         }
         return null;
       }

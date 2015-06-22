@@ -68,7 +68,7 @@ public class FileDataChannel extends AbstractDataChannel {
   }
 
   @Override
-  public long getlength() {
+  public long getLength() {
     return length;
   }
 
@@ -78,7 +78,7 @@ public class FileDataChannel extends AbstractDataChannel {
   }
 
   @Override
-  public void close() {
+  public void commitToDisk() {
   }
 
 }

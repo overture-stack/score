@@ -93,13 +93,6 @@ public class SSLClientConfig {
   @SneakyThrows
   public KeyManagerFactory keyManagerFactory() {
     return null;
-    // KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
-    // if (properties.getSsl().getKeyStore() == null) {
-    // kmf.init(null, null);
-    // return kmf;
-    // }
-    // kmf.init(keyStore(), properties.getSsl().getKeyStorePassword().toCharArray());
-    // return kmf;
   }
 
   @Bean
