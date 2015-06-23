@@ -99,7 +99,7 @@ public class ObjectDownload {
             DownloadUtils.getDownloadFile(outputDirectory, objectId).length())) {
           redo = false;
         } else {
-
+          redo = true;
         }
       }
     }
@@ -110,13 +110,14 @@ public class ObjectDownload {
 
   private void resumeIfPossible(File outputDirectory, String objectId, long offset, long length, boolean checksum)
       throws IOException {
+    List<Part> parts = null;
     try {
-      List<Part> parts = downloadStateStore.getProgress(outputDirectory, objectId);
-      resume(parts, outputDirectory, objectId, checksum);
+      parts = downloadStateStore.getProgress(outputDirectory, objectId);
     } catch (NotRetryableException e) {
-      log.info("New download: {}", objectId);
+      log.info("New download: {}", objectId, e);
       startNewDownload(outputDirectory, objectId, offset, length);
     }
+    resume(parts, outputDirectory, objectId, checksum);
   }
 
   private void resume(List<Part> parts, File outputDirectory, String objectId, boolean checksum) {

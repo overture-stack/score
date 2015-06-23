@@ -32,12 +32,12 @@ public interface DataChannel {
 
   public void reset() throws IOException;
 
-  public long getlength();
+  public long getLength();
 
   public String getMd5();
 
   public boolean isValidMd5(String expectedMd5) throws IOException;
 
-  void close();
+  void commitToDisk();
 
 }

@@ -65,7 +65,7 @@ public final class ChannelUtils {
     HttpURLConnection connection = (HttpURLConnection) url.openConnection();
     connection.setDoOutput(true);
     connection.setRequestMethod("PUT");
-    connection.setFixedLengthStreamingMode(channel.getlength());
+    connection.setFixedLengthStreamingMode(channel.getLength());
 
     channel.writeTo(connection.getOutputStream());
 

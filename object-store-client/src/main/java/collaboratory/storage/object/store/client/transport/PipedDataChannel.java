@@ -55,7 +55,7 @@ public class PipedDataChannel extends AbstractDataChannel {
   }
 
   @Override
-  public long getlength() {
+  public long getLength() {
     return length;
   }
 
@@ -65,7 +65,7 @@ public class PipedDataChannel extends AbstractDataChannel {
   }
 
   @Override
-  public void close() {
+  public void commitToDisk() {
     try {
       is.close();
     } catch (IOException e) {

@@ -20,5 +20,6 @@ Modules
 Top level system modules:
 
 - [Core](object-store-core/README.md)
-- [Object Upload Service](object-upload-service/README.md)
+- [Object Store Client ](object-store-client/README.md)
+- [Object Store Service](object-store-service/README.md)
 

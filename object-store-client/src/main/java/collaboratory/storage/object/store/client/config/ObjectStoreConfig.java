@@ -63,7 +63,7 @@ import com.google.common.collect.ImmutableMap.Builder;
 @Configuration
 public class ObjectStoreConfig {
 
-  private static final int MAX_TIMEOUT = 5 * 60 * 1000;
+  private static final int MAX_TIMEOUT = 20 * 1000;
 
   @Value("${accessToken:undefined}")
   private String accessToken;
