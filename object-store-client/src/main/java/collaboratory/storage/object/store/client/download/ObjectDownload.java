@@ -116,6 +116,7 @@ public class ObjectDownload {
     } catch (NotRetryableException e) {
       log.info("New download: {}", objectId, e);
       startNewDownload(outputDirectory, objectId, offset, length);
+      return;
     }
     resume(parts, outputDirectory, objectId, checksum);
   }
