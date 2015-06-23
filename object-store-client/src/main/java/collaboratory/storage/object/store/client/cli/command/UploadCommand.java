@@ -44,7 +44,7 @@ public class UploadCommand extends AbstractClientCommand {
   @Parameter(names = "--file", description = "Path to a file", required = false)
   private String filePath;
 
-  @Parameter(names = "--manifest", description = "Path to a manifest file", required = true)
+  @Parameter(names = "--manifest", description = "Path to a manifest file", required = false)
   private File manifest;
 
   @Parameter(names = "-f", description = "force to re-upload", required = false)
@@ -71,13 +71,13 @@ public class UploadCommand extends AbstractClientCommand {
     Properties props = new Properties();
     props.load(new FileInputStream(manifest));
     for (Entry<Object, Object> entry : props.entrySet()) {
-      String oid = (String) entry.getKey();
+      String objectId = (String) entry.getKey();
       File obj = new File((String) entry.getValue());
-      if (!uploader.isObjectExist(oid)) {
-        println("Start uploading object: %s using the object id: %s", obj, oid);
-        uploader.upload(obj, oid, isForce);
+      if (!uploader.isObjectExist(objectId)) {
+        println("Start uploading object: %s using the object id: %s", obj, objectId);
+        uploader.upload(obj, objectId, isForce);
       } else {
-        println("Object id: %s has been uploaded. Skipped.", oid);
+        println("Object id: %s has been uploaded. Skipped.", objectId);
       }
     }
     return SUCCESS_STATUS;

@@ -112,7 +112,7 @@ public class ObjectStoreConfig {
       client.setSslcontext(SSLContexts.custom().loadTrustMaterial(truststore).useTLS().build());
       client.setHostnameVerifier(hostnameVerifier);
     }
-    configueOAuth(client);
+    configureOAuth(client);
 
     return client.build();
   }
@@ -164,7 +164,7 @@ public class ObjectStoreConfig {
 
   }
 
-  private void configueOAuth(HttpClientBuilder client) {
+  private void configureOAuth(HttpClientBuilder client) {
     if (!accessToken.equals("undefined")) {
       log.debug("Setting access token: {}", accessToken);
       client.setDefaultHeaders(singletonList(new BasicHeader(AUTHORIZATION, format("Bearer %s", accessToken))));

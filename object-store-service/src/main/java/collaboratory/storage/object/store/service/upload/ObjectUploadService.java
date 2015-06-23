@@ -31,6 +31,8 @@ import collaboratory.storage.object.store.exception.IdNotFoundException;
 import collaboratory.storage.object.store.exception.InternalUnrecoverableError;
 import collaboratory.storage.object.store.exception.NotRetryableException;
 import collaboratory.storage.object.store.exception.RetryableException;
+import collaboratory.storage.object.store.model.MetadataEntity;
+import collaboratory.storage.object.store.service.MetadataService;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
@@ -64,6 +66,9 @@ public class ObjectUploadService {
   @Autowired
   private AmazonS3 s3Client;
 
+  @Autowired
+  private MetadataService metadataClient;
+
   @Value("${collaboratory.bucket.name}")
   private String bucketName;
 
@@ -86,7 +91,17 @@ public class ObjectUploadService {
   public void init() {
   }
 
+  public void verifyRegistration(String objectId) {
+    MetadataEntity mde = metadataClient.getEntity(objectId);
+    if (mde.getId().equals(objectId)) {
+      throw new InternalUnrecoverableError(String.format("Checked for {} and Metadata Service returned {} as match",
+          objectId, mde.getId()));
+    }
+  }
+
   public ObjectSpecification initiateUpload(String objectId, long fileSize, boolean overwritten) {
+    verifyRegistration(objectId);
+
     String objectKey = ObjectStoreUtil.getObjectKey(dataDir, objectId);
     log.debug("initiate upload for object key: {}, overwritten: {}", objectKey, overwritten);
     if (!overwritten) {
@@ -95,10 +110,7 @@ public class ObjectUploadService {
       }
     }
 
-    // TODO:
-    // - check with metadata service to see if the object is registered.
     // - check if object exists already
-
     try {
       String uploadId = getUploadId(objectId);
       stateStore.delete(objectId, uploadId);

@@ -104,7 +104,7 @@ public class ObjectDownload {
       }
     }
     if (retry == retryNumber) {
-      throw new RuntimeException("Number of retry exhausted");
+      throw new RuntimeException("Number of retries exhausted");
     }
   }
 
@@ -120,7 +120,7 @@ public class ObjectDownload {
   }
 
   private void resume(List<Part> parts, File outputDirectory, String objectId, boolean checksum) {
-    log.info("Resume from the previous download...");
+    log.info("Resume from previous download...");
 
     int completedTotal = numCompletedParts(parts);
     int total = parts.size();

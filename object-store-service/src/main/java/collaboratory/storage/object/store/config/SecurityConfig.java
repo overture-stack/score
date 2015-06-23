@@ -94,7 +94,7 @@ public class SecurityConfig {
     @Bean
     public RemoteTokenServices remoteTokenServices(final @Value("${auth.server.url}") String checkTokenUrl,
         final @Value("${auth.server.clientId}") String clientId,
-        final @Value("${auth.server.clientsecret}") String clientSecret) {
+        final @Value("${auth.server.clientSecret}") String clientSecret) {
       final RemoteTokenServices remoteTokenServices = new RemoteTokenServices();
       remoteTokenServices.setCheckTokenEndpointUrl(checkTokenUrl);
       remoteTokenServices.setClientId(clientId);
@@ -111,18 +111,21 @@ public class SecurityConfig {
       http
         .authorizeRequests()
         .antMatchers("/upload/**")
-        .access("#oauth2.hasScope('os.upload')")
+        .access("#oauth2.hasScope('${auth.server.uploadScope}')")
+//        .access("#oauth2.hasScope('s3.upload')")
         .and()
         
         .authorizeRequests()
         .antMatchers("/download/**")
-        .access("#oauth2.hasScope('os.download')")
+        .access("#oauth2.hasScope('${auth.server.downloadScope}')")
+//        .access("#oauth2.hasScope('s3.download')")
         .and()
         
         .authorizeRequests()
         .anyRequest()
         .authenticated();
       // @formatter:on
+      System.out.println("Here");
     }
   }
 

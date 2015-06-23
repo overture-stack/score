@@ -13,7 +13,8 @@ s3:
   #endpoint: https://www.cancercollaboratory.org:9080
   
 collaboratory:
-  bucket.name: oicr.collaboratory
+  #bucket.name: oicr.collaboratory
+  bucket.name: oicr.icgc.collaboratory
   upload.directory: upload
   data.directory: data
   upload.expiration: 7
@@ -23,6 +24,12 @@ collaboratory:
 upload:
   retry.limit: 1000
   partsize: 20000000
+
+## added by AY    
+# MetaData server
+metadata:
+  server:
+    url: https://meta.icgc.org
   
 ---
 spring:
@@ -90,5 +97,10 @@ auth:
   server:
     url: https://localhost:8443/oauth/check_token
     clientId: resource
-    clientsecret: pass
+    clientSecret: pass
+    uploadScope: s3.upload
+    downloadScope: s3.download
+
+
+    
       
