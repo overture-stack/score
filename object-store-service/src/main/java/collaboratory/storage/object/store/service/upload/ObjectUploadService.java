@@ -93,7 +93,7 @@ public class ObjectUploadService {
 
   public void verifyRegistration(String objectId) {
     MetadataEntity mde = metadataClient.getEntity(objectId);
-    if (mde.getId().equals(objectId)) {
+    if (!mde.getId().equals(objectId)) {
       throw new InternalUnrecoverableError(String.format("Checked for {} and Metadata Service returned {} as match",
           objectId, mde.getId()));
     }
