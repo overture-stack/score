@@ -1,2 +1,2 @@
-# Collaboratory Client
+Collaboratory - Object Store Client
 
