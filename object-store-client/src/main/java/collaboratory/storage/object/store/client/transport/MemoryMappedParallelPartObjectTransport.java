@@ -129,15 +129,14 @@ public class MemoryMappedParallelPartObjectTransport extends ParallelPartObjectT
       while (memory.get() < 0L) {
         log.debug("Memory is low. Wait...");
         TimeUnit.MILLISECONDS.sleep(FREE_MEMORY_TIME_DELAY);
-        // suggest to release buffers that are not longer needed
-        System.gc();
+        // suggest to release buffers that are not longer needed (rely on java now)
+        // System.gc();
       }
     }
 
     log.debug("thread pool shut down request ...");
     executor.shutdown();
     executor.awaitTermination(super.maxUploadDuration, TimeUnit.DAYS);
-    progress.stop();
     log.debug("thread pool shut down request completed.");
 
     progress.stop();

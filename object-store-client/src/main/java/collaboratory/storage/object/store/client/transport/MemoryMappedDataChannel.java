@@ -52,7 +52,6 @@ public class MemoryMappedDataChannel extends AbstractDataChannel {
   public void reset() throws IOException {
     log.debug("resetting buffer to the beginning...");
     buffer.rewind();
-    // throw new NotRetryableException(new IOException("Region offset: " + offset + ", length: " + length));
   }
 
   /**
