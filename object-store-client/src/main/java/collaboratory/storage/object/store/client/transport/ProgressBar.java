@@ -67,6 +67,7 @@ public class ProgressBar {
     } catch (InterruptedException e) {
       log.debug("cannot stop the stopwatch", e);
     }
+    display();
     System.err.println();
     System.err.println("Performing data integrity check, please wait...");
   }
