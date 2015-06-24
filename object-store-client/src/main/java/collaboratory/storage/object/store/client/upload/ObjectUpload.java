@@ -31,6 +31,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import collaboratory.storage.object.store.client.exception.NotResumableException;
 import collaboratory.storage.object.store.client.exception.NotRetryableException;
 import collaboratory.storage.object.store.client.transport.ObjectStoreServiceProxy;
 import collaboratory.storage.object.store.client.transport.ObjectTransport;
@@ -90,7 +91,14 @@ public class ObjectUpload {
   @SneakyThrows
   private void startUpload(File file, String objectId) {
     log.info("Start a new upload...");
-    ObjectSpecification spec = proxy.initiateUpload(objectId, file.length());
+    ObjectSpecification spec = null;
+    try {
+      spec = proxy.initiateUpload(objectId, file.length());
+    } catch (NotRetryableException e) {
+      // A NotRetryable exception during initiateUpload should just end whole process
+      // a bit of a sleazy hack
+      throw new NotResumableException(e);
+    }
     uploadParts(spec.getParts(), file, objectId, spec.getUploadId(), new ProgressBar(spec.getParts().size(), spec
         .getParts().size()));
   }
