@@ -126,8 +126,9 @@ public class MemoryMappedParallelPartObjectTransport extends ParallelPartObjectT
       long remaining = memory.addAndGet(-part.getPartSize());
       log.debug("Remaining Memory : {}", remaining);
       log.debug("Number of submitted tasks : {}", tasksSubmitted.get());
-      while (memory.get() < 0 || tasksSubmitted.get() > queueSize) {
-        TimeUnit.MILLISECONDS.sleep(100);
+      while (memory.get() < 0L) {
+        log.debug("Memory is low. Wait...");
+        TimeUnit.MILLISECONDS.sleep(FREE_MEMORY_TIME_DELAY);
         // suggest to release buffers that are not longer needed
         System.gc();
       }
@@ -139,6 +140,7 @@ public class MemoryMappedParallelPartObjectTransport extends ParallelPartObjectT
     progress.stop();
     log.debug("thread pool shut down request completed.");
 
+    progress.stop();
     try {
       takeCareOfException(results.build());
       proxy.finalizeUpload(objectId, uploadId);
