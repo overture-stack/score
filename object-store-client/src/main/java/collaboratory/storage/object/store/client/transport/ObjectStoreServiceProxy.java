@@ -277,10 +277,11 @@ public class ObjectStoreServiceProxy {
       @Override
       public Boolean doWithRetry(RetryContext ctx) throws IOException {
         HttpEntity<Object> requestEntity = new HttpEntity<Object>(defaultHeaders());
-        return serviceRequest.exchange(
-            endpoint + "/upload/{object-id}",
+
+        boolean result = serviceRequest.exchange(endpoint + "/upload/{object-id}",
             HttpMethod.GET, requestEntity,
             Boolean.class, objectId).getBody();
+        return result;
       }
     });
 
