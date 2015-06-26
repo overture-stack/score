@@ -96,7 +96,8 @@ public class ObjectUpload {
       spec = proxy.initiateUpload(objectId, file.length());
     } catch (NotRetryableException e) {
       // A NotRetryable exception during initiateUpload should just end whole process
-      // a bit of a sleazy hack
+      // a bit of a sleazy hack. Should only be thrown when the Metadata service informs us the supplied
+      // object id was never registered/does not exist in Metadata repo
       throw new NotResumableException(e);
     }
     uploadParts(spec.getParts(), file, objectId, spec.getUploadId(), new ProgressBar(spec.getParts().size(), spec
