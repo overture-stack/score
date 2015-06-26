@@ -25,11 +25,6 @@ upload:
   retry.limit: 1000
   partsize: 20000000
 
-## added by AY    
-# MetaData server
-metadata:
-  server:
-    url: https://meta.icgc.org
   
 ---
 spring:
@@ -100,7 +95,8 @@ auth:
     clientSecret: pass
     uploadScope: s3.upload
     downloadScope: s3.download
-
+    #uploadScope: os.upload
+    #downloadScope: os.download
 
     
       
