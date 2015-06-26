@@ -24,6 +24,8 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.actuate.autoconfigure.ManagementSecurityAutoConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -49,6 +51,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
  * Protects resources with access token obtained at the authorization server.
  */
 @Configuration
+@Slf4j
 public class SecurityConfig {
 
   @Configuration
@@ -63,6 +66,12 @@ public class SecurityConfig {
   protected static class EnabledSecurityConfig extends ResourceServerConfigurerAdapter {
 
     private TokenExtractor tokenExtractor = new BearerTokenExtractor();
+
+    @Value("${auth.server.uploadScope}")
+    private String uploadScope;
+
+    @Value("${auth.server.downloadScope}")
+    private String downloadScope;
 
     @Override
     public void configure(HttpSecurity http) throws Exception {
@@ -104,20 +113,21 @@ public class SecurityConfig {
       return remoteTokenServices;
     }
 
-    private static void configureAuthorization(HttpSecurity http) throws Exception {
-      // FIXME: Configure access to resources by token scope
+    private void configureAuthorization(HttpSecurity http) throws Exception {
+      log.info("using upload scope: " + uploadScope);
+      log.info("using download scope: " + downloadScope);
 
       // @formatter:off
       http
         .authorizeRequests()
         .antMatchers("/upload/**")
-        .access("#oauth2.hasScope('${auth.server.uploadScope}')")
+        .access("#oauth2.hasScope('" + uploadScope + "')")
 //        .access("#oauth2.hasScope('s3.upload')")
         .and()
         
         .authorizeRequests()
         .antMatchers("/download/**")
-        .access("#oauth2.hasScope('${auth.server.downloadScope}')")
+        .access("#oauth2.hasScope('" + downloadScope + "')")
 //        .access("#oauth2.hasScope('s3.download')")
         .and()
         
@@ -125,8 +135,7 @@ public class SecurityConfig {
         .anyRequest()
         .authenticated();
       // @formatter:on
-      System.out.println("Here");
     }
-  }
 
+  }
 }
