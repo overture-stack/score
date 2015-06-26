@@ -94,7 +94,8 @@ public class ObjectUploadService {
   public void verifyRegistration(String objectId) {
     MetadataEntity mde = metadataClient.getEntity(objectId);
     if (!mde.getId().equals(objectId)) {
-      throw new InternalUnrecoverableError(String.format("Checked for {} and Metadata Service returned {} as match",
+      throw new InternalUnrecoverableError(String.format(
+          "Checked for {} and Metadata Service returned {} as match: critical error",
           objectId, mde.getId()));
     }
   }
@@ -237,8 +238,8 @@ public class ObjectUploadService {
         throw new InternalUnrecoverableError();
       }
     } else {
-      log.error("Upload cannot be finalize because it is not completed.");
-      throw new NotRetryableException(new IOException("Object cannot be finalized it"));
+      log.error("Upload cannot be finalized because it is not completed.");
+      throw new NotRetryableException(new IOException("Object cannot be finalized"));
     }
   }
 
