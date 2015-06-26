@@ -36,13 +36,13 @@ public class MetadataService {
 
   private final RestTemplate restTemplate = new RestTemplate();
 
-  @Value("${metadata.server.url}")
+  @Value("${metadata.url}")
   private String URL;
 
   public MetadataEntity getEntity(@NonNull String id) {
     log.debug("using " + URL + " for MetaData server");
     try {
-      return restTemplate.getForEntity(URL + "/entities/" + id, MetadataEntity.class).getBody();
+      return restTemplate.getForEntity(URL + "/" + id, MetadataEntity.class).getBody();
     } catch (HttpClientErrorException e) {
       if (e.getStatusCode() == NOT_FOUND) {
         throw new IdNotFoundException(format("Entity %s is not registered on the server.", id));
