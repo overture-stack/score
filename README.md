@@ -1,4 +1,4 @@
-Collaboratry - Storage
+Collaboratory - Storage
 ===
 
 
