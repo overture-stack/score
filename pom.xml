@@ -35,7 +35,6 @@
 			<id>dcc-release</id>
 			<url>http://seqwaremaven.oicr.on.ca/artifactory/dcc-release</url>
 		</repository>
-
 		<!-- Spring -->
 		<repository>
 			<id>spring-milestones</id>
@@ -53,7 +52,6 @@
 				<enabled>true</enabled>
 			</snapshots>
 		</repository>
-
 		<repository>
 			<id>morphia</id>
 			<url> http://morphia.googlecode.com/svn/mavenrepo/</url>
@@ -79,11 +77,9 @@
 			<id>twttr.com</id>
 			<url>http://maven.twttr.com/</url>
 		</repository>
-
 	</repositories>
 
 	<pluginRepositories>
-
 		<!-- Spring -->
 		<pluginRepository>
 			<id>spring-snapshots</id>
@@ -107,8 +103,6 @@
 			</snapshots>
 		</pluginRepository>
 	</pluginRepositories>
-
-
 
 	<dependencyManagement>
 		<dependencies>
@@ -143,7 +137,6 @@
 				<artifactId>aws-java-sdk</artifactId>
 				<version>${aws-java-sdk.version}</version>
 			</dependency>
-
 
 			<!-- Command line -->
 			<dependency>
@@ -241,10 +234,7 @@
 				<version>${assertj-guava.version}</version>
 				<scope>test</scope>
 			</dependency>
-
-
 		</dependencies>
-
 	</dependencyManagement>
 
 	<build>
@@ -260,6 +250,15 @@
 			</plugin>
 		</plugins>
 	</build>
+	
+	<profiles>
+		<profile>
+			<id>release</id>
+			<properties>
+				<package.attach>true</package.attach>
+			</properties>
+    	</profile>
+	</profiles>
 
 	<properties>
 		<!-- SCM -->
