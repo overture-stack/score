@@ -13,7 +13,7 @@ To build, test and install _all_ modules in the system:
 Run
 ---
 
-See specific module documentation below.
+See module-specific documentation below.
 
 Modules
 ---
