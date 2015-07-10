@@ -4,7 +4,7 @@
 
 	<groupId>collaboratory</groupId>
 	<artifactId>object-store</artifactId>
-	<version>0.0.12-SNAPSHOT</version>
+	<version>0.0.12</version>
 	<packaging>pom</packaging>
 
 	<name>${project.artifactId}</name>
