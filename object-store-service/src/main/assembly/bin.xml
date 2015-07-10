@@ -12,6 +12,10 @@
       <directoryMode>0755</directoryMode>
       <fileMode>0755</fileMode>
     </fileSet>
+   <fileSet>
+      <directory>src/main/lib</directory>
+      <outputDirectory>lib</outputDirectory>
+    </fileSet>
     <fileSet>
       <directory>src/main/conf</directory>
       <outputDirectory>conf</outputDirectory>
@@ -21,8 +25,11 @@
       <outputDirectory>cert</outputDirectory>
     </fileSet>
     <fileSet>
-      <directory>src/main/log</directory>
-      <outputDirectory>log</outputDirectory>
+      <directory>src/main/assembly</directory>
+      <outputDirectory>logs</outputDirectory>
+      <excludes>
+        <exclude>**/*</exclude>
+      </excludes>
     </fileSet>
   </fileSets>
   <files>
