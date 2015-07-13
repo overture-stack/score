@@ -38,6 +38,9 @@ public class S3Config {
   private boolean isSecured;
   private String masterEncryptionKeyId;
 
+  @Value("${upload.connection.timeout}")
+  private int connectionTimeout;
+
   @Bean
   public AmazonS3 s3() {
     AmazonS3 s3Client = null;
@@ -50,6 +53,8 @@ public class S3Config {
     }
 
     log.debug("Endpoint: {}", endpoint);
+    log.debug("Retries: {}", retryLimit);
+    log.debug("Endpoint: {}", connectionTimeout);
     s3Client.setEndpoint(endpoint);
     s3Client.setS3ClientOptions(new S3ClientOptions().withPathStyleAccess(true));
 
@@ -59,7 +64,7 @@ public class S3Config {
   private ClientConfiguration clientConfiguration() {
     ClientConfiguration clientConfiguration = new ClientConfiguration();
 
-    log.debug("maskter key id : {}", masterEncryptionKeyId);
+    log.debug("master key id : {}", masterEncryptionKeyId);
     if (isEncryptionEnabled()) {
       clientConfiguration.setSignerOverride("AWSS3V4SignerType");
     }
@@ -72,6 +77,7 @@ public class S3Config {
     clientConfiguration
         .setRetryPolicy(PredefinedRetryPolicies
             .getDefaultRetryPolicyWithCustomMaxRetries(retryLimit));
+    clientConfiguration.setConnectionTimeout(connectionTimeout);
     return clientConfiguration;
 
   }
