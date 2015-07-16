@@ -57,6 +57,8 @@ public class ObjectUploadController {
       @PathVariable(value = "object-id") String objectId,
       @RequestParam(value = "overwritten", required = false, defaultValue = "false") boolean overwritten,
       @RequestParam(value = "fileSize", required = true) long fileSize) {
+    log.info("Initiating upload of object id {} with access token {} having size of {}", objectId, accessToken,
+        Long.toString(fileSize));
     return uploadService.initiateUpload(objectId, fileSize, overwritten);
   }
 

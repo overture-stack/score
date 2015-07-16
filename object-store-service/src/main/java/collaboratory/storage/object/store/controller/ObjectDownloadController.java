@@ -52,6 +52,7 @@ public class ObjectDownloadController {
       @PathVariable(value = "object-id") String objectId,
       @RequestParam(value = "offset", required = true) long offset,
       @RequestParam(value = "length", required = true) long length) {
+    log.info("Requesting download of object id {} with access token {}", objectId, accessToken);
     return downloadService.download(objectId, offset, length);
   }
 
