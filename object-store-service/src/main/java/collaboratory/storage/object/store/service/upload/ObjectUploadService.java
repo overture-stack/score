@@ -94,9 +94,11 @@ public class ObjectUploadService {
   public void verifyRegistration(String objectId) {
     MetadataEntity mde = metadataClient.getEntity(objectId);
     if (!mde.getId().equals(objectId)) {
-      throw new InternalUnrecoverableError(String.format(
-          "Checked for {} and Metadata Service returned {} as match: critical error",
-          objectId, mde.getId()));
+      String msg = String.format(
+          "Critical Error: checked for {} and Metadata Service returned {} as match",
+          objectId, mde.getId());
+      log.error(msg); // log to audit log file
+      throw new InternalUnrecoverableError(msg);
     }
   }
 
@@ -107,7 +109,9 @@ public class ObjectUploadService {
     log.debug("initiate upload for object key: {}, overwritten: {}", objectKey, overwritten);
     if (!overwritten) {
       if (exists(objectId)) {
-        throw new InternalUnrecoverableError("Object should not be overwritten.");
+        String msg = String.format("Attempted to overwrite object id {}", objectId);
+        log.error(msg); // log overwrite attempt occurrence to audit log file
+        throw new InternalUnrecoverableError(msg);
       }
     }
 
@@ -119,8 +123,7 @@ public class ObjectUploadService {
       log.info("No upload ID found. Initiate upload...");
     }
 
-    InitiateMultipartUploadRequest req = new InitiateMultipartUploadRequest(
-        bucketName, objectKey);
+    InitiateMultipartUploadRequest req = new InitiateMultipartUploadRequest(bucketName, objectKey);
     try {
       s3Conf.encrypt(req);
       InitiateMultipartUploadResult result = s3Client.initiateMultipartUpload(req);
@@ -136,7 +139,7 @@ public class ObjectUploadService {
       stateStore.create(spec);
       return spec;
     } catch (AmazonServiceException e) {
-      log.error("fail multipart upload initialization", e);
+      log.error("Multipart Upload Initialization failure", e);
       if (e.getErrorCode().equals("KMS.DisabledException")) {
         throw new InternalUnrecoverableError(e);
       }
@@ -151,7 +154,7 @@ public class ObjectUploadService {
       return true;
     } catch (AmazonServiceException e) {
       if (e.getStatusCode() != HttpStatus.NOT_FOUND.value()) {
-        log.error("Fail on amazon client when requesting object id: {} from bucket: {}", objectId, bucketName, e);
+        log.error("Failure in Amazon Client when requesting object id: {} from bucket: {}", objectId, bucketName, e);
         throw new RetryableException(e);
       }
       log.info("Object key not found: {}", objectKey);
@@ -251,7 +254,7 @@ public class ObjectUploadService {
     try {
       return s3Client.getObjectMetadata(bucketName, ObjectStoreUtil.getObjectKey(dataDir, objectId));
     } catch (AmazonServiceException e) {
-      log.error("Unable to retrieve object meta data for object id: {}", objectId, e);
+      log.error("Unable to retrieve object metadata for object id: {}", objectId, e);
       throw new NotRetryableException(e);
     }
   }

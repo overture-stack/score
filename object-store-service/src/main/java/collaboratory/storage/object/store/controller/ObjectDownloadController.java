@@ -48,11 +48,12 @@ public class ObjectDownloadController {
 
   @RequestMapping(method = RequestMethod.GET, value = "/{object-id}")
   public @ResponseBody ObjectSpecification downloadPartialObject(
-      @RequestHeader(value = "access-token", required = true) final String accessToken,
+      @RequestHeader(value = "Authorization", required = true) final String accessToken,
       @PathVariable(value = "object-id") String objectId,
       @RequestParam(value = "offset", required = true) long offset,
       @RequestParam(value = "length", required = true) long length) {
-    log.info("Requesting download of object id {} with access token {}", objectId, accessToken);
+    String token = accessToken == null ? "<missing token>" : accessToken.replace("Bearer", "").trim();
+    log.info("Requesting download of object id {} with access token {}", objectId, token);
     return downloadService.download(objectId, offset, length);
   }
 
