@@ -37,6 +37,7 @@ import org.springframework.web.bind.annotation.RestController;
 import collaboratory.storage.object.store.core.model.ObjectSpecification;
 import collaboratory.storage.object.store.core.model.UploadProgress;
 import collaboratory.storage.object.store.service.upload.ObjectUploadService;
+import collaboratory.storage.object.store.util.TokenHasher;
 
 /**
  * A controller to expose RESTful API for upload
@@ -57,8 +58,8 @@ public class ObjectUploadController {
       @PathVariable(value = "object-id") String objectId,
       @RequestParam(value = "overwritten", required = false, defaultValue = "false") boolean overwritten,
       @RequestParam(value = "fileSize", required = true) long fileSize) {
-    String token = accessToken == null ? "<missing token>" : accessToken.replace("Bearer", "").trim();
-    log.info("Initiating upload of object id {} with access token {} having size of {}", objectId, token,
+    log.info("Initiating upload of object id {} with access token {} (MD5) having size of {}", objectId,
+        TokenHasher.hashToken(accessToken),
         Long.toString(fileSize));
     return uploadService.initiateUpload(objectId, fileSize, overwritten);
   }

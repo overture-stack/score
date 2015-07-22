@@ -110,6 +110,10 @@ public class SecurityConfig {
       remoteTokenServices.setClientSecret(clientSecret);
       remoteTokenServices.setAccessTokenConverter(accessTokenConverter());
 
+      log.debug("using auth server: " + checkTokenUrl);
+      log.debug("using auth client id: " + clientId);
+      // log.debug("using client secret: " + clientSecret);
+
       return remoteTokenServices;
     }
 
