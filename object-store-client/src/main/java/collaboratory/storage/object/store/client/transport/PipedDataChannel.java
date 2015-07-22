@@ -21,13 +21,14 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PipedInputStream;
 
-import lombok.AllArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import collaboratory.storage.object.store.client.exception.NotRetryableException;
-
 import com.google.api.client.util.IOUtils;
 import com.google.common.hash.Hashing;
 import com.google.common.hash.HashingOutputStream;
+
+import collaboratory.storage.object.store.client.exception.NotRetryableException;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Channels that use pipe
@@ -37,8 +38,11 @@ import com.google.common.hash.HashingOutputStream;
 public class PipedDataChannel extends AbstractDataChannel {
 
   private final PipedInputStream is;
+  @Getter
   private final long offset;
+  @Getter
   private final long length;
+  @Getter
   private String md5 = null;
 
   @Override
@@ -52,16 +56,6 @@ public class PipedDataChannel extends AbstractDataChannel {
     HashingOutputStream hos = new HashingOutputStream(Hashing.md5(), os);
     IOUtils.copy(is, hos);
     md5 = hos.hash().toString();
-  }
-
-  @Override
-  public long getLength() {
-    return length;
-  }
-
-  @Override
-  public String getMd5() {
-    return md5;
   }
 
   @Override

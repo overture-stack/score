@@ -33,17 +33,18 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
-import collaboratory.storage.object.store.client.download.DownloadUtils;
-import collaboratory.storage.object.store.core.model.DataChannel;
-import collaboratory.storage.object.store.core.model.Part;
-
 import com.google.api.client.util.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Ordering;
+
+import collaboratory.storage.object.store.client.download.DownloadUtils;
+import collaboratory.storage.object.store.core.model.DataChannel;
+import collaboratory.storage.object.store.core.model.Part;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * The default transport for parallel upload
@@ -237,6 +238,7 @@ public class ParallelPartObjectTransport implements ObjectTransport {
   }
 
   @Data
+  @EqualsAndHashCode(callSuper = true)
   public static class RemoteParallelBuilder extends ObjectTransport.AbstractBuilder {
 
     private int nThreads;

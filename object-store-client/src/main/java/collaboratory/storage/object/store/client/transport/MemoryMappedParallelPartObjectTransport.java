@@ -34,17 +34,17 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import lombok.AllArgsConstructor;
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Ordering;
+
 import collaboratory.storage.object.store.client.download.DownloadUtils;
 import collaboratory.storage.object.store.client.exception.NotResumableException;
 import collaboratory.storage.object.store.client.exception.NotRetryableException;
 import collaboratory.storage.object.store.client.exception.RetryableException;
 import collaboratory.storage.object.store.core.model.Part;
-
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Ordering;
+import lombok.AllArgsConstructor;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * A data transport using memory mapped channels for parallel upload/download

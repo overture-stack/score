@@ -26,12 +26,13 @@ import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
 
-import lombok.AllArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import collaboratory.storage.object.store.client.exception.NotRetryableException;
-
 import com.google.common.hash.Hashing;
 import com.google.common.hash.HashingOutputStream;
+
+import collaboratory.storage.object.store.client.exception.NotRetryableException;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Channel based on {@link java.nio.MappedByteBuffer memory mapped buffer}
@@ -41,8 +42,11 @@ import com.google.common.hash.HashingOutputStream;
 public class MemoryMappedDataChannel extends AbstractDataChannel {
 
   private MappedByteBuffer buffer;
+  @Getter
   private final long offset;
+  @Getter
   private final long length;
+  @Getter
   private String md5 = null;
 
   /**
@@ -72,16 +76,6 @@ public class MemoryMappedDataChannel extends AbstractDataChannel {
     while (buffer.hasRemaining()) {
       readChannel.read(buffer);
     }
-  }
-
-  @Override
-  public long getLength() {
-    return length;
-  }
-
-  @Override
-  public String getMd5() {
-    return md5;
   }
 
   /**

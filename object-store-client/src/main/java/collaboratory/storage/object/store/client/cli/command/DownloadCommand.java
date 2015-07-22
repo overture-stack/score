@@ -19,23 +19,20 @@ package collaboratory.storage.object.store.client.cli.command;
 
 import java.io.File;
 
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import collaboratory.storage.object.store.client.download.ObjectDownload;
-
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
+
+import collaboratory.storage.object.store.client.download.ObjectDownload;
+import lombok.SneakyThrows;
 
 /**
  * Handle download command line arguments
  */
 @Component
 @Parameters(separators = "=", commandDescription = "object to download")
-@Slf4j
 public class DownloadCommand extends AbstractClientCommand {
 
   @Parameter(names = "--out-dir", description = "Path to an output directory", required = true)
