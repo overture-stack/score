@@ -24,10 +24,6 @@ import static javax.ws.rs.core.HttpHeaders.AUTHORIZATION;
 import java.io.IOException;
 import java.security.KeyStore;
 
-import lombok.Data;
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
-
 import org.apache.http.client.HttpClient;
 import org.apache.http.conn.ssl.SSLContexts;
 import org.apache.http.conn.ssl.X509HostnameVerifier;
@@ -45,15 +41,18 @@ import org.springframework.retry.policy.SimpleRetryPolicy;
 import org.springframework.retry.support.RetryTemplate;
 import org.springframework.web.client.RestTemplate;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMap.Builder;
+
 import collaboratory.storage.object.store.client.download.DownloadStateStore;
 import collaboratory.storage.object.store.client.exception.AmazonS3RetryableResponseErrorHandler;
 import collaboratory.storage.object.store.client.exception.NotResumableException;
 import collaboratory.storage.object.store.client.exception.NotRetryableException;
 import collaboratory.storage.object.store.client.exception.RetryableException;
 import collaboratory.storage.object.store.client.exception.ServiceRetryableResponseErrorHandler;
-
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMap.Builder;
+import lombok.Data;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Configurations for connections for uploads

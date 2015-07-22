@@ -1,6 +1,11 @@
 #
 # Collaboratory Client - Configuration
 #
+
+###############################################################################
+# Profile - common
+###############################################################################
+
 client.directory: ${user.home}
 
 transport:
@@ -23,14 +28,18 @@ logging:
   file: target/logs/client.log
 
 ---
-spring:
-  profiles: prod
+
+###############################################################################
+# Profile - "prod"
+###############################################################################
+
+spring.profiles: prod
 
 client:
   strictSsl: true
 
   upload:
-    serviceHostname: icgc.cancercollaboratory.org
+    serviceHostname: objectstore.cancercollaboratory.org
 
   # SSL
   ssl:
@@ -40,8 +49,37 @@ client:
     trustName: icgc.cancercollaboratory.org
 
 ---
-spring:
-  profiles: debug
+
+###############################################################################
+# Profile - "oicr"
+###############################################################################
+
+spring.profiles: oicr
+
+client:
+  strictSsl: true
+
+  upload:
+    serviceHostname: storage.icgc.org
+
+---
+
+###############################################################################
+# Profile - "secure"
+###############################################################################
+
+spring.profiles: secure
+
+# OAuth2 authorization token
+accessToken: "CHANGE_ME"
+
+---
+
+###############################################################################
+# Profile - "debug"
+###############################################################################
+
+spring.profiles: debug
 
 logging:
   level:
@@ -49,8 +87,3 @@ logging:
     springframework.retry: DEBUG
     springframework.web: DEBUG
     com.amazonaws.services: DEBUG
----
-spring:
-  profiles: secure
-  
-accessToken: "CHANGE_ME"

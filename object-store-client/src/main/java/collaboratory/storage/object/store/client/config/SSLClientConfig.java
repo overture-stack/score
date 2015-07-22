@@ -24,8 +24,6 @@ import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLException;
 import javax.net.ssl.TrustManagerFactory;
 
-import lombok.SneakyThrows;
-
 import org.apache.http.conn.ssl.AbstractVerifier;
 import org.apache.http.conn.ssl.X509HostnameVerifier;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,7 +31,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 
-import collaboratory.storage.object.store.client.config.ClientProperties.SSLProperties;
+import lombok.SneakyThrows;
+import lombok.val;
 
 /**
  * Configurations for SSL
@@ -48,22 +47,9 @@ public class SSLClientConfig {
   @SneakyThrows
   @Bean
   public KeyStore trustStore() {
-    SSLProperties ssl = properties.getSsl();
+    val ssl = properties.getSsl();
     if (ssl.getTrustName() != null && ssl.getTrustStore() != null) {
       InputStream is = ssl.getTrustStore().getInputStream();
-      KeyStore trustStore = KeyStore.getInstance(ssl.getTrustStoreType());
-      trustStore.load(is, ssl.getTrustStorePassword().toCharArray());
-      return trustStore;
-    } else {
-      return null;
-    }
-  }
-
-  @SneakyThrows
-  private KeyStore keyStore() {
-    SSLProperties ssl = properties.getSsl();
-    if (ssl.getKeyStore().exists()) {
-      InputStream is = ssl.getKeyStore().getInputStream();
       KeyStore trustStore = KeyStore.getInstance(ssl.getTrustStoreType());
       trustStore.load(is, ssl.getTrustStorePassword().toCharArray());
       return trustStore;
@@ -83,6 +69,7 @@ public class SSLClientConfig {
             return;
           }
         }
+
         verify(host, cns, subjectAlts, true);
       }
 
@@ -98,13 +85,14 @@ public class SSLClientConfig {
   @Bean
   @SneakyThrows
   public TrustManagerFactory trustManagerFactory() {
-    TrustManagerFactory tmf =
-        TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+    val tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
     if (properties.getSsl().getTrustStore() == null) {
       tmf.init((KeyStore) null);
       return tmf;
     }
+
     tmf.init(trustStore());
     return tmf;
   }
+
 }
