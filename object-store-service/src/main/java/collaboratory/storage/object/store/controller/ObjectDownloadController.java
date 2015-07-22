@@ -32,6 +32,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import collaboratory.storage.object.store.core.model.ObjectSpecification;
 import collaboratory.storage.object.store.service.download.ObjectDownloadService;
+import collaboratory.storage.object.store.util.TokenHasher;
 
 /**
  * A controller to expose RESTful API for download
@@ -52,9 +53,8 @@ public class ObjectDownloadController {
       @PathVariable(value = "object-id") String objectId,
       @RequestParam(value = "offset", required = true) long offset,
       @RequestParam(value = "length", required = true) long length) {
-    String token = accessToken == null ? "<missing token>" : accessToken.replace("Bearer", "").trim();
-    log.info("Requesting download of object id {} with access token {}", objectId, token);
+    log.info("Requesting download of object id {} with access token {} (MD5)", objectId,
+        TokenHasher.hashToken(accessToken));
     return downloadService.download(objectId, offset, length);
   }
-
 }
