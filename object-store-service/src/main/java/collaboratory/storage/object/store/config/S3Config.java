@@ -54,7 +54,7 @@ public class S3Config {
 
     log.debug("Endpoint: {}", endpoint);
     log.debug("Retries: {}", retryLimit);
-    log.debug("Endpoint: {}", connectionTimeout);
+    log.debug("Timeout: {}", connectionTimeout);
     s3Client.setEndpoint(endpoint);
     s3Client.setS3ClientOptions(new S3ClientOptions().withPathStyleAccess(true));
 
