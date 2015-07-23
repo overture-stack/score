@@ -50,7 +50,6 @@ s3:
 ---
 spring:
   profiles: prod
-  profiles.include: secure
   
 # Server
 server:
