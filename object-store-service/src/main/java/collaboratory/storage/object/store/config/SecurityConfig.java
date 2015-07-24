@@ -124,6 +124,7 @@ public class SecurityConfig {
       // @formatter:off
       http
         .authorizeRequests()
+        .antMatchers("/health**").permitAll()
         .antMatchers("/upload/**")
         .access("#oauth2.hasScope('" + uploadScope + "')")
 //        .access("#oauth2.hasScope('s3.upload')")
@@ -134,12 +135,7 @@ public class SecurityConfig {
         .access("#oauth2.hasScope('" + downloadScope + "')")
 //        .access("#oauth2.hasScope('s3.download')")
         .and()
-        
-        .authorizeRequests()
-        .antMatchers("/health")
-        .permitAll()
-        .and()
-        
+
         .authorizeRequests()
         .anyRequest()
         .authenticated();
