@@ -111,7 +111,7 @@ public class SecurityConfig {
       remoteTokenServices.setAccessTokenConverter(accessTokenConverter());
 
       log.debug("using auth server: " + checkTokenUrl);
-      log.debug("using auth client id: " + clientId);
+      // log.debug("using auth client id: " + clientId);
       // log.debug("using client secret: " + clientSecret);
 
       return remoteTokenServices;
@@ -133,6 +133,11 @@ public class SecurityConfig {
         .antMatchers("/download/**")
         .access("#oauth2.hasScope('" + downloadScope + "')")
 //        .access("#oauth2.hasScope('s3.download')")
+        .and()
+        
+        .authorizeRequests()
+        .antMatchers("/health")
+        .permitAll()
         .and()
         
         .authorizeRequests()
