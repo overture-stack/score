@@ -52,12 +52,10 @@ public class ObjectUploadServiceHealth implements HealthIndicator {
   @Override
   public Health health() {
     Health.Builder builder = new Health.Builder();
-
-    String qstring = ((ServletRequestAttributes) RequestContextHolder
-        .getRequestAttributes()).getRequest().getQueryString();
+/*
+    String qstring = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest().getQueryString();
     List<NameValuePair> parameters = URLEncodedUtils.parse(qstring, Charsets.US_ASCII);
-    ArrayList<NameValuePair> tokens =
-        Lists.newArrayList(Collections2.filter(parameters, new Predicate<NameValuePair>() {
+    ArrayList<NameValuePair> tokens = Lists.newArrayList(Collections2.filter(parameters, new Predicate<NameValuePair>() {
 
           @Override
           public boolean apply(@Nullable NameValuePair input) {
@@ -66,11 +64,12 @@ public class ObjectUploadServiceHealth implements HealthIndicator {
             }
             return false;
           }
-        }));
+    }));
+    
     if (tokens.size() != 1) {
       builder.outOfService();
     } else {
-
+*/
       // check if the aws account can access the bucket
       boolean foundBucket = true;
       try {
@@ -85,9 +84,8 @@ public class ObjectUploadServiceHealth implements HealthIndicator {
         builder.outOfService();
       }
 
-      builder
-          .withDetail("foundBucket", foundBucket);
-    }
+      builder.withDetail("foundBucket", foundBucket);
+//    }
     return builder.build();
   }
 }
