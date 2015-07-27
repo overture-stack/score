@@ -27,9 +27,6 @@ import javax.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.actuate.autoconfigure.ManagementSecurityAutoConfiguration;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.security.SecurityAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -50,97 +47,83 @@ import org.springframework.web.filter.OncePerRequestFilter;
  * Resource service configuration file.<br>
  * Protects resources with access token obtained at the authorization server.
  */
-@Configuration
 @Slf4j
-public class SecurityConfig {
+@Configuration
+@Profile("secure")
+@EnableWebSecurity
+@EnableResourceServer
+public class SecurityConfig extends ResourceServerConfigurerAdapter {
 
-  @Configuration
-  @EnableAutoConfiguration(exclude = { SecurityAutoConfiguration.class, ManagementSecurityAutoConfiguration.class })
-  protected static class DefaultSecurityConfig {}
+  private TokenExtractor tokenExtractor = new BearerTokenExtractor();
 
-  @Profile("secure")
-  @Configuration
-  @EnableWebSecurity
-  @EnableResourceServer
-  @EnableAutoConfiguration
-  protected static class EnabledSecurityConfig extends ResourceServerConfigurerAdapter {
+  @Value("${auth.server.uploadScope}")
+  private String uploadScope;
 
-    private TokenExtractor tokenExtractor = new BearerTokenExtractor();
+  @Value("${auth.server.downloadScope}")
+  private String downloadScope;
 
-    @Value("${auth.server.uploadScope}")
-    private String uploadScope;
+  @Override
+  public void configure(HttpSecurity http) throws Exception {
+    http.addFilterAfter(new OncePerRequestFilter() {
 
-    @Value("${auth.server.downloadScope}")
-    private String downloadScope;
+      @Override
+      protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+          throws ServletException, IOException {
 
-    @Override
-    public void configure(HttpSecurity http) throws Exception {
-      http.addFilterAfter(new OncePerRequestFilter() {
-
-        @Override
-        protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
-            FilterChain filterChain)
-            throws ServletException, IOException {
-          // We don't want to allow access to a resource with no token so clear
-          // the security context in case it is actually an OAuth2Authentication
-          if (tokenExtractor.extract(request) == null) {
-            SecurityContextHolder.clearContext();
-          }
-          filterChain.doFilter(request, response);
+        // We don't want to allow access to a resource with no token so clear 
+		// the security context in case it is actually an OAuth2Authentication
+        if (tokenExtractor.extract(request) == null) {
+          SecurityContextHolder.clearContext();
         }
+        filterChain.doFilter(request, response);
+      }
 
-      }, AbstractPreAuthenticatedProcessingFilter.class);
+    }, AbstractPreAuthenticatedProcessingFilter.class);
 
-      http.csrf().disable();
-      configureAuthorization(http);
-    }
+    http.csrf().disable();
+    configureAuthorization(http);
+  }
 
-    @Bean
-    public AccessTokenConverter accessTokenConverter() {
-      return new DefaultAccessTokenConverter();
-    }
+  @Bean
+  public AccessTokenConverter accessTokenConverter() {
+    return new DefaultAccessTokenConverter();
+  }
 
-    @Bean
-    public RemoteTokenServices remoteTokenServices(final @Value("${auth.server.url}") String checkTokenUrl,
-        final @Value("${auth.server.clientId}") String clientId,
-        final @Value("${auth.server.clientSecret}") String clientSecret) {
-      final RemoteTokenServices remoteTokenServices = new RemoteTokenServices();
-      remoteTokenServices.setCheckTokenEndpointUrl(checkTokenUrl);
-      remoteTokenServices.setClientId(clientId);
-      remoteTokenServices.setClientSecret(clientSecret);
-      remoteTokenServices.setAccessTokenConverter(accessTokenConverter());
+  @Bean
+  public RemoteTokenServices remoteTokenServices(final @Value("${auth.server.url}") String checkTokenUrl,
+      final @Value("${auth.server.clientId}") String clientId,
+      final @Value("${auth.server.clientSecret}") String clientSecret) {
+    final RemoteTokenServices remoteTokenServices = new RemoteTokenServices();
+    remoteTokenServices.setCheckTokenEndpointUrl(checkTokenUrl);
+    remoteTokenServices.setClientId(clientId);
+    remoteTokenServices.setClientSecret(clientSecret);
+    remoteTokenServices.setAccessTokenConverter(accessTokenConverter());
 
-      log.debug("using auth server: " + checkTokenUrl);
-      // log.debug("using auth client id: " + clientId);
-      // log.debug("using client secret: " + clientSecret);
+    log.debug("using auth server: " + checkTokenUrl);
+    // log.debug("using auth client id: " + clientId);
+    // log.debug("using client secret: " + clientSecret);
 
-      return remoteTokenServices;
-    }
+    return remoteTokenServices;
+  }
 
-    private void configureAuthorization(HttpSecurity http) throws Exception {
-      log.info("using upload scope: " + uploadScope);
-      log.info("using download scope: " + downloadScope);
+  private void configureAuthorization(HttpSecurity http) throws Exception {
+    log.info("using upload scope: " + uploadScope);
+    log.info("using download scope: " + downloadScope);
 
-      // @formatter:off
-      http
-        .authorizeRequests()
-        .antMatchers("/health**").permitAll()
-        .antMatchers("/upload/**")
-        .access("#oauth2.hasScope('" + uploadScope + "')")
-//        .access("#oauth2.hasScope('s3.upload')")
-        .and()
-        
-        .authorizeRequests()
-        .antMatchers("/download/**")
-        .access("#oauth2.hasScope('" + downloadScope + "')")
-//        .access("#oauth2.hasScope('s3.download')")
-        .and()
-
-        .authorizeRequests()
-        .anyRequest()
-        .authenticated();
-      // @formatter:on
-    }
-
+    // @formatter:off     
+    
+    http
+    .authorizeRequests()
+    .antMatchers("/health").permitAll()
+    .antMatchers("/upload/**")
+    .access("#oauth2.hasScope('" + uploadScope + "')")
+    .antMatchers("/download/**")
+    .access("#oauth2.hasScope('" + downloadScope + "')")
+    .and()
+    
+    .authorizeRequests()
+    .anyRequest().authenticated();
+    // @formatter:on
+    log.info("initialization done");
   }
 }
