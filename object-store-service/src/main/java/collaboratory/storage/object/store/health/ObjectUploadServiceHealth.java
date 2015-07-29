@@ -17,25 +17,13 @@
  */
 package collaboratory.storage.object.store.health;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.apache.http.NameValuePair;
-import org.apache.http.client.utils.URLEncodedUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.stereotype.Component;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
 
 import com.amazonaws.services.s3.AmazonS3;
-import com.google.common.base.Charsets;
-import com.google.common.base.Predicate;
-import com.google.common.collect.Collections2;
-import com.google.common.collect.Lists;
-import com.sun.istack.Nullable;
 
 /**
  * check health for object upload service
@@ -52,40 +40,33 @@ public class ObjectUploadServiceHealth implements HealthIndicator {
   @Override
   public Health health() {
     Health.Builder builder = new Health.Builder();
-/*
-    String qstring = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest().getQueryString();
-    List<NameValuePair> parameters = URLEncodedUtils.parse(qstring, Charsets.US_ASCII);
-    ArrayList<NameValuePair> tokens = Lists.newArrayList(Collections2.filter(parameters, new Predicate<NameValuePair>() {
+    /*
+     * String qstring = ((ServletRequestAttributes)
+     * RequestContextHolder.getRequestAttributes()).getRequest().getQueryString(); List<NameValuePair> parameters =
+     * URLEncodedUtils.parse(qstring, Charsets.US_ASCII); ArrayList<NameValuePair> tokens =
+     * Lists.newArrayList(Collections2.filter(parameters, new Predicate<NameValuePair>() {
+     * 
+     * @Override public boolean apply(@Nullable NameValuePair input) { if (input != null &&
+     * input.getName().equals("dcc-token")) { return true; } return false; } }));
+     * 
+     * if (tokens.size() != 1) { builder.outOfService(); } else {
+     */
+    // check if the aws account can access the bucket
+    boolean foundBucket = true;
+    try {
+      foundBucket = s3.doesBucketExist(bucketName);
+    } catch (Exception e) {
+      foundBucket = false;
+    }
 
-          @Override
-          public boolean apply(@Nullable NameValuePair input) {
-            if (input != null && input.getName().equals("dcc-token")) {
-              return true;
-            }
-            return false;
-          }
-    }));
-    
-    if (tokens.size() != 1) {
-      builder.outOfService();
+    if (foundBucket) {
+      builder.up();
     } else {
-*/
-      // check if the aws account can access the bucket
-      boolean foundBucket = true;
-      try {
-        foundBucket = s3.doesBucketExist(bucketName);
-      } catch (Exception e) {
-        foundBucket = false;
-      }
+      builder.outOfService();
+    }
 
-      if (foundBucket) {
-        builder.up();
-      } else {
-        builder.outOfService();
-      }
-
-      builder.withDetail("foundBucket", foundBucket);
-//    }
+    builder.withDetail("foundBucket", foundBucket);
+    // }
     return builder.build();
   }
 }

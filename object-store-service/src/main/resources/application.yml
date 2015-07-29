@@ -1,3 +1,11 @@
+#
+# Object Store Service - Configuration
+#
+
+###############################################################################
+# Profile - common
+###############################################################################
+
 server:
   port: 5431
   
@@ -26,8 +34,12 @@ upload:
   partsize: 20000000
   connection.timeout: 15000
 
-  
 ---
+
+###############################################################################
+# Profile - "amazon"
+###############################################################################
+
 spring:
   profiles: amazon
   profiles.include: prod
@@ -40,6 +52,11 @@ collaboratory:
   bucket.name: oicr.icgc.collaboratory
 
 ---
+
+###############################################################################
+# Profile - "collaboratory"
+###############################################################################
+
 spring:
   profiles: collaboratory
   profiles.include: prod
@@ -48,8 +65,12 @@ s3:
   endpoint: https://www.cancercollaboratory.org:9080
 
 ---
-spring:
-  profiles: prod
+
+###############################################################################
+# Profile - "prod"
+###############################################################################
+
+spring.profiles: prod
   
 # Server
 server:
@@ -71,22 +92,12 @@ metadata:
   url: https://meta.icgc.org/entities
 
 ---
-spring:
-  profiles: benchmark
 
-# Server
-server:
-  ssl:
-    key-store-type: JKS
+###############################################################################
+# Profile - "secure"
+###############################################################################
 
-s3:
-  secured: false
-  #Sinai Center
-  endpoint: http://www.cancercollaboratory.org:9081
-
----
-spring:
-  profiles: secure
+spring.profiles: secure
   
 # OAuth authentication server
 auth:
@@ -99,5 +110,20 @@ auth:
     #uploadScope: os.upload
     #downloadScope: os.download
 
-    
-      
+---
+
+###############################################################################
+# Profile - "benchmark"
+###############################################################################
+
+spring.profiles: benchmark
+
+# Server
+server:
+  ssl:
+    key-store-type: JKS
+
+s3:
+  secured: false
+  #Sinai Center
+  endpoint: http://www.cancercollaboratory.org:9081

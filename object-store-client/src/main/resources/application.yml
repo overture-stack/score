@@ -1,5 +1,5 @@
 #
-# Collaboratory Client - Configuration
+# Object Store Client - Configuration
 #
 
 ###############################################################################
@@ -14,7 +14,7 @@ transport:
   parallel: 6
 
 client:
-  strictSsl: false
+  accessToken: "${accessToken}" #Alias for backwards compatibility
   home: ${client.directory}
 
   upload:
@@ -22,6 +22,10 @@ client:
     servicePort: 5431
     retryNumber: 10
     retryTimeout: 1
+    
+  ssl:
+    enabled: false
+    custom: false
 
     
 logging:
@@ -30,19 +34,20 @@ logging:
 ---
 
 ###############################################################################
-# Profile - "prod"
+# Profile - "amazon"
 ###############################################################################
 
-spring.profiles: prod
+spring.profiles: amazon
 
 client:
-  strictSsl: true
-
   upload:
     serviceHostname: objectstore.cancercollaboratory.org
 
   # SSL
   ssl:
+    enabled: true
+    custom: true
+    
     trustStore: classpath:client.jks
     trustStoreType: JKS
     trustStorePassword: CLIENT_SECRET
@@ -57,21 +62,13 @@ client:
 spring.profiles: oicr
 
 client:
-  strictSsl: true
-
   upload:
-    serviceHostname: storage.icgc.org
-
----
-
-###############################################################################
-# Profile - "secure"
-###############################################################################
-
-spring.profiles: secure
-
-# OAuth2 authorization token
-accessToken: "CHANGE_ME"
+    serviceHostname: objectstore.icgc.org
+    servicePort: 443
+    
+  ssl:
+    enabled: true
+    custom: false
 
 ---
 

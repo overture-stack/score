@@ -17,19 +17,19 @@
  */
 package collaboratory.storage.object.store.client.config;
 
-import java.io.InputStream;
 import java.security.KeyStore;
 
-import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLException;
 import javax.net.ssl.TrustManagerFactory;
 
 import org.apache.http.conn.ssl.AbstractVerifier;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.conn.ssl.SSLContexts;
 import org.apache.http.conn.ssl.X509HostnameVerifier;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Lazy;
 
 import lombok.SneakyThrows;
 import lombok.val;
@@ -37,21 +37,36 @@ import lombok.val;
 /**
  * Configurations for SSL
  */
-@Lazy
 @Configuration
 public class SSLClientConfig {
 
   @Autowired
   private ClientProperties properties;
 
-  @SneakyThrows
   @Bean
+  @SneakyThrows
+  public TrustManagerFactory trustManagerFactory() {
+    val factory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+
+    val ssl = properties.getSsl();
+    if (ssl.isCustom()) {
+      factory.init(trustStore());
+    } else {
+      factory.init((KeyStore) null);
+    }
+
+    return factory;
+  }
+
+  @Bean
+  @SneakyThrows
   public KeyStore trustStore() {
     val ssl = properties.getSsl();
-    if (ssl.getTrustName() != null && ssl.getTrustStore() != null) {
-      InputStream is = ssl.getTrustStore().getInputStream();
-      KeyStore trustStore = KeyStore.getInstance(ssl.getTrustStoreType());
+    if (ssl.isCustom()) {
+      val is = ssl.getTrustStore().getInputStream();
+      val trustStore = KeyStore.getInstance(ssl.getTrustStoreType());
       trustStore.load(is, ssl.getTrustStorePassword().toCharArray());
+
       return trustStore;
     } else {
       return null;
@@ -59,40 +74,37 @@ public class SSLClientConfig {
   }
 
   @Bean
-  public X509HostnameVerifier verifier() {
-    return new AbstractVerifier() {
+  @SneakyThrows
+  public SSLContext sslContext() {
+    val ssl = properties.getSsl();
+    if (ssl.isCustom()) {
+      return SSLContexts.custom().loadTrustMaterial(trustStore()).useTLS().build();
+    } else {
+      return SSLContexts.createDefault();
+    }
+  }
 
-      @Override
-      public void verify(String host, String[] cns, String[] subjectAlts) throws SSLException {
-        for (String cn : cns) {
-          if (cn.equals(properties.getSsl().getTrustName())) {
-            return;
+  @Bean
+  public X509HostnameVerifier hostnameVerifier() {
+    val ssl = properties.getSsl();
+    if (ssl.isCustom()) {
+      return new AbstractVerifier() {
+
+        @Override
+        public void verify(String host, String[] cns, String[] subjectAlts) throws SSLException {
+          for (String cn : cns) {
+            if (cn.equals(properties.getSsl().getTrustName())) {
+              return;
+            }
           }
+
+          verify(host, cns, subjectAlts, true);
         }
 
-        verify(host, cns, subjectAlts, true);
-      }
-
-    };
-  }
-
-  @Bean
-  @SneakyThrows
-  public KeyManagerFactory keyManagerFactory() {
-    return null;
-  }
-
-  @Bean
-  @SneakyThrows
-  public TrustManagerFactory trustManagerFactory() {
-    val tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-    if (properties.getSsl().getTrustStore() == null) {
-      tmf.init((KeyStore) null);
-      return tmf;
+      };
+    } else {
+      return SSLConnectionSocketFactory.BROWSER_COMPATIBLE_HOSTNAME_VERIFIER;
     }
-
-    tmf.init(trustStore());
-    return tmf;
   }
 
 }
