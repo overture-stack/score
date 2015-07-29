@@ -19,12 +19,12 @@ package collaboratory.storage.object.store.client.exception;
 
 import java.io.IOException;
 
-import lombok.extern.slf4j.Slf4j;
-
 import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.web.client.DefaultResponseErrorHandler;
 
 import com.amazonaws.util.IOUtils;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * responsible to translate server side errors to client side errors
@@ -37,18 +37,22 @@ public class ServiceRetryableResponseErrorHandler extends DefaultResponseErrorHa
     switch (response.getStatusCode()) {
     case NOT_FOUND:
     case BAD_REQUEST:
-      log.warn("Not Retryable Endpoint: {}", response.getStatusText());
-      throw new NotRetryableException(new IOException("object store service error: "
+      log.warn("Bad request. Stop processing: {}", response.getStatusText());
+      throw new NotRetryableException(new IOException("Object store client error: "
           + IOUtils.toString(response.getBody())));
     case INTERNAL_SERVER_ERROR:
       log.warn("Server error. Stop processing: {}", response.getStatusText());
-      throw new NotResumableException(new IOException("Object store service error: "
+      throw new NotResumableException(new IOException("Object store client error: "
+          + IOUtils.toString(response.getBody())));
+    case UNAUTHORIZED:
+      log.warn("Unauthorized. Stop processing: {}", response.getStatusText());
+      throw new NotResumableException(new IOException("Object store client error: "
           + IOUtils.toString(response.getBody())));
     default:
       log.warn("Retryable exception: {}", response.getStatusText());
-      throw new RetryableException(new IOException("object store service error: "
+      throw new RetryableException(new IOException("Object store service error: "
           + IOUtils.toString(response.getBody())));
-
     }
   }
+
 }
