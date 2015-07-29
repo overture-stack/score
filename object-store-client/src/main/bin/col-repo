@@ -12,7 +12,7 @@ COL_HOME=`dirname $0`/..; export COL_HOME
 CLIENT_DIR="$(cd ${COL_HOME} && pwd -P)"
 
 exec java -Xms2G -Xmx3G \
-	-Dspring.profiles.active=prod \
+	-Dspring.profiles.active=amazon \
 	-Dlogging.file=${COL_HOME}/logs/client.log \
 	-Dspring.config.location=${CLIENT_DIR}/conf/ \
 	-Dclient.directory=${CLIENT_DIR} \

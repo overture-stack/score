@@ -1,10 +1,10 @@
 package collaboratory.storage.object.store.client.config;
 
-import lombok.Data;
-
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.Resource;
+
+import lombok.Data;
 
 /**
  * Configurations for user profile and preferences
@@ -18,6 +18,9 @@ public class ClientProperties {
    * Constants.
    */
   private static final int DEFAULT_LIMIT = 10;
+
+  /** OAuth2 access token for ICGC authorization server */
+  private String accessToken;
 
   private String home;
   private int retryLimit = DEFAULT_LIMIT;
@@ -40,8 +43,6 @@ public class ClientProperties {
   private SSLProperties ssl = new SSLProperties();
   private UploadProperties upload = new UploadProperties();
 
-  private boolean strictSsl = true;
-
   @Data
   public static class TokenProperties {
 
@@ -54,6 +55,16 @@ public class ClientProperties {
 
   @Data
   public static class SSLProperties {
+
+    /** Use SSL for communication with the server? */
+    private boolean enabled = true;
+
+    /** Use custom SSL configuration including trust store and host verifier? */
+    private boolean custom = true;
+
+    /*
+     * Properties used when {@code custom = true}:
+     */
 
     private Resource trustStore;
     private String trustStoreType;

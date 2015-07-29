@@ -22,16 +22,15 @@ import static java.util.Collections.singletonList;
 import static javax.ws.rs.core.HttpHeaders.AUTHORIZATION;
 
 import java.io.IOException;
-import java.security.KeyStore;
+
+import javax.net.ssl.SSLContext;
 
 import org.apache.http.client.HttpClient;
-import org.apache.http.conn.ssl.SSLContexts;
 import org.apache.http.conn.ssl.X509HostnameVerifier;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicHeader;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
@@ -52,6 +51,7 @@ import collaboratory.storage.object.store.client.exception.RetryableException;
 import collaboratory.storage.object.store.client.exception.ServiceRetryableResponseErrorHandler;
 import lombok.Data;
 import lombok.SneakyThrows;
+import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -62,17 +62,22 @@ import lombok.extern.slf4j.Slf4j;
 @Configuration
 public class ObjectStoreConfig {
 
+  /**
+   * Constants.
+   */
   private static final int MAX_TIMEOUT = 20 * 1000;
 
-  @Value("${accessToken:undefined}")
-  private String accessToken;
-
+  /**
+   * Configuration.
+   */
   @Autowired
   private ClientProperties properties;
 
+  /**
+   * Dependencies.
+   */
   @Autowired
-  private KeyStore truststore;
-
+  private SSLContext sslContext;
   @Autowired
   private X509HostnameVerifier hostnameVerifier;
 
@@ -106,18 +111,16 @@ public class ObjectStoreConfig {
 
   @SneakyThrows
   private HttpClient sslClient() {
-    HttpClientBuilder client = HttpClients.custom();
-    if (properties.isStrictSsl()) {
-      client.setSslcontext(SSLContexts.custom().loadTrustMaterial(truststore).useTLS().build());
-      client.setHostnameVerifier(hostnameVerifier);
-    }
+    val client = HttpClients.custom();
+    client.setSslcontext(sslContext);
+    client.setHostnameVerifier(hostnameVerifier);
     configureOAuth(client);
 
     return client.build();
   }
 
   private SimpleClientHttpRequestFactory streamingClientHttpRequestFactory() {
-    SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+    val factory = new SimpleClientHttpRequestFactory();
     factory.setReadTimeout(MAX_TIMEOUT);
     factory.setConnectTimeout(MAX_TIMEOUT);
     factory.setOutputStreaming(true);
@@ -155,16 +158,15 @@ public class ObjectStoreConfig {
 
   @Bean(name = "endpoint")
   public String endpoint() {
-    String scheme = "http://";
-    if (properties.isStrictSsl()) {
-      scheme = "https://";
-    }
-    return scheme + properties.getUpload().getServiceHostname() + ":" + properties.getUpload().getServicePort();
-
+    val scheme = properties.getSsl().isEnabled() ? "https" : "http";
+    return scheme + "://" + properties.getUpload().getServiceHostname() + ":" + properties.getUpload().getServicePort();
   }
 
   private void configureOAuth(HttpClientBuilder client) {
-    if (!accessToken.equals("undefined")) {
+    val accessToken = properties.getAccessToken();
+
+    val defined = accessToken != null;
+    if (defined) {
       log.debug("Setting access token: {}", accessToken);
       client.setDefaultHeaders(singletonList(new BasicHeader(AUTHORIZATION, format("Bearer %s", accessToken))));
     }
