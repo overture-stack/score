@@ -41,7 +41,6 @@ import org.springframework.retry.support.RetryTemplate;
 import org.springframework.web.client.RestTemplate;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMap.Builder;
 
 import collaboratory.storage.object.store.client.download.DownloadStateStore;
 import collaboratory.storage.object.store.client.exception.AmazonS3RetryableResponseErrorHandler;
@@ -136,14 +135,14 @@ public class ObjectStoreConfig {
     int maxAttempts =
         properties.getUpload().getRetryNumber() < 0 ? Integer.MAX_VALUE : properties.getUpload().getRetryNumber();
 
-    Builder<Class<? extends Throwable>, Boolean> exceptions = ImmutableMap.builder();
+    val exceptions = ImmutableMap.<Class<? extends Throwable>, Boolean> builder();
     exceptions.put(Error.class, Boolean.FALSE);
     exceptions.put(NotResumableException.class, Boolean.FALSE);
     exceptions.put(NotRetryableException.class, Boolean.FALSE);
     exceptions.put(RetryableException.class, Boolean.TRUE);
     exceptions.put(IOException.class, Boolean.TRUE);
 
-    SimpleRetryPolicy retryPolicy = new SimpleRetryPolicy(maxAttempts, exceptions.build(), true);
+    val retryPolicy = new SimpleRetryPolicy(maxAttempts, exceptions.build(), true);
 
     // TODO: prevent DOS attack yourself
     ExponentialBackOffPolicy backOffPolicy = new ExponentialBackOffPolicy();
