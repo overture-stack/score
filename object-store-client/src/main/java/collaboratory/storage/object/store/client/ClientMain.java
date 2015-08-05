@@ -16,7 +16,6 @@ import com.beust.jcommander.JCommander;
 import com.beust.jcommander.ParameterException;
 
 import collaboratory.storage.object.store.client.cli.command.ClientCommand;
-import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -63,7 +62,7 @@ public class ClientMain implements CommandLineRunner {
     cli.setAcceptUnknownOptions(true);
 
     cli.setProgramName(APPLICATION_NAME);
-    for (val entry : commands.entrySet()) {
+    for (Map.Entry<String, ClientCommand> entry : commands.entrySet()) {
       String beanName = entry.getKey();
       String commandName = getCommandName(beanName);
       ClientCommand command = entry.getValue();
@@ -78,23 +77,25 @@ public class ClientMain implements CommandLineRunner {
         throw new ParameterException("Command name is empty");
       }
 
-      val command = getCommand(commandName);
+      ClientCommand command = getCommand(commandName);
       if (command == null) {
         throw new ParameterException("Unknown command: " + commandName);
       }
 
       int status = command.execute();
 
-      exit(status);
+      exit.accept(status);
     } catch (ParameterException e) {
       System.err.println("Missing parameters: " + e.getMessage());
       usage(cli);
-      exit(1);
+
+      exit.accept(1);
     } catch (Exception e) {
       log.error("Unknown error: ", e);
       System.err.println("Command error: " + e.getMessage()
           + "\n\nPlease check the log for detailed error messages");
-      exit(1);
+
+      exit.accept(1);
     }
   }
 
@@ -121,10 +122,6 @@ public class ClientMain implements CommandLineRunner {
     }
 
     return Arrays.copyOfRange(args, lastSpringConfIdx, args.length);
-  }
-
-  private void exit(int status) {
-    exit.accept(status);
   }
 
 }
