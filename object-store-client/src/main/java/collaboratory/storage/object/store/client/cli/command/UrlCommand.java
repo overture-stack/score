@@ -17,75 +17,37 @@
  */
 package collaboratory.storage.object.store.client.cli.command;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.util.Map.Entry;
-import java.util.Properties;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 
-import collaboratory.storage.object.store.client.upload.ObjectUpload;
+import collaboratory.storage.object.store.client.download.ObjectDownload;
 import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 
 /**
- * Handle upload command line arguments
+ * Resolves URL for a supplied object id.
  */
 @Component
-@Parameters(separators = "=", commandDescription = "file upload")
-@Slf4j
-public class UploadCommand extends AbstractClientCommand {
+@Parameters(separators = "=", commandDescription = "object to resolve URL for")
+public class UrlCommand extends AbstractClientCommand {
 
-  @Parameter(names = "--file", description = "Path to a file", required = false)
-  private String filePath;
-
-  @Parameter(names = "--manifest", description = "Path to a manifest file", required = false)
-  private File manifest;
-
-  @Parameter(names = "-f", description = "force to re-upload", required = false)
-  private boolean isForce = false;
-
-  @Parameter(names = "--object-id", description = "object id assigned to the file", required = false)
+  @Parameter(names = "--object-id", description = "object id to resolve URL for", required = true)
   private String oid;
 
   @Autowired
-  private ObjectUpload uploader;
+  private ObjectDownload downloader;
 
   @Override
   @SneakyThrows
   public int execute() {
-
-    if (filePath != null) {
-      println("Start uploading file: %s", filePath);
-      log.info("file: {}", filePath);
-      File upload = new File(filePath);
-      if (upload.length() == 0) {
-        throw new IllegalArgumentException("Upload file '" + upload.getCanonicalPath()
-            + "' is empty. Uploads of empty files are not permitted. Aborting...");
-      }
-
-      uploader.upload(upload, oid, isForce);
-
-      return SUCCESS_STATUS;
-    }
-
-    Properties props = new Properties();
-    props.load(new FileInputStream(manifest));
-    for (Entry<Object, Object> entry : props.entrySet()) {
-      String objectId = (String) entry.getKey();
-      File obj = new File((String) entry.getValue());
-      if (!uploader.isObjectExist(objectId)) {
-        println("Start uploading object: %s using the object id: %s", obj, objectId);
-        uploader.upload(obj, objectId, isForce);
-      } else {
-        println("Object id: %s has been uploaded. Skipped.", objectId);
-      }
-    }
+    println("Resolving URL for object: %s ...", oid);
+    val url = downloader.getUrl(oid);
+    println("%s", url);
 
     return SUCCESS_STATUS;
   }
+
 }

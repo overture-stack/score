@@ -59,6 +59,7 @@ public class DownloadCommand extends AbstractClientCommand {
     println("Start downloading object: %s", oid);
     File dir = new File(filePath);
     downloader.download(dir, oid, offset, length, isForce);
+
     return SUCCESS_STATUS;
   }
 

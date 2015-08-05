@@ -17,16 +17,16 @@
  */
 package collaboratory.storage.object.store.client.download;
 
+import static com.google.common.collect.Iterables.getOnlyElement;
+
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.util.List;
 
 import javax.annotation.PostConstruct;
-
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -40,6 +40,10 @@ import collaboratory.storage.object.store.client.transport.ObjectTransport.Mode;
 import collaboratory.storage.object.store.client.transport.ProgressBar;
 import collaboratory.storage.object.store.core.model.ObjectSpecification;
 import collaboratory.storage.object.store.core.model.Part;
+import lombok.NonNull;
+import lombok.SneakyThrows;
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * main class to handle uploading objects
@@ -63,6 +67,14 @@ public class ObjectDownload {
   @PostConstruct
   public void setup() {
     retryNumber = retryNumber < 0 ? Integer.MAX_VALUE : retryNumber;
+  }
+
+  @SneakyThrows
+  public URL getUrl(@NonNull String objectId) {
+    val spec = proxy.getDownloadSpecification(objectId, 0, -1);
+    val file = getOnlyElement(spec.getParts());
+
+    return new URL(file.getUrl());
   }
 
   /**
