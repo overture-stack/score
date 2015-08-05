@@ -22,16 +22,15 @@ import java.io.FileInputStream;
 import java.util.Map.Entry;
 import java.util.Properties;
 
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import collaboratory.storage.object.store.client.upload.ObjectUpload;
-
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
+
+import collaboratory.storage.object.store.client.upload.ObjectUpload;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Handle upload command line arguments
@@ -64,6 +63,11 @@ public class UploadCommand extends AbstractClientCommand {
       println("Start uploading file: %s", filePath);
       log.info("file: {}", filePath);
       File upload = new File(filePath);
+      if (upload.length() == 0) {
+        throw new IllegalArgumentException("Upload file '" + upload.getCanonicalPath()
+            + "' is empty. Uploads of empty files are not permitted. Aborting...");
+      }
+
       uploader.upload(upload, oid, isForce);
       return SUCCESS_STATUS;
     }
