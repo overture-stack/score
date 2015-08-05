@@ -26,7 +26,9 @@ collaboratory:
   upload.directory: upload
   data.directory: data
   upload.expiration: 7
-  download.expiration: 7
+  
+  # COL-131: Change pre-signed URLs TTL to 1 day max
+  download.expiration: 1
 
 
 upload:
