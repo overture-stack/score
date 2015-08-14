@@ -102,12 +102,12 @@ public class ObjectUploadService {
     }
   }
 
-  public ObjectSpecification initiateUpload(String objectId, long fileSize, boolean overwritten) {
+  public ObjectSpecification initiateUpload(String objectId, long fileSize, boolean overwrite) {
     verifyRegistration(objectId);
 
     String objectKey = ObjectStoreUtil.getObjectKey(dataDir, objectId);
-    log.debug("initiate upload for object key: {}, overwritten: {}", objectKey, overwritten);
-    if (!overwritten) {
+    log.debug("initiate upload for object key: {}, overwrite: {}", objectKey, overwrite);
+    if (!overwrite) {
       if (exists(objectId)) {
         String msg = String.format("Attempted to overwrite object id {}", objectId);
         log.error(msg); // log overwrite attempt occurrence to audit log file

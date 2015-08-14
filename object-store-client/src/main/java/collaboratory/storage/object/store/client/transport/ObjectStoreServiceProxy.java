@@ -209,17 +209,18 @@ public class ObjectStoreServiceProxy {
     });
   }
 
-  public ObjectSpecification initiateUpload(String objectId, long length) throws IOException {
-    log.debug("Initiate upload, object-id: {}", objectId);
+  public ObjectSpecification initiateUpload(String objectId, long length, boolean overwrite) throws IOException {
+    log.debug("Initiate upload, object-id: {} overwrite: {}", objectId, overwrite);
     return retry.execute(new RetryCallback<ObjectSpecification, IOException>() {
 
       @Override
       public ObjectSpecification doWithRetry(RetryContext ctx) throws IOException {
         HttpEntity<Object> requestEntity = new HttpEntity<Object>(defaultHeaders());
-        return serviceRequest.exchange(endpoint + "/upload/{object-id}/uploads?fileSize={file-size}",
+        return serviceRequest.exchange(
+            endpoint + "/upload/{object-id}/uploads?fileSize={file-size}&overwrite={overwrite}",
             HttpMethod.POST,
             requestEntity,
-            ObjectSpecification.class, objectId, length).getBody();
+            ObjectSpecification.class, objectId, length, overwrite).getBody();
       }
     });
   }

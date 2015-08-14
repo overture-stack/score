@@ -73,7 +73,7 @@ public class ObjectUpload {
     for (int retry = 0; retry < retryNumber; retry++)
       try {
         if (redo) {
-          startUpload(file, objectId);
+          startUpload(file, objectId, redo);
         } else {
           // only perform checksum the first time of the resume
           resumeIfPossible(file, objectId, retry == 0 ? true : false);
@@ -89,11 +89,11 @@ public class ObjectUpload {
    * Start a upload given the object id
    */
   @SneakyThrows
-  private void startUpload(File file, String objectId) {
+  private void startUpload(File file, String objectId, boolean overwrite) {
     log.info("Start a new upload...");
     ObjectSpecification spec = null;
     try {
-      spec = proxy.initiateUpload(objectId, file.length());
+      spec = proxy.initiateUpload(objectId, file.length(), overwrite);
     } catch (NotRetryableException e) {
       // A NotRetryable exception during initiateUpload should just end whole process
       // a bit of a sleazy hack. Should only be thrown when the Metadata service informs us the supplied
@@ -115,7 +115,7 @@ public class ObjectUpload {
       progress = proxy.getProgress(objectId, file.length());
     } catch (NotRetryableException e) {
       log.info("New upload: {}", objectId);
-      startUpload(file, objectId);
+      startUpload(file, objectId, true);
       return;
     }
     resume(file, progress, objectId, checksum);
