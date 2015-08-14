@@ -23,3 +23,6 @@ Top level system modules:
 - [Object Store Client ](object-store-client/README.md)
 - [Object Store Service](object-store-service/README.md)
 
+Changes
+---
+Change log for the user-facing system modules may be found [here](CHANGES.md).
