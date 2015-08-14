@@ -56,12 +56,12 @@ public class ObjectUploadController {
   public @ResponseBody ObjectSpecification initializeMultipartUpload(
       @RequestHeader(value = "Authorization", required = true) final String accessToken,
       @PathVariable(value = "object-id") String objectId,
-      @RequestParam(value = "overwritten", required = false, defaultValue = "false") boolean overwritten,
+      @RequestParam(value = "overwrite", required = false, defaultValue = "false") boolean overwrite,
       @RequestParam(value = "fileSize", required = true) long fileSize) {
     log.info("Initiating upload of object id {} with access token {} (MD5) having size of {}", objectId,
         TokenHasher.hashToken(accessToken),
         Long.toString(fileSize));
-    return uploadService.initiateUpload(objectId, fileSize, overwritten);
+    return uploadService.initiateUpload(objectId, fileSize, overwrite);
   }
 
   @RequestMapping(method = RequestMethod.DELETE, value = "/{object-id}/parts")

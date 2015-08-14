@@ -64,9 +64,9 @@ public class BenchmarkObjectUploadController extends ObjectUploadController {
   public @ResponseBody ObjectSpecification initializeMultipartUpload(
       @RequestHeader(value = "access-token", required = true) final String accessToken,
       @PathVariable(value = "object-id") String objectId,
-      @RequestParam(value = "overwritten", required = false, defaultValue = "false") boolean overwritten,
+      @RequestParam(value = "overwrite", required = false, defaultValue = "false") boolean overwrite,
       @RequestParam(value = "fileSize", required = true) long fileSize) {
-    return uploadService.initiateUpload(objectId, fileSize, overwritten);
+    return uploadService.initiateUpload(objectId, fileSize, overwrite);
   }
 
   @Override

@@ -22,15 +22,16 @@ import java.io.FileInputStream;
 import java.util.Map.Entry;
 import java.util.Properties;
 
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import collaboratory.storage.object.store.client.upload.ObjectUpload;
+
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
-
-import collaboratory.storage.object.store.client.upload.ObjectUpload;
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * Handle upload command line arguments
@@ -78,7 +79,7 @@ public class UploadCommand extends AbstractClientCommand {
     for (Entry<Object, Object> entry : props.entrySet()) {
       String objectId = (String) entry.getKey();
       File obj = new File((String) entry.getValue());
-      if (!uploader.isObjectExist(objectId)) {
+      if ((isForce) || (!uploader.isObjectExist(objectId))) {
         println("Start uploading object: %s using the object id: %s", obj, objectId);
         uploader.upload(obj, objectId, isForce);
       } else {
