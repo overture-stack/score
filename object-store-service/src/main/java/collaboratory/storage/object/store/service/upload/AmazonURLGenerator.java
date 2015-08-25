@@ -39,8 +39,7 @@ public class AmazonURLGenerator implements ObjectURLGenerator {
 
   @Override
   public String getUploadPartUrl(String bucketName, String objectKey, String uploadId, Part part, Date expiration) {
-    GeneratePresignedUrlRequest req =
-        new GeneratePresignedUrlRequest(bucketName, objectKey, HttpMethod.PUT);
+    GeneratePresignedUrlRequest req = new GeneratePresignedUrlRequest(bucketName, objectKey, HttpMethod.PUT);
     req.setExpiration(expiration);
 
     req.addRequestParameter("partNumber", String.valueOf(part.getPartNumber()));
@@ -51,11 +50,18 @@ public class AmazonURLGenerator implements ObjectURLGenerator {
 
   @Override
   public String getDownloadPartUrl(String bucketName, String objectKey, Part part, Date expiration) {
-    GeneratePresignedUrlRequest req =
-        new GeneratePresignedUrlRequest(bucketName, objectKey, HttpMethod.GET);
+    GeneratePresignedUrlRequest req = new GeneratePresignedUrlRequest(bucketName, objectKey, HttpMethod.GET);
     req.setExpiration(expiration);
 
     req.putCustomRequestHeader(HttpHeaders.RANGE, ObjectStoreUtil.getHttpRangeValue(part));
+    return s3Client.generatePresignedUrl(req).toString();
+  }
+
+  @Override
+  public String getDownloadUrl(String bucketName, String objectKey, Date expiration) {
+    GeneratePresignedUrlRequest req = new GeneratePresignedUrlRequest(bucketName, objectKey, HttpMethod.GET);
+    req.setExpiration(expiration);
+
     return s3Client.generatePresignedUrl(req).toString();
   }
 }

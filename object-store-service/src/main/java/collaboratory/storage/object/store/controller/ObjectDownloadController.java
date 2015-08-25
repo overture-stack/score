@@ -52,9 +52,10 @@ public class ObjectDownloadController {
       @RequestHeader(value = "Authorization", required = true) final String accessToken,
       @PathVariable(value = "object-id") String objectId,
       @RequestParam(value = "offset", required = true) long offset,
-      @RequestParam(value = "length", required = true) long length) {
+      @RequestParam(value = "length", required = true) long length,
+      @RequestParam(value = "external", defaultValue = "0") boolean external) {
     log.info("Requesting download of object id {} with access token {} (MD5)", objectId,
         TokenHasher.hashToken(accessToken));
-    return downloadService.download(objectId, offset, length);
+    return downloadService.download(objectId, offset, length, external);
   }
 }

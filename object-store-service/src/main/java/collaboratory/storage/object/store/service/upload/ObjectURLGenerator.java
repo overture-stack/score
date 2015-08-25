@@ -29,4 +29,6 @@ public interface ObjectURLGenerator {
   public String getUploadPartUrl(String bucketName, String objectKey, String uploadId, Part part, Date expiration);
 
   public String getDownloadPartUrl(String bucketName, String objectKey, Part part, Date expiration);
+
+  public String getDownloadUrl(String bucketName, String objectKey, Date expiration);
 }

@@ -303,6 +303,33 @@ public class ObjectStoreServiceProxy {
     });
   }
 
+  /**
+   * Returns ObjectSpecification containing only a single part in order to generate a single pre-signed URL that
+   * external clients can use (i.e., curl - something that doesn't understand our parts)
+   * @param objectId
+   * @param offset
+   * @param length
+   * @param stream
+   * @return
+   * @throws IOException
+   */
+  public ObjectSpecification getExternalDownloadSpecification(String objectId, long offset, long length)
+      throws IOException {
+    log.debug("Endpoint: {}", endpoint);
+    return retry.execute(new RetryCallback<ObjectSpecification, IOException>() {
+
+      @Override
+      public ObjectSpecification doWithRetry(RetryContext ctx) throws IOException {
+        HttpEntity<Object> requestEntity = new HttpEntity<Object>(defaultHeaders());
+        return serviceRequest.exchange(
+            endpoint + "/download/{object-id}?offset={offset}&length={length}&external=1",
+            HttpMethod.GET,
+            requestEntity,
+            ObjectSpecification.class, objectId, offset, length).getBody();
+      }
+    });
+  }
+
   public void deleteDownloadPart(File stateDir, String objectId, Part part) {
     downloadStateStore.deletePart(stateDir, objectId, part);
 

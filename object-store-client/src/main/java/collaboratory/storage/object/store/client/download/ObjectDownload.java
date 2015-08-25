@@ -28,6 +28,10 @@ import java.util.List;
 
 import javax.annotation.PostConstruct;
 
+import lombok.NonNull;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -40,10 +44,6 @@ import collaboratory.storage.object.store.client.transport.ObjectTransport.Mode;
 import collaboratory.storage.object.store.client.transport.ProgressBar;
 import collaboratory.storage.object.store.core.model.ObjectSpecification;
 import collaboratory.storage.object.store.core.model.Part;
-import lombok.NonNull;
-import lombok.SneakyThrows;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * main class to handle uploading objects
@@ -69,10 +69,17 @@ public class ObjectDownload {
     retryNumber = retryNumber < 0 ? Integer.MAX_VALUE : retryNumber;
   }
 
+  /**
+   * This method returns a pre-signed URL for downloading the blob associated with the objectId S3 key.
+   * @param objectId
+   * @param offset
+   * @param length
+   * @return
+   */
   @SneakyThrows
-  public URL getUrl(@NonNull String objectId) {
-    val spec = proxy.getDownloadSpecification(objectId, 0, -1);
-    val file = getOnlyElement(spec.getParts());
+  public URL getUrl(@NonNull String objectId, long offset, long length) {
+    ObjectSpecification spec = proxy.getExternalDownloadSpecification(objectId, offset, length);
+    Part file = getOnlyElement(spec.getParts()); // throws IllegalArgumentException if more than one part
 
     return new URL(file.getUrl());
   }
@@ -102,11 +109,11 @@ public class ObjectDownload {
         }
         return;
       } catch (NotResumableException e) {
-        log.error("Fail to handle download request", e.getCause());
+        log.error("Failed to handle download request", e.getCause());
         throw e;
       } catch (NotRetryableException e) {
         log.warn(
-            "Download is not completed successfully in the last execution. Checking data integrity. Please wait...", e);
+            "Download failed during last execution. Checking data integrity. Please wait...", e);
         if (proxy.isDownloadDataRecoverable(outputDirectory, objectId,
             DownloadUtils.getDownloadFile(outputDirectory, objectId).length())) {
           redo = false;
@@ -157,18 +164,21 @@ public class ObjectDownload {
   }
 
   /**
-   * Start a upload given the object id
+   * Start a download given the object id
    */
   @SneakyThrows
   private void startNewDownload(File dir, String objectId, long offset, long length) {
-    log.info("Start a new download...");
+    log.info("Starting a new download...");
     File objFile = DownloadUtils.getDownloadFile(dir, objectId);
+
     if (objFile.exists()) {
       throw new NotResumableException(new FileAlreadyExistsException(objFile.getPath()));
     }
+
     if (!dir.exists()) {
       Files.createDirectories(dir.toPath());
     }
+
     ObjectSpecification spec = proxy.getDownloadSpecification(objectId, offset, length);
     downloadStateStore.init(dir, spec);
     // TODO: assign session id
@@ -177,7 +187,7 @@ public class ObjectDownload {
   }
 
   /**
-   * start upload parts using a specific configured data transport
+   * start downloading parts using a specific configured data transport
    */
   @SneakyThrows
   private void downloadParts(List<Part> parts, File file, String objectId, String sessionId, ProgressBar progressBar,
