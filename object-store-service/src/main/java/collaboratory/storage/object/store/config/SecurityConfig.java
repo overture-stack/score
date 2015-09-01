@@ -24,8 +24,6 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import lombok.extern.slf4j.Slf4j;
-
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -42,6 +40,10 @@ import org.springframework.security.oauth2.provider.token.DefaultAccessTokenConv
 import org.springframework.security.oauth2.provider.token.RemoteTokenServices;
 import org.springframework.security.web.authentication.preauth.AbstractPreAuthenticatedProcessingFilter;
 import org.springframework.web.filter.OncePerRequestFilter;
+
+import collaboratory.storage.object.store.oauth.CachingRemoteTokenServices;
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Resource service configuration file.<br>
@@ -70,8 +72,8 @@ public class SecurityConfig extends ResourceServerConfigurerAdapter {
       protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
           throws ServletException, IOException {
 
-        // We don't want to allow access to a resource with no token so clear 
-		// the security context in case it is actually an OAuth2Authentication
+        // We don't want to allow access to a resource with no token so clear
+        // the security context in case it is actually an OAuth2Authentication
         if (tokenExtractor.extract(request) == null) {
           SecurityContextHolder.clearContext();
         }
@@ -90,39 +92,37 @@ public class SecurityConfig extends ResourceServerConfigurerAdapter {
   }
 
   @Bean
-  public RemoteTokenServices remoteTokenServices(final @Value("${auth.server.url}") String checkTokenUrl,
+  public RemoteTokenServices remoteTokenServices(
+      final @Value("${auth.server.url}") String checkTokenUrl,
       final @Value("${auth.server.clientId}") String clientId,
       final @Value("${auth.server.clientSecret}") String clientSecret) {
-    final RemoteTokenServices remoteTokenServices = new RemoteTokenServices();
+    val remoteTokenServices = new CachingRemoteTokenServices();
     remoteTokenServices.setCheckTokenEndpointUrl(checkTokenUrl);
     remoteTokenServices.setClientId(clientId);
     remoteTokenServices.setClientSecret(clientSecret);
     remoteTokenServices.setAccessTokenConverter(accessTokenConverter());
 
     log.debug("using auth server: " + checkTokenUrl);
-    // log.debug("using auth client id: " + clientId);
-    // log.debug("using client secret: " + clientSecret);
 
     return remoteTokenServices;
   }
 
   private void configureAuthorization(HttpSecurity http) throws Exception {
-    log.info("using upload scope: " + uploadScope);
-    log.info("using download scope: " + downloadScope);
+    log.info("using upload scope: {}", uploadScope);
+    log.info("using download scope: {}", downloadScope);
 
     // @formatter:off     
-    
     http
-    .authorizeRequests()
-    .antMatchers("/health").permitAll()
-    .antMatchers("/upload/**")
-    .access("#oauth2.hasScope('" + uploadScope + "')")
-    .antMatchers("/download/**")
-    .access("#oauth2.hasScope('" + downloadScope + "')")
-    .and()
-    
-    .authorizeRequests()
-    .anyRequest().authenticated();
+      .authorizeRequests()
+      .antMatchers("/health").permitAll()
+      .antMatchers("/upload/**")
+      .access("#oauth2.hasScope('" + uploadScope + "')")
+      .antMatchers("/download/**")
+      .access("#oauth2.hasScope('" + downloadScope + "')")
+      .and()
+      
+      .authorizeRequests()
+      .anyRequest().authenticated();
     // @formatter:on
     log.info("initialization done");
   }
