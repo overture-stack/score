@@ -41,27 +41,13 @@ public class BenchmarkURLGenerator implements ObjectURLGenerator {
         + uploadId;
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see collaboratory.storage.object.store.service.upload.ObjectURLGenerator#getdownloadPartUrl(java.lang.String,
-   * java.lang.String, collaboratory.storage.object.store.core.model.Part, java.util.Date)
-   */
   @Override
   public String getDownloadPartUrl(String bucketName, String objectKey, Part part, Date expiration) {
-    // TODO Auto-generated method stub
     return null;
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see collaboratory.storage.object.store.service.upload.ObjectURLGenerator#getdownloadPartUrl(java.lang.String,
-   * java.lang.String, collaboratory.storage.object.store.core.model.Part, java.util.Date)
-   */
   @Override
   public String getDownloadUrl(String bucketName, String objectKey, Date expiration) {
-    // TODO Auto-generated method stub
     return null;
   }
 }

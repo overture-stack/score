@@ -34,17 +34,17 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Ordering;
-
+import lombok.AllArgsConstructor;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import collaboratory.storage.object.store.client.download.DownloadUtils;
 import collaboratory.storage.object.store.client.exception.NotResumableException;
 import collaboratory.storage.object.store.client.exception.NotRetryableException;
 import collaboratory.storage.object.store.client.exception.RetryableException;
 import collaboratory.storage.object.store.core.model.Part;
-import lombok.AllArgsConstructor;
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
+
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Ordering;
 
 /**
  * A data transport using memory mapped channels for parallel upload/download
@@ -105,13 +105,11 @@ public class MemoryMappedParallelPartObjectTransport extends ParallelPartObjectT
                 log.debug("Checksumming part: {}", part);
                 if (checksum && isCorrupted(channel, part, file)) {
                   log.debug("Fail checksumm. Reupload part: {}", part);
-                  proxy.uploadPart(channel, part, objectId,
-                      uploadId);
+                  proxy.uploadPart(channel, part, objectId, uploadId);
                 }
                 progress.updateChecksum(1);
               } else {
-                proxy.uploadPart(channel, part, objectId,
-                    uploadId);
+                proxy.uploadPart(channel, part, objectId, uploadId);
                 progress.updateProgress(1);
               }
             } finally {

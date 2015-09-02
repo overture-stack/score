@@ -15,53 +15,37 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package collaboratory.storage.object.store.client.cli.command;
+package collaboratory.storage.object.store.client.transport;
 
-import java.io.File;
+import java.net.URL;
 
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
-import collaboratory.storage.object.store.client.download.ObjectDownload;
-
-import com.beust.jcommander.Parameter;
-import com.beust.jcommander.Parameters;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 /**
- * Handle download command line arguments
+ * responsible for interacting with metadata service
  */
-@Component
-@Parameters(separators = "=", commandDescription = "object to download")
-public class DownloadCommand extends AbstractClientCommand {
+@Service
+@Slf4j
+public class MetaServiceProxy {
 
-  @Parameter(names = "--out-dir", description = "Path to an output directory", required = true)
-  private String filePath;
-
-  @Parameter(names = "-f", description = "force to re-upload", required = false)
-  private boolean isForce = false;
-
-  @Parameter(names = "--object-id", description = "object id to download", required = true)
-  private String oid;
-
-  @Parameter(names = "--offset", description = "the offset to set for download", required = false)
-  private long offset = 0;
-
-  @Parameter(names = "--length", description = "the length of the download", required = false)
-  private long length = -1;
-
-  @Autowired
-  private ObjectDownload downloader;
-
-  @Override
   @SneakyThrows
-  public int execute() {
-    println("Start downloading object: %s", oid);
-    File dir = new File(filePath);
-    downloader.download(dir, oid, offset, length, isForce);
-
-    return SUCCESS_STATUS;
+  public ObjectNode findEntity(String objectId) {
+    return read("/" + objectId);
   }
 
+  @SneakyThrows
+  public ObjectNode findEntitiesByGnosId(String gnosId) {
+    return read("?gnosId=" + gnosId);
+  }
+
+  @SneakyThrows
+  public ObjectNode read(String url) {
+    return new ObjectMapper().readValue(new URL("https://meta.icgc.org/entities" + url), ObjectNode.class);
+  }
 }

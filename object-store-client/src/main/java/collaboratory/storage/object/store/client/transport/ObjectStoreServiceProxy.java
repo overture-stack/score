@@ -23,6 +23,7 @@ import java.io.OutputStream;
 import java.net.URI;
 import java.util.List;
 
+import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -215,7 +216,7 @@ public class ObjectStoreServiceProxy {
 
       @Override
       public ObjectSpecification doWithRetry(RetryContext ctx) throws IOException {
-        HttpEntity<Object> requestEntity = new HttpEntity<Object>(defaultHeaders());
+        val requestEntity = new HttpEntity<Object>(defaultHeaders());
         return serviceRequest.exchange(
             endpoint + "/upload/{object-id}/uploads?fileSize={file-size}&overwrite={overwrite}",
             HttpMethod.POST,
@@ -240,7 +241,7 @@ public class ObjectStoreServiceProxy {
 
       @Override
       public Void doWithRetry(RetryContext ctx) throws IOException {
-        HttpEntity<Object> requestEntity = new HttpEntity<Object>(defaultHeaders());
+        val requestEntity = new HttpEntity<Object>(defaultHeaders());
         serviceRequest.exchange(endpoint + "/upload/{object-id}?uploadId={upload-id}", HttpMethod.POST, requestEntity,
             Void.class, objectId, uploadId);
         return null;
@@ -257,7 +258,7 @@ public class ObjectStoreServiceProxy {
       @Override
       public Void doWithRetry(RetryContext ctx) throws IOException {
         if (disableChecksum || md5.equals(etag)) {
-          HttpEntity<Object> requestEntity = new HttpEntity<Object>(defaultHeaders());
+          val requestEntity = new HttpEntity<Object>(defaultHeaders());
           serviceRequest
               .exchange(
                   endpoint
@@ -277,7 +278,7 @@ public class ObjectStoreServiceProxy {
 
       @Override
       public Boolean doWithRetry(RetryContext ctx) throws IOException {
-        HttpEntity<Object> requestEntity = new HttpEntity<Object>(defaultHeaders());
+        val requestEntity = new HttpEntity<Object>(defaultHeaders());
 
         boolean result = serviceRequest.exchange(endpoint + "/upload/{object-id}",
             HttpMethod.GET, requestEntity,
@@ -294,7 +295,7 @@ public class ObjectStoreServiceProxy {
 
       @Override
       public ObjectSpecification doWithRetry(RetryContext ctx) throws IOException {
-        HttpEntity<Object> requestEntity = new HttpEntity<Object>(defaultHeaders());
+        val requestEntity = new HttpEntity<Object>(defaultHeaders());
         return serviceRequest.exchange(endpoint + "/download/{object-id}?offset={offset}&length={length}",
             HttpMethod.GET,
             requestEntity,
@@ -305,13 +306,8 @@ public class ObjectStoreServiceProxy {
 
   /**
    * Returns ObjectSpecification containing only a single part in order to generate a single pre-signed URL that
-   * external clients can use (i.e., curl - something that doesn't understand our parts)
-   * @param objectId
-   * @param offset
-   * @param length
-   * @param stream
-   * @return
-   * @throws IOException
+   * external clients can use (i.e., curl - something that doesn't understand our parts). The external query parameter
+   * is set to true.
    */
   public ObjectSpecification getExternalDownloadSpecification(String objectId, long offset, long length)
       throws IOException {
@@ -320,9 +316,9 @@ public class ObjectStoreServiceProxy {
 
       @Override
       public ObjectSpecification doWithRetry(RetryContext ctx) throws IOException {
-        HttpEntity<Object> requestEntity = new HttpEntity<Object>(defaultHeaders());
+        val requestEntity = new HttpEntity<Object>(defaultHeaders());
         return serviceRequest.exchange(
-            endpoint + "/download/{object-id}?offset={offset}&length={length}&external=1",
+            endpoint + "/download/{object-id}?offset={offset}&length={length}&external=true",
             HttpMethod.GET,
             requestEntity,
             ObjectSpecification.class, objectId, offset, length).getBody();
@@ -341,7 +337,7 @@ public class ObjectStoreServiceProxy {
 
       @Override
       public Void doWithRetry(RetryContext ctx) throws IOException {
-        HttpEntity<Object> requestEntity = new HttpEntity<Object>(defaultHeaders());
+        val requestEntity = new HttpEntity<Object>(defaultHeaders());
         serviceRequest.exchange(
             endpoint + "/upload/{object-id}/parts?uploadId={upload-id}&partNumber={partNumber}",
             HttpMethod.DELETE, requestEntity,
@@ -368,7 +364,7 @@ public class ObjectStoreServiceProxy {
       @Override
       public Boolean doWithRetry(RetryContext ctx) throws IOException {
         try {
-          HttpEntity<Object> requestEntity = new HttpEntity<Object>(defaultHeaders());
+          val requestEntity = new HttpEntity<Object>(defaultHeaders());
           serviceRequest.exchange(
               endpoint + "/upload/{object-id}/recovery?fileSize={file-size}",
               HttpMethod.POST, requestEntity,

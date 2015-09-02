@@ -69,6 +69,16 @@ public class ObjectDownload {
     retryNumber = retryNumber < 0 ? Integer.MAX_VALUE : retryNumber;
   }
 
+  @SneakyThrows
+  public URL getUrl(@NonNull String objectId) {
+    return getUrl(objectId, 0, -1);
+  }
+
+  @SneakyThrows
+  public String getUrlAsString(@NonNull String objectId) {
+    return getUrlAsString(objectId, 0, -1);
+  }
+
   /**
    * This method returns a pre-signed URL for downloading the blob associated with the objectId S3 key.
    * @param objectId
@@ -82,6 +92,14 @@ public class ObjectDownload {
     Part file = getOnlyElement(spec.getParts()); // throws IllegalArgumentException if more than one part
 
     return new URL(file.getUrl());
+  }
+
+  @SneakyThrows
+  public String getUrlAsString(@NonNull String objectId, long offset, long length) {
+    ObjectSpecification spec = proxy.getExternalDownloadSpecification(objectId, offset, length);
+    Part file = getOnlyElement(spec.getParts()); // throws IllegalArgumentException if more than one part
+
+    return file.getUrl();
   }
 
   /**
@@ -146,6 +164,7 @@ public class ObjectDownload {
     int completedTotal = numCompletedParts(parts);
     int total = parts.size();
 
+    log.info("{} parts remaining", total);
     downloadParts(parts, outputDirectory, objectId, objectId, new ProgressBar(total, total
         - completedTotal), checksum);
 

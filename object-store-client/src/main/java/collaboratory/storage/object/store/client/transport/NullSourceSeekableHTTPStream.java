@@ -15,53 +15,41 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package collaboratory.storage.object.store.client.cli.command;
+package collaboratory.storage.object.store.client.transport;
 
-import java.io.File;
+import htsjdk.samtools.seekablestream.SeekableHTTPStream;
 
-import lombok.SneakyThrows;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-
-import collaboratory.storage.object.store.client.download.ObjectDownload;
-
-import com.beust.jcommander.Parameter;
-import com.beust.jcommander.Parameters;
+import java.net.Proxy;
+import java.net.URL;
 
 /**
- * Handle download command line arguments
+ * 
  */
-@Component
-@Parameters(separators = "=", commandDescription = "object to download")
-public class DownloadCommand extends AbstractClientCommand {
+public class NullSourceSeekableHTTPStream extends SeekableHTTPStream {
 
-  @Parameter(names = "--out-dir", description = "Path to an output directory", required = true)
-  private String filePath;
+  /**
+   * @param url
+   */
+  public NullSourceSeekableHTTPStream(URL url) {
+    super(url);
+  }
 
-  @Parameter(names = "-f", description = "force to re-upload", required = false)
-  private boolean isForce = false;
+  /**
+   * @param url
+   * @param proxy
+   */
+  public NullSourceSeekableHTTPStream(URL url, Proxy proxy) {
+    super(url, proxy);
+  }
 
-  @Parameter(names = "--object-id", description = "object id to download", required = true)
-  private String oid;
-
-  @Parameter(names = "--offset", description = "the offset to set for download", required = false)
-  private long offset = 0;
-
-  @Parameter(names = "--length", description = "the length of the download", required = false)
-  private long length = -1;
-
-  @Autowired
-  private ObjectDownload downloader;
-
+  /*
+   * (non-Javadoc)
+   * 
+   * @see htsjdk.samtools.seekablestream.SeekableHTTPStream#getSource()
+   */
   @Override
-  @SneakyThrows
-  public int execute() {
-    println("Start downloading object: %s", oid);
-    File dir = new File(filePath);
-    downloader.download(dir, oid, offset, length, isForce);
-
-    return SUCCESS_STATUS;
+  public String getSource() {
+    return null;
   }
 
 }

@@ -270,7 +270,7 @@
 		<spring-security-oauth2.version>2.0.7.RELEASE</spring-security-oauth2.version>
 
 		<!-- Versions - Amazon -->
-		<aws-java-sdk.version>1.10.0</aws-java-sdk.version>
+		<aws-java-sdk.version>1.10.11</aws-java-sdk.version>
 
 		<!--  For collaboratory (ceph) 
 		<aws-java-sdk.version>1.8.11</aws-java-sdk.version>

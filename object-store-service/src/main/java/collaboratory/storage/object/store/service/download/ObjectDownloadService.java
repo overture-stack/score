@@ -17,6 +17,8 @@
  */
 package collaboratory.storage.object.store.service.download;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -49,7 +51,6 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.GetObjectRequest;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectInputStream;
-import com.google.common.base.Preconditions;
 
 /**
  * service responsible for object download (full or partial)
@@ -81,19 +82,19 @@ public class ObjectDownloadService {
   ObjectPartCalculator partCalculator;
 
   public ObjectSpecification download(String objectId, long offset, long length, boolean forExternalUse) {
-    Preconditions.checkArgument(offset > -1);
+    checkArgument(offset > -1L);
 
     // retrieve our meta file for object id
     ObjectSpecification objectSpec = download(objectId);
 
     // short-circuit in default case
-    if (!forExternalUse && (offset == 0 && length < 0)) {
+    if (!forExternalUse && (offset == 0L && length < 0L)) {
       return objectSpec;
     }
 
     // calculate Range values
     // to retrieve to the end of the file
-    if (length < 0) {
+    if (!forExternalUse && (length < 0L)) {
       length = objectSpec.getObjectSize() - offset;
     }
 
@@ -111,7 +112,7 @@ public class ObjectDownloadService {
     List<Part> parts;
     if (forExternalUse) {
       // return as a single part - no matter how large
-      parts = partCalculator.specify(offset, length);
+      parts = partCalculator.specify(0L, -1L);
     }
     else {
       parts = partCalculator.divide(offset, length);
@@ -169,7 +170,7 @@ public class ObjectDownloadService {
 
     for (Part part : parts) {
       if (forExternalUse) {
-        // there should only be one part
+        // there should only be one part - don't include RANGE header in pre-signed URL
         part.setUrl(urlGenerator.getDownloadUrl(bucketName, objectKey, expirationDate));
       }
       else {

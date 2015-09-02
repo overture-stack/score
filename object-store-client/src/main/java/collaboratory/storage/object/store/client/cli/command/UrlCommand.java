@@ -39,10 +39,10 @@ public class UrlCommand extends AbstractClientCommand {
   private String oid;
 
   // @Parameter(names = "--offset", description = "the start byte position of the range for download", required = false)
-  private long offset = 0;
+  private long offset = 0L;
 
   // @Parameter(names = "--length", description = "the number of bytes to include in the download", required = false)
-  private long length = -1;
+  private long length = -1L;
 
   @Autowired
   private ObjectDownload downloader;
@@ -56,5 +56,4 @@ public class UrlCommand extends AbstractClientCommand {
 
     return SUCCESS_STATUS;
   }
-
 }

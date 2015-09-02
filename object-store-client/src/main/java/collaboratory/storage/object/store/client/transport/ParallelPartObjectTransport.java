@@ -33,18 +33,18 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
-import com.google.api.client.util.Preconditions;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Ordering;
-
-import collaboratory.storage.object.store.client.download.DownloadUtils;
-import collaboratory.storage.object.store.core.model.DataChannel;
-import collaboratory.storage.object.store.core.model.Part;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import collaboratory.storage.object.store.client.download.DownloadUtils;
+import collaboratory.storage.object.store.core.model.DataChannel;
+import collaboratory.storage.object.store.core.model.Part;
+
+import com.google.api.client.util.Preconditions;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Ordering;
 
 /**
  * The default transport for parallel upload
@@ -98,13 +98,11 @@ public class ParallelPartObjectTransport implements ObjectTransport {
           FileDataChannel channel = new FileDataChannel(file, part.getOffset(), part.getPartSize(), null);
           if (part.isCompleted()) {
             if (isCorrupted(channel, part, file)) {
-              proxy.uploadPart(channel, part, objectId,
-                  uploadId);
+              proxy.uploadPart(channel, part, objectId, uploadId);
             }
             progress.updateChecksum(1);
           } else {
-            proxy.uploadPart(channel, part, objectId,
-                uploadId);
+            proxy.uploadPart(channel, part, objectId, uploadId);
             progress.updateProgress(1);
           }
           progress.incrementByteWritten(part.getPartSize());
