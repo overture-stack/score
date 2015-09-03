@@ -24,14 +24,32 @@ import collaboratory.storage.object.store.core.model.Part;
  */
 public class ObjectStoreUtil {
 
+  /**
+   * Returns S3 key for actual object blob
+   * @param dataDir
+   * @param objectId
+   * @return
+   */
   public static String getObjectKey(String dataDir, String objectId) {
     return dataDir + "/" + objectId;
   }
 
+  /**
+   * Returns S3 key for metadata file for blob (contains upload id's, MD5 checksums, pre-signed URL's for each part of
+   * file)
+   * @param dataDir
+   * @param objectId
+   * @return
+   */
   public static String getObjectMetaKey(String dataDir, String objectId) {
     return dataDir + "/" + objectId + ".meta";
   }
 
+  /**
+   * Generates Range header for URL
+   * @param part
+   * @return
+   */
   public static String getHttpRangeValue(Part part) {
     return String.valueOf("bytes=" + part.getOffset()) + "-"
         + String.valueOf(part.getOffset() + part.getPartSize() - 1L);

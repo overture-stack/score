@@ -58,4 +58,9 @@ public class SimplePartCalculator implements ObjectPartCalculator {
     }
     return parts.build();
   }
+
+  @Override
+  public List<Part> specify(long offset, long length) {
+    return ImmutableList.of(new Part(1, length, offset, null, null));
+  }
 }

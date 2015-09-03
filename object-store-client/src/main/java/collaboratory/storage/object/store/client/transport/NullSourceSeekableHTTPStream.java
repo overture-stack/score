@@ -15,20 +15,41 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package collaboratory.storage.object.store.service.upload;
+package collaboratory.storage.object.store.client.transport;
 
-import java.util.Date;
+import htsjdk.samtools.seekablestream.SeekableHTTPStream;
 
-import collaboratory.storage.object.store.core.model.Part;
+import java.net.Proxy;
+import java.net.URL;
 
 /**
- * an interface to represent a upload url generator
+ * 
  */
-public interface ObjectURLGenerator {
+public class NullSourceSeekableHTTPStream extends SeekableHTTPStream {
 
-  public String getUploadPartUrl(String bucketName, String objectKey, String uploadId, Part part, Date expiration);
+  /**
+   * @param url
+   */
+  public NullSourceSeekableHTTPStream(URL url) {
+    super(url);
+  }
 
-  public String getDownloadPartUrl(String bucketName, String objectKey, Part part, Date expiration);
+  /**
+   * @param url
+   * @param proxy
+   */
+  public NullSourceSeekableHTTPStream(URL url, Proxy proxy) {
+    super(url, proxy);
+  }
 
-  public String getDownloadUrl(String bucketName, String objectKey, Date expiration);
+  /*
+   * (non-Javadoc)
+   * 
+   * @see htsjdk.samtools.seekablestream.SeekableHTTPStream#getSource()
+   */
+  @Override
+  public String getSource() {
+    return null;
+  }
+
 }

@@ -102,9 +102,7 @@ public class UploadStateStore {
   @SneakyThrows
   public ObjectSpecification loadUploadSpecification(String objectId, String uploadId) {
     try {
-      GetObjectRequest req =
-          new GetObjectRequest(bucketName, getUploadStateKey(objectId,
-              uploadId, META));
+      GetObjectRequest req = new GetObjectRequest(bucketName, getUploadStateKey(objectId, uploadId, META));
       S3Object obj = s3Client.getObject(req);
       ObjectMapper mapper = new ObjectMapper();
 
@@ -125,8 +123,7 @@ public class UploadStateStore {
 
   private boolean isMetaAvailable(String objectId, String uploadId) {
     try {
-      s3Client.getObjectMetadata(bucketName,
-          getUploadStateKey(objectId, uploadId, META));
+      s3Client.getObjectMetadata(bucketName, getUploadStateKey(objectId, uploadId, META));
     } catch (AmazonS3Exception ex) {
       if (ex.getStatusCode() == HttpStatus.NOT_FOUND.value()) {
         return false;
@@ -340,7 +337,7 @@ public class UploadStateStore {
     return StringUtils.substringAfter(StringUtils.removeStart(key, getUploadStateKey(objectId, uploadId)), "|");
   }
 
-  public void deleletePart(String objectId, String uploadId, int partNumber) {
+  public void deletePart(String objectId, String uploadId, int partNumber) {
     ListObjectsRequest listObjectsRequest = new ListObjectsRequest()
         .withBucketName(bucketName)
         .withPrefix(getUploadStateKey(objectId, uploadId, getLexicographicalOrderUploadPartName(partNumber, "")));

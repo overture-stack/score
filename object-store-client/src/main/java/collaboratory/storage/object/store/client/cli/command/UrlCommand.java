@@ -17,15 +17,16 @@
  */
 package collaboratory.storage.object.store.client.cli.command;
 
+import lombok.SneakyThrows;
+import lombok.val;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import collaboratory.storage.object.store.client.download.ObjectDownload;
+
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
-
-import collaboratory.storage.object.store.client.download.ObjectDownload;
-import lombok.SneakyThrows;
-import lombok.val;
 
 /**
  * Resolves URL for a supplied object id.
@@ -37,17 +38,22 @@ public class UrlCommand extends AbstractClientCommand {
   @Parameter(names = "--object-id", description = "object id to resolve URL for", required = true)
   private String oid;
 
+  // @Parameter(names = "--offset", description = "the start byte position of the range for download", required = false)
+  private long offset = 0L;
+
+  // @Parameter(names = "--length", description = "the number of bytes to include in the download", required = false)
+  private long length = -1L;
+
   @Autowired
   private ObjectDownload downloader;
 
   @Override
   @SneakyThrows
   public int execute() {
-    println("Resolving URL for object: %s ...", oid);
-    val url = downloader.getUrl(oid);
+    println("Resolving URL for object: %s (offset = %d, length = %d) ", oid, offset, length);
+    val url = downloader.getUrl(oid, offset, length);
     println("%s", url);
 
     return SUCCESS_STATUS;
   }
-
 }

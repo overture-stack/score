@@ -19,14 +19,15 @@ package collaboratory.storage.object.store.client.cli.command;
 
 import java.io.File;
 
+import lombok.SneakyThrows;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import collaboratory.storage.object.store.client.download.ObjectDownload;
+
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
-
-import collaboratory.storage.object.store.client.download.ObjectDownload;
-import lombok.SneakyThrows;
 
 /**
  * Handle download command line arguments

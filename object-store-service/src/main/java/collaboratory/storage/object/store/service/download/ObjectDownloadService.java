@@ -17,6 +17,8 @@
  */
 package collaboratory.storage.object.store.service.download;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -49,7 +51,6 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.GetObjectRequest;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectInputStream;
-import com.google.common.base.Preconditions;
 
 /**
  * service responsible for object download (full or partial)
@@ -80,6 +81,49 @@ public class ObjectDownloadService {
   @Autowired
   ObjectPartCalculator partCalculator;
 
+  public ObjectSpecification download(String objectId, long offset, long length, boolean forExternalUse) {
+    checkArgument(offset > -1L);
+
+    // retrieve our meta file for object id
+    ObjectSpecification objectSpec = download(objectId);
+
+    // short-circuit in default case
+    if (!forExternalUse && (offset == 0L && length < 0L)) {
+      return objectSpec;
+    }
+
+    // calculate Range values
+    // to retrieve to the end of the file
+    if (!forExternalUse && (length < 0L)) {
+      length = objectSpec.getObjectSize() - offset;
+    }
+
+    // validate offset and length parameters:
+    // check if the offset + length > length - that would be too big
+    if ((offset + length) > objectSpec.getObjectSize()) {
+      throw new InternalUnrecoverableError("specified parameters exceed object size (object id: " + objectId
+          + ", offset: " + offset
+          + ", length: " + length + ")");
+    }
+
+    // construct ObjectSpecification for actual object in /data logical folder
+    String objectKey = ObjectStoreUtil.getObjectKey(dataDir, objectId);
+
+    List<Part> parts;
+    if (forExternalUse) {
+      // return as a single part - no matter how large
+      parts = partCalculator.specify(0L, -1L);
+    }
+    else {
+      parts = partCalculator.divide(offset, length);
+    }
+    fillUrl(objectKey, parts, forExternalUse);
+    ObjectSpecification spec = new ObjectSpecification(objectKey, objectId, objectId, parts, length);
+
+    return spec;
+  }
+
+  // This really is a misleading method name - should be retrieveMetaFile() or something
   public ObjectSpecification download(String objectId) {
     log.debug("Download object id: {}", objectId);
     String objectMetaKey = ObjectStoreUtil.getObjectMetaKey(dataDir, objectId);
@@ -87,30 +131,31 @@ public class ObjectDownloadService {
     log.debug("Download meta key: {}", objectMetaKey);
 
     try {
+      // retrieve .meta file to get list of presigned URL's
       S3Object obj = retrieveObject(objectId, objectMetaKey);
+
       ObjectMapper mapper = new ObjectMapper();
       ObjectSpecification spec;
       try (S3ObjectInputStream inputStream = obj.getObjectContent()) {
         spec = mapper.readValue(inputStream, ObjectSpecification.class);
-        fillUrl(objectKey, spec.getParts());
+        fillUrl(objectKey, spec.getParts(), false);
         return spec;
       }
     } catch (JsonParseException | JsonMappingException e) {
       throw new NotRetryableException(e);
 
     } catch (IOException e) {
-      log.error("Fail to retrieve meta file", e);
+      log.error("Failed to retrieve meta file", e);
       throw new NotRetryableException(e);
     }
   }
 
   private S3Object retrieveObject(String objectId, String objectKey) {
     try {
-      GetObjectRequest req =
-          new GetObjectRequest(bucketName, objectKey);
+      GetObjectRequest req = new GetObjectRequest(bucketName, objectKey);
       return s3Client.getObject(req);
     } catch (AmazonServiceException e) {
-      log.error("Amazon service throws an exception", e);
+      log.error("Exception thrown by Amazon S3", e);
       if (e.getStatusCode() == HttpStatus.NOT_FOUND.value() || !e.isRetryable()) {
         throw new InternalUnrecoverableError(new IdNotFoundException(objectId));
       } else {
@@ -119,37 +164,18 @@ public class ObjectDownloadService {
     }
   }
 
-  public ObjectSpecification download(String objectId, long offset, long length) {
-    Preconditions.checkArgument(offset > -1);
-    ObjectSpecification objectSpec = download(objectId);
-    if (offset == 0 && length < 0) {
-      return objectSpec;
-    }
-
-    // to retrieve to the end of the file
-    if (length < 0) {
-      length = objectSpec.getObjectSize() - offset;
-    }
-
-    // check if the offset + length > length
-    if ((offset + length) > objectSpec.getObjectSize()) {
-      throw new InternalUnrecoverableError("exceed object size (object id: " + objectId + ", offset: " + offset
-          + ", length: " + length + ")");
-    }
-
-    String objectKey = ObjectStoreUtil.getObjectKey(dataDir, objectId);
-
-    List<Part> parts = partCalculator.divide(offset, length);
-    fillUrl(objectKey, parts);
-    ObjectSpecification spec = new ObjectSpecification(objectKey, objectId, objectId, parts, length);
-    return spec;
-  }
-
-  private void fillUrl(String objectKey, List<Part> parts) {
+  private void fillUrl(String objectKey, List<Part> parts, boolean forExternalUse) {
     LocalDateTime now = LocalDateTime.now();
     Date expirationDate = Date.from(now.plusDays(expiration).atZone(ZoneId.systemDefault()).toInstant());
+
     for (Part part : parts) {
-      part.setUrl(urlGenerator.getDownloadPartUrl(bucketName, objectKey, part, expirationDate));
+      if (forExternalUse) {
+        // there should only be one part - don't include RANGE header in pre-signed URL
+        part.setUrl(urlGenerator.getDownloadUrl(bucketName, objectKey, expirationDate));
+      }
+      else {
+        part.setUrl(urlGenerator.getDownloadPartUrl(bucketName, objectKey, part, expirationDate));
+      }
     }
   }
 

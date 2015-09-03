@@ -302,6 +302,6 @@ public class ObjectUploadService {
   }
 
   public void deletePart(String objectId, String uploadId, int partNumber) {
-    stateStore.deleletePart(objectId, uploadId, partNumber);
+    stateStore.deletePart(objectId, uploadId, partNumber);
   }
 }

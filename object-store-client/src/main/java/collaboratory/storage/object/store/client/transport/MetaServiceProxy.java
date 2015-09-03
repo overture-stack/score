@@ -15,20 +15,37 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package collaboratory.storage.object.store.service.upload;
+package collaboratory.storage.object.store.client.transport;
 
-import java.util.Date;
+import java.net.URL;
 
-import collaboratory.storage.object.store.core.model.Part;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.stereotype.Service;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 /**
- * an interface to represent a upload url generator
+ * responsible for interacting with metadata service
  */
-public interface ObjectURLGenerator {
+@Service
+@Slf4j
+public class MetaServiceProxy {
 
-  public String getUploadPartUrl(String bucketName, String objectKey, String uploadId, Part part, Date expiration);
+  @SneakyThrows
+  public ObjectNode findEntity(String objectId) {
+    return read("/" + objectId);
+  }
 
-  public String getDownloadPartUrl(String bucketName, String objectKey, Part part, Date expiration);
+  @SneakyThrows
+  public ObjectNode findEntitiesByGnosId(String gnosId) {
+    return read("?gnosId=" + gnosId);
+  }
 
-  public String getDownloadUrl(String bucketName, String objectKey, Date expiration);
+  @SneakyThrows
+  public ObjectNode read(String url) {
+    return new ObjectMapper().readValue(new URL("https://meta.icgc.org/entities" + url), ObjectNode.class);
+  }
 }
