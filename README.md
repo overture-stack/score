@@ -1,4 +1,4 @@
-Collaboratory - Storage
+ICGC - Storage
 ===
 
 
@@ -20,8 +20,8 @@ Modules
 Top level system modules:
 
 - [Core](object-store-core/README.md)
-- [Object Store Client ](object-store-client/README.md)
-- [Object Store Service](object-store-service/README.md)
+- [Client ](object-store-client/README.md)
+- [Server](object-store-service/README.md)
 
 Changes
 ---
