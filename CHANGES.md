@@ -1,4 +1,4 @@
-ICGC DCC - Portal - Change Log
+ICGC DCC - Storage - Change Log
 ===
 
 Change log for the ObjectStore Service/Client
