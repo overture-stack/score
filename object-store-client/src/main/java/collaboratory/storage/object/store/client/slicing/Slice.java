@@ -15,53 +15,32 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package collaboratory.storage.object.store.client.cli.command;
+package collaboratory.storage.object.store.client.slicing;
 
-import java.io.File;
-
-import lombok.SneakyThrows;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-
-import collaboratory.storage.object.store.client.download.ObjectDownload;
-
-import com.beust.jcommander.Parameter;
-import com.beust.jcommander.Parameters;
+import lombok.Data;
 
 /**
- * Handle download command line arguments
+ * 
  */
-@Component
-@Parameters(separators = "=", commandDescription = "Retrieve object from ObjectStore")
-public class DownloadCommand extends AbstractClientCommand {
+@Data
+public class Slice {
 
-  @Parameter(names = "--out-dir", description = "path to output directory", required = true)
-  private String filePath;
+  private String sequence;
+  private int start = -1;
+  private int end = -1;
 
-  @Parameter(names = { "-f", "--force" }, description = "force re-download (override local file)", required = false)
-  private boolean isForce = false;
+  public Slice(String seq) {
+    sequence = seq;
+  }
 
-  @Parameter(names = "--object-id", description = "object id to download", required = true)
-  private String oid;
+  public Slice(String seq, int st) {
+    this(seq);
+    start = st;
+  }
 
-  @Parameter(names = "--offset", description = "position in source file to begin download from", required = false)
-  private long offset = 0;
-
-  @Parameter(names = "--length", description = "the number of bytes to download (in bytes)", required = false)
-  private long length = -1;
-
-  @Autowired
-  private ObjectDownload downloader;
-
-  @Override
-  @SneakyThrows
-  public int execute() {
-    println("Start downloading object: %s", oid);
-    File dir = new File(filePath);
-    downloader.download(dir, oid, offset, length, isForce);
-
-    return SUCCESS_STATUS;
+  public Slice(String seq, int st, int e) {
+    this(seq, st);
+    end = e;
   }
 
 }

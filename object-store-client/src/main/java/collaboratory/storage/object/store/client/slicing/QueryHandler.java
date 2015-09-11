@@ -15,53 +15,24 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package collaboratory.storage.object.store.client.cli.command;
+package collaboratory.storage.object.store.client.slicing;
 
-import java.io.File;
+import htsjdk.samtools.QueryInterval;
+import htsjdk.samtools.SAMFileHeader;
 
-import lombok.SneakyThrows;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-
-import collaboratory.storage.object.store.client.download.ObjectDownload;
-
-import com.beust.jcommander.Parameter;
-import com.beust.jcommander.Parameters;
+import java.util.List;
 
 /**
- * Handle download command line arguments
+ * 
  */
-@Component
-@Parameters(separators = "=", commandDescription = "Retrieve object from ObjectStore")
-public class DownloadCommand extends AbstractClientCommand {
+public class QueryHandler {
 
-  @Parameter(names = "--out-dir", description = "path to output directory", required = true)
-  private String filePath;
-
-  @Parameter(names = { "-f", "--force" }, description = "force re-download (override local file)", required = false)
-  private boolean isForce = false;
-
-  @Parameter(names = "--object-id", description = "object id to download", required = true)
-  private String oid;
-
-  @Parameter(names = "--offset", description = "position in source file to begin download from", required = false)
-  private long offset = 0;
-
-  @Parameter(names = "--length", description = "the number of bytes to download (in bytes)", required = false)
-  private long length = -1;
-
-  @Autowired
-  private ObjectDownload downloader;
-
-  @Override
-  @SneakyThrows
-  public int execute() {
-    println("Start downloading object: %s", oid);
-    File dir = new File(filePath);
-    downloader.download(dir, oid, offset, length, isForce);
-
-    return SUCCESS_STATUS;
+  public static QueryInterval[] parseQueryStrings(SAMFileHeader header, List<String> query) {
+    // handle if multiple ranges specified
+    List<Slice> slices = QueryParser.parse(query);
+    SliceConverter converter = new SliceConverter(header.getSequenceDictionary());
+    QueryInterval[] intervals = converter.convert(slices);
+    return intervals;
   }
 
 }
