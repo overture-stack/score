@@ -29,7 +29,6 @@ import org.springframework.stereotype.Component;
 
 import collaboratory.storage.object.store.client.transport.MetaServiceProxy;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 @Slf4j
@@ -74,7 +73,7 @@ public class MetaServiceQuery {
 
   private Optional<String> findIndexFileObjectId(final ObjectNode entities) {
     // loop through all entities associated with GNOS id
-    for (JsonNode entity : entities.withArray("content")) {
+    for (val entity : entities.withArray("content")) {
       val fileName = entity.get("fileName").textValue();
       if (fileName.endsWith(".bai")) {
         return Optional.of(entity.get("id").textValue());
