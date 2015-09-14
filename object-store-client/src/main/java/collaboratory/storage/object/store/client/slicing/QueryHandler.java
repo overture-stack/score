@@ -22,12 +22,14 @@ import htsjdk.samtools.SAMFileHeader;
 
 import java.util.List;
 
-/**
- * 
- */
-public class QueryHandler {
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+import lombok.NonNull;
 
-  public static QueryInterval[] parseQueryStrings(SAMFileHeader header, List<String> query) {
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
+public final class QueryHandler {
+
+  public static QueryInterval[] parseQueryStrings(@NonNull SAMFileHeader header, @NonNull List<String> query) {
     // handle if multiple ranges specified
     List<Slice> slices = QueryParser.parse(query);
     SliceConverter converter = new SliceConverter(header.getSequenceDictionary());

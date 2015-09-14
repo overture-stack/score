@@ -23,16 +23,14 @@ import htsjdk.samtools.SAMSequenceDictionary;
 import java.util.Comparator;
 import java.util.List;
 
-/**
- * 
- */
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+
+@RequiredArgsConstructor
 public class SliceConverter {
 
-  private SAMSequenceDictionary samDictionary;
-
-  public SliceConverter(SAMSequenceDictionary dict) {
-    samDictionary = dict;
-  }
+  @NonNull
+  private final SAMSequenceDictionary samDictionary;
 
   public QueryInterval convert(Slice slice) {
     int ix = samDictionary.getSequenceIndex(slice.getSequence());

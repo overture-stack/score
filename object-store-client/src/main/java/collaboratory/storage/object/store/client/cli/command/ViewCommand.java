@@ -17,13 +17,13 @@
  */
 package collaboratory.storage.object.store.client.cli.command;
 
+import static com.google.common.base.Preconditions.checkState;
 import htsjdk.samtools.QueryInterval;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMFileWriter;
 import htsjdk.samtools.SAMFileWriterFactory;
 import htsjdk.samtools.SAMRecordIterator;
 import htsjdk.samtools.SamInputResource;
-import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 
 import java.io.File;
@@ -82,8 +82,6 @@ public class ViewCommand extends AbstractClientCommand {
       + " ranges separated by space", variableArity = true)
   private List<String> query = new ArrayList<String>();
 
-  // @Autowired
-  // private MetaServiceProxy meta;
   @Autowired
   private MetaServiceQuery metaQuery;
 
@@ -92,22 +90,18 @@ public class ViewCommand extends AbstractClientCommand {
 
   @Override
   public int execute() {
-
-    // scenario: specify object id: pulls bam and bai from s3
-    // scenario: specify bam filename: assumes corresponding bai file is next to bam
-
     try {
-      SamInputResource resource = initInputResource();
+      SamInputResource resource = createInputResource();
 
       @Cleanup
-      final SamReader reader = SamReaderFactory.makeDefault().open(resource);
+      val reader = SamReaderFactory.makeDefault().open(resource);
       SAMFileHeader header = reader.getFileHeader();
 
       QueryInterval[] intervals = QueryHandler.parseQueryStrings(header, query);
 
-      String outputFileName = generateFileOutputName();
+      val outputFileName = generateFileOutputName();
       @Cleanup
-      final SAMFileWriter writer = initFileWriter(header, outputFileName);
+      val writer = createFileWriter(header, outputFileName);
 
       if (!headerOnly) {
         // perform actual slicing
@@ -125,7 +119,7 @@ public class ViewCommand extends AbstractClientCommand {
     return SUCCESS_STATUS;
   }
 
-  private SamInputResource initInputResource() {
+  private SamInputResource createInputResource() {
     SamInputResource resource = null;
     if (!oid.trim().isEmpty()) {
       resource = getRemoteResource(oid);
@@ -144,7 +138,7 @@ public class ViewCommand extends AbstractClientCommand {
     return resource;
   }
 
-  private SAMFileWriter initFileWriter(SAMFileHeader header, String path) {
+  private SAMFileWriter createFileWriter(SAMFileHeader header, String path) {
     boolean stdout = (path == null) || path.trim().isEmpty();
 
     final SAMFileWriterFactory factory = new SAMFileWriterFactory();
@@ -181,8 +175,7 @@ public class ViewCommand extends AbstractClientCommand {
   private String generateDefaultFilename() {
     String result = "";
     if (bamFilePath.trim().isEmpty()) {
-
-      result = filePath + File.separator + metaQuery.getFilename();
+      result = filePath + File.separator + metaQuery.getFileName();
     }
     else {
       // use filename of input file
@@ -228,11 +221,7 @@ public class ViewCommand extends AbstractClientCommand {
     URL bamFileUrl = downloader.getUrl(objectId, 0, -1);
 
     Optional<String> indexFileId = metaQuery.getAssociatedIndexObjectId();
-    if (!indexFileId.isPresent()) {
-      // TODO: make this more gooder
-      throw new RuntimeException(String.format("No index file associated with BAM file (object_id = {})",
-          objectId));
-    }
+    checkState(indexFileId.isPresent(), "No index file associated with BAM file (object_id = %s)", objectId);
 
     URL indexFileUrl = downloader.getUrl(indexFileId.get());
 

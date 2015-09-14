@@ -17,8 +17,11 @@
  */
 package collaboratory.storage.object.store.client.slicing;
 
+import static com.google.common.base.Preconditions.checkState;
+
 import java.util.Optional;
 
+import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,10 +51,8 @@ public class MetaServiceQuery {
     }
   }
 
-  public String getFilename() {
-    if (objectFileName == null) {
-      throw new IllegalArgumentException("Object Id not specified");
-    }
+  public String getFileName() {
+    checkState(objectFileName != null, "Object Id not specified");
     return objectFileName;
   }
 
@@ -61,7 +62,7 @@ public class MetaServiceQuery {
    * @return
    */
   public Optional<String> getAssociatedIndexObjectId() {
-    String gnosId = objectNode.get("gnosId").textValue();
+    val gnosId = objectNode.get("gnosId").textValue();
     ObjectNode entities = metaService.findEntitiesByGnosId(gnosId);
     Optional<String> indexFileObjectId = findIndexFileObjectId(entities);
     if (!indexFileObjectId.isPresent()) {
@@ -74,7 +75,7 @@ public class MetaServiceQuery {
   private Optional<String> findIndexFileObjectId(final ObjectNode entities) {
     // loop through all entities associated with GNOS id
     for (JsonNode entity : entities.withArray("content")) {
-      String fileName = entity.get("fileName").textValue();
+      val fileName = entity.get("fileName").textValue();
       if (fileName.endsWith(".bai")) {
         return Optional.of(entity.get("id").textValue());
       }

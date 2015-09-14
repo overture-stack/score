@@ -25,10 +25,9 @@ import com.google.common.base.CharMatcher;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Iterators;
 
-/**
- * 
- */
 public class QueryParser {
+
+  private static Splitter queryScrubber = Splitter.on(CharMatcher.anyOf(":-")).omitEmptyStrings().trimResults();
 
   public static List<Slice> parse(List<String> queries) {
     List<Slice> result = new ArrayList<Slice>();
@@ -38,8 +37,12 @@ public class QueryParser {
     return result;
   }
 
+  public static Integer parseIntArgument(String s) {
+    return Integer.parseInt(s.replace(",", ""));
+  }
+
   public static Slice parse(String query) {
-    Iterable<String> tokens = Splitter.on(CharMatcher.anyOf(":-")).omitEmptyStrings().trimResults().split(query);
+    Iterable<String> tokens = queryScrubber.split(query);
     Iterator<String> it = tokens.iterator();
     int count = Iterators.size(tokens.iterator());
 
@@ -50,12 +53,11 @@ public class QueryParser {
         result = new Slice(it.next());
         break;
       case 2:
-        result = new Slice(it.next(), Integer.parseInt(it.next().replace(",", "")));
+        result = new Slice(it.next(), parseIntArgument(it.next()));
         break;
       case 3:
         result =
-            new Slice(it.next(), Integer.parseInt(it.next().replace(",", "")), Integer.parseInt(it.next().replace(",",
-                "")));
+            new Slice(it.next(), parseIntArgument(it.next()), parseIntArgument(it.next()));
         break;
       default:
         throw new IllegalArgumentException(String.format("Unrecognizable region %s", query));

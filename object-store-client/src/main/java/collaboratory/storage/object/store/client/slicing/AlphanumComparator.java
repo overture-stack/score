@@ -24,39 +24,38 @@ import java.util.Comparator;
  * containing numbers.  Instead of sorting numbers in ASCII order like
  * a standard sort, this algorithm sorts numbers in numeric order.
  *
- * The Alphanum Algorithm is discussed at http://www.DaveKoelle.com
- *
+ * The Alphanum Algorithm is discussed at http://www.DaveKoelle.com. This class is the
+ * java implementation of the algorithm and was downloaded from 
+ * http://www.davekoelle.com/alphanum.html
  */
-public class AlphanumComparator implements Comparator<Slice>
-{
+public class AlphanumComparator implements Comparator<Slice> {
 
-  private final boolean isDigit(char ch)
-  {
+  private final boolean isDigit(char ch) {
     return ch >= 48 && ch <= 57;
   }
 
   /** Length of string is passed in for improved efficiency (only need to calculate it once) **/
-  private final String getChunk(String s, int slength, int marker)
-  {
+  private final String getChunk(String s, int slength, int marker) {
     StringBuilder chunk = new StringBuilder();
     char c = s.charAt(marker);
     chunk.append(c);
     marker++;
-    if (isDigit(c))
-    {
-      while (marker < slength)
-      {
+    if (isDigit(c)) {
+      while (marker < slength) {
         c = s.charAt(marker);
-        if (!isDigit(c)) break;
+        if (!isDigit(c)) {
+          break;
+        }
         chunk.append(c);
         marker++;
       }
-    } else
-    {
-      while (marker < slength)
-      {
+    }
+    else {
+      while (marker < slength) {
         c = s.charAt(marker);
-        if (isDigit(c)) break;
+        if (isDigit(c)) {
+          break;
+        }
         chunk.append(c);
         marker++;
       }
@@ -65,8 +64,7 @@ public class AlphanumComparator implements Comparator<Slice>
   }
 
   @Override
-  public int compare(Slice slice1, Slice slice2)
-  {
+  public int compare(Slice slice1, Slice slice2) {
     int thisMarker = 0;
     int thatMarker = 0;
     String s1 = slice1.getSequence();
@@ -74,8 +72,7 @@ public class AlphanumComparator implements Comparator<Slice>
     int s1Length = s1.length();
     int s2Length = s2.length();
 
-    while (thisMarker < s1Length && thatMarker < s2Length)
-    {
+    while ((thisMarker < s1Length) && (thatMarker < s2Length)) {
       String thisChunk = getChunk(s1, s1Length, thisMarker);
       thisMarker += thisChunk.length();
 
@@ -84,29 +81,27 @@ public class AlphanumComparator implements Comparator<Slice>
 
       // If both chunks contain numeric characters, sort them numerically
       int result = 0;
-      if (isDigit(thisChunk.charAt(0)) && isDigit(thatChunk.charAt(0)))
-      {
+      if (isDigit(thisChunk.charAt(0)) && isDigit(thatChunk.charAt(0))) {
         // Simple chunk comparison by length.
         int thisChunkLength = thisChunk.length();
         result = thisChunkLength - thatChunk.length();
         // If equal, the first different number counts
-        if (result == 0)
-        {
-          for (int i = 0; i < thisChunkLength; i++)
-          {
+        if (result == 0) {
+          for (int i = 0; i < thisChunkLength; i++) {
             result = thisChunk.charAt(i) - thatChunk.charAt(i);
-            if (result != 0)
-            {
+            if (result != 0) {
               return result;
             }
           }
         }
-      } else
-      {
+      }
+      else {
         result = thisChunk.compareTo(thatChunk);
       }
 
-      if (result != 0) return result;
+      if (result != 0) {
+        return result;
+      }
     }
 
     return s1Length - s2Length;
