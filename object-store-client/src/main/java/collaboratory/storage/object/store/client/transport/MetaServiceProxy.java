@@ -19,19 +19,17 @@ package collaboratory.storage.object.store.client.transport;
 
 import java.net.URL;
 
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
-
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import lombok.SneakyThrows;
+
 /**
  * responsible for interacting with metadata service
  */
 @Service
-@Slf4j
 public class MetaServiceProxy {
 
   @SneakyThrows
