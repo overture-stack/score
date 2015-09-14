@@ -1,0 +1,18 @@
+#!/bin/bash -e
+#
+# Copyright 2015(c) The Ontario Institute for Cancer Research. All rights reserved.
+#
+# Description:
+# 	Runs the ObjectStore/Storage client to upload/download/slice files in the Amazon S3 oicr.icgc bucket
+
+COL_HOME=`dirname $0`/..; export COL_HOME
+CLIENT_DIR="$(cd ${COL_HOME} && pwd -P)"
+
+exec java -Xms2G -Xmx3G \
+	-Dspring.profiles.active=amazon \
+	-Dlogging.file=${COL_HOME}/logs/client.log \
+	-Dspring.config.location=${CLIENT_DIR}/conf/ \
+	-Dclient.directory=${CLIENT_DIR} \
+	-cp ${COL_HOME}/conf:${COL_HOME}/lib/object-store-client.jar \
+	org.springframework.boot.loader.JarLauncher \
+	"$@"

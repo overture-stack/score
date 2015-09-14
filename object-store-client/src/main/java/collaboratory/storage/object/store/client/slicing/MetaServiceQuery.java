@@ -15,53 +15,70 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package collaboratory.storage.object.store.client.cli.command;
+package collaboratory.storage.object.store.client.slicing;
 
-import java.io.File;
+import static com.google.common.base.Preconditions.checkState;
 
-import lombok.SneakyThrows;
+import java.util.Optional;
+
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import collaboratory.storage.object.store.client.download.ObjectDownload;
+import collaboratory.storage.object.store.client.transport.MetaServiceProxy;
 
-import com.beust.jcommander.Parameter;
-import com.beust.jcommander.Parameters;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
-/**
- * Handle download command line arguments
- */
+@Slf4j
 @Component
-@Parameters(separators = "=", commandDescription = "Retrieve object from ObjectStore")
-public class DownloadCommand extends AbstractClientCommand {
-
-  @Parameter(names = "--out-dir", description = "path to output directory", required = true)
-  private String filePath;
-
-  @Parameter(names = { "-f", "--force" }, description = "force re-download (override local file)", required = false)
-  private boolean isForce = false;
-
-  @Parameter(names = "--object-id", description = "object id to download", required = true)
-  private String oid;
-
-  @Parameter(names = "--offset", description = "position in source file to begin download from", required = false)
-  private long offset = 0;
-
-  @Parameter(names = "--length", description = "the number of bytes to download (in bytes)", required = false)
-  private long length = -1;
+public class MetaServiceQuery {
 
   @Autowired
-  private ObjectDownload downloader;
+  private MetaServiceProxy metaService;
 
-  @Override
-  @SneakyThrows
-  public int execute() {
-    println("Start downloading object: %s", oid);
-    File dir = new File(filePath);
-    downloader.download(dir, oid, offset, length, isForce);
+  private ObjectNode objectNode;
 
-    return SUCCESS_STATUS;
+  private String objectFileName;
+
+  public void setObjectId(String objectId) {
+    objectNode = metaService.findEntity(objectId);
+    objectFileName = objectNode.get("fileName").textValue();
+    if (!objectFileName.toLowerCase().endsWith(".bam")) {
+      throw new IllegalArgumentException("Cannot view non-BAM files");
+    }
   }
 
+  public String getFileName() {
+    checkState(objectFileName != null, "Object Id not specified");
+    return objectFileName;
+  }
+
+  /**
+   * Uses GNOS id associated with current BAM file object id
+   * @param entity
+   * @return
+   */
+  public Optional<String> getAssociatedIndexObjectId() {
+    val gnosId = objectNode.get("gnosId").textValue();
+    ObjectNode entities = metaService.findEntitiesByGnosId(gnosId);
+    Optional<String> indexFileObjectId = findIndexFileObjectId(entities);
+    if (!indexFileObjectId.isPresent()) {
+      log.error("Cannot find object id of index file");
+      return Optional.empty();
+    }
+    return indexFileObjectId;
+  }
+
+  private Optional<String> findIndexFileObjectId(final ObjectNode entities) {
+    // loop through all entities associated with GNOS id
+    for (val entity : entities.withArray("content")) {
+      val fileName = entity.get("fileName").textValue();
+      if (fileName.endsWith(".bai")) {
+        return Optional.of(entity.get("id").textValue());
+      }
+    }
+    return Optional.empty();
+  }
 }

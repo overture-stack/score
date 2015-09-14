@@ -41,16 +41,16 @@ import com.beust.jcommander.Parameters;
 @Slf4j
 public class UploadCommand extends AbstractClientCommand {
 
-  @Parameter(names = "--file", description = "Path to a file", required = false)
+  @Parameter(names = "--file", description = "path to file to upload", required = false)
   private String filePath;
 
-  @Parameter(names = "--manifest", description = "Path to a manifest file", required = false)
+  @Parameter(names = "--manifest", description = "path to manifest file", required = false)
   private File manifest;
 
-  @Parameter(names = "-f", description = "force to re-upload", required = false)
+  @Parameter(names = "-f", description = "force re-upload", required = false)
   private boolean isForce = false;
 
-  @Parameter(names = "--object-id", description = "object id assigned to the file", required = false)
+  @Parameter(names = "--object-id", description = "object id assigned to upload file", required = false)
   private String oid;
 
   @Autowired

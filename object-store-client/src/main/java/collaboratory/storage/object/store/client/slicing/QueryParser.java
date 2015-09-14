@@ -15,53 +15,56 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package collaboratory.storage.object.store.client.cli.command;
+package collaboratory.storage.object.store.client.slicing;
 
-import java.io.File;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
-import lombok.SneakyThrows;
+import com.google.common.base.CharMatcher;
+import com.google.common.base.Splitter;
+import com.google.common.collect.Iterators;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+public class QueryParser {
 
-import collaboratory.storage.object.store.client.download.ObjectDownload;
+  private static Splitter queryScrubber = Splitter.on(CharMatcher.anyOf(":-")).omitEmptyStrings().trimResults();
 
-import com.beust.jcommander.Parameter;
-import com.beust.jcommander.Parameters;
-
-/**
- * Handle download command line arguments
- */
-@Component
-@Parameters(separators = "=", commandDescription = "Retrieve object from ObjectStore")
-public class DownloadCommand extends AbstractClientCommand {
-
-  @Parameter(names = "--out-dir", description = "path to output directory", required = true)
-  private String filePath;
-
-  @Parameter(names = { "-f", "--force" }, description = "force re-download (override local file)", required = false)
-  private boolean isForce = false;
-
-  @Parameter(names = "--object-id", description = "object id to download", required = true)
-  private String oid;
-
-  @Parameter(names = "--offset", description = "position in source file to begin download from", required = false)
-  private long offset = 0;
-
-  @Parameter(names = "--length", description = "the number of bytes to download (in bytes)", required = false)
-  private long length = -1;
-
-  @Autowired
-  private ObjectDownload downloader;
-
-  @Override
-  @SneakyThrows
-  public int execute() {
-    println("Start downloading object: %s", oid);
-    File dir = new File(filePath);
-    downloader.download(dir, oid, offset, length, isForce);
-
-    return SUCCESS_STATUS;
+  public static List<Slice> parse(List<String> queries) {
+    List<Slice> result = new ArrayList<Slice>();
+    for (String region : queries) {
+      result.add(parse(region));
+    }
+    return result;
   }
 
+  public static Integer parseIntArgument(String s) {
+    return Integer.parseInt(s.replace(",", ""));
+  }
+
+  public static Slice parse(String query) {
+    Iterable<String> tokens = queryScrubber.split(query);
+    Iterator<String> it = tokens.iterator();
+    int count = Iterators.size(tokens.iterator());
+
+    Slice result = null;
+    try {
+      switch (count) {
+      case 1:
+        result = new Slice(it.next());
+        break;
+      case 2:
+        result = new Slice(it.next(), parseIntArgument(it.next()));
+        break;
+      case 3:
+        result =
+            new Slice(it.next(), parseIntArgument(it.next()), parseIntArgument(it.next()));
+        break;
+      default:
+        throw new IllegalArgumentException(String.format("Unrecognizable region %s", query));
+      }
+    } catch (NumberFormatException nfe) {
+      throw new IllegalArgumentException(String.format("Invalid region specified %s", query), nfe);
+    }
+    return result;
+  }
 }
