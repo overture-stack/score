@@ -18,6 +18,13 @@
 package collaboratory.storage.object.store.client.cli.command;
 
 import static com.google.common.base.Preconditions.checkState;
+import htsjdk.samtools.QueryInterval;
+import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.SAMFileWriter;
+import htsjdk.samtools.SAMFileWriterFactory;
+import htsjdk.samtools.SAMRecordIterator;
+import htsjdk.samtools.SamInputResource;
+import htsjdk.samtools.SamReaderFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -26,25 +33,19 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import lombok.Cleanup;
+import lombok.val;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import com.beust.jcommander.Parameter;
-import com.beust.jcommander.Parameters;
 
 import collaboratory.storage.object.store.client.download.ObjectDownload;
 import collaboratory.storage.object.store.client.slicing.MetaServiceQuery;
 import collaboratory.storage.object.store.client.slicing.QueryHandler;
 import collaboratory.storage.object.store.client.transport.NullSourceSeekableHTTPStream;
-import htsjdk.samtools.QueryInterval;
-import htsjdk.samtools.SAMFileHeader;
-import htsjdk.samtools.SAMFileWriter;
-import htsjdk.samtools.SAMFileWriterFactory;
-import htsjdk.samtools.SAMRecordIterator;
-import htsjdk.samtools.SamInputResource;
-import htsjdk.samtools.SamReaderFactory;
-import lombok.Cleanup;
-import lombok.val;
+
+import com.beust.jcommander.Parameter;
+import com.beust.jcommander.Parameters;
 
 @Component
 @Parameters(separators = "=", commandDescription = "extract/displays some or all of SAM/BAM file")
@@ -139,10 +140,10 @@ public class ViewCommand extends AbstractClientCommand {
     factory.setCreateIndex(true).setUseAsyncIo(true).setCreateMd5File(false);
 
     SAMFileWriter result = null;
-    if (outputType.toUpperCase().equals("BAM")) {
+    if (outputType.equalsIgnoreCase("BAM")) {
       result = stdout ? factory.makeBAMWriter(header, true, System.out) : factory.makeBAMWriter(header, true,
           new File(path));
-    } else if (outputType.toUpperCase().equals("SAM")) {
+    } else if (outputType.equalsIgnoreCase("SAM")) {
       result = stdout ? factory.makeSAMWriter(header, true, System.out) : factory.makeSAMWriter(header, true,
           new File(path));
     }

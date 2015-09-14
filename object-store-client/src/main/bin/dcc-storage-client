@@ -3,10 +3,7 @@
 # Copyright 2015(c) The Ontario Institute for Cancer Research. All rights reserved.
 #
 # Description:
-#
-# Usage:
-#
-# Example:
+# 	Runs the ObjectStore/Storage client to upload/download/slice files in the Amazon S3 oicr.icgc bucket
 
 COL_HOME=`dirname $0`/..; export COL_HOME
 CLIENT_DIR="$(cd ${COL_HOME} && pwd -P)"

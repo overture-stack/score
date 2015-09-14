@@ -19,9 +19,6 @@ package collaboratory.storage.object.store.client.slicing;
 
 import lombok.Data;
 
-/**
- * 
- */
 @Data
 public class Slice {
 
