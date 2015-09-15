@@ -1,321 +1,321 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-	<modelVersion>4.0.0</modelVersion>
+  <modelVersion>4.0.0</modelVersion>
 
-	<groupId>collaboratory</groupId>
-	<artifactId>object-store</artifactId>
-	<version>0.0.22-SNAPSHOT</version>
-	<packaging>pom</packaging>
+  <groupId>org.icgc.dcc</groupId>
+  <artifactId>dcc-storage</artifactId>
+  <version>0.0.22-SNAPSHOT</version>
+  <packaging>pom</packaging>
 
-	<name>${project.artifactId}</name>
-	<description>${project.name}</description>
+  <name>${project.artifactId}</name>
+  <description>${project.name}</description>
 
-	<url>https://github.com/CancerCollaboratory/storage</url>
-	<organization>
-		<name>Collaboratory</name>
-	</organization>
-	<inceptionYear>2015</inceptionYear>
+  <url>https://github.com/CancerCollaboratory/storage</url>
+  <organization>
+    <name>Collaboratory</name>
+  </organization>
+  <inceptionYear>2015</inceptionYear>
 
-	<modules>
-		<module>object-store-core</module>
-		<module>object-store-client</module>
-		<module>object-store-service</module>
-	</modules>
+  <modules>
+    <module>dcc-storage-core</module>
+    <module>dcc-storage-client</module>
+    <module>dcc-storage-server</module>
+  </modules>
 
-	<scm>
-		<connection>${github.url}</connection>
-		<developerConnection>${github.url}</developerConnection>
-		<url>${github.url}</url>
-		<tag>HEAD</tag>
-	</scm>
+  <scm>
+    <connection>${github.url}</connection>
+    <developerConnection>${github.url}</developerConnection>
+    <url>${github.url}</url>
+    <tag>HEAD</tag>
+  </scm>
 
-	<repositories>
-		<!-- DCC -->
-		<repository>
-			<id>dcc-release</id>
-			<url>http://seqwaremaven.oicr.on.ca/artifactory/dcc-release</url>
-		</repository>
-		<!-- Spring -->
-		<repository>
-			<id>spring-milestones</id>
-			<name>Spring Milestones</name>
-			<url>http://repo.spring.io/milestone</url>
-			<snapshots>
-				<enabled>false</enabled>
-			</snapshots>
-		</repository>
-		<repository>
-			<id>spring-snapshots</id>
-			<name>Spring Snapshots</name>
-			<url>http://repo.spring.io/snapshot</url>
-			<snapshots>
-				<enabled>true</enabled>
-			</snapshots>
-		</repository>
-		<repository>
-			<id>morphia</id>
-			<url> http://morphia.googlecode.com/svn/mavenrepo/</url>
-			<releases>
-				<enabled>true</enabled>
-			</releases>
-			<snapshots>
-				<enabled>false</enabled>
-			</snapshots>
-		</repository>
-		<repository>
-			<id>oss.sonatype</id>
-			<url>http://oss.sonatype.org/content/repositories/releases/</url>
-			<releases>
-				<enabled>true</enabled>
-			</releases>
-			<snapshots>
-				<enabled>false</enabled>
-			</snapshots>
-		</repository>
-		<repository>
-			<!-- For com.hadoop.gplcompression -->
-			<id>twttr.com</id>
-			<url>http://maven.twttr.com/</url>
-		</repository>
-	</repositories>
+  <repositories>
+    <!-- DCC -->
+    <repository>
+      <id>dcc-release</id>
+      <url>http://seqwaremaven.oicr.on.ca/artifactory/dcc-release</url>
+    </repository>
+    <!-- Spring -->
+    <repository>
+      <id>spring-milestones</id>
+      <name>Spring Milestones</name>
+      <url>http://repo.spring.io/milestone</url>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </repository>
+    <repository>
+      <id>spring-snapshots</id>
+      <name>Spring Snapshots</name>
+      <url>http://repo.spring.io/snapshot</url>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </repository>
+    <repository>
+      <id>morphia</id>
+      <url> http://morphia.googlecode.com/svn/mavenrepo/</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </repository>
+    <repository>
+      <id>oss.sonatype</id>
+      <url>http://oss.sonatype.org/content/repositories/releases/</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </repository>
+    <repository>
+      <!-- For com.hadoop.gplcompression -->
+      <id>twttr.com</id>
+      <url>http://maven.twttr.com/</url>
+    </repository>
+  </repositories>
 
-	<pluginRepositories>
-		<!-- Spring -->
-		<pluginRepository>
-			<id>spring-snapshots</id>
-			<name>Spring Snapshots</name>
-			<url>http://repo.spring.io/snapshot</url>
-			<snapshots>
-				<enabled>true</enabled>
-			</snapshots>
-		</pluginRepository>
+  <pluginRepositories>
+    <!-- Spring -->
+    <pluginRepository>
+      <id>spring-snapshots</id>
+      <name>Spring Snapshots</name>
+      <url>http://repo.spring.io/snapshot</url>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </pluginRepository>
 
-		<!-- Apache -->
-		<pluginRepository>
-			<id>apache-snapshots</id>
-			<name>Apache Snapshot Repository</name>
-			<url>https://repository.apache.org/content/groups/snapshots-group/</url>
-			<releases>
-				<enabled>false</enabled>
-			</releases>
-			<snapshots>
-				<enabled>true</enabled>
-			</snapshots>
-		</pluginRepository>
-	</pluginRepositories>
+    <!-- Apache -->
+    <pluginRepository>
+      <id>apache-snapshots</id>
+      <name>Apache Snapshot Repository</name>
+      <url>https://repository.apache.org/content/groups/snapshots-group/</url>
+      <releases>
+        <enabled>false</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </pluginRepository>
+  </pluginRepositories>
 
-	<dependencyManagement>
-		<dependencies>
-			<dependency>
-				<groupId>${project.groupId}</groupId>
-				<artifactId>object-store-core</artifactId>
-				<version>${project.version}</version>
-			</dependency>
+  <dependencyManagement>
+    <dependencies>
 
-			<!-- Spring -->
-			<dependency>
-				<groupId>org.springframework.security.oauth</groupId>
-				<artifactId>spring-security-oauth2</artifactId>
-				<version>${spring-security-oauth2.version}</version>
-				<exclusions>
-					<exclusion>
-						<artifactId>jackson-mapper-asl</artifactId>
-						<groupId>org.codehaus.jackson</groupId>
-					</exclusion>
-				</exclusions>
-			</dependency>
+      <!-- DCC- Storage -->
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>dcc-storage-core</artifactId>
+        <version>${project.version}</version>
+      </dependency>
 
-			<dependency>
-				<groupId>org.springframework.retry</groupId>
-				<artifactId>spring-retry</artifactId>
-				<version>${spring-retry.version}</version>
-			</dependency>
+      <!-- Spring -->
+      <dependency>
+        <groupId>org.springframework.security.oauth</groupId>
+        <artifactId>spring-security-oauth2</artifactId>
+        <version>${spring-security-oauth2.version}</version>
+        <exclusions>
+          <exclusion>
+            <artifactId>jackson-mapper-asl</artifactId>
+            <groupId>org.codehaus.jackson</groupId>
+          </exclusion>
+        </exclusions>
+      </dependency>
 
-			<!-- Amazon -->
-			<dependency>
-				<groupId>com.amazonaws</groupId>
-				<artifactId>aws-java-sdk</artifactId>
-				<version>${aws-java-sdk.version}</version>
-			</dependency>
+      <dependency>
+        <groupId>org.springframework.retry</groupId>
+        <artifactId>spring-retry</artifactId>
+        <version>${spring-retry.version}</version>
+      </dependency>
 
-			<!-- Command line -->
-			<dependency>
-				<groupId>com.beust</groupId>
-				<artifactId>jcommander</artifactId>
-				<version>${jcommander.version}</version>
-			</dependency>
+      <!-- Amazon -->
+      <dependency>
+        <groupId>com.amazonaws</groupId>
+        <artifactId>aws-java-sdk</artifactId>
+        <version>${aws-java-sdk.version}</version>
+      </dependency>
 
-			<!-- JSON -->
-			<dependency>
-				<groupId>com.fasterxml.jackson.core</groupId>
-				<artifactId>jackson-core</artifactId>
-				<version>${jackson.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>com.fasterxml.jackson.core</groupId>
-				<artifactId>jackson-databind</artifactId>
-				<version>${jackson.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>com.fasterxml.jackson.dataformat</groupId>
-				<artifactId>jackson-dataformat-smile</artifactId>
-				<version>${jackson-smile.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>com.fasterxml.jackson.dataformat</groupId>
-				<artifactId>jackson-dataformat-yaml</artifactId>
-				<version>${jackson-yaml.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>com.fasterxml.jackson.dataformat</groupId>
-				<artifactId>jackson-dataformat-csv</artifactId>
-				<version>${jackson-csv.version}</version>
-			</dependency>
+      <!-- Command line -->
+      <dependency>
+        <groupId>com.beust</groupId>
+        <artifactId>jcommander</artifactId>
+        <version>${jcommander.version}</version>
+      </dependency>
 
-			<!-- Utilities -->
-			<dependency>
-				<groupId>org.projectlombok</groupId>
-				<artifactId>lombok</artifactId>
-				<version>${lombok.version}</version>
-			</dependency>
+      <!-- JSON -->
+      <dependency>
+        <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-core</artifactId>
+        <version>${jackson.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-databind</artifactId>
+        <version>${jackson.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.fasterxml.jackson.dataformat</groupId>
+        <artifactId>jackson-dataformat-smile</artifactId>
+        <version>${jackson-smile.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.fasterxml.jackson.dataformat</groupId>
+        <artifactId>jackson-dataformat-yaml</artifactId>
+        <version>${jackson-yaml.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.fasterxml.jackson.dataformat</groupId>
+        <artifactId>jackson-dataformat-csv</artifactId>
+        <version>${jackson-csv.version}</version>
+      </dependency>
 
-			<dependency>
-				<groupId>com.google.guava</groupId>
-				<artifactId>guava</artifactId>
-				<version>${guava.version}</version>
-			</dependency>
+      <!-- Utilities -->
+      <dependency>
+        <groupId>org.projectlombok</groupId>
+        <artifactId>lombok</artifactId>
+        <version>${lombok.version}</version>
+      </dependency>
 
-			<dependency>
-				<!-- Guava "optional" dependency -->
-				<groupId>com.google.code.findbugs</groupId>
-				<artifactId>jsr305</artifactId>
-				<version>${jsr305.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>joda-time</groupId>
-				<artifactId>joda-time</artifactId>
-				<version>${joda-time.version}</version>
-			</dependency>
+      <dependency>
+        <groupId>com.google.guava</groupId>
+        <artifactId>guava</artifactId>
+        <version>${guava.version}</version>
+      </dependency>
 
-			<!-- Testing - Unit, mocking, assertions -->
-			<dependency>
-				<groupId>junit</groupId>
-				<artifactId>junit</artifactId>
-				<version>${junit.version}</version>
-				<scope>test</scope>
-			</dependency>
-			<dependency>
-				<groupId>org.mockito</groupId>
-				<artifactId>mockito-core</artifactId>
-				<version>${mockito.version}</version>
-				<scope>test</scope>
-			</dependency>
-			<dependency>
-				<groupId>org.powermock</groupId>
-				<artifactId>powermock-module-junit4</artifactId>
-				<version>${powermock.version}</version>
-				<scope>test</scope>
-			</dependency>
-			<dependency>
-				<groupId>org.powermock</groupId>
-				<artifactId>powermock-api-mockito</artifactId>
-				<version>${powermock.version}</version>
-				<scope>test</scope>
-			</dependency>
-			<dependency>
-				<groupId>org.assertj</groupId>
-				<artifactId>assertj-core</artifactId>
-				<version>${assertj-core.version}</version>
-				<scope>test</scope>
-			</dependency>
-			<dependency>
-				<groupId>org.assertj</groupId>
-				<artifactId>assertj-guava</artifactId>
-				<version>${assertj-guava.version}</version>
-				<scope>test</scope>
-			</dependency>
-		</dependencies>
-	</dependencyManagement>
+      <dependency>
+        <!-- Guava "optional" dependency -->
+        <groupId>com.google.code.findbugs</groupId>
+        <artifactId>jsr305</artifactId>
+        <version>${jsr305.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>joda-time</groupId>
+        <artifactId>joda-time</artifactId>
+        <version>${joda-time.version}</version>
+      </dependency>
 
-	<build>
-		<defaultGoal>install</defaultGoal>
-		<plugins>
-			<plugin>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<configuration>
-					<source>1.8</source>
-					<target>1.8</target>
-				</configuration>
-			        <version>2.5.1</version>
-			</plugin>
-		</plugins>
-	</build>
-	
-	<profiles>
-		<profile>
-			<id>release</id>
-			<properties>
-				<package.attach>true</package.attach>
-			</properties>
-    	</profile>
-	</profiles>
+      <!-- Testing - Unit, mocking, assertions -->
+      <dependency>
+        <groupId>junit</groupId>
+        <artifactId>junit</artifactId>
+        <version>${junit.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.mockito</groupId>
+        <artifactId>mockito-core</artifactId>
+        <version>${mockito.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.powermock</groupId>
+        <artifactId>powermock-module-junit4</artifactId>
+        <version>${powermock.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.powermock</groupId>
+        <artifactId>powermock-api-mockito</artifactId>
+        <version>${powermock.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.assertj</groupId>
+        <artifactId>assertj-core</artifactId>
+        <version>${assertj-core.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.assertj</groupId>
+        <artifactId>assertj-guava</artifactId>
+        <version>${assertj-guava.version}</version>
+        <scope>test</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
 
-	<properties>
-		<!-- SCM -->
-		<github.url>scm:git:git@github.com:CancerCollaboratory/storage.git</github.url>
+  <build>
+    <defaultGoal>install</defaultGoal>
+    <plugins>
+      <plugin>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <source>1.8</source>
+          <target>1.8</target>
+        </configuration>
+        <version>2.5.1</version>
+      </plugin>
+    </plugins>
+  </build>
 
-		<!-- Versions - Spring -->
-		<spring-boot.version>1.2.4.RELEASE</spring-boot.version>
-		<spring-retry.version>1.1.2.RELEASE</spring-retry.version>
-		<spring-security-oauth2.version>2.0.7.RELEASE</spring-security-oauth2.version>
+  <profiles>
+    <profile>
+      <id>release</id>
+      <properties>
+        <package.attach>true</package.attach>
+      </properties>
+    </profile>
+  </profiles>
 
-		<!-- Versions - Amazon -->
-		<aws-java-sdk.version>1.10.11</aws-java-sdk.version>
+  <properties>
+    <!-- SCM -->
+    <github.url>scm:git:git@github.com:CancerCollaboratory/storage.git</github.url>
 
-		<!--  For collaboratory (ceph) 
-		<aws-java-sdk.version>1.8.11</aws-java-sdk.version>
-        -->
+    <!-- Versions - Spring -->
+    <spring-boot.version>1.2.4.RELEASE</spring-boot.version>
+    <spring-retry.version>1.1.2.RELEASE</spring-retry.version>
+    <spring-security-oauth2.version>2.0.7.RELEASE</spring-security-oauth2.version>
 
-		<!-- Versions - Utilities -->
-		<lombok.version>1.16.6</lombok.version>
-		<jcommander.version>1.35</jcommander.version>
-		<guava.version>17.0</guava.version>
-		<joda-time.version>2.2</joda-time.version>
-		<jsr305.version>1.3.9</jsr305.version>
+    <!-- Versions - Amazon -->
+    <aws-java-sdk.version>1.10.11</aws-java-sdk.version>
 
-		<git-commit-id-plugin.version>2.1.9</git-commit-id-plugin.version>
+    <!-- For collaboratory (ceph) <aws-java-sdk.version>1.8.11</aws-java-sdk.version> -->
 
-		<!-- Encoding -->
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+    <!-- Versions - Utilities -->
+    <lombok.version>1.16.6</lombok.version>
+    <jcommander.version>1.35</jcommander.version>
+    <guava.version>17.0</guava.version>
+    <joda-time.version>2.2</joda-time.version>
+    <jsr305.version>1.3.9</jsr305.version>
 
-		<!-- Format -->
-		<maven.build.timestamp.format>yyyy-MM-dd HH:mm:ss</maven.build.timestamp.format>
+    <git-commit-id-plugin.version>2.1.9</git-commit-id-plugin.version>
 
-		<!-- Plugins -->
-		<generateSources.skipDelombok>true</generateSources.skipDelombok>
-		<test.redirectTestOutputToFile>true</test.redirectTestOutputToFile>
-		<test.useFile>true</test.useFile>
-		<install.skipFindbugs>true</install.skipFindbugs>
-		<package.attach>false</package.attach>
+    <!-- Encoding -->
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-		<!-- Versions - JSON -->
-		<jackson.version>2.3.0</jackson.version>
-		<jackson-smile.version>2.3.0</jackson-smile.version>
-		<jackson-yaml.version>2.3.0</jackson-yaml.version>
-		<jackson-csv.version>2.3.0</jackson-csv.version>
+    <!-- Format -->
+    <maven.build.timestamp.format>yyyy-MM-dd HH:mm:ss</maven.build.timestamp.format>
 
-		<!-- Versions - Testing -->
-		<junit.version>4.10</junit.version>
-		<mockito.version>1.10.19</mockito.version>
-		<powermock.version>1.5.1</powermock.version>
-		<assertj-core.version>1.7.0</assertj-core.version>
-		<assertj-guava.version>1.2.0</assertj-guava.version>
+    <!-- Plugins -->
+    <generateSources.skipDelombok>true</generateSources.skipDelombok>
+    <test.redirectTestOutputToFile>true</test.redirectTestOutputToFile>
+    <test.useFile>true</test.useFile>
+    <install.skipFindbugs>true</install.skipFindbugs>
+    <package.attach>false</package.attach>
 
-		<!-- PMD -->
-		<pmd.sourcedir>${basedir}/src/main/pmd</pmd.sourcedir>
-		<pmd.targetdir>${project.build.directory}/pmd</pmd.targetdir>
+    <!-- Versions - JSON -->
+    <jackson.version>2.3.0</jackson.version>
+    <jackson-smile.version>2.3.0</jackson-smile.version>
+    <jackson-yaml.version>2.3.0</jackson-yaml.version>
+    <jackson-csv.version>2.3.0</jackson-csv.version>
 
-	</properties>
+    <!-- Versions - Testing -->
+    <junit.version>4.10</junit.version>
+    <mockito.version>1.10.19</mockito.version>
+    <powermock.version>1.5.1</powermock.version>
+    <assertj-core.version>1.7.0</assertj-core.version>
+    <assertj-guava.version>1.2.0</assertj-guava.version>
+
+    <!-- PMD -->
+    <pmd.sourcedir>${basedir}/src/main/pmd</pmd.sourcedir>
+    <pmd.targetdir>${project.build.directory}/pmd</pmd.targetdir>
+
+  </properties>
 
 </project>

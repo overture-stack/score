@@ -1,6 +1,7 @@
-ICGC - Storage
+ICGC DCC - Storage
 ===
 
+Storage and transfer system for ICGC cloud based projects. 
 
 Build
 ---
