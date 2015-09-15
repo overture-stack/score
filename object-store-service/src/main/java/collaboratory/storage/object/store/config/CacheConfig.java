@@ -24,6 +24,7 @@ import java.util.concurrent.ConcurrentMap;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CachingConfigurerSupport;
+import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.cache.concurrent.ConcurrentMapCache;
 import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
 import org.springframework.cache.interceptor.KeyGenerator;
@@ -36,7 +37,7 @@ import com.google.common.cache.CacheBuilder;
  * Server wide caching configuration.
  */
 @Configuration
-// @EnableCaching
+@EnableCaching
 public class CacheConfig extends CachingConfigurerSupport {
 
   /**
