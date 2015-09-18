@@ -15,52 +15,37 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.client.cli.command;
+package org.icgc.dcc.storage.client.manifest;
 
-import java.io.File;
+import java.util.List;
 
-import lombok.SneakyThrows;
-
-import org.icgc.dcc.storage.client.download.ObjectDownload;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-
-import com.beust.jcommander.Parameter;
-import com.beust.jcommander.Parameters;
+import lombok.Builder;
+import lombok.Value;
 
 /**
- * Handle download command line arguments
+ * See https://wiki.oicr.on.ca/display/DCCSOFT/Uniform+metadata+JSON+document+for+ICGC+Data+Repositories#
+ * UniformmetadataJSONdocumentforICGCDataRepositories-Manifestfileformatfordownloader
  */
-@Component
-@Parameters(separators = "=", commandDescription = "Retrieve object from ObjectStore")
-public class DownloadCommand extends AbstractClientCommand {
+@Value
+public class Manifest {
 
-  @Parameter(names = "--out-dir", description = "path to output directory", required = true)
-  private String filePath;
+  private final List<ManifestEntry> entries;
 
-  @Parameter(names = { "-f", "--force" }, description = "force re-download (override local file)", required = false)
-  private boolean isForce = false;
+  @Value
+  @Builder
+  public static class ManifestEntry {
 
-  @Parameter(names = "--object-id", description = "object id to download", required = true)
-  private String oid;
+    String repoCode;
+    String fileId;
+    String fileUuid;
+    String fileFormat;
+    String fileName;
+    String fileSize;
+    String fileMd5sum;
+    String indexFileUuid;
+    String donorId;
+    String projectId;
 
-  @Parameter(names = "--offset", description = "position in source file to begin download from", required = false)
-  private long offset = 0;
-
-  @Parameter(names = "--length", description = "the number of bytes to download (in bytes)", required = false)
-  private long length = -1;
-
-  @Autowired
-  private ObjectDownload downloader;
-
-  @Override
-  @SneakyThrows
-  public int execute() {
-    println("Start downloading object: %s", oid);
-    File dir = new File(filePath);
-    downloader.download(dir, oid, offset, length, isForce);
-
-    return SUCCESS_STATUS;
   }
 
 }

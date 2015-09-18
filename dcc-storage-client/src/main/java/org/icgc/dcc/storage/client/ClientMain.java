@@ -4,7 +4,7 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.function.Consumer;
 
-import org.icgc.dcc.storage.client.cli.command.ClientCommand;
+import org.icgc.dcc.storage.client.command.ClientCommand;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;

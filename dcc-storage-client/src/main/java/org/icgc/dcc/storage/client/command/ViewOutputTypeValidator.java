@@ -15,25 +15,21 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.client.cli.command;
+package org.icgc.dcc.storage.client.command;
 
-import org.icgc.dcc.storage.client.config.ClientProperties;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.beust.jcommander.IParameterValidator;
+import com.beust.jcommander.ParameterException;
 
 /**
- * Abstract class to handle command line arugments
+ * 
  */
-public abstract class AbstractClientCommand implements ClientCommand {
+public class ViewOutputTypeValidator implements IParameterValidator {
 
-  @Autowired
-  protected ClientProperties properties;
-
-  protected static void print(String format, Object... args) {
-    System.err.printf(format, args);
-  }
-
-  protected static void println(String format, Object... args) {
-    print(format + "%n", args);
+  @Override
+  public void validate(String name, String value) throws ParameterException {
+    if (!value.toUpperCase().equals("BAM") && !value.toUpperCase().equals("SAM")) {
+      throw new ParameterException("Parameter " + name + " must be one of 'BAM|SAM' (received " + value + ")");
+    }
   }
 
 }

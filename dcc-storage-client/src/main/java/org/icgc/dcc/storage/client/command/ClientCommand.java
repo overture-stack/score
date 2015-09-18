@@ -15,21 +15,28 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.client.cli.command;
-
-import com.beust.jcommander.IParameterValidator;
-import com.beust.jcommander.ParameterException;
+package org.icgc.dcc.storage.client.command;
 
 /**
- * 
+ * Abstraction that represents a client command available for execution.
  */
-public class ViewOutputTypeValidator implements IParameterValidator {
+public interface ClientCommand {
 
-  @Override
-  public void validate(String name, String value) throws ParameterException {
-    if (!value.toUpperCase().equals("BAM") && !value.toUpperCase().equals("SAM")) {
-      throw new ParameterException("Parameter " + name + " must be one of 'BAM|SAM' (received " + value + ")");
-    }
-  }
+  /**
+   * Status code returned when a command is successful.
+   */
+  static final int SUCCESS_STATUS = 0;
+
+  /**
+   * Status code returned when a command has failed.
+   */
+  static final int FAILURE_STATUS = 1;
+
+  /**
+   * Execute the command
+   * 
+   * @return the status code
+   */
+  int execute();
 
 }

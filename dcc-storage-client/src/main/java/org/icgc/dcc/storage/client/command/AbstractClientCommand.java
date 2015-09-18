@@ -15,28 +15,25 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.client.cli.command;
+package org.icgc.dcc.storage.client.command;
+
+import org.icgc.dcc.storage.client.config.ClientProperties;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
- * Abstraction that represents a client command available for execution.
+ * Abstract class to handle command line arugments
  */
-public interface ClientCommand {
+public abstract class AbstractClientCommand implements ClientCommand {
 
-  /**
-   * Status code returned when a command is successful.
-   */
-  static final int SUCCESS_STATUS = 0;
+  @Autowired
+  protected ClientProperties properties;
 
-  /**
-   * Status code returned when a command has failed.
-   */
-  static final int FAILURE_STATUS = 1;
+  protected static void print(String format, Object... args) {
+    System.err.printf(format, args);
+  }
 
-  /**
-   * Execute the command
-   * 
-   * @return the status code
-   */
-  int execute();
+  protected static void println(String format, Object... args) {
+    print(format + "%n", args);
+  }
 
 }

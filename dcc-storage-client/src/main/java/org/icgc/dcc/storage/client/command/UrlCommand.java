@@ -15,17 +15,12 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.client.cli.command;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.util.Map.Entry;
-import java.util.Properties;
+package org.icgc.dcc.storage.client.command;
 
 import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 
-import org.icgc.dcc.storage.client.upload.ObjectUpload;
+import org.icgc.dcc.storage.client.download.ObjectDownload;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -33,58 +28,30 @@ import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 
 /**
- * Handle upload command line arguments
+ * Resolves URL for a supplied object id.
  */
 @Component
-@Parameters(separators = "=", commandDescription = "file upload")
-@Slf4j
-public class UploadCommand extends AbstractClientCommand {
+@Parameters(separators = "=", commandDescription = "object to resolve URL for")
+public class UrlCommand extends AbstractClientCommand {
 
-  @Parameter(names = "--file", description = "path to file to upload", required = false)
-  private String filePath;
-
-  @Parameter(names = "--manifest", description = "path to manifest file", required = false)
-  private File manifest;
-
-  @Parameter(names = "-f", description = "force re-upload", required = false)
-  private boolean isForce = false;
-
-  @Parameter(names = "--object-id", description = "object id assigned to upload file", required = false)
+  @Parameter(names = "--object-id", description = "object id to resolve URL for", required = true)
   private String oid;
 
+  // @Parameter(names = "--offset", description = "the start byte position of the range for download", required = false)
+  private long offset = 0L;
+
+  // @Parameter(names = "--length", description = "the number of bytes to include in the download", required = false)
+  private long length = -1L;
+
   @Autowired
-  private ObjectUpload uploader;
+  private ObjectDownload downloader;
 
   @Override
   @SneakyThrows
   public int execute() {
-
-    if (filePath != null) {
-      println("Start uploading file: %s", filePath);
-      log.info("file: {}", filePath);
-      File upload = new File(filePath);
-      if (upload.length() == 0) {
-        throw new IllegalArgumentException("Upload file '" + upload.getCanonicalPath()
-            + "' is empty. Uploads of empty files are not permitted. Aborting...");
-      }
-
-      uploader.upload(upload, oid, isForce);
-
-      return SUCCESS_STATUS;
-    }
-
-    Properties props = new Properties();
-    props.load(new FileInputStream(manifest));
-    for (Entry<Object, Object> entry : props.entrySet()) {
-      String objectId = (String) entry.getKey();
-      File obj = new File((String) entry.getValue());
-      if ((isForce) || (!uploader.isObjectExist(objectId))) {
-        println("Start uploading object: %s using the object id: %s", obj, objectId);
-        uploader.upload(obj, objectId, isForce);
-      } else {
-        println("Object id: %s has been uploaded. Skipped.", objectId);
-      }
-    }
+    println("Resolving URL for object: %s (offset = %d, length = %d) ", oid, offset, length);
+    val url = downloader.getUrl(oid, offset, length);
+    println("%s", url);
 
     return SUCCESS_STATUS;
   }
