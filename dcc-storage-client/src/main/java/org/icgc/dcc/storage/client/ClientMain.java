@@ -1,5 +1,7 @@
 package org.icgc.dcc.storage.client;
 
+import static java.lang.System.err;
+
 import java.util.Arrays;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -13,9 +15,11 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.retry.annotation.EnableRetry;
 
+import com.amazonaws.services.importexport.model.MissingParameterException;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.ParameterException;
 
+import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -58,21 +62,23 @@ public class ClientMain implements CommandLineRunner {
     // delete all args with - from the left
     String[] args = filterSpringConfigurations(params);
 
-    JCommander cli = new JCommander();
+    val cli = new JCommander();
     cli.setAcceptUnknownOptions(true);
-
     cli.setProgramName(APPLICATION_NAME);
-    for (Map.Entry<String, ClientCommand> entry : commands.entrySet()) {
-      String beanName = entry.getKey();
-      String commandName = getCommandName(beanName);
-      ClientCommand command = entry.getValue();
-
-      cli.addCommand(commandName, command);
-    }
 
     try {
+      for (val entry : commands.entrySet()) {
+        val beanName = entry.getKey();
+        val commandName = getCommandName(beanName);
+        val command = entry.getValue();
+
+        cli.addCommand(commandName, command);
+
+      }
+
       cli.parse(args);
-      String commandName = cli.getParsedCommand();
+
+      val commandName = cli.getParsedCommand();
       if (commandName == null) {
         throw new ParameterException("Command name is empty");
       }
@@ -85,15 +91,19 @@ public class ClientMain implements CommandLineRunner {
       int status = command.execute();
 
       exit.accept(status);
+    } catch (MissingParameterException e) {
+      err.println("Missing parameters: " + e.getMessage());
+      usage(cli);
+
+      exit.accept(1);
     } catch (ParameterException e) {
-      System.err.println("Missing parameters: " + e.getMessage());
+      err.println("Bad parameter(s): " + e.getMessage());
       usage(cli);
 
       exit.accept(1);
     } catch (Exception e) {
       log.error("Unknown error: ", e);
-      System.err.println("Command error: " + e.getMessage()
-          + "\n\nPlease check the log for detailed error messages");
+      err.println("Command error: " + e.getMessage() + "\n\nPlease check the log for detailed error messages");
 
       exit.accept(1);
     }
@@ -110,7 +120,7 @@ public class ClientMain implements CommandLineRunner {
   private void usage(JCommander cli) {
     StringBuilder sb = new StringBuilder();
     cli.usage(sb);
-    System.err.println(sb.toString());
+    err.println(sb.toString());
   }
 
   private String[] filterSpringConfigurations(String[] args) {

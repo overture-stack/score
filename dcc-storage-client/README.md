@@ -51,7 +51,7 @@ org.icgc.dcc.storage.client.ClientMain
 ### Program Arguments
 
 ```
-upload --manifest src/test/resources/fixtures/manifest.txt
+upload --manifest src/test/resources/fixtures/upload/manifest.txt
 ```
 
 

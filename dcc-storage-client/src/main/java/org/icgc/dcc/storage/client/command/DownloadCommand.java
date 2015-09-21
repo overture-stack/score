@@ -19,6 +19,9 @@ package org.icgc.dcc.storage.client.command;
 
 import java.io.File;
 
+import org.icgc.dcc.storage.client.cli.DirectoryValidator;
+import org.icgc.dcc.storage.client.cli.FileValidator;
+import org.icgc.dcc.storage.client.cli.ObjectIdValidator;
 import org.icgc.dcc.storage.client.download.ObjectDownload;
 import org.icgc.dcc.storage.client.manifest.ManifestReader;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,16 +40,16 @@ import lombok.val;
 @Parameters(separators = "=", commandDescription = "Retrieve object from ObjectStore")
 public class DownloadCommand extends AbstractClientCommand {
 
-  @Parameter(names = "--out-dir", description = "path to output directory", required = true)
-  private String filePath;
+  @Parameter(names = { "--output-dir", "--out-dir" /* Deprecated */ }, description = "path to output directory", required = true, validateValueWith = DirectoryValidator.class)
+  private File outDir;
 
-  @Parameter(names = { "-f", "--force" }, description = "force re-download (override local file)", required = false)
+  @Parameter(names = "--force", description = "force re-download (override local file)", required = false)
   private boolean isForce = false;
 
-  @Parameter(names = "--manifest", description = "path to manifest file", required = false)
+  @Parameter(names = "--manifest", description = "path to manifest file", required = false, validateValueWith = FileValidator.class)
   private File manifestFile;
 
-  @Parameter(names = "--object-id", description = "object id to download", required = false)
+  @Parameter(names = "--object-id", description = "object id to download", required = false, validateValueWith = ObjectIdValidator.class)
   private String oid;
 
   @Parameter(names = "--offset", description = "position in source file to begin download from", required = false)
@@ -61,17 +64,29 @@ public class DownloadCommand extends AbstractClientCommand {
   @Override
   @SneakyThrows
   public int execute() {
-    File dir = new File(filePath);
+    if (!outDir.exists()) {
+      println("Output directory '%s' is missing. Exiting.", outDir.getCanonicalPath());
+      return FAILURE_STATUS;
+    }
 
     if (oid != null) {
-      // Ad-hoc single
+      // Inline single
       println("Start downloading object: %s", oid);
-      downloader.download(dir, oid, offset, length, isForce);
+      downloader.download(outDir, oid, offset, length, isForce);
     } else {
       // Manifest based
       val manifest = new ManifestReader().readManifest(manifestFile);
-      for (val entry : manifest.getEntries()) {
-        downloader.download(dir, entry.getFileUuid(), offset, length, isForce);
+      val entries = manifest.getEntries();
+      if (entries.isEmpty()) {
+
+        println("Manifest '%s' is empty. Exiting.", manifestFile.getCanonicalPath());
+        return FAILURE_STATUS;
+      }
+
+      int i = 1;
+      for (val entry : entries) {
+        println("[%s/%s] Start downloading object: %s", i++, entries.size(), entry.getFileUuid());
+        downloader.download(outDir, entry.getFileUuid(), offset, length, isForce);
       }
     }
 

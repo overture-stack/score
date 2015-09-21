@@ -22,15 +22,17 @@ import java.io.FileInputStream;
 import java.util.Map.Entry;
 import java.util.Properties;
 
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
-
+import org.icgc.dcc.storage.client.cli.FileValidator;
+import org.icgc.dcc.storage.client.cli.ObjectIdValidator;
 import org.icgc.dcc.storage.client.upload.ObjectUpload;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
+
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Handle upload command line arguments
@@ -40,16 +42,16 @@ import com.beust.jcommander.Parameters;
 @Slf4j
 public class UploadCommand extends AbstractClientCommand {
 
-  @Parameter(names = "--file", description = "path to file to upload", required = false)
-  private String filePath;
+  @Parameter(names = "--file", description = "path to file to upload", required = false, validateValueWith = FileValidator.class)
+  private File file;
 
-  @Parameter(names = "--manifest", description = "path to manifest file", required = false)
+  @Parameter(names = "--manifest", description = "path to manifest file", required = false, validateValueWith = FileValidator.class)
   private File manifestFile;
 
-  @Parameter(names = "-f", description = "force re-upload", required = false)
+  @Parameter(names = "--force", description = "force re-upload", required = false)
   private boolean isForce = false;
 
-  @Parameter(names = "--object-id", description = "object id assigned to upload file", required = false)
+  @Parameter(names = "--object-id", description = "object id assigned to upload file", required = false, validateValueWith = ObjectIdValidator.class)
   private String oid;
 
   @Autowired
@@ -59,16 +61,15 @@ public class UploadCommand extends AbstractClientCommand {
   @SneakyThrows
   public int execute() {
 
-    if (filePath != null) {
-      println("Start uploading file: %s", filePath);
-      log.info("file: {}", filePath);
-      File upload = new File(filePath);
-      if (upload.length() == 0) {
-        throw new IllegalArgumentException("Upload file '" + upload.getCanonicalPath()
+    if (file != null) {
+      println("Start uploading file: %s", file);
+      log.info("file: {}", file);
+      if (file.length() == 0) {
+        throw new IllegalArgumentException("Upload file '" + file.getCanonicalPath()
             + "' is empty. Uploads of empty files are not permitted. Aborting...");
       }
 
-      uploader.upload(upload, oid, isForce);
+      uploader.upload(file, oid, isForce);
 
       return SUCCESS_STATUS;
     }

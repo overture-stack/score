@@ -18,13 +18,6 @@
 package org.icgc.dcc.storage.client.command;
 
 import static com.google.common.base.Preconditions.checkState;
-import htsjdk.samtools.QueryInterval;
-import htsjdk.samtools.SAMFileHeader;
-import htsjdk.samtools.SAMFileWriter;
-import htsjdk.samtools.SAMFileWriterFactory;
-import htsjdk.samtools.SAMRecordIterator;
-import htsjdk.samtools.SamInputResource;
-import htsjdk.samtools.SamReaderFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -33,9 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import lombok.Cleanup;
-import lombok.val;
-
+import org.icgc.dcc.storage.client.cli.ObjectIdValidator;
 import org.icgc.dcc.storage.client.download.ObjectDownload;
 import org.icgc.dcc.storage.client.slicing.MetaServiceQuery;
 import org.icgc.dcc.storage.client.slicing.QueryHandler;
@@ -45,6 +36,16 @@ import org.springframework.stereotype.Component;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
+
+import htsjdk.samtools.QueryInterval;
+import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.SAMFileWriter;
+import htsjdk.samtools.SAMFileWriterFactory;
+import htsjdk.samtools.SAMRecordIterator;
+import htsjdk.samtools.SamInputResource;
+import htsjdk.samtools.SamReaderFactory;
+import lombok.Cleanup;
+import lombok.val;
 
 @Component
 @Parameters(separators = "=", commandDescription = "extract/displays some or all of SAM/BAM file")
@@ -63,11 +64,11 @@ public class ViewCommand extends AbstractClientCommand {
   @Parameter(names = "--output-file", description = "filename to write output to. Uses filename from metadata, or original input filename if not specified")
   private String fileName = "";
 
-  @Parameter(names = "--output-type", description = "output format of query BAM/SAM. Default: BAM", validateWith = ViewOutputTypeValidator.class)
-  private String outputType = "BAM"; // TODO: maybe make a String Enum for output types
+  @Parameter(names = "--output-type", description = "output format of query BAM/SAM. Default: BAM")
+  private OutputType outputType = OutputType.BAM;
 
-  @Parameter(names = "--object-id", description = "object id of BAM file to download slice from")
-  private String oid = "";
+  @Parameter(names = "--object-id", description = "object id of BAM file to download slice from", validateValueWith = ObjectIdValidator.class)
+  private String oid;
 
   @Parameter(names = "--input-file", description = "local path to BAM file. Overrides specification of --object-id")
   private String bamFilePath = "";
@@ -78,6 +79,10 @@ public class ViewCommand extends AbstractClientCommand {
   @Parameter(names = "--query", description = "query to define extract from BAM file (coordinate format 'sequence:start-end'). Multiple"
       + " ranges separated by space", variableArity = true)
   private List<String> query = new ArrayList<String>();
+
+  public enum OutputType {
+    BAM, SAM
+  }
 
   @Autowired
   private MetaServiceQuery metaQuery;
@@ -139,10 +144,10 @@ public class ViewCommand extends AbstractClientCommand {
     factory.setCreateIndex(true).setUseAsyncIo(true).setCreateMd5File(false);
 
     SAMFileWriter result = null;
-    if (outputType.equalsIgnoreCase("BAM")) {
+    if (outputType == OutputType.BAM) {
       result = stdout ? factory.makeBAMWriter(header, true, System.out) : factory.makeBAMWriter(header, true,
           new File(path));
-    } else if (outputType.equalsIgnoreCase("SAM")) {
+    } else if (outputType == OutputType.SAM) {
       result = stdout ? factory.makeSAMWriter(header, true, System.out) : factory.makeSAMWriter(header, true,
           new File(path));
     }

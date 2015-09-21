@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 The Ontario Institute for Cancer Research. All rights reserved.                             
+ * Copyright (c) 2013 The Ontario Institute for Cancer Research. All rights reserved.                             
  *                                                                                                               
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
  * You should have received a copy of the GNU General Public License along with                                  
@@ -15,41 +15,38 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.client.command;
+package org.icgc.dcc.storage.client.cli;
 
-import org.icgc.dcc.storage.client.cli.ObjectIdValidator;
-import org.icgc.dcc.storage.client.download.ObjectDownload;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import static java.lang.String.format;
 
-import com.beust.jcommander.Parameter;
-import com.beust.jcommander.Parameters;
+import java.util.UUID;
 
-import lombok.SneakyThrows;
-import lombok.val;
+import com.beust.jcommander.IValueValidator;
+import com.beust.jcommander.ParameterException;
 
-/**
- * Resolves URL for a supplied object id.
- */
-@Component
-@Parameters(separators = "=", commandDescription = "object to resolve URL for")
-public class UrlCommand extends AbstractClientCommand {
-
-  @Parameter(names = "--object-id", description = "object id to resolve URL for", required = true, validateValueWith = ObjectIdValidator.class)
-  private String oid;
-
-  @Autowired
-  private ObjectDownload downloader;
+public class ObjectIdValidator implements IValueValidator<String> {
 
   @Override
-  @SneakyThrows
-  public int execute() {
-    val offset = 0L;
-    val length = -1L;
-    println("Resolving URL for object: %s (offset = %d, length = %d) ", oid, offset, length);
-    val url = downloader.getUrl(oid, offset, length);
-    println("%s", url);
+  public void validate(String name, String objectId) throws ParameterException {
+    if (objectId == null) {
+      return;
+    }
 
-    return SUCCESS_STATUS;
+    if (tryParse(objectId) == null) {
+      parameterException(name, objectId, "is not a valid UUID");
+    }
   }
+
+  private UUID tryParse(String objectId) {
+    try {
+      return UUID.fromString(objectId);
+    } catch (IllegalArgumentException e) {
+      return null;
+    }
+  }
+
+  private static void parameterException(String name, String objectId, String message) throws ParameterException {
+    throw new ParameterException(format("Invalid option: %s: %s %s", name, objectId, message));
+  }
+
 }
