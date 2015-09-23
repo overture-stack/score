@@ -56,9 +56,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class MemoryMappedParallelPartObjectTransport extends ParallelPartObjectTransport {
 
-  /**
-   * 
-   */
   private static final int FREE_MEMORY_TIME_DELAY = 10;
 
   @AllArgsConstructor

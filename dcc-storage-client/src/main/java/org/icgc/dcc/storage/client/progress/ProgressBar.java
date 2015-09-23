@@ -1,10 +1,14 @@
 package org.icgc.dcc.storage.client.progress;
 
+import static org.fusesource.jansi.Ansi.ansi;
+
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+
+import org.fusesource.jansi.AnsiConsole;
 
 import com.google.common.base.Stopwatch;
 
@@ -16,6 +20,10 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class ProgressBar {
+
+  static {
+    AnsiConsole.systemInstall();
+  }
 
   private static final int PADDING = 4;
   private final AtomicInteger totalIncr = new AtomicInteger(0);
@@ -43,7 +51,7 @@ public class ProgressBar {
   }
 
   public void start() {
-    System.err.println("Number of parts remaining: " + (total - checksumTotal));
+    System.out.println(ansi().render("@|green Number of parts remaining|@: " + (total - checksumTotal)));
     stopwatch.start();
     progressMonitor = Executors.newSingleThreadScheduledExecutor();
     progressMonitor.scheduleWithFixedDelay(new Runnable() {
@@ -72,7 +80,7 @@ public class ProgressBar {
 
   public void end(boolean incompleted) {
     if (incompleted) {
-      System.err.println("Data transfer has been interrupted. Some parts are missing. Waiting to resubmission...");
+      System.err.println("Data transfer has been interrupted. Some parts are missing. Waiting to retry...");
     }
     System.err.format("Total execution time: %s%n", stopwatch);
   }
@@ -103,18 +111,28 @@ public class ProgressBar {
     val scale = 0.5f;
 
     for (int i = 0; i < (int) (100 * scale); i++) {
-      if (i < (int) (percent * scale)) {
-        bar.append("=");
-      } else if (i == (int) (percent * scale)) {
-        bar.append(">");
+      if (i <= (int) (percent * scale)) {
+        bar.append(green("◼"));
       } else {
         bar.append(" ");
       }
     }
 
-    bar.append("]   " + percent + "%, Checksum= " + checksumPercent + "%, Write/sec= " + format(byteWrittenPerSec)
-        + ", Read/sec= "
-        + format(byteReadPerSec));
+    bar.append("]   "
+        + bold(String.format("%3s", percent))
+        + "%,"
+        + " "
+        + green("Checksum")
+        + ": "
+        + bold(checksumPercent)
+        + "%, "
+        + green("Write/sec")
+        + ": "
+        + bold(format(byteWrittenPerSec))
+        + ", "
+        + green("Read/sec")
+        + ": "
+        + bold(format(byteReadPerSec)));
 
     for (int i = 0; i < PADDING; i++)
       bar.append(" ");
@@ -139,6 +157,18 @@ public class ProgressBar {
     String pre = (si ? "kMGTPE" : "KMGTPE").charAt(exp - 1) + (si ? "" : "i");
 
     return String.format("%.1f %sB", bytes / Math.pow(unit, exp), pre);
+  }
+
+  private static String green(String text) {
+    return ansi().render("@|green " + text + "|@").toString();
+  }
+
+  private static String bold(long text) {
+    return bold(Long.toString(text));
+  }
+
+  private static String bold(String text) {
+    return ansi().bold().render(text).boldOff().toString();
   }
 
 }
