@@ -34,18 +34,20 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.icgc.dcc.storage.client.download.DownloadUtils;
+import org.icgc.dcc.storage.client.download.Downloads;
 import org.icgc.dcc.storage.client.exception.NotResumableException;
 import org.icgc.dcc.storage.client.exception.NotRetryableException;
 import org.icgc.dcc.storage.client.exception.RetryableException;
+import org.icgc.dcc.storage.client.progress.ProgressDataChannel;
+import org.icgc.dcc.storage.core.model.DataChannel;
 import org.icgc.dcc.storage.core.model.Part;
+
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Ordering;
 
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Ordering;
 
 /**
  * A data transport using memory mapped channels for parallel upload/download
@@ -95,13 +97,14 @@ public class MemoryMappedParallelPartObjectTransport extends ParallelPartObjectT
         final MappedByteBuffer buffer =
             fis.getChannel().map(FileChannel.MapMode.READ_ONLY, part.getOffset(), part.getPartSize());
         buffer.load();
-        progress.incrementByteRead(part.getPartSize());
+        // progress.incrementByteRead(part.getPartSize());
         results.add(executor.submit(new Callable<Part>() {
 
           @Override
           public Part call() throws Exception {
             try {
-              MemoryMappedDataChannel channel = new MemoryMappedDataChannel(buffer, 0, part.getPartSize(), null);
+              DataChannel channel =
+                  new ProgressDataChannel(new MemoryMappedDataChannel(buffer, 0, part.getPartSize(), null), progress);
               if (part.isCompleted()) {
                 log.debug("Checksumming part: {}", part);
                 if (checksum && isCorrupted(channel, part, file)) {
@@ -114,7 +117,9 @@ public class MemoryMappedParallelPartObjectTransport extends ParallelPartObjectT
                 progress.updateProgress(1);
               }
             } finally {
+              // This is required due to memory mapping which happens natively
               progress.incrementByteWritten(part.getPartSize());
+
               memory.addAndGet(part.getPartSize());
               tasksSubmitted.decrementAndGet();
             }
@@ -153,7 +158,7 @@ public class MemoryMappedParallelPartObjectTransport extends ParallelPartObjectT
   @SneakyThrows
   public void receive(File outputDir) {
     File filename = new File(outputDir, objectId);
-    long fileSize = DownloadUtils.calculateTotalSize(parts);
+    long fileSize = Downloads.calculateTotalSize(parts);
 
     log.debug("downloading object to file: {}, size:{}", filename.getPath(), fileSize);
     final ExecutorService downloadExecutorService = Executors.newFixedThreadPool(nThreads);
@@ -195,14 +200,15 @@ public class MemoryMappedParallelPartObjectTransport extends ParallelPartObjectT
                   channel.map(FileChannel.MapMode.READ_WRITE, currOffset, part.getPartSize());
               MemoryMappedDataChannel memoryChannel =
                   new MemoryMappedDataChannel(buffer, part.getOffset(), part.getPartSize(), null);
+              DataChannel progressChannel = new ProgressDataChannel(memoryChannel, progress);
               try {
                 if (part.isCompleted()) {
-                  if (checksum && isCorrupted(memoryChannel, part, outputDir)) {
-                    proxy.downloadPart(memoryChannel, part, objectId, outputDir);
+                  if (checksum && isCorrupted(progressChannel, part, outputDir)) {
+                    proxy.downloadPart(progressChannel, part, objectId, outputDir);
                   }
                   progress.updateChecksum(1);
                 } else {
-                  proxy.downloadPart(memoryChannel, part, objectId, outputDir);
+                  proxy.downloadPart(progressChannel, part, objectId, outputDir);
                   progress.updateProgress(1);
                 }
                 return memoryChannel;
@@ -217,9 +223,8 @@ public class MemoryMappedParallelPartObjectTransport extends ParallelPartObjectT
               }
             }
           } finally {
-            progress.incrementByteRead(part.getPartSize());
+            // progress.incrementByteRead(part.getPartSize());
             progress.incrementByteWritten(part.getPartSize());
-
           }
         }
 

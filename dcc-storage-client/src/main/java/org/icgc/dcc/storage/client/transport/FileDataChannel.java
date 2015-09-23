@@ -59,7 +59,7 @@ public class FileDataChannel extends AbstractDataChannel {
   }
 
   @Override
-  public void writeTo(InputStream is) throws IOException {
+  public void readFrom(InputStream is) throws IOException {
     try (FileOutputStream os = new FileOutputStream(file)) {
       try (ReadableByteChannel fromChannel = Channels.newChannel(is)) {
         os.getChannel().transferFrom(fromChannel, 0, length);

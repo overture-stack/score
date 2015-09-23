@@ -15,29 +15,24 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.core.model;
+package org.icgc.dcc.storage.client.download;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.File;
+import java.util.List;
 
-/**
- * An interface to represent a channel that performs checksum and send data to a respective stream
- */
-public interface DataChannel {
+import org.icgc.dcc.storage.core.model.Part;
 
-  void writeTo(OutputStream os) throws IOException;
+public class Downloads {
 
-  void readFrom(InputStream is) throws IOException;
+  public static File getDownloadFile(File outputDir, String objectId) {
+    return new File(outputDir, objectId);
+  }
 
-  void reset() throws IOException;
-
-  long getLength();
-
-  String getMd5();
-
-  boolean isValidMd5(String expectedMd5) throws IOException;
-
-  void commitToDisk();
-
+  public static long calculateTotalSize(List<Part> parts) {
+    long total = 0;
+    for (Part part : parts) {
+      total += part.getPartSize();
+    }
+    return total;
+  }
 }

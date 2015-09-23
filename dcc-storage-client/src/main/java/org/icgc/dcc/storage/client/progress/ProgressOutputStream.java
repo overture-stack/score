@@ -15,29 +15,40 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.core.model;
+package org.icgc.dcc.storage.client.progress;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 
-/**
- * An interface to represent a channel that performs checksum and send data to a respective stream
- */
-public interface DataChannel {
+import org.icgc.dcc.storage.core.util.ForwardingOutputStream;
 
-  void writeTo(OutputStream os) throws IOException;
+import lombok.NonNull;
 
-  void readFrom(InputStream is) throws IOException;
+public class ProgressOutputStream extends ForwardingOutputStream {
 
-  void reset() throws IOException;
+  private final ProgressBar progress;
 
-  long getLength();
+  public ProgressOutputStream(@NonNull OutputStream outputStream, @NonNull ProgressBar progress) {
+    super(outputStream);
+    this.progress = progress;
+  }
 
-  String getMd5();
+  @Override
+  public void write(int b) throws IOException {
+    super.write(b);
+    progress.incrementByteWritten(1);
+  }
 
-  boolean isValidMd5(String expectedMd5) throws IOException;
+  @Override
+  public void write(byte[] b) throws IOException {
+    super.write(b);
+    progress.incrementByteWritten(b.length);
+  }
 
-  void commitToDisk();
+  @Override
+  public void write(byte[] b, int off, int len) throws IOException {
+    super.write(b, off, len);
+    progress.incrementByteWritten(len);
+  }
 
 }

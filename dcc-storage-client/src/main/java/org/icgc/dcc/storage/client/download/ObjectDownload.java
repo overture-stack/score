@@ -28,21 +28,21 @@ import java.util.List;
 
 import javax.annotation.PostConstruct;
 
-import lombok.NonNull;
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
-
 import org.icgc.dcc.storage.client.exception.NotResumableException;
 import org.icgc.dcc.storage.client.exception.NotRetryableException;
+import org.icgc.dcc.storage.client.progress.ProgressBar;
 import org.icgc.dcc.storage.client.transport.ObjectStoreServiceProxy;
 import org.icgc.dcc.storage.client.transport.ObjectTransport;
-import org.icgc.dcc.storage.client.transport.ProgressBar;
 import org.icgc.dcc.storage.client.transport.ObjectTransport.Mode;
 import org.icgc.dcc.storage.core.model.ObjectSpecification;
 import org.icgc.dcc.storage.core.model.Part;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+
+import lombok.NonNull;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * main class to handle uploading objects
@@ -115,7 +115,7 @@ public class ObjectDownload {
     for (; retry < retryNumber; retry++) {
       try {
         if (redo) {
-          File objFile = DownloadUtils.getDownloadFile(outputDirectory, objectId);
+          File objFile = Downloads.getDownloadFile(outputDirectory, objectId);
           if (objFile.exists()) {
             objFile.delete();
           }
@@ -132,7 +132,7 @@ public class ObjectDownload {
         log.warn(
             "Download failed during last execution. Checking data integrity. Please wait...", e);
         if (proxy.isDownloadDataRecoverable(outputDirectory, objectId,
-            DownloadUtils.getDownloadFile(outputDirectory, objectId).length())) {
+            Downloads.getDownloadFile(outputDirectory, objectId).length())) {
           redo = false;
         } else {
           redo = true;
@@ -150,7 +150,7 @@ public class ObjectDownload {
     try {
       parts = downloadStateStore.getProgress(outputDirectory, objectId);
     } catch (NotRetryableException e) {
-      log.info("New download: {}", objectId, e);
+      log.info("New download: {} because {}", objectId, e.getMessage());
       startNewDownload(outputDirectory, objectId, offset, length);
       return;
     }
@@ -187,7 +187,7 @@ public class ObjectDownload {
   @SneakyThrows
   private void startNewDownload(File dir, String objectId, long offset, long length) {
     log.info("Starting a new download...");
-    File objFile = DownloadUtils.getDownloadFile(dir, objectId);
+    File objFile = Downloads.getDownloadFile(dir, objectId);
 
     if (objFile.exists()) {
       throw new NotResumableException(new FileAlreadyExistsException(objFile.getPath()));

@@ -60,7 +60,7 @@ public class MemoryMappedDataChannel extends AbstractDataChannel {
   }
 
   /**
-   * Write to a given outputstream and calculate the hash once it is fully written
+   * Write to a given output stream and calculate the hash once it is fully written
    */
   @Override
   public void writeTo(OutputStream os) throws IOException {
@@ -72,7 +72,7 @@ public class MemoryMappedDataChannel extends AbstractDataChannel {
   }
 
   @Override
-  public void writeTo(InputStream is) throws IOException {
+  public void readFrom(InputStream is) throws IOException {
     ReadableByteChannel readChannel = Channels.newChannel(is);
     while (buffer.hasRemaining()) {
       readChannel.read(buffer);

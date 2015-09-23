@@ -20,6 +20,7 @@ package org.icgc.dcc.storage.client.transport;
 import java.io.File;
 import java.util.List;
 
+import org.icgc.dcc.storage.client.progress.ProgressBar;
 import org.icgc.dcc.storage.core.model.Part;
 
 /**

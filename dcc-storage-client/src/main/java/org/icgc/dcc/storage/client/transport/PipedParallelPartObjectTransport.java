@@ -26,14 +26,16 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import org.icgc.dcc.storage.client.progress.ProgressDataChannel;
+import org.icgc.dcc.storage.core.model.DataChannel;
 import org.icgc.dcc.storage.core.model.Part;
-
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteSource;
 import com.google.common.io.Files;
+
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * A data transport using piped input channels for parallel upload
@@ -61,8 +63,10 @@ public class PipedParallelPartObjectTransport extends ParallelPartObjectTranspor
 
         @Override
         public Part call() throws Exception {
-          proxy.uploadPart(new PipedDataChannel(pis, 0, part.getPartSize(), null), part, objectId, uploadId);
-          progress.incrementByteWritten(part.getPartSize());
+          DataChannel dataChannel =
+              new ProgressDataChannel(new PipedDataChannel(pis, 0, part.getPartSize(), null), progress);
+          proxy.uploadPart(dataChannel, part, objectId, uploadId);
+          // progress.incrementByteWritten(part.getPartSize());
           progress.updateProgress(1);
           memory.addAndGet(part.getPartSize());
           return part;
@@ -72,7 +76,7 @@ public class PipedParallelPartObjectTransport extends ParallelPartObjectTranspor
       ByteSource source = Files.asByteSource(file);
       source.slice(part.getOffset(), part.getPartSize()).copyTo(pos);
       pos.close();
-      progress.incrementByteRead(part.getPartSize());
+      // progress.incrementByteRead(part.getPartSize());
       progress.updateProgress(0);
       long remaining = memory.addAndGet(-part.getPartSize());
       log.debug("Remaining Memory : {}", remaining);

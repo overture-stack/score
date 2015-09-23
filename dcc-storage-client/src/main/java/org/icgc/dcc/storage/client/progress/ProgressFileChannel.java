@@ -15,29 +15,78 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.core.model;
+package org.icgc.dcc.storage.client.progress;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 
-/**
- * An interface to represent a channel that performs checksum and send data to a respective stream
- */
-public interface DataChannel {
+import org.icgc.dcc.storage.core.util.ForwardingFileChannel;
 
-  void writeTo(OutputStream os) throws IOException;
+import lombok.NonNull;
+import lombok.val;
 
-  void readFrom(InputStream is) throws IOException;
+public class ProgressFileChannel extends ForwardingFileChannel {
 
-  void reset() throws IOException;
+  private final ProgressBar progress;
 
-  long getLength();
+  public ProgressFileChannel(@NonNull FileChannel delegate, @NonNull ProgressBar progress) {
+    super(delegate);
+    this.progress = progress;
+  }
 
-  String getMd5();
+  @Override
+  public int read(ByteBuffer dst) throws IOException {
+    val value = super.read(dst);
+    if (value > 0) {
+      progress.incrementByteRead(value);
+    }
 
-  boolean isValidMd5(String expectedMd5) throws IOException;
+    return value;
+  }
 
-  void commitToDisk();
+  @Override
+  public long read(ByteBuffer[] dsts, int offset, int length) throws IOException {
+    val value = super.read(dsts, offset, length);
+    if (value > 0) {
+      progress.incrementByteRead(value);
+    }
+
+    return value;
+  }
+
+  @Override
+  public int read(ByteBuffer dst, long position) throws IOException {
+    val value = super.read(dst, position);
+    if (value > 0) {
+      progress.incrementByteRead(value);
+    }
+
+    return value;
+  }
+
+  @Override
+  public int write(ByteBuffer src) throws IOException {
+    val value = super.write(src);
+    progress.incrementByteWritten(value);
+
+    return value;
+  }
+
+  @Override
+  public long write(ByteBuffer[] srcs, int offset, int length) throws IOException {
+    val value = super.write(srcs, offset, length);
+    progress.incrementByteWritten(value);
+
+    return value;
+  }
+
+  @Override
+  public int write(ByteBuffer src, long position) throws IOException {
+    val value = super.write(src, position);
+    progress.incrementByteWritten(value);
+
+    return value;
+  }
 
 }

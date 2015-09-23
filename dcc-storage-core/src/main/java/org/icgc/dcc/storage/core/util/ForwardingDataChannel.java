@@ -15,29 +15,54 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.core.model;
+package org.icgc.dcc.storage.core.util;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-/**
- * An interface to represent a channel that performs checksum and send data to a respective stream
- */
-public interface DataChannel {
+import org.icgc.dcc.storage.core.model.DataChannel;
 
-  void writeTo(OutputStream os) throws IOException;
+import lombok.RequiredArgsConstructor;
 
-  void readFrom(InputStream is) throws IOException;
+@RequiredArgsConstructor
+public class ForwardingDataChannel implements DataChannel {
 
-  void reset() throws IOException;
+  private final DataChannel delegate;
 
-  long getLength();
+  @Override
+  public void writeTo(OutputStream os) throws IOException {
+    delegate.writeTo(os);
+  }
 
-  String getMd5();
+  @Override
+  public void readFrom(InputStream is) throws IOException {
+    delegate.readFrom(is);
+  }
 
-  boolean isValidMd5(String expectedMd5) throws IOException;
+  @Override
+  public void reset() throws IOException {
+    delegate.reset();
+  }
 
-  void commitToDisk();
+  @Override
+  public long getLength() {
+    return delegate.getLength();
+  }
+
+  @Override
+  public String getMd5() {
+    return delegate.getMd5();
+  }
+
+  @Override
+  public boolean isValidMd5(String expectedMd5) throws IOException {
+    return delegate.isValidMd5(expectedMd5);
+  }
+
+  @Override
+  public void commitToDisk() {
+    delegate.commitToDisk();
+  }
 
 }

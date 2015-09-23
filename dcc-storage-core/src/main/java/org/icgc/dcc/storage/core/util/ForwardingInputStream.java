@@ -15,29 +15,76 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.core.model;
+package org.icgc.dcc.storage.core.util;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 
-/**
- * An interface to represent a channel that performs checksum and send data to a respective stream
- */
-public interface DataChannel {
+import lombok.RequiredArgsConstructor;
 
-  void writeTo(OutputStream os) throws IOException;
+@RequiredArgsConstructor
+public class ForwardingInputStream extends InputStream {
 
-  void readFrom(InputStream is) throws IOException;
+  private final InputStream delegate;
 
-  void reset() throws IOException;
+  @Override
+  public int read() throws IOException {
+    return delegate.read();
+  }
 
-  long getLength();
+  @Override
+  public int hashCode() {
+    return delegate.hashCode();
+  }
 
-  String getMd5();
+  @Override
+  public int read(byte[] b) throws IOException {
+    return delegate.read(b);
+  }
 
-  boolean isValidMd5(String expectedMd5) throws IOException;
+  @Override
+  public boolean equals(Object obj) {
+    return delegate.equals(obj);
+  }
 
-  void commitToDisk();
+  @Override
+  public int read(byte[] b, int off, int len) throws IOException {
+    return delegate.read(b, off, len);
+  }
+
+  @Override
+  public long skip(long n) throws IOException {
+    return delegate.skip(n);
+  }
+
+  @Override
+  public String toString() {
+    return delegate.toString();
+  }
+
+  @Override
+  public int available() throws IOException {
+    return delegate.available();
+  }
+
+  @Override
+  public void close() throws IOException {
+    delegate.close();
+  }
+
+  @Override
+  public void mark(int readlimit) {
+    delegate.mark(readlimit);
+  }
+
+  @Override
+  public void reset() throws IOException {
+    delegate.reset();
+  }
+
+  @Override
+  public boolean markSupported() {
+    return delegate.markSupported();
+  }
 
 }

@@ -29,9 +29,9 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.icgc.dcc.storage.client.exception.NotResumableException;
 import org.icgc.dcc.storage.client.exception.NotRetryableException;
+import org.icgc.dcc.storage.client.progress.ProgressBar;
 import org.icgc.dcc.storage.client.transport.ObjectStoreServiceProxy;
 import org.icgc.dcc.storage.client.transport.ObjectTransport;
-import org.icgc.dcc.storage.client.transport.ProgressBar;
 import org.icgc.dcc.storage.client.transport.ObjectTransport.Mode;
 import org.icgc.dcc.storage.core.model.ObjectSpecification;
 import org.icgc.dcc.storage.core.model.Part;

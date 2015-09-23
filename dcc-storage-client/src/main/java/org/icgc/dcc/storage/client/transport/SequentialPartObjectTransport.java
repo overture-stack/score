@@ -20,12 +20,15 @@ package org.icgc.dcc.storage.client.transport;
 import java.io.File;
 import java.util.List;
 
+import org.icgc.dcc.storage.client.progress.ProgressBar;
+import org.icgc.dcc.storage.client.progress.ProgressDataChannel;
+import org.icgc.dcc.storage.core.model.DataChannel;
 import org.icgc.dcc.storage.core.model.Part;
+
+import com.google.common.base.Preconditions;
 
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-
-import com.google.common.base.Preconditions;
 
 /**
  * A data transport for sequential upload
@@ -53,7 +56,8 @@ public class SequentialPartObjectTransport implements ObjectTransport {
     progress.start();
     for (Part part : parts) {
       log.debug("processing part: {}", part);
-      FileDataChannel channel = new FileDataChannel(file, part.getOffset(), part.getPartSize(), null);
+      DataChannel channel =
+          new ProgressDataChannel(new FileDataChannel(file, part.getOffset(), part.getPartSize(), null), progress);
 
       boolean resend = false;
       if (part.getMd5() != null) {
@@ -66,9 +70,9 @@ public class SequentialPartObjectTransport implements ObjectTransport {
         resend = true;
       }
 
-      progress.incrementByteRead(part.getPartSize());
+      // progress.incrementByteRead(part.getPartSize());
       proxy.uploadPart(channel, part, objectId, uploadId);
-      progress.incrementByteWritten(part.getPartSize());
+      // progress.incrementByteWritten(part.getPartSize());
 
       if (resend) {
         progress.updateChecksum(1);

@@ -1,4 +1,4 @@
-package org.icgc.dcc.storage.client.transport;
+package org.icgc.dcc.storage.client.progress;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -6,20 +6,18 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-import lombok.extern.slf4j.Slf4j;
-
 import com.google.common.base.Stopwatch;
 
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
+
 /**
- * progress bar for keeping track of the upload/download progress
+ * Progress bar for keeping track of the upload/download progress
  */
 @Slf4j
 public class ProgressBar {
 
-  /**
-   * 
-   */
-  private static final int PADDING = 14;
+  private static final int PADDING = 4;
   private final AtomicInteger totalIncr = new AtomicInteger(0);
   private final AtomicInteger checksumTotalIncr = new AtomicInteger(0);
   private final AtomicLong nByteWritten = new AtomicLong(0);
@@ -100,13 +98,14 @@ public class ProgressBar {
   }
 
   public synchronized void display() {
-
     StringBuilder bar = new StringBuilder("\r[");
 
-    for (int i = 0; i < 100; i++) {
-      if (i < (percent)) {
+    val scale = 0.5f;
+
+    for (int i = 0; i < (int) (100 * scale); i++) {
+      if (i < (int) (percent * scale)) {
         bar.append("=");
-      } else if (i == (percent)) {
+      } else if (i == (int) (percent * scale)) {
         bar.append(">");
       } else {
         bar.append(" ");
@@ -121,17 +120,25 @@ public class ProgressBar {
       bar.append(" ");
 
     System.err.print(bar.toString());
+    System.err.flush();
   }
 
   private String format(long size) {
-    if ((size >> 10) == 0) {
-      return String.format("%dB/s", size);
-    } else if ((size >> 20) == 0) {
-      return String.format("%dKB/s", size >> 10);
-    } else {
-      return String.format("%dMB/s", size >> 20);
-    }
+    return formatBytes(size) + "/s";
+  }
 
+  public static String formatBytes(long bytes) {
+    return formatBytes(bytes, true);
+  }
+
+  public static String formatBytes(long bytes, boolean si) {
+    int unit = si ? 1000 : 1024;
+    if (bytes < unit) return bytes + " B";
+
+    int exp = (int) (Math.log(bytes) / Math.log(unit));
+    String pre = (si ? "kMGTPE" : "KMGTPE").charAt(exp - 1) + (si ? "" : "i");
+
+    return String.format("%.1f %sB", bytes / Math.pow(unit, exp), pre);
   }
 
 }

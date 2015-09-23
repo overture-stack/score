@@ -120,7 +120,7 @@ public class ObjectStoreServiceProxy {
           @Override
           public HttpHeaders extractData(ClientHttpResponse response) throws IOException {
             try (HashingInputStream his = new HashingInputStream(Hashing.md5(), response.getBody())) {
-              channel.writeTo(his);
+              channel.readFrom(his);
               response.getHeaders().set(HttpHeaders.ETAG, his.hash().toString());
               return response.getHeaders();
             }

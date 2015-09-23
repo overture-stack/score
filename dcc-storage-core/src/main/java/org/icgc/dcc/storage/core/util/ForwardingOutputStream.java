@@ -15,29 +15,56 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.core.model;
+package org.icgc.dcc.storage.core.util;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 
-/**
- * An interface to represent a channel that performs checksum and send data to a respective stream
- */
-public interface DataChannel {
+import lombok.RequiredArgsConstructor;
 
-  void writeTo(OutputStream os) throws IOException;
+@RequiredArgsConstructor
+public class ForwardingOutputStream extends OutputStream {
 
-  void readFrom(InputStream is) throws IOException;
+  private final OutputStream delegate;
 
-  void reset() throws IOException;
+  @Override
+  public void write(int b) throws IOException {
+    delegate.write(b);
+  }
 
-  long getLength();
+  @Override
+  public int hashCode() {
+    return delegate.hashCode();
+  }
 
-  String getMd5();
+  @Override
+  public void write(byte[] b) throws IOException {
+    delegate.write(b);
+  }
 
-  boolean isValidMd5(String expectedMd5) throws IOException;
+  @Override
+  public void write(byte[] b, int off, int len) throws IOException {
+    delegate.write(b, off, len);
+  }
 
-  void commitToDisk();
+  @Override
+  public boolean equals(Object obj) {
+    return delegate.equals(obj);
+  }
+
+  @Override
+  public void flush() throws IOException {
+    delegate.flush();
+  }
+
+  @Override
+  public void close() throws IOException {
+    delegate.close();
+  }
+
+  @Override
+  public String toString() {
+    return delegate.toString();
+  }
 
 }

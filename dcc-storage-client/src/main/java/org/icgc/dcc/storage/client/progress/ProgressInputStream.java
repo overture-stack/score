@@ -15,24 +15,46 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.client.download;
+package org.icgc.dcc.storage.client.progress;
 
-import java.io.File;
-import java.util.List;
+import java.io.IOException;
+import java.io.InputStream;
 
-import org.icgc.dcc.storage.core.model.Part;
+import org.icgc.dcc.storage.core.util.ForwardingInputStream;
 
-public class DownloadUtils {
+import lombok.NonNull;
+import lombok.val;
 
-  public static File getDownloadFile(File outputDir, String objectId) {
-    return new File(outputDir, objectId);
+public class ProgressInputStream extends ForwardingInputStream {
+
+  private final ProgressBar progress;
+
+  public ProgressInputStream(@NonNull InputStream inputStream, @NonNull ProgressBar progress) {
+    super(inputStream);
+    this.progress = progress;
   }
 
-  public static long calculateTotalSize(List<Part> parts) {
-    long total = 0;
-    for (Part part : parts) {
-      total += part.getPartSize();
-    }
-    return total;
+  @Override
+  public int read() throws IOException {
+    val value = super.read();
+    progress.incrementByteRead(1);
+
+    return value;
   }
+
+  @Override
+  public int read(byte[] b) throws IOException {
+    val value = super.read(b);
+    progress.incrementByteRead(b.length);
+    return value;
+  }
+
+  @Override
+  public int read(byte[] b, int off, int len) throws IOException {
+    val value = super.read(b, off, len);
+    progress.incrementByteRead(len);
+
+    return value;
+  }
+
 }

@@ -87,6 +87,7 @@ public class DownloadCommand extends AbstractClientCommand {
       for (val entry : entries) {
         println("[%s/%s] Start downloading object: %s", i++, entries.size(), entry.getFileUuid());
         downloader.download(outDir, entry.getFileUuid(), offset, length, isForce);
+        println("");
       }
     }
 
