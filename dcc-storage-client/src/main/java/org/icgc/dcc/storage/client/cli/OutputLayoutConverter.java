@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 The Ontario Institute for Cancer Research. All rights reserved.                             
+ * Copyright (c) 2013 The Ontario Institute for Cancer Research. All rights reserved.                             
  *                                                                                                               
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
  * You should have received a copy of the GNU General Public License along with                                  
@@ -15,35 +15,28 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.client.transport;
+package org.icgc.dcc.storage.client.cli;
 
-import java.net.URL;
+import java.util.Arrays;
 
-import org.springframework.stereotype.Service;
+import org.icgc.dcc.storage.client.command.DownloadCommand.OutputLayout;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.beust.jcommander.ParameterException;
+import com.beust.jcommander.converters.BaseConverter;
 
-import lombok.SneakyThrows;
+public class OutputLayoutConverter extends BaseConverter<Enum<?>> {
 
-/**
- * responsible for interacting with metadata service
- */
-@Service
-public class MetaServiceProxy {
-
-  @SneakyThrows
-  public ObjectNode findEntity(String objectId) {
-    return read("/" + objectId);
+  public OutputLayoutConverter(String optionName) {
+    super(optionName);
   }
 
-  @SneakyThrows
-  public ObjectNode findEntitiesByGnosId(String gnosId) {
-    return read("?gnosId=" + gnosId);
+  @Override
+  public OutputLayout convert(String value) {
+    try {
+      return OutputLayout.valueOf(value.toUpperCase());
+    } catch (Exception ex) {
+      throw new ParameterException(getErrorString(value, "a value in " + Arrays.toString(OutputLayout.values())));
+    }
   }
 
-  @SneakyThrows
-  public ObjectNode read(String url) {
-    return new ObjectMapper().readValue(new URL("https://meta.icgc.org/entities" + url), ObjectNode.class);
-  }
 }

@@ -74,7 +74,7 @@ public class ProgressBar {
     if (incompleted) {
       System.err.println("Data transfer has been interrupted. Some parts are missing. Waiting to resubmission...");
     }
-    System.err.println("Total Execution Time (min): " + (stopwatch.elapsed(TimeUnit.MINUTES) + 1));
+    System.err.format("Total execution time: %s%n", stopwatch);
   }
 
   public void incrementByteWritten(long incr) {

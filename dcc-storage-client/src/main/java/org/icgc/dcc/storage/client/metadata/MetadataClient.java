@@ -15,66 +15,60 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.client.slicing;
+package org.icgc.dcc.storage.client.metadata;
 
-import static com.google.common.base.Preconditions.checkState;
-
+import java.io.FileNotFoundException;
+import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
-import org.icgc.dcc.storage.client.metadata.Entity;
-import org.icgc.dcc.storage.client.metadata.MetadataClient;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
+import lombok.NonNull;
+import lombok.SneakyThrows;
 import lombok.val;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
-@Component
-public class MetaServiceQuery {
+/**
+ * Responsible for interacting with metadata service
+ */
+@Service
+public class MetadataClient {
 
-  @Autowired
-  private MetadataClient metadataClient;
+  private static final ObjectMapper MAPPER = new ObjectMapper();
 
-  private Entity entity;
+  public Entity findEntity(@NonNull String objectId) throws EntityNotFoundException {
+    return read("/" + objectId);
+  }
 
-  public void setObjectId(String objectId) {
-    entity = metadataClient.findEntity(objectId);
-    if (!entity.getFileName().toLowerCase().endsWith(".bam")) {
-      throw new IllegalArgumentException("Cannot view non-BAM files");
+  public List<Entity> findEntitiesByGnosId(@NonNull String gnosId) throws EntityNotFoundException {
+    return readAll("?gnosId=" + gnosId);
+  }
+
+  @SneakyThrows
+  private static Entity read(@NonNull String path) {
+    try {
+      return MAPPER.readValue(url(path), Entity.class);
+    } catch (FileNotFoundException e) {
+      throw new EntityNotFoundException(e);
     }
   }
 
-  public String getFileName() {
-    checkState(entity.getFileName() != null, "Object Id not specified");
-    return entity.getFileName();
+  @SneakyThrows
+  private static List<Entity> readAll(@NonNull String path) {
+    try {
+      val result = MAPPER.readValue(url(path), ObjectNode.class);
+      return MAPPER.convertValue(result.path("content"), new TypeReference<ArrayList<Entity>>() {});
+    } catch (FileNotFoundException e) {
+      throw new EntityNotFoundException(e);
+    }
   }
 
-  /**
-   * Uses GNOS id associated with current BAM file object id
-   * @param entity
-   * @return
-   */
-  public Optional<String> getAssociatedIndexObjectId() {
-    val gnosId = entity.getGnosId();
-    val entities = metadataClient.findEntitiesByGnosId(gnosId);
-    Optional<String> indexFileObjectId = findIndexFileObjectId(entities);
-    if (!indexFileObjectId.isPresent()) {
-      log.error("Cannot find object id of index file");
-      return Optional.empty();
-    }
-    return indexFileObjectId;
-  }
-
-  private Optional<String> findIndexFileObjectId(final List<Entity> entities) {
-    // loop through all entities associated with GNOS id
-    for (val entity : entities) {
-      val fileName = entity.getFileName();
-      if (fileName.endsWith(".bai")) {
-        return Optional.of(entity.getId());
-      }
-    }
-    return Optional.empty();
+  @SneakyThrows
+  private static URL url(String path) {
+    return new URL("https://meta.icgc.org/entities" + path);
   }
 }

@@ -59,7 +59,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Data
 @Configuration
-public class ObjectStoreConfig {
+public class ClientConfig {
 
   /**
    * Constants.
