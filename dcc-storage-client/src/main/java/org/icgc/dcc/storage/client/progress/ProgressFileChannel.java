@@ -68,7 +68,9 @@ public class ProgressFileChannel extends ForwardingFileChannel {
   @Override
   public int write(ByteBuffer src) throws IOException {
     val value = super.write(src);
-    progress.incrementByteWritten(value);
+    if (value > 0) {
+      progress.incrementByteWritten(value);
+    }
 
     return value;
   }
@@ -76,7 +78,9 @@ public class ProgressFileChannel extends ForwardingFileChannel {
   @Override
   public long write(ByteBuffer[] srcs, int offset, int length) throws IOException {
     val value = super.write(srcs, offset, length);
-    progress.incrementByteWritten(value);
+    if (value > 0) {
+      progress.incrementByteWritten(value);
+    }
 
     return value;
   }
@@ -84,7 +88,9 @@ public class ProgressFileChannel extends ForwardingFileChannel {
   @Override
   public int write(ByteBuffer src, long position) throws IOException {
     val value = super.write(src, position);
-    progress.incrementByteWritten(value);
+    if (value > 0) {
+      progress.incrementByteWritten(value);
+    }
 
     return value;
   }

@@ -199,6 +199,7 @@ public class ObjectDownload {
 
     ObjectSpecification spec = proxy.getDownloadSpecification(objectId, offset, length);
     downloadStateStore.init(dir, spec);
+
     // TODO: assign session id
     downloadParts(spec.getParts(), dir, objectId, objectId, new ProgressBar(spec.getParts().size(), spec
         .getParts().size()), false);

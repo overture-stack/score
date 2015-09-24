@@ -82,7 +82,9 @@ public class ProgressBar {
     if (incompleted) {
       System.err.println("Data transfer has been interrupted. Some parts are missing. Waiting to retry...");
     }
-    System.err.format("Total execution time: %s%n", stopwatch);
+    System.err.println("Total execution time: " + bold(stopwatch.toString()));
+    System.err.println("Total bytes read: " + bold(formatCount(nByteRead.get())));
+    System.err.println("Total bytes written: " + bold(formatCount(nByteWritten.get())));
   }
 
   public void incrementByteWritten(long incr) {
@@ -106,7 +108,9 @@ public class ProgressBar {
   }
 
   public synchronized void display() {
-    StringBuilder bar = new StringBuilder("\r[");
+    StringBuilder bar = new StringBuilder("\r");
+    bar.append(bold(String.format("%3s", percent)));
+    bar.append("% [");
 
     val scale = 0.5f;
 
@@ -118,10 +122,12 @@ public class ProgressBar {
       }
     }
 
-    bar.append("]   "
-        + bold(String.format("%3s", percent))
-        + "%,"
+    bar.append("] "
         + " "
+        + green("Parts")
+        + ": "
+        + bold(totalIncr.get() + "/" + total)
+        + ", "
         + green("Checksum")
         + ": "
         + bold(checksumPercent)
@@ -157,6 +163,10 @@ public class ProgressBar {
     String pre = (si ? "kMGTPE" : "KMGTPE").charAt(exp - 1) + (si ? "" : "i");
 
     return String.format("%.1f %sB", bytes / Math.pow(unit, exp), pre);
+  }
+
+  public static String formatCount(long count) {
+    return String.format("%,d", count);
   }
 
   private static String green(String text) {
