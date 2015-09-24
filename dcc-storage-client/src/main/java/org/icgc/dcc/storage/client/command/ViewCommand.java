@@ -28,7 +28,8 @@ import java.util.Optional;
 
 import org.icgc.dcc.storage.client.cli.ObjectIdValidator;
 import org.icgc.dcc.storage.client.download.ObjectDownload;
-import org.icgc.dcc.storage.client.slicing.MetaServiceQuery;
+import org.icgc.dcc.storage.client.metadata.Entity;
+import org.icgc.dcc.storage.client.metadata.MetadataService;
 import org.icgc.dcc.storage.client.slicing.QueryHandler;
 import org.icgc.dcc.storage.client.transport.NullSourceSeekableHTTPStream;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,7 +42,6 @@ import htsjdk.samtools.QueryInterval;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMFileWriter;
 import htsjdk.samtools.SAMFileWriterFactory;
-import htsjdk.samtools.SAMRecordIterator;
 import htsjdk.samtools.SamInputResource;
 import htsjdk.samtools.SamReaderFactory;
 import lombok.Cleanup;
@@ -85,29 +85,29 @@ public class ViewCommand extends AbstractClientCommand {
   }
 
   @Autowired
-  private MetaServiceQuery metaQuery;
-
+  private MetadataService metadataService;
   @Autowired
   private ObjectDownload downloader;
 
   @Override
   public int execute() {
     try {
-      SamInputResource resource = createInputResource();
+      val entity = getEntity();
+      val resource = createInputResource(entity);
 
       @Cleanup
       val reader = SamReaderFactory.makeDefault().open(resource);
-      SAMFileHeader header = reader.getFileHeader();
+      val header = reader.getFileHeader();
 
       QueryInterval[] intervals = QueryHandler.parseQueryStrings(header, query);
 
-      val outputFileName = generateFileOutputName();
+      val outputFileName = generateFileOutputName(entity);
       @Cleanup
       val writer = createFileWriter(header, outputFileName);
 
       if (!headerOnly) {
-        // perform actual slicing
-        SAMRecordIterator iterator = reader.query(intervals, containedOnly);
+        // Perform actual slicing
+        val iterator = reader.query(intervals, containedOnly);
 
         while (iterator.hasNext()) {
           val record = iterator.next();
@@ -121,10 +121,14 @@ public class ViewCommand extends AbstractClientCommand {
     return SUCCESS_STATUS;
   }
 
-  private SamInputResource createInputResource() {
+  private Optional<Entity> getEntity() {
+    return Optional.ofNullable(!oid.trim().isEmpty() ? metadataService.getEntity(oid) : null);
+  }
+
+  private SamInputResource createInputResource(Optional<Entity> entity) {
     SamInputResource resource = null;
-    if (!oid.trim().isEmpty()) {
-      resource = getRemoteResource(oid);
+    if (entity.isPresent()) {
+      resource = getRemoteResource(entity.get());
     } else {
       if (bamFilePath.trim().isEmpty()) {
         throw new IllegalArgumentException("No BAM file input specified");
@@ -154,13 +158,13 @@ public class ViewCommand extends AbstractClientCommand {
     return result;
   }
 
-  private String generateFileOutputName() {
+  private String generateFileOutputName(Optional<Entity> entity) {
     String result = ""; // stdout
     // check for explicit path + filename
     if (!filePath.trim().isEmpty()) {
       if (fileName.trim().isEmpty()) {
         // generated name depends on whether user has specified object id or local bam file name
-        result = generateDefaultFilename();
+        result = generateDefaultFilename(entity);
       } else {
         // use supplied filename
         result = filePath + File.separator + fileName;
@@ -169,10 +173,10 @@ public class ViewCommand extends AbstractClientCommand {
     return result;
   }
 
-  private String generateDefaultFilename() {
+  private String generateDefaultFilename(Optional<Entity> entity) {
     String result = "";
     if (bamFilePath.trim().isEmpty()) {
-      result = filePath + File.separator + metaQuery.getFileName();
+      result = filePath + File.separator + entity.get().getFileName();
     } else {
       // use filename of input file
       String fileName = new File(bamFilePath).getName();
@@ -195,13 +199,12 @@ public class ViewCommand extends AbstractClientCommand {
   }
 
   private SamInputResource getFileResource(String bamFilePath, String baiFilePath) {
-    File bam = new File(bamFilePath);
-    File bai = new File(baiFilePath);
-
+    val bam = new File(bamFilePath);
     if (!bam.exists()) {
       throw new IllegalArgumentException("Expected " + bamFilePath + " does not exist");
     }
 
+    val bai = new File(baiFilePath);
     if (!bai.exists()) {
       throw new IllegalArgumentException("Expected " + baiFilePath
           + " not found. Consider setting filename with --input-file-index option");
@@ -211,15 +214,13 @@ public class ViewCommand extends AbstractClientCommand {
     return resource;
   }
 
-  private SamInputResource getRemoteResource(String objectId) {
-    metaQuery.setObjectId(objectId);
+  private SamInputResource getRemoteResource(Entity entity) {
+    URL bamFileUrl = downloader.getUrl(entity.getId(), 0, -1);
 
-    URL bamFileUrl = downloader.getUrl(objectId, 0, -1);
+    val indexEntity = metadataService.getIndexEntity(entity);
+    checkState(indexEntity.isPresent(), "No index file associated with BAM file (object_id = %s)", entity);
 
-    Optional<String> indexFileId = metaQuery.getAssociatedIndexObjectId();
-    checkState(indexFileId.isPresent(), "No index file associated with BAM file (object_id = %s)", objectId);
-
-    URL indexFileUrl = downloader.getUrl(indexFileId.get());
+    URL indexFileUrl = downloader.getUrl(indexEntity.get().getId());
 
     NullSourceSeekableHTTPStream bamFileHttpStream = new NullSourceSeekableHTTPStream(bamFileUrl);
     NullSourceSeekableHTTPStream indexFileHttpStream = new NullSourceSeekableHTTPStream(indexFileUrl);
@@ -227,4 +228,5 @@ public class ViewCommand extends AbstractClientCommand {
     SamInputResource resource = SamInputResource.of(bamFileHttpStream).index(indexFileHttpStream);
     return resource;
   }
+
 }

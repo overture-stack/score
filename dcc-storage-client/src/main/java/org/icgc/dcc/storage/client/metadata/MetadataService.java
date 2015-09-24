@@ -15,66 +15,32 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.client.slicing;
+package org.icgc.dcc.storage.client.metadata;
 
-import static com.google.common.base.Preconditions.checkState;
-
-import java.util.List;
 import java.util.Optional;
 
-import org.icgc.dcc.storage.client.metadata.Entity;
-import org.icgc.dcc.storage.client.metadata.MetadataClient;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import lombok.val;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
-@Component
-public class MetaServiceQuery {
+@Service
+public class MetadataService {
 
   @Autowired
   private MetadataClient metadataClient;
 
-  private Entity entity;
-
-  public void setObjectId(String objectId) {
-    entity = metadataClient.findEntity(objectId);
-    if (!entity.getFileName().toLowerCase().endsWith(".bam")) {
-      throw new IllegalArgumentException("Cannot view non-BAM files");
-    }
+  public Entity getEntity(String objectId) {
+    return metadataClient.findEntity(objectId);
   }
 
-  public String getFileName() {
-    checkState(entity.getFileName() != null, "Object Id not specified");
-    return entity.getFileName();
+  public Optional<Entity> getIndexEntity(Entity entity) {
+    val entities = metadataClient.findEntitiesByGnosId(entity.getGnosId());
+
+    return entities
+        .stream()
+        .filter(e -> e.getFileName().endsWith(".bai"))
+        .findFirst();
   }
 
-  /**
-   * Uses GNOS id associated with current BAM file object id
-   * @param entity
-   * @return
-   */
-  public Optional<String> getAssociatedIndexObjectId() {
-    val gnosId = entity.getGnosId();
-    val entities = metadataClient.findEntitiesByGnosId(gnosId);
-    Optional<String> indexFileObjectId = findIndexFileObjectId(entities);
-    if (!indexFileObjectId.isPresent()) {
-      log.error("Cannot find object id of index file");
-      return Optional.empty();
-    }
-    return indexFileObjectId;
-  }
-
-  private Optional<String> findIndexFileObjectId(final List<Entity> entities) {
-    // loop through all entities associated with GNOS id
-    for (val entity : entities) {
-      val fileName = entity.getFileName();
-      if (fileName.endsWith(".bai")) {
-        return Optional.of(entity.getId());
-      }
-    }
-    return Optional.empty();
-  }
 }
