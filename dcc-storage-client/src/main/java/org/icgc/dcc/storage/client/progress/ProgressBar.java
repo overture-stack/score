@@ -8,6 +8,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.fusesource.jansi.Ansi;
 import org.fusesource.jansi.AnsiConsole;
 
 import com.google.common.base.Stopwatch;
@@ -20,10 +21,6 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class ProgressBar {
-
-  static {
-    AnsiConsole.systemInstall();
-  }
 
   private static final int PADDING = 4;
   private final AtomicInteger totalIncr = new AtomicInteger(0);
@@ -42,16 +39,23 @@ public class ProgressBar {
   private long percent;
   private int checksumPercent = 100;
 
-  public ProgressBar(int total, int numJobs) {
+  private final boolean silent;
+
+  public ProgressBar(int total, int numJobs, boolean ansi, boolean silent) {
+    Ansi.setEnabled(ansi);
+    if (ansi) {
+      AnsiConsole.systemInstall();
+    }
+
     this.total = total;
     this.checksumTotal = total - numJobs;
+    this.silent = silent;
+    this.stopwatch = Stopwatch.createUnstarted();
     updateProgress(total - numJobs);
-    stopwatch = Stopwatch.createUnstarted();
-
   }
 
   public void start() {
-    System.out.println(ansi().render("@|green Number of parts remaining|@: " + (total - checksumTotal)));
+    println(label("Number of parts remaining") + ": " + metric(total - checksumTotal));
     stopwatch.start();
     progressMonitor = Executors.newSingleThreadScheduledExecutor();
     progressMonitor.scheduleWithFixedDelay(new Runnable() {
@@ -71,20 +75,20 @@ public class ProgressBar {
     try {
       progressMonitor.awaitTermination(DELAY, TimeUnit.SECONDS);
     } catch (InterruptedException e) {
-      log.debug("cannot stop the stopwatch", e);
+      log.debug("Cannot stop the stopwatch", e);
     }
     display();
-    System.err.println();
-    System.err.println("Performing data integrity check, please wait...");
+    println("");
+    println("Finalizing...");
   }
 
   public void end(boolean incompleted) {
     if (incompleted) {
-      System.err.println("Data transfer has been interrupted. Some parts are missing. Waiting to retry...");
+      println("Data transfer has been interrupted. Some parts are missing. Waiting to retry...");
     }
-    System.err.println("Total execution time: " + bold(stopwatch.toString()));
-    System.err.println("Total bytes read: " + bold(formatCount(nByteRead.get())));
-    System.err.println("Total bytes written: " + bold(formatCount(nByteWritten.get())));
+    println("Total execution time: " + metric(String.format("%15s", stopwatch.toString())));
+    println("Total bytes read:     " + metric(String.format("%15s", formatCount(nByteRead.get()))));
+    println("Total bytes written:  " + metric(String.format("%15s", formatCount(nByteWritten.get()))));
   }
 
   public void incrementByteWritten(long incr) {
@@ -109,14 +113,14 @@ public class ProgressBar {
 
   public synchronized void display() {
     StringBuilder bar = new StringBuilder("\r");
-    bar.append(bold(String.format("%3s", percent)));
+    bar.append(metric(String.format("%3s", percent)));
     bar.append("% [");
 
     val scale = 0.5f;
 
     for (int i = 0; i < (int) (100 * scale); i++) {
       if (i <= (int) (percent * scale)) {
-        bar.append(green("◼"));
+        bar.append(label("◼"));
       } else {
         bar.append(" ");
       }
@@ -124,27 +128,37 @@ public class ProgressBar {
 
     bar.append("] "
         + " "
-        + green("Parts")
+        + label("Parts")
         + ": "
-        + bold(totalIncr.get() + "/" + total)
+        + metric(totalIncr.get() + "/" + total)
         + ", "
-        + green("Checksum")
+        + label("Checksum")
         + ": "
         + bold(checksumPercent)
         + "%, "
-        + green("Write/sec")
+        + label("Write/sec")
         + ": "
-        + bold(format(byteWrittenPerSec))
+        + metric(format(byteWrittenPerSec))
         + ", "
-        + green("Read/sec")
+        + label("Read/sec")
         + ": "
-        + bold(format(byteReadPerSec)));
+        + metric(format(byteReadPerSec)));
 
     for (int i = 0; i < PADDING; i++)
       bar.append(" ");
 
-    System.err.print(bar.toString());
-    System.err.flush();
+    print(bar.toString());
+  }
+
+  private void print(String text) {
+    if (!silent) {
+      System.err.print(text);
+      System.err.flush();
+    }
+  }
+
+  private void println(String text) {
+    print(text + "\n");
   }
 
   private String format(long size) {
@@ -169,15 +183,19 @@ public class ProgressBar {
     return String.format("%,d", count);
   }
 
-  private static String green(String text) {
+  private static String label(String text) {
     return ansi().render("@|green " + text + "|@").toString();
   }
 
   private static String bold(long text) {
-    return bold(Long.toString(text));
+    return metric(Long.toString(text));
   }
 
-  private static String bold(String text) {
+  private static String metric(long value) {
+    return metric(Long.toString(value));
+  }
+
+  private static String metric(String text) {
     return ansi().bold().render(text).boldOff().toString();
   }
 

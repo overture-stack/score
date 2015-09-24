@@ -6,16 +6,15 @@
 # Profile - common
 ###############################################################################
 
-client.directory: ${user.home}
-
 transport:
   fileFrom: memory
   memory: 1
   parallel: 6
 
 client:
+  ansi: ${ansi:true}
+  silent: ${silent:false}
   accessToken: "${accessToken}" #Alias for backwards compatibility
-  home: ${client.directory}
 
   upload:
     serviceHostname: localhost
@@ -80,7 +79,7 @@ spring.profiles: debug
 
 logging:
   level:
-    collaboratory: DEBUG
+    org.icgc.dcc.storage: DEBUG
     springframework.retry: DEBUG
     springframework.web: DEBUG
     com.amazonaws.services: DEBUG

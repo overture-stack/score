@@ -24,9 +24,6 @@ import java.util.function.Predicate;
 
 import javax.annotation.PostConstruct;
 
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
-
 import org.icgc.dcc.storage.client.exception.NotResumableException;
 import org.icgc.dcc.storage.client.exception.NotRetryableException;
 import org.icgc.dcc.storage.client.progress.ProgressBar;
@@ -39,6 +36,10 @@ import org.icgc.dcc.storage.core.model.UploadProgress;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+
+import lombok.SneakyThrows;
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * main class to handle uploading objects
@@ -54,6 +55,10 @@ public class ObjectUpload {
 
   @Value("${client.upload.retryNumber}")
   private int retryNumber;
+  @Value("${client.ansi}")
+  private boolean ansi;
+  @Value("${client.silent}")
+  private boolean silent;
 
   @PostConstruct
   public void setup() {
@@ -99,8 +104,9 @@ public class ObjectUpload {
       // object id was never registered/does not exist in Metadata repo
       throw new NotResumableException(e);
     }
-    uploadParts(spec.getParts(), file, objectId, spec.getUploadId(), new ProgressBar(spec.getParts().size(), spec
-        .getParts().size()));
+
+    val progress = new ProgressBar(spec.getParts().size(), spec.getParts().size(), ansi, silent);
+    uploadParts(spec.getParts(), file, objectId, spec.getUploadId(), progress);
   }
 
   /**
@@ -125,10 +131,10 @@ public class ObjectUpload {
    * Resume a upload given the upload progress. Checksum is required only for the first attempt for each process
    * execution.
    */
-  private void resume(File file, UploadProgress progress, String objectId, boolean checksum) {
+  private void resume(File file, UploadProgress uploadProgress, String objectId, boolean checksum) {
     log.info("Resume from the previous upload...");
 
-    List<Part> parts = progress.getParts();
+    List<Part> parts = uploadProgress.getParts();
     int completedTotal = numCompletedParts(parts);
     int total = parts.size();
 
@@ -143,8 +149,8 @@ public class ObjectUpload {
       });
     }
 
-    uploadParts(parts, file, progress.getObjectId(), progress.getUploadId(), new ProgressBar(total, total
-        - completedTotal));
+    val progress = new ProgressBar(total, total - completedTotal, ansi, silent);
+    uploadParts(parts, file, uploadProgress.getObjectId(), uploadProgress.getUploadId(), progress);
 
   }
 

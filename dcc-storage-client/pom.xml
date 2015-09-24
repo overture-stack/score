@@ -53,26 +53,11 @@
       <groupId>org.springframework.retry</groupId>
       <artifactId>spring-retry</artifactId>
     </dependency>
-    <dependency>
-      <groupId>org.aspectj</groupId>
-      <artifactId>aspectjrt</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.aspectj</groupId>
-      <artifactId>aspectjweaver</artifactId>
-    </dependency>
-
-    <!-- Test - Spring -->
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-test</artifactId>
-      <scope>test</scope>
-    </dependency>
 
     <!-- Amazon -->
     <dependency>
       <groupId>com.amazonaws</groupId>
-      <artifactId>aws-java-sdk</artifactId>
+      <artifactId>aws-java-sdk-s3</artifactId>
     </dependency>
 
     <!-- HTTP -->
@@ -103,7 +88,6 @@
       <version>${jersey.version}</version>
     </dependency>
 
-
     <!-- CLI -->
     <dependency>
       <groupId>com.beust</groupId>
@@ -113,6 +97,13 @@
       <groupId>org.fusesource.jansi</groupId>
       <artifactId>jansi</artifactId>
       <version>1.11</version>
+    </dependency>
+
+    <!-- Genomics -->
+    <dependency>
+      <groupId>com.github.samtools</groupId>
+      <artifactId>htsjdk</artifactId>
+      <version>1.138</version>
     </dependency>
 
     <!-- JSON -->
@@ -139,10 +130,11 @@
       <version>1.51</version>
     </dependency>
 
+    <!-- Test - Spring -->
     <dependency>
-      <groupId>com.github.samtools</groupId>
-      <artifactId>htsjdk</artifactId>
-      <version>1.138</version>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-test</artifactId>
+      <scope>test</scope>
     </dependency>
   </dependencies>
 

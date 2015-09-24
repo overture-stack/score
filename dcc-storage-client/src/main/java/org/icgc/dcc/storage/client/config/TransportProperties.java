@@ -15,41 +15,20 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.client.command;
+package org.icgc.dcc.storage.client.config;
 
-import org.icgc.dcc.storage.client.cli.ObjectIdValidator;
-import org.icgc.dcc.storage.client.download.ObjectDownload;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
-import com.beust.jcommander.Parameter;
-import com.beust.jcommander.Parameters;
+import lombok.Data;
 
-import lombok.SneakyThrows;
-import lombok.val;
-
-/**
- * Resolves URL for a supplied object id.
- */
+@Data
 @Component
-@Parameters(separators = "=", commandDescription = "Resolves the URL of the remote object")
-public class UrlCommand extends AbstractClientCommand {
+@ConfigurationProperties(prefix = "transport")
+public class TransportProperties {
 
-  @Parameter(names = "--object-id", description = "object id to resolve URL for", required = true, validateValueWith = ObjectIdValidator.class)
-  private String oid;
+  String fileFrom;
+  long memory;
+  int parallel;
 
-  @Autowired
-  private ObjectDownload downloader;
-
-  @Override
-  @SneakyThrows
-  public int execute() {
-    val offset = 0L;
-    val length = -1L;
-    println("Resolving URL for object: %s (offset = %d, length = %d) ", oid, offset, length);
-    val url = downloader.getUrl(oid, offset, length);
-    println("%s", url);
-
-    return SUCCESS_STATUS;
-  }
 }

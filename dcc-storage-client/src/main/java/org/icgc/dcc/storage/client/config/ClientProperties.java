@@ -1,8 +1,8 @@
 package org.icgc.dcc.storage.client.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.Resource;
+import org.springframework.stereotype.Component;
 
 import lombok.Data;
 
@@ -10,7 +10,7 @@ import lombok.Data;
  * Configurations for user profile and preferences
  */
 @Data
-@Configuration
+@Component
 @ConfigurationProperties(prefix = "client")
 public class ClientProperties {
 

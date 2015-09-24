@@ -17,9 +17,6 @@
  */
 package org.icgc.dcc.storage.client.config;
 
-import lombok.Data;
-import lombok.extern.slf4j.Slf4j;
-
 import org.icgc.dcc.storage.client.transport.MemoryMappedParallelPartObjectTransport;
 import org.icgc.dcc.storage.client.transport.ObjectStoreServiceProxy;
 import org.icgc.dcc.storage.client.transport.ObjectTransport;
@@ -27,43 +24,40 @@ import org.icgc.dcc.storage.client.transport.ParallelPartObjectTransport;
 import org.icgc.dcc.storage.client.transport.PipedParallelPartObjectTransport;
 import org.icgc.dcc.storage.client.transport.SequentialPartObjectTransport;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Configurations for data transport
  */
-@Data
-@Configuration
-@ConfigurationProperties(prefix = "transport")
 @Slf4j
+@Configuration
 public class TransportConfig {
 
-  private String fileFrom;
-  private long memory;
-  private int parallel;
-
+  @Autowired
+  TransportProperties properties;
   @Autowired
   ObjectStoreServiceProxy proxy;
 
   @Bean
   public ObjectTransport.Builder TransportBuilder() {
     ObjectTransport.Builder builder;
-    switch (fileFrom) {
+    switch (properties.getFileFrom()) {
     case "memory":
       log.debug("Transport: {}", "Memory");
       builder = MemoryMappedParallelPartObjectTransport.builder()
-          .withMemory(memory * 1024 * 1024 * 1024)
-          .withNumberOfWorkerThreads(parallel)
+          .withMemory(properties.getMemory() * 1024 * 1024 * 1024)
+          .withNumberOfWorkerThreads(properties.getParallel())
           .withProxy(proxy);
       break;
     case "remote":
       log.debug("Transport: {}", "Remote");
       builder =
           ParallelPartObjectTransport.builder()
-              .withMemory(memory * 1024 * 1024 * 1024)
-              .withNumberOfWorkerThreads(parallel)
+              .withMemory(properties.getMemory() * 1024 * 1024 * 1024)
+              .withNumberOfWorkerThreads(properties.getParallel())
               .withProxy(proxy);
       break;
     case "sequential":
@@ -74,13 +68,14 @@ public class TransportConfig {
       break;
     default:
       builder = PipedParallelPartObjectTransport.builder()
-          .withMemory(memory * 1024 * 1024 * 1024)
-          .withNumberOfWorkerThreads(parallel)
+          .withMemory(properties.getMemory() * 1024 * 1024 * 1024)
+          .withNumberOfWorkerThreads(properties.getParallel())
           .withProxy(proxy);
       log.debug("Transport: {}, Builder: {}", "local", builder);
 
     }
-    return builder;
 
+    return builder;
   }
+
 }

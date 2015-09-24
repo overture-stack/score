@@ -37,8 +37,11 @@ import org.icgc.dcc.storage.client.exception.NotRetryableException;
 import org.icgc.dcc.storage.client.exception.RetryableException;
 import org.icgc.dcc.storage.client.exception.ServiceRetryableResponseErrorHandler;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.PropertyPlaceholderAutoConfiguration;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.retry.backoff.ExponentialBackOffPolicy;
@@ -48,7 +51,6 @@ import org.springframework.web.client.RestTemplate;
 
 import com.google.common.collect.ImmutableMap;
 
-import lombok.Data;
 import lombok.SneakyThrows;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
@@ -57,8 +59,9 @@ import lombok.extern.slf4j.Slf4j;
  * Configurations for connections for uploads
  */
 @Slf4j
-@Data
 @Configuration
+@EnableConfigurationProperties
+@Import(PropertyPlaceholderAutoConfiguration.class)
 public class ClientConfig {
 
   /**

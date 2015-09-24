@@ -45,7 +45,7 @@ import lombok.val;
  * Handle download command line arguments
  */
 @Component
-@Parameters(separators = "=", commandDescription = "Retrieve object from ObjectStore")
+@Parameters(separators = "=", commandDescription = "Retrieve object(s) from remote storage")
 public class DownloadCommand extends AbstractClientCommand {
 
   public enum OutputLayout {
@@ -105,7 +105,7 @@ public class DownloadCommand extends AbstractClientCommand {
       return FAILURE_STATUS;
     }
 
-    println("Start downloading object: %s (%s)", oid, entity.getFileName());
+    println("Downloading object: %s (%s)", oid, entity.getFileName());
 
     downloader.download(outDir, oid, offset, length, isForce);
     layout(entity);
@@ -134,7 +134,7 @@ public class DownloadCommand extends AbstractClientCommand {
         return FAILURE_STATUS;
       }
 
-      println("[%s/%s] Start downloading object: %s (%s)", i++, entries.size(), objectId, entity.getFileName());
+      println("[%s/%s] Downloading object: %s (%s)", i++, entries.size(), objectId, entity.getFileName());
       downloader.download(outDir, entry.getFileUuid(), offset, length, isForce);
       layout(entity);
       println("");

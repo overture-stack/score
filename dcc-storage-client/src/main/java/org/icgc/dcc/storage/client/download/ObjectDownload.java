@@ -42,6 +42,7 @@ import org.springframework.stereotype.Component;
 
 import lombok.NonNull;
 import lombok.SneakyThrows;
+import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -62,6 +63,10 @@ public class ObjectDownload {
 
   @Value("${client.upload.retryNumber}")
   private int retryNumber;
+  @Value("${client.ansi}")
+  private boolean ansi;
+  @Value("${client.silent}")
+  private boolean silent;
 
   @PostConstruct
   public void setup() {
@@ -164,8 +169,8 @@ public class ObjectDownload {
     int total = parts.size();
 
     log.info("{} parts remaining", total);
-    downloadParts(parts, outputDirectory, objectId, objectId, new ProgressBar(total, total
-        - completedTotal), checksum);
+    val progress = new ProgressBar(total, total - completedTotal, ansi, silent);
+    downloadParts(parts, outputDirectory, objectId, objectId, progress, checksum);
 
   }
 
@@ -200,9 +205,9 @@ public class ObjectDownload {
     ObjectSpecification spec = proxy.getDownloadSpecification(objectId, offset, length);
     downloadStateStore.init(dir, spec);
 
-    // TODO: assign session id
-    downloadParts(spec.getParts(), dir, objectId, objectId, new ProgressBar(spec.getParts().size(), spec
-        .getParts().size()), false);
+    // TODO: Assign session id
+    val progress = new ProgressBar(spec.getParts().size(), spec.getParts().size(), ansi, silent);
+    downloadParts(spec.getParts(), dir, objectId, objectId, progress, false);
   }
 
   /**

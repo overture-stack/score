@@ -38,7 +38,7 @@ import lombok.extern.slf4j.Slf4j;
  * Handle upload command line arguments
  */
 @Component
-@Parameters(separators = "=", commandDescription = "file upload")
+@Parameters(separators = "=", commandDescription = "Uploads object(s) to remote storage")
 @Slf4j
 public class UploadCommand extends AbstractClientCommand {
 

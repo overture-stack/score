@@ -48,7 +48,7 @@ import lombok.Cleanup;
 import lombok.val;
 
 @Component
-@Parameters(separators = "=", commandDescription = "extract/displays some or all of SAM/BAM file")
+@Parameters(separators = "=", commandDescription = "Extract/displays some or all of SAM/BAM file")
 public class ViewCommand extends AbstractClientCommand {
 
   @Parameter(names = "--contained", description = "output only alignments completely contained in specified region. By default, any alignment"
