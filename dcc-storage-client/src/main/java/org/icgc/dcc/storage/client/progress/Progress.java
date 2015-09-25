@@ -117,11 +117,11 @@ public class Progress {
     for (int i = 0; i < (int) (100 * scale); i++) {
       val completed = (int) (percent * scale);
       if (i <= completed) {
-        bar.append(terminal.label("◼"));
+        bar.append(terminal.label("#"));
       } else if (i == completed + 1) {
         bar.append(" ");
       } else {
-        bar.append("·");
+        bar.append(".");
       }
     }
 
