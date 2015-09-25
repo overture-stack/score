@@ -24,12 +24,13 @@ import java.util.function.Predicate;
 
 import javax.annotation.PostConstruct;
 
+import org.icgc.dcc.storage.client.cli.Terminal;
 import org.icgc.dcc.storage.client.exception.NotResumableException;
 import org.icgc.dcc.storage.client.exception.NotRetryableException;
-import org.icgc.dcc.storage.client.progress.ProgressBar;
-import org.icgc.dcc.storage.client.transport.ObjectStoreServiceProxy;
-import org.icgc.dcc.storage.client.transport.ObjectTransport;
-import org.icgc.dcc.storage.client.transport.ObjectTransport.Mode;
+import org.icgc.dcc.storage.client.progress.Progress;
+import org.icgc.dcc.storage.client.transport.StorageService;
+import org.icgc.dcc.storage.client.transport.Transport;
+import org.icgc.dcc.storage.client.transport.Transport.Mode;
 import org.icgc.dcc.storage.core.model.ObjectSpecification;
 import org.icgc.dcc.storage.core.model.Part;
 import org.icgc.dcc.storage.core.model.UploadProgress;
@@ -46,19 +47,17 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @Component
-public class ObjectUpload {
+public class UploadService {
 
   @Autowired
-  private ObjectStoreServiceProxy proxy;
+  private StorageService storageService;
   @Autowired
-  private ObjectTransport.Builder transportBuilder;
+  private Transport.Builder transportBuilder;
+  @Autowired
+  private Terminal terminal;
 
   @Value("${client.upload.retryNumber}")
   private int retryNumber;
-  @Value("${client.ansi}")
-  private boolean ansi;
-  @Value("${client.silent}")
-  private boolean silent;
 
   @PostConstruct
   public void setup() {
@@ -85,7 +84,7 @@ public class ObjectUpload {
         return;
       } catch (NotRetryableException e) {
         log.warn("Upload is not completed successfully in the last execution. Checking data integrity. Please wait...");
-        redo = !proxy.isUploadDataRecoverable(objectId, file.length());
+        redo = !storageService.isUploadDataRecoverable(objectId, file.length());
       }
   }
 
@@ -97,7 +96,7 @@ public class ObjectUpload {
     log.info("Start a new upload...");
     ObjectSpecification spec = null;
     try {
-      spec = proxy.initiateUpload(objectId, file.length(), overwrite);
+      spec = storageService.initiateUpload(objectId, file.length(), overwrite);
     } catch (NotRetryableException e) {
       // A NotRetryable exception during initiateUpload should just end whole process
       // a bit of a sleazy hack. Should only be thrown when the Metadata service informs us the supplied
@@ -105,7 +104,7 @@ public class ObjectUpload {
       throw new NotResumableException(e);
     }
 
-    val progress = new ProgressBar(spec.getParts().size(), spec.getParts().size(), ansi, silent);
+    val progress = new Progress(spec.getParts().size(), spec.getParts().size(), terminal);
     uploadParts(spec.getParts(), file, objectId, spec.getUploadId(), progress);
   }
 
@@ -117,7 +116,7 @@ public class ObjectUpload {
   private void resumeIfPossible(File file, String objectId, boolean checksum) {
     UploadProgress progress = null;
     try {
-      progress = proxy.getProgress(objectId, file.length());
+      progress = storageService.getProgress(objectId, file.length());
     } catch (NotRetryableException e) {
       log.info("New upload: {}", objectId);
       startUpload(file, objectId, true);
@@ -149,9 +148,8 @@ public class ObjectUpload {
       });
     }
 
-    val progress = new ProgressBar(total, total - completedTotal, ansi, silent);
+    val progress = new Progress(total, total - completedTotal, terminal);
     uploadParts(parts, file, uploadProgress.getObjectId(), uploadProgress.getUploadId(), progress);
-
   }
 
   /**
@@ -170,8 +168,8 @@ public class ObjectUpload {
    * start upload parts using a specific configured data transport
    */
   @SneakyThrows
-  private void uploadParts(List<Part> parts, File file, String objectId, String uploadId, ProgressBar progressBar) {
-    transportBuilder.withProxy(proxy)
+  private void uploadParts(List<Part> parts, File file, String objectId, String uploadId, Progress progressBar) {
+    transportBuilder.withProxy(storageService)
         .withProgressBar(progressBar)
         .withParts(parts)
         .withObjectId(objectId)
@@ -181,6 +179,6 @@ public class ObjectUpload {
   }
 
   public boolean isObjectExist(String oid) throws IOException {
-    return proxy.isObjectExist(oid);
+    return storageService.isObjectExist(oid);
   }
 }

@@ -27,9 +27,9 @@ import lombok.val;
 
 public class ProgressInputStream extends ForwardingInputStream {
 
-  private final ProgressBar progress;
+  private final Progress progress;
 
-  public ProgressInputStream(@NonNull InputStream inputStream, @NonNull ProgressBar progress) {
+  public ProgressInputStream(@NonNull InputStream inputStream, @NonNull Progress progress) {
     super(inputStream);
     this.progress = progress;
   }

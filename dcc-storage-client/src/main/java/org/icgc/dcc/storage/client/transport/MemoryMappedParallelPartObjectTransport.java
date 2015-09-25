@@ -285,7 +285,7 @@ public class MemoryMappedParallelPartObjectTransport extends ParallelPartObjectT
   public static class MemoryMappedParallelBuilder extends RemoteParallelBuilder {
 
     @Override
-    public ObjectTransport build() {
+    public Transport build() {
       checkArgumentsNotNull();
       return new MemoryMappedParallelPartObjectTransport(this);
     }

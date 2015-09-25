@@ -18,8 +18,8 @@
 package org.icgc.dcc.storage.client.config;
 
 import org.icgc.dcc.storage.client.transport.MemoryMappedParallelPartObjectTransport;
-import org.icgc.dcc.storage.client.transport.ObjectStoreServiceProxy;
-import org.icgc.dcc.storage.client.transport.ObjectTransport;
+import org.icgc.dcc.storage.client.transport.StorageService;
+import org.icgc.dcc.storage.client.transport.Transport;
 import org.icgc.dcc.storage.client.transport.ParallelPartObjectTransport;
 import org.icgc.dcc.storage.client.transport.PipedParallelPartObjectTransport;
 import org.icgc.dcc.storage.client.transport.SequentialPartObjectTransport;
@@ -39,11 +39,11 @@ public class TransportConfig {
   @Autowired
   TransportProperties properties;
   @Autowired
-  ObjectStoreServiceProxy proxy;
+  StorageService proxy;
 
   @Bean
-  public ObjectTransport.Builder TransportBuilder() {
-    ObjectTransport.Builder builder;
+  public Transport.Builder TransportBuilder() {
+    Transport.Builder builder;
     switch (properties.getFileFrom()) {
     case "memory":
       log.debug("Transport: {}", "Memory");

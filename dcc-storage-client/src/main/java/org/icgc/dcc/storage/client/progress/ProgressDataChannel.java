@@ -28,9 +28,9 @@ import lombok.NonNull;
 
 public class ProgressDataChannel extends ForwardingDataChannel {
 
-  private final ProgressBar progress;
+  private final Progress progress;
 
-  public ProgressDataChannel(@NonNull DataChannel delegate, @NonNull ProgressBar progress) {
+  public ProgressDataChannel(@NonNull DataChannel delegate, @NonNull Progress progress) {
     super(delegate);
     this.progress = progress;
   }

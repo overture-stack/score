@@ -28,10 +28,9 @@ import org.icgc.dcc.storage.client.cli.DirectoryValidator;
 import org.icgc.dcc.storage.client.cli.FileValidator;
 import org.icgc.dcc.storage.client.cli.ObjectIdValidator;
 import org.icgc.dcc.storage.client.cli.OutputLayoutConverter;
-import org.icgc.dcc.storage.client.download.ObjectDownload;
+import org.icgc.dcc.storage.client.download.DownloadService;
 import org.icgc.dcc.storage.client.manifest.ManifestReader;
 import org.icgc.dcc.storage.client.metadata.Entity;
-import org.icgc.dcc.storage.client.metadata.MetadataClient;
 import org.icgc.dcc.storage.client.metadata.MetadataService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -52,14 +51,14 @@ import lombok.val;
 public class DownloadCommand extends AbstractClientCommand {
 
   public enum OutputLayout {
-    BUNDLE, FILE_NAME, ID
+    BUNDLE, FILENAME, ID
   }
 
   @Parameter(names = { "--output-dir", "--out-dir" /* Deprecated */ }, description = "path to output directory", required = true, validateValueWith = DirectoryValidator.class)
   private File outDir;
 
-  @Parameter(names = { "--output-layout" }, description = "layout of the output-dir", converter = OutputLayoutConverter.class)
-  private OutputLayout layout = OutputLayout.FILE_NAME;
+  @Parameter(names = { "--output-layout" }, description = "layout of the output-dir. One of 'bundle' (nest files in bundle directory), 'filename' (nest files in filename directory), or 'id' (flat list of files named with object-id)", converter = OutputLayoutConverter.class)
+  private OutputLayout layout = OutputLayout.FILENAME;
 
   @Parameter(names = "--force", description = "force re-download (override local file)", required = false)
   private boolean force = false;
@@ -79,11 +78,11 @@ public class DownloadCommand extends AbstractClientCommand {
   @Parameter(names = "--index", description = "download file index if available?", required = false)
   private boolean index = true;
 
+  /**
+   * Dependencies
+   */
   @Autowired
-  private ObjectDownload downloader;
-
-  @Autowired
-  private MetadataClient metadataClient;
+  private DownloadService downloadService;
   @Autowired
   private MetadataService metadataService;
 
@@ -116,11 +115,16 @@ public class DownloadCommand extends AbstractClientCommand {
     val entities = resolveEntities(objectIds);
 
     int i = 1;
+    terminal.println("");
     for (val entity : entities) {
-      println("[%s/%s] Downloading object: %s (%s)", i, entities.size(), entity.getId(), entity.getFileName());
-      downloader.download(outDir, entity.getId(), offset, length, force);
+      terminal
+          .printLine()
+          .printf("[%s/%s] Downloading object: %s (%s)%n", i++, entities.size(), terminal.value(entity.getId()),
+              entity.getFileName())
+          .printLine();
+      downloadService.download(outDir, entity.getId(), offset, length, force);
       layout(entity);
-      println("");
+      terminal.println("");
     }
 
     return SUCCESS_STATUS;
@@ -146,7 +150,7 @@ public class DownloadCommand extends AbstractClientCommand {
   private List<Entity> resolveEntities(List<String> objectIds) {
     val entities = ImmutableList.<Entity> builder();
     for (val objectId : objectIds) {
-      val entity = metadataClient.findEntity(objectId);
+      val entity = metadataService.getEntity(objectId);
       entities.add(entity);
 
       if (index) {
@@ -171,7 +175,7 @@ public class DownloadCommand extends AbstractClientCommand {
       val target = new File(bundleDir, entity.getFileName());
 
       return target;
-    } else if (layout == OutputLayout.FILE_NAME) {
+    } else if (layout == OutputLayout.FILENAME) {
       // "filename/id"
       val fileDir = new File(outDir, entity.getFileName());
       val target = new File(fileDir, entity.getId());

@@ -39,6 +39,13 @@
       <groupId>${project.groupId}</groupId>
       <artifactId>dcc-storage-core</artifactId>
     </dependency>
+    
+    <!-- DCC - Common -->
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>dcc-common-core</artifactId>
+      <version>${dcc-common.version}</version>
+    </dependency>
 
     <!-- Spring -->
     <dependency>
@@ -60,34 +67,6 @@
       <artifactId>aws-java-sdk-s3</artifactId>
     </dependency>
 
-    <!-- HTTP -->
-    <!-- TODO: Determine if we need all of these considering we already have Spring and Jersey equivalents -->
-    <dependency>
-      <groupId>com.google.http-client</groupId>
-      <artifactId>google-http-client</artifactId>
-      <version>${google.http.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.google.oauth-client</groupId>
-      <artifactId>google-oauth-client</artifactId>
-      <version>${google.http.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.google.http-client</groupId>
-      <artifactId>google-http-client-jackson</artifactId>
-      <version>${google.http.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.sun.jersey</groupId>
-      <artifactId>jersey-client</artifactId>
-      <version>${jersey.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.sun.jersey</groupId>
-      <artifactId>jersey-json</artifactId>
-      <version>${jersey.version}</version>
-    </dependency>
-
     <!-- CLI -->
     <dependency>
       <groupId>com.beust</groupId>
@@ -98,6 +77,11 @@
       <artifactId>jansi</artifactId>
       <version>1.11</version>
     </dependency>
+    <dependency>
+      <groupId>jline</groupId>
+      <artifactId>jline</artifactId>
+      <version>2.13</version>
+    </dependency>
 
     <!-- Genomics -->
     <dependency>
@@ -106,19 +90,13 @@
       <version>1.138</version>
     </dependency>
 
-    <!-- JSON -->
-    <dependency>
-      <groupId>com.fasterxml.jackson.jaxrs</groupId>
-      <artifactId>jackson-jaxrs-json-provider</artifactId>
-      <version>${jackson.version}</version>
-    </dependency>
-
     <!-- Utilities -->
     <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
     </dependency>
 
+    <!-- SSL -->
     <dependency>
       <groupId>org.bouncycastle</groupId>
       <artifactId>bcprov-jdk15on</artifactId>
@@ -140,6 +118,18 @@
 
   <build>
     <plugins>
+      <!-- Jar -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <configuration>
+          <archive>
+            <manifestEntries>
+              <Implementation-Version>${project.version}</Implementation-Version>
+            </manifestEntries>
+          </archive>
+        </configuration>
+      </plugin>
       <!-- Package -->
       <plugin>
         <groupId>org.springframework.boot</groupId>
@@ -175,17 +165,11 @@
   </build>
 
   <properties>
+    <!-- Versions - DCC -->
+    <dcc-common.version>3.8.15.0</dcc-common.version>
+    
     <!-- Versions - Genomics -->
-    <picard.version>1.119</picard.version>
-
-    <!-- Versions - HTTP -->
-    <!-- TODO: this is duplicated in core -->
-    <google.http.version>1.18.0-rc</google.http.version>
-    <jersey.version>1.18.1</jersey.version>
-
-    <!-- Versions - Utilities -->
-    <ant.version>1.8.2</ant.version>
-    <jclouds.version>1.8.1</jclouds.version>
+    <htsjdk.version>1.138</htsjdk.version>
   </properties>
 
 </project>

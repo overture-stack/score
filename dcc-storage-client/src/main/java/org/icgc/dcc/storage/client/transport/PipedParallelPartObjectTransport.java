@@ -104,7 +104,7 @@ public class PipedParallelPartObjectTransport extends ParallelPartObjectTranspor
   public static class LocalParallelBuilder extends RemoteParallelBuilder {
 
     @Override
-    public ObjectTransport build() {
+    public Transport build() {
       checkArgumentsNotNull();
       return new PipedParallelPartObjectTransport(this);
     }

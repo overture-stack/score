@@ -61,7 +61,7 @@ import com.google.common.hash.HashingInputStream;
  */
 @Service
 @Slf4j
-public class ObjectStoreServiceProxy {
+public class StorageService {
 
   @Autowired
   private ClientProperties properties;

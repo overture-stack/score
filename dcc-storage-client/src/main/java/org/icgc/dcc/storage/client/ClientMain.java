@@ -1,6 +1,8 @@
 package org.icgc.dcc.storage.client;
 
+import static com.google.common.base.Objects.firstNonNull;
 import static java.lang.System.err;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 import java.util.Map;
 import java.util.function.Consumer;
@@ -16,7 +18,9 @@ import com.beust.jcommander.JCommander;
 import com.beust.jcommander.MissingCommandException;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
+import com.google.common.io.Resources;
 
+import jline.TerminalFactory;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
@@ -45,6 +49,8 @@ public class ClientMain implements CommandLineRunner {
    */
   @Parameter(names = "--help", description = "shows help message", required = false, help = true)
   private boolean help = false;
+  @Parameter(names = "--version", description = "shows version information", required = false, help = true)
+  private boolean version = false;
 
   /**
    * Dependencies.
@@ -70,6 +76,7 @@ public class ClientMain implements CommandLineRunner {
     val cli = new JCommander(this);
     cli.setAcceptUnknownOptions(true);
     cli.setProgramName(APPLICATION_NAME);
+    cli.setColumnSize(TerminalFactory.get().getWidth());
 
     try {
       for (val entry : commands.entrySet()) {
@@ -82,9 +89,17 @@ public class ClientMain implements CommandLineRunner {
 
       cli.parse(params);
 
+      if (version) {
+        err.println(Resources.toString(Resources.getResource("banner.txt"), UTF_8));
+        err.println("Version: " + getVersion());
+        exit.accept(0);
+        return;
+      }
+
       if (help) {
         usage(cli);
-        exit.accept(1);
+        exit.accept(0);
+        return;
       }
 
       val commandName = cli.getParsedCommand();
@@ -130,6 +145,10 @@ public class ClientMain implements CommandLineRunner {
     StringBuilder sb = new StringBuilder();
     cli.usage(sb);
     err.println(sb.toString());
+  }
+
+  private String getVersion() {
+    return firstNonNull(getClass().getPackage().getImplementationVersion(), "[unknown version]");
   }
 
 }

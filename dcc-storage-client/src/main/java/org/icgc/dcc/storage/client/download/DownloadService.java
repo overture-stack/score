@@ -28,12 +28,13 @@ import java.util.List;
 
 import javax.annotation.PostConstruct;
 
+import org.icgc.dcc.storage.client.cli.Terminal;
 import org.icgc.dcc.storage.client.exception.NotResumableException;
 import org.icgc.dcc.storage.client.exception.NotRetryableException;
-import org.icgc.dcc.storage.client.progress.ProgressBar;
-import org.icgc.dcc.storage.client.transport.ObjectStoreServiceProxy;
-import org.icgc.dcc.storage.client.transport.ObjectTransport;
-import org.icgc.dcc.storage.client.transport.ObjectTransport.Mode;
+import org.icgc.dcc.storage.client.progress.Progress;
+import org.icgc.dcc.storage.client.transport.StorageService;
+import org.icgc.dcc.storage.client.transport.Transport;
+import org.icgc.dcc.storage.client.transport.Transport.Mode;
 import org.icgc.dcc.storage.core.model.ObjectSpecification;
 import org.icgc.dcc.storage.core.model.Part;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,23 +51,19 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @Component
-public class ObjectDownload {
+public class DownloadService {
 
   @Autowired
-  private ObjectStoreServiceProxy proxy;
-
+  private StorageService storageService;
   @Autowired
   private DownloadStateStore downloadStateStore;
-
   @Autowired
-  private ObjectTransport.Builder transportBuilder;
+  private Transport.Builder transportBuilder;
+  @Autowired
+  private Terminal terminal;
 
   @Value("${client.upload.retryNumber}")
   private int retryNumber;
-  @Value("${client.ansi}")
-  private boolean ansi;
-  @Value("${client.silent}")
-  private boolean silent;
 
   @PostConstruct
   public void setup() {
@@ -92,7 +89,7 @@ public class ObjectDownload {
    */
   @SneakyThrows
   public URL getUrl(@NonNull String objectId, long offset, long length) {
-    ObjectSpecification spec = proxy.getExternalDownloadSpecification(objectId, offset, length);
+    ObjectSpecification spec = storageService.getExternalDownloadSpecification(objectId, offset, length);
     Part file = getOnlyElement(spec.getParts()); // throws IllegalArgumentException if more than one part
 
     return new URL(file.getUrl());
@@ -100,7 +97,7 @@ public class ObjectDownload {
 
   @SneakyThrows
   public String getUrlAsString(@NonNull String objectId, long offset, long length) {
-    ObjectSpecification spec = proxy.getExternalDownloadSpecification(objectId, offset, length);
+    ObjectSpecification spec = storageService.getExternalDownloadSpecification(objectId, offset, length);
     Part file = getOnlyElement(spec.getParts()); // throws IllegalArgumentException if more than one part
 
     return file.getUrl();
@@ -136,7 +133,7 @@ public class ObjectDownload {
       } catch (NotRetryableException e) {
         log.warn(
             "Download failed during last execution. Checking data integrity. Please wait...", e);
-        if (proxy.isDownloadDataRecoverable(outputDirectory, objectId,
+        if (storageService.isDownloadDataRecoverable(outputDirectory, objectId,
             Downloads.getDownloadFile(outputDirectory, objectId).length())) {
           redo = false;
         } else {
@@ -169,7 +166,7 @@ public class ObjectDownload {
     int total = parts.size();
 
     log.info("{} parts remaining", total);
-    val progress = new ProgressBar(total, total - completedTotal, ansi, silent);
+    val progress = new Progress(total, total - completedTotal, terminal);
     downloadParts(parts, outputDirectory, objectId, objectId, progress, checksum);
 
   }
@@ -202,11 +199,11 @@ public class ObjectDownload {
       Files.createDirectories(dir.toPath());
     }
 
-    ObjectSpecification spec = proxy.getDownloadSpecification(objectId, offset, length);
+    ObjectSpecification spec = storageService.getDownloadSpecification(objectId, offset, length);
     downloadStateStore.init(dir, spec);
 
     // TODO: Assign session id
-    val progress = new ProgressBar(spec.getParts().size(), spec.getParts().size(), ansi, silent);
+    val progress = new Progress(spec.getParts().size(), spec.getParts().size(), terminal);
     downloadParts(spec.getParts(), dir, objectId, objectId, progress, false);
   }
 
@@ -214,9 +211,9 @@ public class ObjectDownload {
    * start downloading parts using a specific configured data transport
    */
   @SneakyThrows
-  private void downloadParts(List<Part> parts, File file, String objectId, String sessionId, ProgressBar progressBar,
+  private void downloadParts(List<Part> parts, File file, String objectId, String sessionId, Progress progressBar,
       boolean checksum) {
-    transportBuilder.withProxy(proxy)
+    transportBuilder.withProxy(storageService)
         .withProgressBar(progressBar)
         .withParts(parts)
         .withObjectId(objectId)

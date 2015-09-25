@@ -27,9 +27,6 @@ import com.beust.jcommander.converters.BaseConverter;
 
 public class OutputTypeConverter extends BaseConverter<Enum<?>> {
 
-  /**
-   * @param optionName
-   */
   public OutputTypeConverter(String optionName) {
     super(optionName);
   }
@@ -39,7 +36,8 @@ public class OutputTypeConverter extends BaseConverter<Enum<?>> {
     try {
       return OutputType.valueOf(value.toUpperCase());
     } catch (Exception ex) {
-      throw new ParameterException(getErrorString(value, "a value in " + Arrays.toString(OutputLayout.values())));
+      throw new ParameterException(
+          getErrorString(value, "a value in " + Arrays.toString(OutputLayout.values())).toLowerCase());
     }
   }
 

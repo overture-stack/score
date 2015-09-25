@@ -18,7 +18,7 @@
 package org.icgc.dcc.storage.client.command;
 
 import org.icgc.dcc.storage.client.cli.ObjectIdValidator;
-import org.icgc.dcc.storage.client.download.ObjectDownload;
+import org.icgc.dcc.storage.client.download.DownloadService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -39,7 +39,7 @@ public class UrlCommand extends AbstractClientCommand {
   private String oid;
 
   @Autowired
-  private ObjectDownload downloader;
+  private DownloadService downloader;
 
   @Override
   @SneakyThrows

@@ -24,7 +24,7 @@ import java.util.Properties;
 
 import org.icgc.dcc.storage.client.cli.FileValidator;
 import org.icgc.dcc.storage.client.cli.ObjectIdValidator;
-import org.icgc.dcc.storage.client.upload.ObjectUpload;
+import org.icgc.dcc.storage.client.upload.UploadService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -55,7 +55,7 @@ public class UploadCommand extends AbstractClientCommand {
   private String oid;
 
   @Autowired
-  private ObjectUpload uploader;
+  private UploadService uploader;
 
   @Override
   @SneakyThrows

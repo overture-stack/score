@@ -1,15 +1,12 @@
 package org.icgc.dcc.storage.client.progress;
 
-import static org.fusesource.jansi.Ansi.ansi;
-
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.fusesource.jansi.Ansi;
-import org.fusesource.jansi.AnsiConsole;
+import org.icgc.dcc.storage.client.cli.Terminal;
 
 import com.google.common.base.Stopwatch;
 
@@ -20,9 +17,8 @@ import lombok.extern.slf4j.Slf4j;
  * Progress bar for keeping track of the upload/download progress
  */
 @Slf4j
-public class ProgressBar {
+public class Progress {
 
-  private static final int PADDING = 4;
   private final AtomicInteger totalIncr = new AtomicInteger(0);
   private final AtomicInteger checksumTotalIncr = new AtomicInteger(0);
   private final AtomicLong nByteWritten = new AtomicLong(0);
@@ -39,23 +35,17 @@ public class ProgressBar {
   private long percent;
   private int checksumPercent = 100;
 
-  private final boolean silent;
+  private Terminal terminal;
 
-  public ProgressBar(int total, int numJobs, boolean ansi, boolean silent) {
-    Ansi.setEnabled(ansi);
-    if (ansi) {
-      AnsiConsole.systemInstall();
-    }
-
+  public Progress(int total, int numJobs, Terminal terminal) {
     this.total = total;
     this.checksumTotal = total - numJobs;
-    this.silent = silent;
+    this.terminal = terminal;
     this.stopwatch = Stopwatch.createUnstarted();
     updateProgress(total - numJobs);
   }
 
   public void start() {
-    println(label("Number of parts remaining") + ": " + metric(total - checksumTotal));
     stopwatch.start();
     progressMonitor = Executors.newSingleThreadScheduledExecutor();
     progressMonitor.scheduleWithFixedDelay(new Runnable() {
@@ -78,17 +68,23 @@ public class ProgressBar {
       log.debug("Cannot stop the stopwatch", e);
     }
     display();
-    println("");
-    println("Finalizing...");
+    terminal.println("");
+    terminal.println("Finalizing...");
   }
 
   public void end(boolean incompleted) {
     if (incompleted) {
-      println("Data transfer has been interrupted. Some parts are missing. Waiting to retry...");
+      terminal
+          .println(terminal.error("Data transfer has been interrupted. Some parts are missing. Waiting to retry..."));
     }
-    println("Total execution time: " + metric(String.format("%15s", stopwatch.toString())));
-    println("Total bytes read:     " + metric(String.format("%15s", formatCount(nByteRead.get()))));
-    println("Total bytes written:  " + metric(String.format("%15s", formatCount(nByteWritten.get()))));
+
+    terminal
+        .println(
+            terminal.label("Total execution time") + ": " + terminal.value(String.format("%15s", stopwatch.toString())))
+        .println(terminal.label("Total bytes read    ") + ": "
+            + terminal.value(String.format("%15s", Terminal.formatCount(nByteRead.get()))))
+        .println(terminal.label("Total bytes written ") + ": "
+            + terminal.value(String.format("%15s", Terminal.formatCount(nByteWritten.get()))));
   }
 
   public void incrementByteWritten(long incr) {
@@ -113,90 +109,45 @@ public class ProgressBar {
 
   public synchronized void display() {
     StringBuilder bar = new StringBuilder("\r");
-    bar.append(metric(String.format("%3s", percent)));
+    bar.append(terminal.value(String.format("%3s", percent)));
     bar.append("% [");
 
     val scale = 0.5f;
 
     for (int i = 0; i < (int) (100 * scale); i++) {
-      if (i <= (int) (percent * scale)) {
-        bar.append(label("◼"));
-      } else {
+      val completed = (int) (percent * scale);
+      if (i <= completed) {
+        bar.append(terminal.label("◼"));
+      } else if (i == completed + 1) {
         bar.append(" ");
+      } else {
+        bar.append("·");
       }
     }
 
     bar.append("] "
         + " "
-        + label("Parts")
+        + terminal.label("Parts")
         + ": "
-        + metric(totalIncr.get() + "/" + total)
+        + terminal.value(totalIncr.get() + "/" + total)
         + ", "
-        + label("Checksum")
+        + terminal.label("Checksum")
         + ": "
-        + bold(checksumPercent)
+        + terminal.value(checksumPercent)
         + "%, "
-        + label("Write/sec")
+        + terminal.label("Write/sec")
         + ": "
-        + metric(format(byteWrittenPerSec))
+        + terminal.value(Terminal.formatBytes(byteWrittenPerSec)) + Terminal.formatBytesUnits(byteWrittenPerSec) + "/s"
         + ", "
-        + label("Read/sec")
+        + terminal.label("Read/sec")
         + ": "
-        + metric(format(byteReadPerSec)));
+        + terminal.value(Terminal.formatBytes(byteReadPerSec)) + Terminal.formatBytesUnits(byteReadPerSec) + "/s");
 
-    for (int i = 0; i < PADDING; i++)
+    val padding = 4;
+    for (int i = 0; i < padding; i++)
       bar.append(" ");
 
-    print(bar.toString());
-  }
-
-  private void print(String text) {
-    if (!silent) {
-      System.err.print(text);
-      System.err.flush();
-    }
-  }
-
-  private void println(String text) {
-    print(text + "\n");
-  }
-
-  private String format(long size) {
-    return formatBytes(size) + "/s";
-  }
-
-  public static String formatBytes(long bytes) {
-    return formatBytes(bytes, true);
-  }
-
-  public static String formatBytes(long bytes, boolean si) {
-    int unit = si ? 1000 : 1024;
-    if (bytes < unit) return bytes + " B";
-
-    int exp = (int) (Math.log(bytes) / Math.log(unit));
-    String pre = (si ? "kMGTPE" : "KMGTPE").charAt(exp - 1) + (si ? "" : "i");
-
-    return String.format("%.1f %sB", bytes / Math.pow(unit, exp), pre);
-  }
-
-  public static String formatCount(long count) {
-    return String.format("%,d", count);
-  }
-
-  private static String label(String text) {
-    return ansi().render("@|green " + text + "|@").toString();
-  }
-
-  private static String bold(long text) {
-    return metric(Long.toString(text));
-  }
-
-  private static String metric(long value) {
-    return metric(Long.toString(value));
-  }
-
-  private static String metric(String text) {
-    return ansi().bold().render(text).boldOff().toString();
+    terminal.print(bar.toString());
   }
 
 }

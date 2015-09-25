@@ -28,9 +28,9 @@ import lombok.val;
 
 public class ProgressFileChannel extends ForwardingFileChannel {
 
-  private final ProgressBar progress;
+  private final Progress progress;
 
-  public ProgressFileChannel(@NonNull FileChannel delegate, @NonNull ProgressBar progress) {
+  public ProgressFileChannel(@NonNull FileChannel delegate, @NonNull Progress progress) {
     super(delegate);
     this.progress = progress;
   }

@@ -34,12 +34,12 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.icgc.dcc.storage.client.download.Downloads;
-import org.icgc.dcc.storage.client.progress.ProgressBar;
+import org.icgc.dcc.storage.client.progress.Progress;
 import org.icgc.dcc.storage.client.progress.ProgressDataChannel;
 import org.icgc.dcc.storage.core.model.DataChannel;
 import org.icgc.dcc.storage.core.model.Part;
 
-import com.google.api.client.util.Preconditions;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Ordering;
 
@@ -54,15 +54,15 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @AllArgsConstructor
-public class ParallelPartObjectTransport implements ObjectTransport {
+public class ParallelPartObjectTransport implements Transport {
 
   private static final int MIN_WORKER = 1;
   private static final long MIN_MEMORY = 1024L * 1024L;
 
-  final protected ObjectStoreServiceProxy proxy;
+  final protected StorageService proxy;
   final protected int nThreads;
   final protected int queueSize;
-  final protected ProgressBar progress;
+  final protected Progress progress;
   final protected List<Part> parts;
   final protected String objectId;
   final protected String uploadId;
@@ -243,7 +243,7 @@ public class ParallelPartObjectTransport implements ObjectTransport {
 
   @Data
   @EqualsAndHashCode(callSuper = true)
-  public static class RemoteParallelBuilder extends ObjectTransport.AbstractBuilder {
+  public static class RemoteParallelBuilder extends Transport.AbstractBuilder {
 
     private int nThreads;
     private long memory;
@@ -265,7 +265,7 @@ public class ParallelPartObjectTransport implements ObjectTransport {
     }
 
     @Override
-    public ObjectTransport build() {
+    public Transport build() {
       checkArgumentsNotNull();
       return new ParallelPartObjectTransport(this);
     }

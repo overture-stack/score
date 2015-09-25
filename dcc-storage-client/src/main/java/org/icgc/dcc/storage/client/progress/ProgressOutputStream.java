@@ -26,9 +26,9 @@ import lombok.NonNull;
 
 public class ProgressOutputStream extends ForwardingOutputStream {
 
-  private final ProgressBar progress;
+  private final Progress progress;
 
-  public ProgressOutputStream(@NonNull OutputStream outputStream, @NonNull ProgressBar progress) {
+  public ProgressOutputStream(@NonNull OutputStream outputStream, @NonNull Progress progress) {
     super(outputStream);
     this.progress = progress;
   }

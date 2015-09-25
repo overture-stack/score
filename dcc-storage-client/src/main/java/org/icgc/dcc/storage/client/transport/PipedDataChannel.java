@@ -21,9 +21,9 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PipedInputStream;
 
+import org.apache.commons.compress.utils.IOUtils;
 import org.icgc.dcc.storage.client.exception.NotRetryableException;
 
-import com.google.api.client.util.IOUtils;
 import com.google.common.hash.Hashing;
 import com.google.common.hash.HashingOutputStream;
 

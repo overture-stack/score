@@ -20,7 +20,7 @@ package org.icgc.dcc.storage.client.transport;
 import java.io.File;
 import java.util.List;
 
-import org.icgc.dcc.storage.client.progress.ProgressBar;
+import org.icgc.dcc.storage.client.progress.Progress;
 import org.icgc.dcc.storage.client.progress.ProgressDataChannel;
 import org.icgc.dcc.storage.core.model.DataChannel;
 import org.icgc.dcc.storage.core.model.Part;
@@ -34,10 +34,10 @@ import lombok.extern.slf4j.Slf4j;
  * A data transport for sequential upload
  */
 @Slf4j
-public class SequentialPartObjectTransport implements ObjectTransport {
+public class SequentialPartObjectTransport implements Transport {
 
-  final private ObjectStoreServiceProxy proxy;
-  final private ProgressBar progress;
+  final private StorageService proxy;
+  final private Progress progress;
   final private List<Part> parts;
   final private String objectId;
   final private String uploadId;
@@ -90,14 +90,14 @@ public class SequentialPartObjectTransport implements ObjectTransport {
 
   }
 
-  public static ObjectTransport.Builder builder() {
+  public static Transport.Builder builder() {
     return new SequentialBuilder();
   }
 
-  public static class SequentialBuilder extends ObjectTransport.AbstractBuilder {
+  public static class SequentialBuilder extends Transport.AbstractBuilder {
 
     @Override
-    public ObjectTransport build() {
+    public Transport build() {
       Preconditions.checkNotNull(parts);
       Preconditions.checkNotNull(proxy);
       Preconditions.checkNotNull(objectId);

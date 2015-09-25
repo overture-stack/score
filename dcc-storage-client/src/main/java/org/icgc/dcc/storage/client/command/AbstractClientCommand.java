@@ -17,6 +17,7 @@
  */
 package org.icgc.dcc.storage.client.command;
 
+import org.icgc.dcc.storage.client.cli.Terminal;
 import org.icgc.dcc.storage.client.config.ClientProperties;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -25,8 +26,13 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 public abstract class AbstractClientCommand implements ClientCommand {
 
+  /**
+   * Dependencies.
+   */
   @Autowired
   protected ClientProperties properties;
+  @Autowired
+  protected Terminal terminal;
 
   protected static void print(String format, Object... args) {
     System.err.printf(format, args);

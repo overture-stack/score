@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.icgc.dcc.storage.client.cli.ObjectIdValidator;
-import org.icgc.dcc.storage.client.download.ObjectDownload;
+import org.icgc.dcc.storage.client.download.DownloadService;
 import org.icgc.dcc.storage.client.metadata.Entity;
 import org.icgc.dcc.storage.client.metadata.MetadataService;
 import org.icgc.dcc.storage.client.slicing.QueryHandler;
@@ -87,7 +87,7 @@ public class ViewCommand extends AbstractClientCommand {
   @Autowired
   private MetadataService metadataService;
   @Autowired
-  private ObjectDownload downloader;
+  private DownloadService downloader;
 
   @Override
   public int execute() {
