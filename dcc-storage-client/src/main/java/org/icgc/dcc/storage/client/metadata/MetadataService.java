@@ -36,11 +36,26 @@ public class MetadataService {
 
   public Optional<Entity> getIndexEntity(Entity entity) {
     val entities = metadataClient.findEntitiesByGnosId(entity.getGnosId());
-
     return entities
         .stream()
-        .filter(e -> e.getFileName().endsWith(".bai"))
+        .filter(e -> isIndexFile(e, entity.getFileName()))
         .findFirst();
+  }
+
+  private static boolean isIndexFile(Entity e, String fileName) {
+    return isBaiFile(e, fileName) || isTbiFile(e, fileName);
+  }
+
+  private static boolean isTbiFile(Entity e, String fileName) {
+    return isMatch(e, fileName + ".tbi");
+  }
+
+  private static boolean isBaiFile(Entity e, String fileName) {
+    return isMatch(e, fileName + ".bai");
+  }
+
+  private static boolean isMatch(Entity e, String indexFileName) {
+    return e.getFileName().compareToIgnoreCase(indexFileName) == 0;
   }
 
 }
