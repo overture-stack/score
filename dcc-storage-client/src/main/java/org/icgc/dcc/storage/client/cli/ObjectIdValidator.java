@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 The Ontario Institute for Cancer Research. All rights reserved.                             
+ * Copyright (c) 2013 The Ontario Institute for Cancer Research. All rights reserved.                             
  *                                                                                                               
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
  * You should have received a copy of the GNU General Public License along with                                  
@@ -15,57 +15,38 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.client.transport;
+package org.icgc.dcc.storage.client.cli;
 
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.PipedInputStream;
+import static java.lang.String.format;
 
-import org.apache.commons.compress.utils.IOUtils;
-import org.icgc.dcc.storage.client.exception.NotRetryableException;
+import java.util.UUID;
 
-import com.google.common.hash.Hashing;
-import com.google.common.hash.HashingOutputStream;
+import com.beust.jcommander.IValueValidator;
+import com.beust.jcommander.ParameterException;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
-
-/**
- * Channels that use pipe
- */
-@Slf4j
-@AllArgsConstructor
-public class PipedDataChannel extends AbstractDataChannel {
-
-  private final PipedInputStream is;
-  @Getter
-  private final long offset;
-  @Getter
-  private final long length;
-  @Getter
-  private String md5 = null;
+public class ObjectIdValidator implements IValueValidator<String> {
 
   @Override
-  public void reset() throws IOException {
-    log.warn("cannot be reset");
-    throw new NotRetryableException();
-  }
-
-  @Override
-  public void writeTo(OutputStream os) throws IOException {
-    HashingOutputStream hos = new HashingOutputStream(Hashing.md5(), os);
-    IOUtils.copy(is, hos);
-    md5 = hos.hash().toString();
-  }
-
-  @Override
-  public void commitToDisk() {
-    try {
-      is.close();
-    } catch (IOException e) {
-      log.warn("fail to close the input pipe", e);
+  public void validate(String name, String objectId) throws ParameterException {
+    if (objectId == null) {
+      return;
     }
+
+    if (tryParse(objectId) == null) {
+      parameterException(name, objectId, "is not a valid UUID");
+    }
+  }
+
+  private UUID tryParse(String objectId) {
+    try {
+      return UUID.fromString(objectId);
+    } catch (IllegalArgumentException e) {
+      return null;
+    }
+  }
+
+  private static void parameterException(String name, String objectId, String message) throws ParameterException {
+    throw new ParameterException(format("Invalid option: %s: %s %s", name, objectId, message));
   }
 
 }

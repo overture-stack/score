@@ -15,57 +15,37 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.client.transport;
+package org.icgc.dcc.storage.client.manifest;
 
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.PipedInputStream;
+import java.util.List;
 
-import org.apache.commons.compress.utils.IOUtils;
-import org.icgc.dcc.storage.client.exception.NotRetryableException;
-
-import com.google.common.hash.Hashing;
-import com.google.common.hash.HashingOutputStream;
-
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
+import lombok.Builder;
+import lombok.Value;
 
 /**
- * Channels that use pipe
+ * See https://wiki.oicr.on.ca/display/DCCSOFT/Uniform+metadata+JSON+document+for+ICGC+Data+Repositories#
+ * UniformmetadataJSONdocumentforICGCDataRepositories-Manifestfileformatfordownloader
  */
-@Slf4j
-@AllArgsConstructor
-public class PipedDataChannel extends AbstractDataChannel {
+@Value
+public class Manifest {
 
-  private final PipedInputStream is;
-  @Getter
-  private final long offset;
-  @Getter
-  private final long length;
-  @Getter
-  private String md5 = null;
+  private final List<ManifestEntry> entries;
 
-  @Override
-  public void reset() throws IOException {
-    log.warn("cannot be reset");
-    throw new NotRetryableException();
-  }
+  @Value
+  @Builder
+  public static class ManifestEntry {
 
-  @Override
-  public void writeTo(OutputStream os) throws IOException {
-    HashingOutputStream hos = new HashingOutputStream(Hashing.md5(), os);
-    IOUtils.copy(is, hos);
-    md5 = hos.hash().toString();
-  }
+    String repoCode;
+    String fileId;
+    String fileUuid;
+    String fileFormat;
+    String fileName;
+    String fileSize;
+    String fileMd5sum;
+    String indexFileUuid;
+    String donorId;
+    String projectId;
 
-  @Override
-  public void commitToDisk() {
-    try {
-      is.close();
-    } catch (IOException e) {
-      log.warn("fail to close the input pipe", e);
-    }
   }
 
 }

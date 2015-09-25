@@ -33,9 +33,15 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.icgc.dcc.storage.client.download.DownloadUtils;
+import org.icgc.dcc.storage.client.download.Downloads;
+import org.icgc.dcc.storage.client.progress.Progress;
+import org.icgc.dcc.storage.client.progress.ProgressDataChannel;
 import org.icgc.dcc.storage.core.model.DataChannel;
 import org.icgc.dcc.storage.core.model.Part;
+
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Ordering;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -43,24 +49,20 @@ import lombok.EqualsAndHashCode;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
-import com.google.api.client.util.Preconditions;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Ordering;
-
 /**
  * The default transport for parallel upload
  */
 @Slf4j
 @AllArgsConstructor
-public class ParallelPartObjectTransport implements ObjectTransport {
+public class ParallelPartObjectTransport implements Transport {
 
   private static final int MIN_WORKER = 1;
   private static final long MIN_MEMORY = 1024L * 1024L;
 
-  final protected ObjectStoreServiceProxy proxy;
+  final protected StorageService proxy;
   final protected int nThreads;
   final protected int queueSize;
-  final protected ProgressBar progress;
+  final protected Progress progress;
   final protected List<Part> parts;
   final protected String objectId;
   final protected String uploadId;
@@ -96,7 +98,8 @@ public class ParallelPartObjectTransport implements ObjectTransport {
 
         @Override
         public Part call() throws Exception {
-          FileDataChannel channel = new FileDataChannel(file, part.getOffset(), part.getPartSize(), null);
+          DataChannel channel =
+              new ProgressDataChannel(new FileDataChannel(file, part.getOffset(), part.getPartSize(), null), progress);
           if (part.isCompleted()) {
             if (isCorrupted(channel, part, file)) {
               proxy.uploadPart(channel, part, objectId, uploadId);
@@ -106,8 +109,8 @@ public class ParallelPartObjectTransport implements ObjectTransport {
             proxy.uploadPart(channel, part, objectId, uploadId);
             progress.updateProgress(1);
           }
-          progress.incrementByteWritten(part.getPartSize());
-          progress.incrementByteRead(part.getPartSize());
+          // progress.incrementByteWritten(part.getPartSize());
+          // progress.incrementByteRead(part.getPartSize());
           return part;
         }
       }));
@@ -129,7 +132,7 @@ public class ParallelPartObjectTransport implements ObjectTransport {
   @Override
   @SneakyThrows
   public void receive(File outputDir) {
-    long fileSize = DownloadUtils.calculateTotalSize(parts);
+    long fileSize = Downloads.calculateTotalSize(parts);
     log.debug("downloading object id: {}, size:{}", objectId, fileSize);
     ExecutorService executor = Executors.newFixedThreadPool(nThreads);
     ImmutableList.Builder<Future<Part>> results = ImmutableList.builder();
@@ -145,8 +148,10 @@ public class ParallelPartObjectTransport implements ObjectTransport {
 
         @Override
         public Part call() throws Exception {
-          FileDataChannel channel =
-              new FileDataChannel(getPartFileName(outputDir, part), part.getOffset(), part.getPartSize(), null);
+          DataChannel channel =
+              new ProgressDataChannel(
+                  new FileDataChannel(getPartFileName(outputDir, part), part.getOffset(), part.getPartSize(), null),
+                  progress);
 
           if (part.isCompleted()) {
             if (checksum && isCorrupted(channel, part, outputDir)) {
@@ -157,8 +162,8 @@ public class ParallelPartObjectTransport implements ObjectTransport {
             proxy.downloadPart(channel, part, objectId, outputDir);
             progress.updateProgress(1);
           }
-          progress.incrementByteRead(part.getPartSize());
-          progress.incrementByteWritten(part.getPartSize());
+          // progress.incrementByteRead(part.getPartSize());
+          // progress.incrementByteWritten(part.getPartSize());
           return part;
         }
       }));
@@ -238,7 +243,7 @@ public class ParallelPartObjectTransport implements ObjectTransport {
 
   @Data
   @EqualsAndHashCode(callSuper = true)
-  public static class RemoteParallelBuilder extends ObjectTransport.AbstractBuilder {
+  public static class RemoteParallelBuilder extends Transport.AbstractBuilder {
 
     private int nThreads;
     private long memory;
@@ -260,7 +265,7 @@ public class ParallelPartObjectTransport implements ObjectTransport {
     }
 
     @Override
-    public ObjectTransport build() {
+    public Transport build() {
       checkArgumentsNotNull();
       return new ParallelPartObjectTransport(this);
     }
@@ -282,8 +287,8 @@ public class ParallelPartObjectTransport implements ObjectTransport {
 
   private void mergeToFile(List<Part> parts, File outputDir) throws IOException {
     // appending parts to objectFile
-    try (RandomAccessFile fos = new RandomAccessFile(DownloadUtils.getDownloadFile(outputDir, objectId), "rw")) {
-      fos.setLength(DownloadUtils.calculateTotalSize(parts));
+    try (RandomAccessFile fos = new RandomAccessFile(Downloads.getDownloadFile(outputDir, objectId), "rw")) {
+      fos.setLength(Downloads.calculateTotalSize(parts));
       FileChannel target = fos.getChannel();
       for (Part part : parts) {
         File partFile = getPartFileName(outputDir, part);

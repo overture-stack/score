@@ -23,9 +23,10 @@ import java.io.InputStream;
 
 import org.icgc.dcc.storage.core.model.DataChannel;
 
-import lombok.extern.slf4j.Slf4j;
-
 import com.google.common.io.ByteStreams;
+
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Abstract channel for data upload
@@ -35,16 +36,20 @@ public abstract class AbstractDataChannel implements DataChannel {
 
   @Override
   public boolean isValidMd5(String expectedMd5) throws IOException {
+    // Need to read through the whole stream in order to calculate the md5
     writeTo(ByteStreams.nullOutputStream());
-    if (!getMd5().equals(expectedMd5)) {
-      log.warn("md5 failed. Expected: {}, Actual: {}. Resend part number = {}", expectedMd5, getMd5());
+
+    // Now it's available
+    val actualMd5 = getMd5();
+    if (!actualMd5.equals(expectedMd5)) {
+      log.warn("md5 failed. Expected: {}, Actual: {}.", expectedMd5, actualMd5);
       return false;
     }
     return true;
   }
 
   @Override
-  public void writeTo(InputStream is) throws IOException {
+  public void readFrom(InputStream is) throws IOException {
     throw new AssertionError("Not implemented");
   }
 }

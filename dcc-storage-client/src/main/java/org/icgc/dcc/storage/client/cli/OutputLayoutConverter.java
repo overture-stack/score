@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 The Ontario Institute for Cancer Research. All rights reserved.                             
+ * Copyright (c) 2013 The Ontario Institute for Cancer Research. All rights reserved.                             
  *                                                                                                               
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
  * You should have received a copy of the GNU General Public License along with                                  
@@ -15,44 +15,28 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.client.cli.command;
+package org.icgc.dcc.storage.client.cli;
 
-import lombok.SneakyThrows;
-import lombok.val;
+import java.util.Arrays;
 
-import org.icgc.dcc.storage.client.download.ObjectDownload;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.icgc.dcc.storage.client.command.DownloadCommand.OutputLayout;
 
-import com.beust.jcommander.Parameter;
-import com.beust.jcommander.Parameters;
+import com.beust.jcommander.ParameterException;
+import com.beust.jcommander.converters.BaseConverter;
 
-/**
- * Resolves URL for a supplied object id.
- */
-@Component
-@Parameters(separators = "=", commandDescription = "object to resolve URL for")
-public class UrlCommand extends AbstractClientCommand {
+public class OutputLayoutConverter extends BaseConverter<Enum<?>> {
 
-  @Parameter(names = "--object-id", description = "object id to resolve URL for", required = true)
-  private String oid;
-
-  // @Parameter(names = "--offset", description = "the start byte position of the range for download", required = false)
-  private long offset = 0L;
-
-  // @Parameter(names = "--length", description = "the number of bytes to include in the download", required = false)
-  private long length = -1L;
-
-  @Autowired
-  private ObjectDownload downloader;
+  public OutputLayoutConverter(String optionName) {
+    super(optionName);
+  }
 
   @Override
-  @SneakyThrows
-  public int execute() {
-    println("Resolving URL for object: %s (offset = %d, length = %d) ", oid, offset, length);
-    val url = downloader.getUrl(oid, offset, length);
-    println("%s", url);
-
-    return SUCCESS_STATUS;
+  public OutputLayout convert(String value) {
+    try {
+      return OutputLayout.valueOf(value.toUpperCase());
+    } catch (Exception ex) {
+      throw new ParameterException(getErrorString(value, "a value in " + Arrays.toString(OutputLayout.values())));
+    }
   }
+
 }

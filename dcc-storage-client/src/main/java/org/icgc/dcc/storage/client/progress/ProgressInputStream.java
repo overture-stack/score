@@ -15,57 +15,53 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.client.transport;
+package org.icgc.dcc.storage.client.progress;
 
 import java.io.IOException;
-import java.io.OutputStream;
-import java.io.PipedInputStream;
+import java.io.InputStream;
 
-import org.apache.commons.compress.utils.IOUtils;
-import org.icgc.dcc.storage.client.exception.NotRetryableException;
+import org.icgc.dcc.storage.core.util.ForwardingInputStream;
 
-import com.google.common.hash.Hashing;
-import com.google.common.hash.HashingOutputStream;
+import lombok.NonNull;
+import lombok.val;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
+public class ProgressInputStream extends ForwardingInputStream {
 
-/**
- * Channels that use pipe
- */
-@Slf4j
-@AllArgsConstructor
-public class PipedDataChannel extends AbstractDataChannel {
+  private final Progress progress;
 
-  private final PipedInputStream is;
-  @Getter
-  private final long offset;
-  @Getter
-  private final long length;
-  @Getter
-  private String md5 = null;
-
-  @Override
-  public void reset() throws IOException {
-    log.warn("cannot be reset");
-    throw new NotRetryableException();
+  public ProgressInputStream(@NonNull InputStream inputStream, @NonNull Progress progress) {
+    super(inputStream);
+    this.progress = progress;
   }
 
   @Override
-  public void writeTo(OutputStream os) throws IOException {
-    HashingOutputStream hos = new HashingOutputStream(Hashing.md5(), os);
-    IOUtils.copy(is, hos);
-    md5 = hos.hash().toString();
-  }
-
-  @Override
-  public void commitToDisk() {
-    try {
-      is.close();
-    } catch (IOException e) {
-      log.warn("fail to close the input pipe", e);
+  public int read() throws IOException {
+    val value = super.read();
+    if (value > 0) {
+      progress.incrementByteRead(1);
     }
+
+    return value;
+  }
+
+  @Override
+  public int read(byte[] b) throws IOException {
+    val value = super.read(b);
+    if (value > 0) {
+      progress.incrementByteRead(value);
+    }
+
+    return value;
+  }
+
+  @Override
+  public int read(byte[] b, int off, int len) throws IOException {
+    val value = super.read(b, off, len);
+    if (value > 0) {
+      progress.incrementByteRead(value);
+    }
+
+    return value;
   }
 
 }

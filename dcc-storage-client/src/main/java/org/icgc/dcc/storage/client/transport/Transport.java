@@ -20,12 +20,13 @@ package org.icgc.dcc.storage.client.transport;
 import java.io.File;
 import java.util.List;
 
+import org.icgc.dcc.storage.client.progress.Progress;
 import org.icgc.dcc.storage.core.model.Part;
 
 /**
  * A transport for data upload
  */
-public interface ObjectTransport {
+public interface Transport {
 
   enum Mode {
     UPLOAD, DOWNLOAD
@@ -44,9 +45,9 @@ public interface ObjectTransport {
    */
   public interface Builder {
 
-    public ObjectTransport build();
+    public Transport build();
 
-    public Builder withProgressBar(ProgressBar progressBar);
+    public Builder withProgressBar(Progress progressBar);
 
     public Builder withParts(List<Part> parts);
 
@@ -54,7 +55,7 @@ public interface ObjectTransport {
 
     public Builder withSessionId(String uploadId);
 
-    public Builder withProxy(ObjectStoreServiceProxy proxy);
+    public Builder withProxy(StorageService proxy);
 
     public Builder withTransportMode(Mode mode);
 
@@ -63,8 +64,8 @@ public interface ObjectTransport {
 
   public abstract class AbstractBuilder implements Builder {
 
-    protected ObjectStoreServiceProxy proxy;
-    protected ProgressBar progressBar;
+    protected StorageService proxy;
+    protected Progress progressBar;
     protected List<Part> parts;
     protected String objectId;
     protected String uploadId;
@@ -72,7 +73,7 @@ public interface ObjectTransport {
     protected boolean checksum;
 
     @Override
-    public Builder withProgressBar(ProgressBar progressBar) {
+    public Builder withProgressBar(Progress progressBar) {
       this.progressBar = progressBar;
       return this;
     }
@@ -102,7 +103,7 @@ public interface ObjectTransport {
     }
 
     @Override
-    public Builder withProxy(ObjectStoreServiceProxy proxy) {
+    public Builder withProxy(StorageService proxy) {
       this.proxy = proxy;
       return this;
     }

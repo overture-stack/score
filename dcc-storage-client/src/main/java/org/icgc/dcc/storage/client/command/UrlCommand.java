@@ -15,69 +15,41 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.client.slicing;
+package org.icgc.dcc.storage.client.command;
 
-import static com.google.common.base.Preconditions.checkState;
-
-import java.util.Optional;
-
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
-
-import org.icgc.dcc.storage.client.transport.MetaServiceProxy;
+import org.icgc.dcc.storage.client.cli.ObjectIdValidator;
+import org.icgc.dcc.storage.client.download.DownloadService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.beust.jcommander.Parameter;
+import com.beust.jcommander.Parameters;
 
-@Slf4j
+import lombok.SneakyThrows;
+import lombok.val;
+
+/**
+ * Resolves URL for a supplied object id.
+ */
 @Component
-public class MetaServiceQuery {
+@Parameters(separators = "=", commandDescription = "Resolves the URL of the remote object")
+public class UrlCommand extends AbstractClientCommand {
+
+  @Parameter(names = "--object-id", description = "object id to resolve URL for", required = true, validateValueWith = ObjectIdValidator.class)
+  private String oid;
 
   @Autowired
-  private MetaServiceProxy metaService;
+  private DownloadService downloader;
 
-  private ObjectNode objectNode;
+  @Override
+  @SneakyThrows
+  public int execute() {
+    val offset = 0L;
+    val length = -1L;
+    println("Resolving URL for object: %s (offset = %d, length = %d) ", oid, offset, length);
+    val url = downloader.getUrl(oid, offset, length);
+    println("%s", url);
 
-  private String objectFileName;
-
-  public void setObjectId(String objectId) {
-    objectNode = metaService.findEntity(objectId);
-    objectFileName = objectNode.get("fileName").textValue();
-    if (!objectFileName.toLowerCase().endsWith(".bam")) {
-      throw new IllegalArgumentException("Cannot view non-BAM files");
-    }
-  }
-
-  public String getFileName() {
-    checkState(objectFileName != null, "Object Id not specified");
-    return objectFileName;
-  }
-
-  /**
-   * Uses GNOS id associated with current BAM file object id
-   * @param entity
-   * @return
-   */
-  public Optional<String> getAssociatedIndexObjectId() {
-    val gnosId = objectNode.get("gnosId").textValue();
-    ObjectNode entities = metaService.findEntitiesByGnosId(gnosId);
-    Optional<String> indexFileObjectId = findIndexFileObjectId(entities);
-    if (!indexFileObjectId.isPresent()) {
-      log.error("Cannot find object id of index file");
-      return Optional.empty();
-    }
-    return indexFileObjectId;
-  }
-
-  private Optional<String> findIndexFileObjectId(final ObjectNode entities) {
-    // loop through all entities associated with GNOS id
-    for (val entity : entities.withArray("content")) {
-      val fileName = entity.get("fileName").textValue();
-      if (fileName.endsWith(".bai")) {
-        return Optional.of(entity.get("id").textValue());
-      }
-    }
-    return Optional.empty();
+    return SUCCESS_STATUS;
   }
 }

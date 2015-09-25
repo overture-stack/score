@@ -1,4 +1,4 @@
-package org.icgc.dcc.storage.client.transport;
+package org.icgc.dcc.storage.client.progress;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -6,20 +6,19 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-import lombok.extern.slf4j.Slf4j;
+import org.icgc.dcc.storage.client.cli.Terminal;
 
 import com.google.common.base.Stopwatch;
 
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
+
 /**
- * progress bar for keeping track of the upload/download progress
+ * Progress bar for keeping track of the upload/download progress
  */
 @Slf4j
-public class ProgressBar {
+public class Progress {
 
-  /**
-   * 
-   */
-  private static final int PADDING = 14;
   private final AtomicInteger totalIncr = new AtomicInteger(0);
   private final AtomicInteger checksumTotalIncr = new AtomicInteger(0);
   private final AtomicLong nByteWritten = new AtomicLong(0);
@@ -36,16 +35,17 @@ public class ProgressBar {
   private long percent;
   private int checksumPercent = 100;
 
-  public ProgressBar(int total, int numJobs) {
+  private Terminal terminal;
+
+  public Progress(int total, int numJobs, Terminal terminal) {
     this.total = total;
     this.checksumTotal = total - numJobs;
+    this.terminal = terminal;
+    this.stopwatch = Stopwatch.createUnstarted();
     updateProgress(total - numJobs);
-    stopwatch = Stopwatch.createUnstarted();
-
   }
 
   public void start() {
-    System.err.println("Number of parts remaining: " + (total - checksumTotal));
     stopwatch.start();
     progressMonitor = Executors.newSingleThreadScheduledExecutor();
     progressMonitor.scheduleWithFixedDelay(new Runnable() {
@@ -65,18 +65,26 @@ public class ProgressBar {
     try {
       progressMonitor.awaitTermination(DELAY, TimeUnit.SECONDS);
     } catch (InterruptedException e) {
-      log.debug("cannot stop the stopwatch", e);
+      log.debug("Cannot stop the stopwatch", e);
     }
     display();
-    System.err.println();
-    System.err.println("Performing data integrity check, please wait...");
+    terminal.println("");
+    terminal.println("Finalizing...");
   }
 
   public void end(boolean incompleted) {
     if (incompleted) {
-      System.err.println("Data transfer has been interrupted. Some parts are missing. Waiting to resubmission...");
+      terminal
+          .println(terminal.error("Data transfer has been interrupted. Some parts are missing. Waiting to retry..."));
     }
-    System.err.println("Total Execution Time (min): " + (stopwatch.elapsed(TimeUnit.MINUTES) + 1));
+
+    terminal
+        .println(
+            terminal.label("Total execution time") + ": " + terminal.value(String.format("%15s", stopwatch.toString())))
+        .println(terminal.label("Total bytes read    ") + ": "
+            + terminal.value(String.format("%15s", Terminal.formatCount(nByteRead.get()))))
+        .println(terminal.label("Total bytes written ") + ": "
+            + terminal.value(String.format("%15s", Terminal.formatCount(nByteWritten.get()))));
   }
 
   public void incrementByteWritten(long incr) {
@@ -100,38 +108,46 @@ public class ProgressBar {
   }
 
   public synchronized void display() {
+    StringBuilder bar = new StringBuilder("\r");
+    bar.append(terminal.value(String.format("%3s", percent)));
+    bar.append("% [");
 
-    StringBuilder bar = new StringBuilder("\r[");
+    val scale = 0.5f;
 
-    for (int i = 0; i < 100; i++) {
-      if (i < (percent)) {
-        bar.append("=");
-      } else if (i == (percent)) {
-        bar.append(">");
-      } else {
+    for (int i = 0; i < (int) (100 * scale); i++) {
+      val completed = (int) (percent * scale);
+      if (i <= completed) {
+        bar.append(terminal.label("◼"));
+      } else if (i == completed + 1) {
         bar.append(" ");
+      } else {
+        bar.append("·");
       }
     }
 
-    bar.append("]   " + percent + "%, Checksum= " + checksumPercent + "%, Write/sec= " + format(byteWrittenPerSec)
-        + ", Read/sec= "
-        + format(byteReadPerSec));
+    bar.append("] "
+        + " "
+        + terminal.label("Parts")
+        + ": "
+        + terminal.value(totalIncr.get() + "/" + total)
+        + ", "
+        + terminal.label("Checksum")
+        + ": "
+        + terminal.value(checksumPercent)
+        + "%, "
+        + terminal.label("Write/sec")
+        + ": "
+        + terminal.value(Terminal.formatBytes(byteWrittenPerSec)) + Terminal.formatBytesUnits(byteWrittenPerSec) + "/s"
+        + ", "
+        + terminal.label("Read/sec")
+        + ": "
+        + terminal.value(Terminal.formatBytes(byteReadPerSec)) + Terminal.formatBytesUnits(byteReadPerSec) + "/s");
 
-    for (int i = 0; i < PADDING; i++)
+    val padding = 4;
+    for (int i = 0; i < padding; i++)
       bar.append(" ");
 
-    System.err.print(bar.toString());
-  }
-
-  private String format(long size) {
-    if ((size >> 10) == 0) {
-      return String.format("%dB/s", size);
-    } else if ((size >> 20) == 0) {
-      return String.format("%dKB/s", size >> 10);
-    } else {
-      return String.format("%dMB/s", size >> 20);
-    }
-
+    terminal.print(bar.toString());
   }
 
 }

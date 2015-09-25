@@ -26,17 +26,17 @@ import java.io.OutputStream;
  */
 public interface DataChannel {
 
-  public void writeTo(OutputStream os) throws IOException;
+  void writeTo(OutputStream os) throws IOException;
 
-  public void writeTo(InputStream is) throws IOException;
+  void readFrom(InputStream is) throws IOException;
 
-  public void reset() throws IOException;
+  void reset() throws IOException;
 
-  public long getLength();
+  long getLength();
 
-  public String getMd5();
+  String getMd5();
 
-  public boolean isValidMd5(String expectedMd5) throws IOException;
+  boolean isValidMd5(String expectedMd5) throws IOException;
 
   void commitToDisk();
 

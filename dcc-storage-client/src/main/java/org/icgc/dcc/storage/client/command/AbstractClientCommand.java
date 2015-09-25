@@ -15,35 +15,31 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.client.transport;
+package org.icgc.dcc.storage.client.command;
 
-import java.net.URL;
-
-import org.springframework.stereotype.Service;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
-import lombok.SneakyThrows;
+import org.icgc.dcc.storage.client.cli.Terminal;
+import org.icgc.dcc.storage.client.config.ClientProperties;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
- * responsible for interacting with metadata service
+ * Abstract class to handle command line arugments
  */
-@Service
-public class MetaServiceProxy {
+public abstract class AbstractClientCommand implements ClientCommand {
 
-  @SneakyThrows
-  public ObjectNode findEntity(String objectId) {
-    return read("/" + objectId);
+  /**
+   * Dependencies.
+   */
+  @Autowired
+  protected ClientProperties properties;
+  @Autowired
+  protected Terminal terminal;
+
+  protected static void print(String format, Object... args) {
+    System.err.printf(format, args);
   }
 
-  @SneakyThrows
-  public ObjectNode findEntitiesByGnosId(String gnosId) {
-    return read("?gnosId=" + gnosId);
+  protected static void println(String format, Object... args) {
+    print(format + "%n", args);
   }
 
-  @SneakyThrows
-  public ObjectNode read(String url) {
-    return new ObjectMapper().readValue(new URL("https://meta.icgc.org/entities" + url), ObjectNode.class);
-  }
 }

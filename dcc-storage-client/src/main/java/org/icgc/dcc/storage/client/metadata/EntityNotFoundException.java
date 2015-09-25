@@ -15,57 +15,29 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.client.transport;
+package org.icgc.dcc.storage.client.metadata;
 
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.PipedInputStream;
+public class EntityNotFoundException extends RuntimeException {
 
-import org.apache.commons.compress.utils.IOUtils;
-import org.icgc.dcc.storage.client.exception.NotRetryableException;
-
-import com.google.common.hash.Hashing;
-import com.google.common.hash.HashingOutputStream;
-
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
-
-/**
- * Channels that use pipe
- */
-@Slf4j
-@AllArgsConstructor
-public class PipedDataChannel extends AbstractDataChannel {
-
-  private final PipedInputStream is;
-  @Getter
-  private final long offset;
-  @Getter
-  private final long length;
-  @Getter
-  private String md5 = null;
-
-  @Override
-  public void reset() throws IOException {
-    log.warn("cannot be reset");
-    throw new NotRetryableException();
+  public EntityNotFoundException() {
+    super();
   }
 
-  @Override
-  public void writeTo(OutputStream os) throws IOException {
-    HashingOutputStream hos = new HashingOutputStream(Hashing.md5(), os);
-    IOUtils.copy(is, hos);
-    md5 = hos.hash().toString();
+  public EntityNotFoundException(String message, Throwable cause, boolean enableSuppression,
+      boolean writableStackTrace) {
+    super(message, cause, enableSuppression, writableStackTrace);
   }
 
-  @Override
-  public void commitToDisk() {
-    try {
-      is.close();
-    } catch (IOException e) {
-      log.warn("fail to close the input pipe", e);
-    }
+  public EntityNotFoundException(String message, Throwable cause) {
+    super(message, cause);
+  }
+
+  public EntityNotFoundException(String message) {
+    super(message);
+  }
+
+  public EntityNotFoundException(Throwable cause) {
+    super(cause);
   }
 
 }

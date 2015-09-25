@@ -15,57 +15,60 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.client.transport;
+package org.icgc.dcc.storage.client.metadata;
 
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.PipedInputStream;
+import java.io.FileNotFoundException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 
-import org.apache.commons.compress.utils.IOUtils;
-import org.icgc.dcc.storage.client.exception.NotRetryableException;
+import org.springframework.stereotype.Service;
 
-import com.google.common.hash.Hashing;
-import com.google.common.hash.HashingOutputStream;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
+import lombok.NonNull;
+import lombok.SneakyThrows;
+import lombok.val;
 
 /**
- * Channels that use pipe
+ * Responsible for interacting with metadata service
  */
-@Slf4j
-@AllArgsConstructor
-public class PipedDataChannel extends AbstractDataChannel {
+@Service
+public class MetadataClient {
 
-  private final PipedInputStream is;
-  @Getter
-  private final long offset;
-  @Getter
-  private final long length;
-  @Getter
-  private String md5 = null;
+  private static final ObjectMapper MAPPER = new ObjectMapper();
 
-  @Override
-  public void reset() throws IOException {
-    log.warn("cannot be reset");
-    throw new NotRetryableException();
+  public Entity findEntity(@NonNull String objectId) throws EntityNotFoundException {
+    return read("/" + objectId);
   }
 
-  @Override
-  public void writeTo(OutputStream os) throws IOException {
-    HashingOutputStream hos = new HashingOutputStream(Hashing.md5(), os);
-    IOUtils.copy(is, hos);
-    md5 = hos.hash().toString();
+  public List<Entity> findEntitiesByGnosId(@NonNull String gnosId) throws EntityNotFoundException {
+    return readAll("?gnosId=" + gnosId);
   }
 
-  @Override
-  public void commitToDisk() {
+  @SneakyThrows
+  private static Entity read(@NonNull String path) {
     try {
-      is.close();
-    } catch (IOException e) {
-      log.warn("fail to close the input pipe", e);
+      return MAPPER.readValue(url(path), Entity.class);
+    } catch (FileNotFoundException e) {
+      throw new EntityNotFoundException(e);
     }
   }
 
+  @SneakyThrows
+  private static List<Entity> readAll(@NonNull String path) {
+    try {
+      val result = MAPPER.readValue(url(path), ObjectNode.class);
+      return MAPPER.convertValue(result.path("content"), new TypeReference<ArrayList<Entity>>() {});
+    } catch (FileNotFoundException e) {
+      throw new EntityNotFoundException(e);
+    }
+  }
+
+  @SneakyThrows
+  private static URL url(String path) {
+    return new URL("https://meta.icgc.org/entities" + path);
+  }
 }

@@ -15,52 +15,28 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.client.cli.command;
-
-import java.io.File;
-
-import lombok.SneakyThrows;
-
-import org.icgc.dcc.storage.client.download.ObjectDownload;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-
-import com.beust.jcommander.Parameter;
-import com.beust.jcommander.Parameters;
+package org.icgc.dcc.storage.client.command;
 
 /**
- * Handle download command line arguments
+ * Abstraction that represents a client command available for execution.
  */
-@Component
-@Parameters(separators = "=", commandDescription = "Retrieve object from ObjectStore")
-public class DownloadCommand extends AbstractClientCommand {
+public interface ClientCommand {
 
-  @Parameter(names = "--out-dir", description = "path to output directory", required = true)
-  private String filePath;
+  /**
+   * Status code returned when a command is successful.
+   */
+  static final int SUCCESS_STATUS = 0;
 
-  @Parameter(names = { "-f", "--force" }, description = "force re-download (override local file)", required = false)
-  private boolean isForce = false;
+  /**
+   * Status code returned when a command has failed.
+   */
+  static final int FAILURE_STATUS = 1;
 
-  @Parameter(names = "--object-id", description = "object id to download", required = true)
-  private String oid;
-
-  @Parameter(names = "--offset", description = "position in source file to begin download from", required = false)
-  private long offset = 0;
-
-  @Parameter(names = "--length", description = "the number of bytes to download (in bytes)", required = false)
-  private long length = -1;
-
-  @Autowired
-  private ObjectDownload downloader;
-
-  @Override
-  @SneakyThrows
-  public int execute() {
-    println("Start downloading object: %s", oid);
-    File dir = new File(filePath);
-    downloader.download(dir, oid, offset, length, isForce);
-
-    return SUCCESS_STATUS;
-  }
+  /**
+   * Execute the command
+   * 
+   * @return the status code
+   */
+  int execute();
 
 }

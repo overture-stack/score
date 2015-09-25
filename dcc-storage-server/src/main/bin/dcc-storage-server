@@ -19,8 +19,8 @@
 # Optimized for use with version 3.5.19 of the Wrapper.
 
 # Application
-APP_NAME="object-store-server"
-APP_LONG_NAME="ObjectStore Service"
+APP_NAME="dcc-storage-server"
+APP_LONG_NAME="DCC Storage Server"
 
 # Wrapper
 WRAPPER_CMD="./wrapper"
@@ -95,19 +95,19 @@ PLIST_DOMAIN=org.tanukisoftware.wrapper
 # The following two lines are used by the chkconfig command. Change as is
 #  appropriate for your application.  They should remain commented.
 # chkconfig: 2345 20 80
-# description:  ObjectStore Server
+# description:  DCC Storage Server
  
 # Initialization block for the install_initd and remove_initd scripts used by
 #  SUSE linux distributions.
 ### BEGIN INIT INFO
-# Provides: object-store-server
+# Provides: dcc-storage-server
 # Required-Start: $local_fs $network $syslog
 # Should-Start: 
 # Required-Stop:
 # Default-Start: 2 3 4 5
 # Default-Stop: 0 1 6
-# Short-Description: ObjectStore Server
-# Description: ObjectStore Server
+# Short-Description: DCC Storage Server
+# Description: DCC Storage Server
 ### END INIT INFO
 
 # Do not modify anything beyond this point

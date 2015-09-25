@@ -15,21 +15,20 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.client.cli.command;
+package org.icgc.dcc.storage.client.config;
 
-import com.beust.jcommander.IParameterValidator;
-import com.beust.jcommander.ParameterException;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Component;
 
-/**
- * 
- */
-public class ViewOutputTypeValidator implements IParameterValidator {
+import lombok.Data;
 
-  @Override
-  public void validate(String name, String value) throws ParameterException {
-    if (!value.toUpperCase().equals("BAM") && !value.toUpperCase().equals("SAM")) {
-      throw new ParameterException("Parameter " + name + " must be one of 'BAM|SAM' (received " + value + ")");
-    }
-  }
+@Data
+@Component
+@ConfigurationProperties(prefix = "transport")
+public class TransportProperties {
+
+  String fileFrom;
+  long memory;
+  int parallel;
 
 }

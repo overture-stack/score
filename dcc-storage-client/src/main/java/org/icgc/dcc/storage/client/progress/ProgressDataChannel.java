@@ -15,24 +15,34 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.client.download;
+package org.icgc.dcc.storage.client.progress;
 
-import java.io.File;
-import java.util.List;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
-import org.icgc.dcc.storage.core.model.Part;
+import org.icgc.dcc.storage.core.model.DataChannel;
+import org.icgc.dcc.storage.core.util.ForwardingDataChannel;
 
-public class DownloadUtils {
+import lombok.NonNull;
 
-  public static File getDownloadFile(File outputDir, String objectId) {
-    return new File(outputDir, objectId);
+public class ProgressDataChannel extends ForwardingDataChannel {
+
+  private final Progress progress;
+
+  public ProgressDataChannel(@NonNull DataChannel delegate, @NonNull Progress progress) {
+    super(delegate);
+    this.progress = progress;
   }
 
-  public static long calculateTotalSize(List<Part> parts) {
-    long total = 0;
-    for (Part part : parts) {
-      total += part.getPartSize();
-    }
-    return total;
+  @Override
+  public void readFrom(InputStream inputStream) throws IOException {
+    super.readFrom(new ProgressInputStream(inputStream, progress));
   }
+
+  @Override
+  public void writeTo(OutputStream outputStream) throws IOException {
+    super.writeTo(new ProgressOutputStream(outputStream, progress));
+  }
+
 }

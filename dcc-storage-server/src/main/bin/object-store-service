@@ -1,9 +1,0 @@
-#!/bin/bash -e
-#
-# Copyright 2015(c) The Ontario Institute for Cancer Research. All rights reserved.
-#
-
-COL_HOME=`dirname $0`/..; export COL_HOME
-SERVICE_DIR="$(cd ${COL_HOME} && pwd -P)"
-
-exec java -Xmx6G -Dspring.profiles.active=prod -Dserver.ssl.key-store=${SERVICE_DIR}/cert/service.jks -Dspring.config.location=${SERVICE_DIR}/conf/ -DLOG_FILE="${COL_HOME}/log/object-store-service.log" -jar ${COL_HOME}/lib/object-store-service.jar "$@"

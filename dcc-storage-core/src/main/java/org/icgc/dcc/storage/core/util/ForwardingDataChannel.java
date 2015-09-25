@@ -15,57 +15,54 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.client.transport;
+package org.icgc.dcc.storage.core.util;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.PipedInputStream;
 
-import org.apache.commons.compress.utils.IOUtils;
-import org.icgc.dcc.storage.client.exception.NotRetryableException;
+import org.icgc.dcc.storage.core.model.DataChannel;
 
-import com.google.common.hash.Hashing;
-import com.google.common.hash.HashingOutputStream;
+import lombok.RequiredArgsConstructor;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
+@RequiredArgsConstructor
+public class ForwardingDataChannel implements DataChannel {
 
-/**
- * Channels that use pipe
- */
-@Slf4j
-@AllArgsConstructor
-public class PipedDataChannel extends AbstractDataChannel {
-
-  private final PipedInputStream is;
-  @Getter
-  private final long offset;
-  @Getter
-  private final long length;
-  @Getter
-  private String md5 = null;
-
-  @Override
-  public void reset() throws IOException {
-    log.warn("cannot be reset");
-    throw new NotRetryableException();
-  }
+  private final DataChannel delegate;
 
   @Override
   public void writeTo(OutputStream os) throws IOException {
-    HashingOutputStream hos = new HashingOutputStream(Hashing.md5(), os);
-    IOUtils.copy(is, hos);
-    md5 = hos.hash().toString();
+    delegate.writeTo(os);
+  }
+
+  @Override
+  public void readFrom(InputStream is) throws IOException {
+    delegate.readFrom(is);
+  }
+
+  @Override
+  public void reset() throws IOException {
+    delegate.reset();
+  }
+
+  @Override
+  public long getLength() {
+    return delegate.getLength();
+  }
+
+  @Override
+  public String getMd5() {
+    return delegate.getMd5();
+  }
+
+  @Override
+  public boolean isValidMd5(String expectedMd5) throws IOException {
+    return delegate.isValidMd5(expectedMd5);
   }
 
   @Override
   public void commitToDisk() {
-    try {
-      is.close();
-    } catch (IOException e) {
-      log.warn("fail to close the input pipe", e);
-    }
+    delegate.commitToDisk();
   }
 
 }

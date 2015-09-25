@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 The Ontario Institute for Cancer Research. All rights reserved.                             
+ * Copyright (c) 2013 The Ontario Institute for Cancer Research. All rights reserved.                             
  *                                                                                                               
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
  * You should have received a copy of the GNU General Public License along with                                  
@@ -15,25 +15,30 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.client.cli.command;
+package org.icgc.dcc.storage.client.cli;
 
-import org.icgc.dcc.storage.client.config.ClientProperties;
-import org.springframework.beans.factory.annotation.Autowired;
+import java.util.Arrays;
 
-/**
- * Abstract class to handle command line arugments
- */
-public abstract class AbstractClientCommand implements ClientCommand {
+import org.icgc.dcc.storage.client.command.DownloadCommand.OutputLayout;
+import org.icgc.dcc.storage.client.command.ViewCommand.OutputType;
 
-  @Autowired
-  protected ClientProperties properties;
+import com.beust.jcommander.ParameterException;
+import com.beust.jcommander.converters.BaseConverter;
 
-  protected static void print(String format, Object... args) {
-    System.err.printf(format, args);
+public class OutputTypeConverter extends BaseConverter<Enum<?>> {
+
+  public OutputTypeConverter(String optionName) {
+    super(optionName);
   }
 
-  protected static void println(String format, Object... args) {
-    print(format + "%n", args);
+  @Override
+  public OutputType convert(String value) {
+    try {
+      return OutputType.valueOf(value.toUpperCase());
+    } catch (Exception ex) {
+      throw new ParameterException(
+          getErrorString(value, "a value in " + Arrays.toString(OutputLayout.values())).toLowerCase());
+    }
   }
 
 }

@@ -15,57 +15,24 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.client.transport;
+package org.icgc.dcc.storage.client.download;
 
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.PipedInputStream;
+import java.io.File;
+import java.util.List;
 
-import org.apache.commons.compress.utils.IOUtils;
-import org.icgc.dcc.storage.client.exception.NotRetryableException;
+import org.icgc.dcc.storage.core.model.Part;
 
-import com.google.common.hash.Hashing;
-import com.google.common.hash.HashingOutputStream;
+public class Downloads {
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
-
-/**
- * Channels that use pipe
- */
-@Slf4j
-@AllArgsConstructor
-public class PipedDataChannel extends AbstractDataChannel {
-
-  private final PipedInputStream is;
-  @Getter
-  private final long offset;
-  @Getter
-  private final long length;
-  @Getter
-  private String md5 = null;
-
-  @Override
-  public void reset() throws IOException {
-    log.warn("cannot be reset");
-    throw new NotRetryableException();
+  public static File getDownloadFile(File outputDir, String objectId) {
+    return new File(outputDir, objectId);
   }
 
-  @Override
-  public void writeTo(OutputStream os) throws IOException {
-    HashingOutputStream hos = new HashingOutputStream(Hashing.md5(), os);
-    IOUtils.copy(is, hos);
-    md5 = hos.hash().toString();
-  }
-
-  @Override
-  public void commitToDisk() {
-    try {
-      is.close();
-    } catch (IOException e) {
-      log.warn("fail to close the input pipe", e);
+  public static long calculateTotalSize(List<Part> parts) {
+    long total = 0;
+    for (Part part : parts) {
+      total += part.getPartSize();
     }
+    return total;
   }
-
 }

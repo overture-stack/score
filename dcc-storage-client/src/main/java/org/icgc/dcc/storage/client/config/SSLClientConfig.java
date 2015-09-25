@@ -41,7 +41,7 @@ import lombok.val;
 public class SSLClientConfig {
 
   @Autowired
-  private ClientProperties properties;
+  ClientProperties properties;
 
   @Bean
   @SneakyThrows

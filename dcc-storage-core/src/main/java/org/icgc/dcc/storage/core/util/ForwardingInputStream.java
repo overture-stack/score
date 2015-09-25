@@ -15,57 +15,76 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.client.transport;
+package org.icgc.dcc.storage.core.util;
 
 import java.io.IOException;
-import java.io.OutputStream;
-import java.io.PipedInputStream;
+import java.io.InputStream;
 
-import org.apache.commons.compress.utils.IOUtils;
-import org.icgc.dcc.storage.client.exception.NotRetryableException;
+import lombok.RequiredArgsConstructor;
 
-import com.google.common.hash.Hashing;
-import com.google.common.hash.HashingOutputStream;
+@RequiredArgsConstructor
+public class ForwardingInputStream extends InputStream {
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
+  private final InputStream delegate;
 
-/**
- * Channels that use pipe
- */
-@Slf4j
-@AllArgsConstructor
-public class PipedDataChannel extends AbstractDataChannel {
+  @Override
+  public int read() throws IOException {
+    return delegate.read();
+  }
 
-  private final PipedInputStream is;
-  @Getter
-  private final long offset;
-  @Getter
-  private final long length;
-  @Getter
-  private String md5 = null;
+  @Override
+  public int hashCode() {
+    return delegate.hashCode();
+  }
+
+  @Override
+  public int read(byte[] b) throws IOException {
+    return delegate.read(b);
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    return delegate.equals(obj);
+  }
+
+  @Override
+  public int read(byte[] b, int off, int len) throws IOException {
+    return delegate.read(b, off, len);
+  }
+
+  @Override
+  public long skip(long n) throws IOException {
+    return delegate.skip(n);
+  }
+
+  @Override
+  public String toString() {
+    return delegate.toString();
+  }
+
+  @Override
+  public int available() throws IOException {
+    return delegate.available();
+  }
+
+  @Override
+  public void close() throws IOException {
+    delegate.close();
+  }
+
+  @Override
+  public void mark(int readlimit) {
+    delegate.mark(readlimit);
+  }
 
   @Override
   public void reset() throws IOException {
-    log.warn("cannot be reset");
-    throw new NotRetryableException();
+    delegate.reset();
   }
 
   @Override
-  public void writeTo(OutputStream os) throws IOException {
-    HashingOutputStream hos = new HashingOutputStream(Hashing.md5(), os);
-    IOUtils.copy(is, hos);
-    md5 = hos.hash().toString();
-  }
-
-  @Override
-  public void commitToDisk() {
-    try {
-      is.close();
-    } catch (IOException e) {
-      log.warn("fail to close the input pipe", e);
-    }
+  public boolean markSupported() {
+    return delegate.markSupported();
   }
 
 }

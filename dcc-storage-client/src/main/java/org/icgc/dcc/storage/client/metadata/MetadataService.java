@@ -15,57 +15,32 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.client.transport;
+package org.icgc.dcc.storage.client.metadata;
 
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.PipedInputStream;
+import java.util.Optional;
 
-import org.apache.commons.compress.utils.IOUtils;
-import org.icgc.dcc.storage.client.exception.NotRetryableException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
-import com.google.common.hash.Hashing;
-import com.google.common.hash.HashingOutputStream;
+import lombok.val;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
+@Service
+public class MetadataService {
 
-/**
- * Channels that use pipe
- */
-@Slf4j
-@AllArgsConstructor
-public class PipedDataChannel extends AbstractDataChannel {
+  @Autowired
+  private MetadataClient metadataClient;
 
-  private final PipedInputStream is;
-  @Getter
-  private final long offset;
-  @Getter
-  private final long length;
-  @Getter
-  private String md5 = null;
-
-  @Override
-  public void reset() throws IOException {
-    log.warn("cannot be reset");
-    throw new NotRetryableException();
+  public Entity getEntity(String objectId) {
+    return metadataClient.findEntity(objectId);
   }
 
-  @Override
-  public void writeTo(OutputStream os) throws IOException {
-    HashingOutputStream hos = new HashingOutputStream(Hashing.md5(), os);
-    IOUtils.copy(is, hos);
-    md5 = hos.hash().toString();
-  }
+  public Optional<Entity> getIndexEntity(Entity entity) {
+    val entities = metadataClient.findEntitiesByGnosId(entity.getGnosId());
 
-  @Override
-  public void commitToDisk() {
-    try {
-      is.close();
-    } catch (IOException e) {
-      log.warn("fail to close the input pipe", e);
-    }
+    return entities
+        .stream()
+        .filter(e -> e.getFileName().endsWith(".bai"))
+        .findFirst();
   }
 
 }
