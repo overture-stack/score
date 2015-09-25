@@ -16,6 +16,6 @@ exec java -Xms2G -Xmx3G \
 	-Dlogging.file=${COL_HOME}/logs/client.log \
 	-Dspring.config.location=${CLIENT_DIR}/conf/ \
 	-Dclient.directory=${CLIENT_DIR} \
-	-cp ${COL_HOME}/conf:${COL_HOME}/lib/object-store-client.jar \
+	-cp ${COL_HOME}/conf:${COL_HOME}/lib/dcc-storage-client.jar \
 	org.springframework.boot.loader.JarLauncher \
 	"$@"
