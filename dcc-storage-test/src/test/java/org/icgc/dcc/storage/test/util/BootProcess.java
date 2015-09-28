@@ -15,20 +15,33 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.test.auth;
+package org.icgc.dcc.storage.test.util;
 
-import org.icgc.dcc.metadata.server.ServerMain;
+import java.io.File;
 
-public class Auth {
+import com.google.common.collect.ImmutableList;
 
-  private final String[] args;
+import lombok.SneakyThrows;
+import lombok.val;
 
-  public Auth(String... args) {
-    this.args = args;
+public class BootProcess {
+
+  @SneakyThrows
+  public static Process bootProcess(Class<?> mainClass, String... args) {
+    val jarFile = new File(mainClass.getProtectionDomain().getCodeSource().getLocation().getPath());
+    return bootProcess(jarFile, args);
   }
 
-  public void start() {
-    ServerMain.main(args);
+  @SneakyThrows
+  public static Process bootProcess(File jarFile, String... args) {
+    args = ImmutableList.<String> builder()
+        .add("java", "-jar", jarFile.getCanonicalPath())
+        .add(args).build()
+        .toArray(new String[args.length + 1]);
+
+    val process = new ProcessBuilder(args).inheritIO().start();
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> process.destroyForcibly()));
+    return process;
   }
 
 }

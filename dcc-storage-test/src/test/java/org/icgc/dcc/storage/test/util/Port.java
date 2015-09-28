@@ -15,20 +15,51 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.test.meta;
+package org.icgc.dcc.storage.test.util;
 
-import org.icgc.dcc.metadata.server.ServerMain;
+import static com.google.common.base.Stopwatch.createStarted;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
-public class Meta {
+import java.net.InetSocketAddress;
+import java.net.Socket;
+import java.net.SocketException;
+import java.util.concurrent.TimeUnit;
 
-  private final String[] args;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
-  public Meta(String... args) {
-    this.args = args;
-  }
+@Slf4j
+@RequiredArgsConstructor
+public class Port {
 
-  public void start() {
-    ServerMain.main(args);
+  @NonNull
+  private final String host;
+  private final int port;
+
+  @SneakyThrows
+  public void waitFor(long timeValue, TimeUnit timeUnit) {
+    val address = new InetSocketAddress(host, port);
+    val duration = timeUnit.toMillis(timeValue);
+    val threshold = System.currentTimeMillis() + duration;
+
+    log.info("Waiting up to {} {} for {}:{} to become available...", timeValue, timeUnit, host, port);
+    val watch = createStarted();
+    while (System.currentTimeMillis() < threshold) {
+      try (val socket = new Socket()) {
+        socket.connect(address, (int) duration);
+
+        log.info("Port available!");
+        return;
+      } catch (SocketException e) {
+        log.info("Waiting ({})...", watch);
+        Thread.sleep(SECONDS.toMillis(5));
+      }
+    }
+
+    log.warn("After {} {} portal not available for {}:{}!", timeValue, timeUnit, host, port);
   }
 
 }

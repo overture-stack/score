@@ -20,6 +20,7 @@
       <groupId>com.scireum</groupId>
       <artifactId>s3ninja</artifactId>
       <version>2.4</version>
+      <scope>test</scope>
       <exclusions>
         <exclusion>
           <artifactId>slf4j-log4j12</artifactId>
@@ -28,14 +29,39 @@
       </exclusions>
     </dependency>
     <dependency>
+      <groupId>de.flapdoodle.embed</groupId>
+      <artifactId>de.flapdoodle.embed.mongo</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.icgc.dcc</groupId>
+      <artifactId>dcc-storage-server</artifactId>
+      <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.icgc.dcc</groupId>
+      <artifactId>dcc-storage-client</artifactId>
+      <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>org.icgc.dcc</groupId>
       <artifactId>dcc-auth-server</artifactId>
       <version>${dcc-auth.version}</version>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.icgc.dcc</groupId>
       <artifactId>dcc-metadata-server</artifactId>
       <version>${dcc-metadata.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.icgc.dcc</groupId>
+      <artifactId>dcc-metadata-client</artifactId>
+      <version>${dcc-metadata.version}</version>
+      <scope>test</scope>
     </dependency>    
 
   </dependencies>

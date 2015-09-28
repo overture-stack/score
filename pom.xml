@@ -80,7 +80,7 @@
 
   <properties>
     <!-- Versions - DCC -->
-    <dcc-metadata.version>0.0.13</dcc-metadata.version>
+    <dcc-metadata.version>0.0.14</dcc-metadata.version>
     <dcc-auth.version>1.0.4</dcc-auth.version>
     
     <!-- Versions - Spring -->
