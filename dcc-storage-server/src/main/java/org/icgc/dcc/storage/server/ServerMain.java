@@ -9,10 +9,10 @@ import org.springframework.boot.autoconfigure.security.SecurityAutoConfiguration
  * Application entry point.
  */
 @SpringBootApplication(exclude = { SecurityAutoConfiguration.class, ManagementSecurityAutoConfiguration.class })
-public class ObjectStoreMain {
+public class ServerMain {
 
   public static void main(String... args) {
-    SpringApplication.run(ObjectStoreMain.class, args);
+    SpringApplication.run(ServerMain.class, args);
   }
 
 }

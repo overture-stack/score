@@ -19,6 +19,7 @@
     <module>dcc-storage-core</module>
     <module>dcc-storage-client</module>
     <module>dcc-storage-server</module>
+    <module>dcc-storage-test</module>
   </modules>
 
   <repositories>
@@ -28,6 +29,16 @@
       <url>http://seqwaremaven.oicr.on.ca/artifactory/dcc-release</url>
     </repository>
   </repositories>
+
+  <dependencies>
+  
+    <!-- Utilities -->
+    <dependency>
+      <groupId>org.projectlombok</groupId>
+      <artifactId>lombok</artifactId>
+    </dependency>
+    
+  </dependencies>
 
   <dependencyManagement>
     <dependencies>
@@ -64,9 +75,14 @@
         <version>${aws-java-sdk.version}</version>
       </dependency>
     </dependencies>
+    
   </dependencyManagement>
 
   <properties>
+    <!-- Versions - DCC -->
+    <dcc-metadata.version>0.0.13</dcc-metadata.version>
+    <dcc-auth.version>1.0.4</dcc-auth.version>
+    
     <!-- Versions - Spring -->
     <spring-boot.version>1.2.6.RELEASE</spring-boot.version>
     <spring-retry.version>1.1.2.RELEASE</spring-retry.version>

@@ -1,5 +1,5 @@
 #
-# Object Store Service - Configuration
+# DCC Storage Server - Configuration
 #
 
 ###############################################################################
@@ -111,6 +111,30 @@ auth:
     downloadScope: s3.download
     #uploadScope: os.upload
     #downloadScope: os.download
+
+---
+
+###############################################################################
+# Profile - "dev"
+###############################################################################
+
+spring.profiles: dev
+
+s3:
+  secured: false
+  endpoint: localhost:9444/s3
+  accessKey: AKIAIOSFODNN7EXAMPLE 
+  secretKey: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+
+# Server
+server:
+
+collaboratory:
+  bucket.name: test.icgc
+
+# Metadata server
+metadata:
+  url: https://meta.icgc.org/entities
 
 ---
 
