@@ -1,6 +1,8 @@
 package org.icgc.dcc.storage.test;
 
+import static com.google.common.base.Strings.repeat;
 import static java.util.concurrent.TimeUnit.MINUTES;
+import static org.icgc.dcc.storage.test.util.Assertions.assertDirectories;
 import static org.icgc.dcc.storage.test.util.SpringBootProcess.bootRun;
 
 import java.io.File;
@@ -17,12 +19,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.google.common.base.Strings;
-
 import lombok.val;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 public class StorageIntegrationTest {
 
   /**
@@ -61,9 +59,9 @@ public class StorageIntegrationTest {
     storageServer();
 
     banner("Waiting for service ports...");
-    new Port("localhost", authPort).waitFor(1, MINUTES);
-    new Port("localhost", metadataPort).waitFor(1, MINUTES);
-    new Port("localhost", storagePort).waitFor(1, MINUTES);
+    waitForPort(authPort);
+    waitForPort(metadataPort);
+    waitForPort(storagePort);
   }
 
   @After
@@ -81,7 +79,6 @@ public class StorageIntegrationTest {
 
     banner("Authorizing...");
     val accessToken = new AuthClient("https://localhost:" + authPort).createAccessToken();
-    log.info("accessToken: {}", accessToken);
 
     //
     // Register
@@ -89,7 +86,7 @@ public class StorageIntegrationTest {
 
     banner("Registering...");
     val register = metadataClient(accessToken,
-        "-i", "src/test/resources/fixtures/" + gnosId,
+        "-i", fs.getUploadsDir() + "/" + gnosId,
         "-m", "manifest.txt",
         "-o", fs.getRootDir().toString());
     register.waitFor(1, MINUTES);
@@ -108,14 +105,27 @@ public class StorageIntegrationTest {
     // Download
     //
 
-    for (val entity : findEntities(gnosId)) {
+    val entities = findEntities(gnosId);
+    for (val entity : entities) {
+      if (entity.getFileName().endsWith(".bai")) {
+        // Skip BAI files since these will be downloaded when the BAM file is requested
+        continue;
+      }
+
       banner("Downloading " + entity);
       val download = storageClient(accessToken,
           "download",
           "--object-id", entity.getId(),
+          "--output-layout", "bundle",
           "--output-dir", fs.getDownloadsDir().toString());
       download.waitFor(1, MINUTES);
     }
+
+    //
+    // Verify
+    //
+    banner("Verifying...");
+    assertDirectories(fs.getDownloadsDir(), fs.getUploadsDir());
   }
 
   private void authServer() {
@@ -132,7 +142,7 @@ public class StorageIntegrationTest {
     bootRun(
         org.icgc.dcc.metadata.server.ServerMain.class,
         "--spring.profiles.active=development",
-        "--logging.file=" + fs.getLogsDir() + "dcc-metadata-server.log",
+        "--logging.file=" + fs.getLogsDir() + "/dcc-metadata-server.log",
         "--server.port=" + metadataPort,
         "--management.port=8544",
         "--endpoints.jmx.domain=metadata",
@@ -186,11 +196,15 @@ public class StorageIntegrationTest {
     return targetDir.listFiles((File file, String name) -> name.startsWith(artifactId) && name.endsWith(".jar"))[0];
   }
 
+  private static void waitForPort(int port) {
+    new Port("localhost", port).waitFor(1, MINUTES);
+  }
+
   private static void banner(String text) {
     System.out.println("");
-    log.info("{}", Strings.repeat("#", 100));
-    log.info("{}", text);
-    log.info("{}", Strings.repeat("#", 100));
+    System.out.println(repeat("#", 100));
+    System.out.println(text);
+    System.out.println(repeat("#", 100));
     System.out.println("");
   }
 

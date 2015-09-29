@@ -33,7 +33,7 @@ public class OutputLayoutConverter extends BaseConverter<Enum<?>> {
   @Override
   public OutputLayout convert(String value) {
     try {
-      return OutputLayout.valueOf(value.toUpperCase());
+      return OutputLayout.valueOf(value.toLowerCase());
     } catch (Exception ex) {
       throw new ParameterException(getErrorString(value, "a value in " + Arrays.toString(OutputLayout.values())));
     }

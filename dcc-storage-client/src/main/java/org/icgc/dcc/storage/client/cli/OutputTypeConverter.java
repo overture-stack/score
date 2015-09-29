@@ -34,10 +34,10 @@ public class OutputTypeConverter extends BaseConverter<Enum<?>> {
   @Override
   public OutputType convert(String value) {
     try {
-      return OutputType.valueOf(value.toUpperCase());
+      return OutputType.valueOf(value.toLowerCase());
     } catch (Exception ex) {
       throw new ParameterException(
-          getErrorString(value, "a value in " + Arrays.toString(OutputLayout.values())).toLowerCase());
+          getErrorString(value, "a value in " + Arrays.toString(OutputLayout.values())));
     }
   }
 

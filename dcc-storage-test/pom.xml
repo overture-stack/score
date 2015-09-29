@@ -16,10 +16,11 @@
 
   <dependencies>
 
+    <!-- Test - S3 --> <!-- Note: needs to be first -->
     <dependency>
       <groupId>com.scireum</groupId>
       <artifactId>s3ninja</artifactId>
-      <version>2.6</version>
+      <version>${s3ninja.version}</version>
       <scope>test</scope>
       <exclusions>
         <exclusion>
@@ -28,27 +29,34 @@
         </exclusion>
       </exclusions>
     </dependency>
+
+    <!-- Test - DCC Storage -->
     <dependency>
-      <groupId>de.flapdoodle.embed</groupId>
-      <artifactId>de.flapdoodle.embed.mongo</artifactId>
+      <groupId>org.icgc.dcc</groupId>
+      <artifactId>dcc-storage-client</artifactId>
+      <version>${project.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.icgc.dcc</groupId>
       <artifactId>dcc-storage-server</artifactId>
-      <version>0.0.23-SNAPSHOT</version>
+      <version>${project.version}</version>
       <scope>test</scope>
     </dependency>
-    <dependency>
-      <groupId>org.icgc.dcc</groupId>
-      <artifactId>dcc-storage-client</artifactId>
-      <version>0.0.23-SNAPSHOT</version>
-      <scope>test</scope>
-    </dependency>
+
+    <!-- Test - DCC Auth -->
     <dependency>
       <groupId>org.icgc.dcc</groupId>
       <artifactId>dcc-auth-server</artifactId>
       <version>${dcc-auth.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- Test - DCC Metadata -->
+    <dependency>
+      <groupId>org.icgc.dcc</groupId>
+      <artifactId>dcc-metadata-client</artifactId>
+      <version>${dcc-metadata.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -57,15 +65,19 @@
       <version>${dcc-metadata.version}</version>
       <scope>test</scope>
     </dependency>
+
+    <!-- Test - Mongo -->
     <dependency>
-      <groupId>org.icgc.dcc</groupId>
-      <artifactId>dcc-metadata-client</artifactId>
-      <version>${dcc-metadata.version}</version>
+      <groupId>de.flapdoodle.embed</groupId>
+      <artifactId>de.flapdoodle.embed.mongo</artifactId>
       <scope>test</scope>
-    </dependency>    
+    </dependency>
 
   </dependencies>
 
   <properties>
+    <!-- Versions - S3 -->
+    <s3ninja.version>2.6</s3ninja.version>
   </properties>
+  
 </project>
