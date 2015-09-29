@@ -15,21 +15,51 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.test.s3;
+package org.icgc.dcc.storage.test.fs;
 
-import sirius.kernel.Setup;
-import sirius.kernel.Setup.Mode;
-import sirius.kernel.Sirius;
+import static org.apache.commons.io.FileUtils.copyDirectory;
+import static org.apache.commons.io.FileUtils.deleteDirectory;
+import static org.apache.commons.io.FileUtils.forceMkdir;
 
-public class S3 {
+import java.io.File;
 
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@RequiredArgsConstructor
+public class FileSystem {
+
+  @Getter
+  private final File rootDir;
+  private final String gnosId;
+
+  @SneakyThrows
   public void start() {
-    Setup setup = new Setup(Mode.DEV, ClassLoader.getSystemClassLoader()).withLogToFile(false);
-    Sirius.start(setup);
+    deleteDirectory(rootDir);
+    for (val path : new String[] { "s3/buckets", "s3/multipart", "downloads", "uploads", "logs" }) {
+      val dir = new File(rootDir, path);
+
+      log.info("Creating '{}'...", dir);
+      forceMkdir(dir);
+    }
+
+    copyDirectory(new File("src/test/resources/fixtures/" + gnosId), new File(rootDir + "/uploads/" + gnosId));
   }
 
-  public void stop() {
-    Sirius.stop();
+  public File getUploadsDir() {
+    return new File(rootDir, "uploads");
+  }
+
+  public File getDownloadsDir() {
+    return new File(rootDir, "downloads");
+  }
+
+  public File getLogsDir() {
+    return new File(rootDir, "logs");
   }
 
 }

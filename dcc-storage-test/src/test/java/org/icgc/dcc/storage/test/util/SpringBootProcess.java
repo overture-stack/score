@@ -27,23 +27,23 @@ import lombok.val;
 /**
  * Spring boot process wrapper.
  */
-public class BootProcess {
+public class SpringBootProcess {
 
-  public static Process bootProcess(Class<?> mainClass, String... config) {
-    return bootProcess(mainClass, new String[] {}, config);
+  public static Process bootRun(Class<?> mainClass, String... config) {
+    return bootRun(mainClass, new String[] {}, config);
   }
 
-  public static Process bootProcess(Class<?> mainClass, String[] args, String... config) {
+  public static Process bootRun(Class<?> mainClass, String[] args, String... config) {
     val jarFile = new File(mainClass.getProtectionDomain().getCodeSource().getLocation().getPath());
-    return bootProcess(jarFile, args, config);
+    return bootRun(jarFile, args, config);
   }
 
-  public static Process bootProcess(File jarFile, String... config) {
-    return bootProcess(jarFile, new String[] {}, config);
+  public static Process bootRun(File jarFile, String... config) {
+    return bootRun(jarFile, new String[] {}, config);
   }
 
   @SneakyThrows
-  public static Process bootProcess(File jarFile, String[] args, String... config) {
+  public static Process bootRun(File jarFile, String[] args, String... config) {
     args = ImmutableList.<String> builder()
         .add("java", "-Ds3ninja=true", "-jar", jarFile.getCanonicalPath())
         .add(args)
