@@ -22,6 +22,9 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.icgc.dcc.common.core.security.SSLCertificateValidation;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -33,12 +36,30 @@ import lombok.SneakyThrows;
 import lombok.val;
 
 /**
- * Responsible for interacting with metadata service
+ * Responsible for interacting with metadata service.
  */
 @Service
 public class MetadataClient {
 
+  /**
+   * Constants.
+   */
   private static final ObjectMapper MAPPER = new ObjectMapper();
+
+  /**
+   * Configuration.
+   */
+  @NonNull
+  private final String serverUrl;
+
+  @Autowired
+  public MetadataClient(@Value("${metadata.url}") String serverUrl, @Value("${metadata.ssl.enabled}") boolean ssl) {
+    if (!ssl) {
+      SSLCertificateValidation.disable();
+    }
+
+    this.serverUrl = serverUrl;
+  }
 
   public Entity findEntity(@NonNull String objectId) throws EntityNotFoundException {
     return read("/" + objectId);
@@ -49,7 +70,7 @@ public class MetadataClient {
   }
 
   @SneakyThrows
-  private static Entity read(@NonNull String path) {
+  private Entity read(@NonNull String path) {
     try {
       return MAPPER.readValue(url(path), Entity.class);
     } catch (FileNotFoundException e) {
@@ -58,7 +79,7 @@ public class MetadataClient {
   }
 
   @SneakyThrows
-  private static List<Entity> readAll(@NonNull String path) {
+  private List<Entity> readAll(@NonNull String path) {
     try {
       val result = MAPPER.readValue(url(path), ObjectNode.class);
       return MAPPER.convertValue(result.path("content"), new TypeReference<ArrayList<Entity>>() {});
@@ -68,7 +89,7 @@ public class MetadataClient {
   }
 
   @SneakyThrows
-  private static URL url(String path) {
-    return new URL("https://meta.icgc.org/entities" + path);
+  private URL url(String path) {
+    return new URL(serverUrl + "/entities" + path);
   }
 }

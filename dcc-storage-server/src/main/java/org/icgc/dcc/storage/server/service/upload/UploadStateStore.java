@@ -24,9 +24,6 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
-
 import org.apache.commons.lang.StringUtils;
 import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.map.JsonMappingException;
@@ -54,6 +51,10 @@ import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectInputStream;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.google.common.collect.Lists;
+
+import lombok.SneakyThrows;
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * It records the state of a upload in progress
@@ -214,8 +215,7 @@ public class UploadStateStore {
     return true;
   }
 
-  public void finalizeUploadPart(String objectId, String uploadId, int partNumber, String md5, String eTag)
-  {
+  public void finalizeUploadPart(String objectId, String uploadId, int partNumber, String md5, String eTag) {
     ObjectMapper mapper = new ObjectMapper();
     try {
       log.debug("Finalize part for object id: {}, upload id: {}, md5: {}, eTag: {}", objectId, uploadId, md5, eTag);
@@ -274,7 +274,7 @@ public class UploadStateStore {
     ListObjectsRequest req = new ListObjectsRequest()
         .withBucketName(bucketName)
         .withMaxKeys(MAX_KEYS)
-        .withDelimiter(DIRECTORY_SEPARATOR)
+        .withDelimiter(getDirectorySeparator())
         .withPrefix(getUploadStateKey(objectId, ""));
     try {
       ObjectListing objectListing;
@@ -298,25 +298,33 @@ public class UploadStateStore {
 
   private String getUploadIdFromMeta(String objectId, String objectUploadKey) {
     return StringUtils.removeEnd(StringUtils.removeStart(objectUploadKey, getUploadStateKey(objectId, "")),
-        DIRECTORY_SEPARATOR);
+        getDirectorySeparator());
   }
 
   private String getUploadStateKey(String objectId, String uploadId) {
+    val directorySeparator = getDirectorySeparator();
+
     return new StringBuilder(upload)
-        .append(DIRECTORY_SEPARATOR)
+        .append(directorySeparator)
         .append(objectId)
         .append(UPLOAD_SEPARATOR)
         .append(uploadId)
         .toString();
   }
 
+  public String getDirectorySeparator() {
+    return Boolean.getBoolean("s3ninja") ? "_" : DIRECTORY_SEPARATOR;
+  }
+
   private String getUploadStateKey(String objectId, String uploadId, String filename) {
+    val directorySeparator = getDirectorySeparator();
+
     return new StringBuilder(upload)
-        .append(DIRECTORY_SEPARATOR)
+        .append(directorySeparator)
         .append(objectId)
         .append(UPLOAD_SEPARATOR)
         .append(uploadId)
-        .append(DIRECTORY_SEPARATOR)
+        .append(directorySeparator)
         .append(filename)
         .toString();
   }

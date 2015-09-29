@@ -60,7 +60,6 @@ public class UploadCommand extends AbstractClientCommand {
   @Override
   @SneakyThrows
   public int execute() {
-
     if (file != null) {
       println("Start uploading file: %s", file);
       log.info("file: {}", file);

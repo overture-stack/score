@@ -24,19 +24,30 @@ import com.google.common.collect.ImmutableList;
 import lombok.SneakyThrows;
 import lombok.val;
 
+/**
+ * Spring boot process wrapper.
+ */
 public class BootProcess {
 
-  @SneakyThrows
-  public static Process bootProcess(Class<?> mainClass, String... args) {
+  public static Process bootProcess(Class<?> mainClass, String... config) {
+    return bootProcess(mainClass, new String[] {}, config);
+  }
+
+  public static Process bootProcess(Class<?> mainClass, String[] args, String... config) {
     val jarFile = new File(mainClass.getProtectionDomain().getCodeSource().getLocation().getPath());
-    return bootProcess(jarFile, args);
+    return bootProcess(jarFile, args, config);
+  }
+
+  public static Process bootProcess(File jarFile, String... config) {
+    return bootProcess(jarFile, new String[] {}, config);
   }
 
   @SneakyThrows
-  public static Process bootProcess(File jarFile, String... args) {
+  public static Process bootProcess(File jarFile, String[] args, String... config) {
     args = ImmutableList.<String> builder()
-        .add("java", "-jar", jarFile.getCanonicalPath())
-        .add(args).build()
+        .add("java", "-Ds3ninja=true", "-jar", jarFile.getCanonicalPath())
+        .add(args)
+        .add(config).build()
         .toArray(new String[args.length + 1]);
 
     val process = new ProcessBuilder(args).inheritIO().start();

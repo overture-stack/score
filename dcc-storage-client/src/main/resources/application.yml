@@ -26,6 +26,11 @@ client:
     enabled: false
     custom: false
 
+# Metadata server
+metadata:
+  url: https://meta.icgc.org/entities
+  ssl:
+    enabled: true
     
 logging:
   file: target/logs/client.log
