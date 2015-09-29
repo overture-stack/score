@@ -19,13 +19,12 @@ package org.icgc.dcc.storage.client.cli;
 
 import java.util.Arrays;
 
-import org.icgc.dcc.storage.client.command.DownloadCommand.OutputLayout;
 import org.icgc.dcc.storage.client.command.ViewCommand.OutputType;
 
 import com.beust.jcommander.ParameterException;
 import com.beust.jcommander.converters.BaseConverter;
 
-public class OutputTypeConverter extends BaseConverter<Enum<?>> {
+public class OutputTypeConverter extends BaseConverter<OutputType> {
 
   public OutputTypeConverter(String optionName) {
     super(optionName);
@@ -37,7 +36,7 @@ public class OutputTypeConverter extends BaseConverter<Enum<?>> {
       return OutputType.valueOf(value.toLowerCase());
     } catch (Exception ex) {
       throw new ParameterException(
-          getErrorString(value, "a value in " + Arrays.toString(OutputLayout.values())));
+          getErrorString(value, "a value in " + Arrays.toString(OutputType.values())));
     }
   }
 

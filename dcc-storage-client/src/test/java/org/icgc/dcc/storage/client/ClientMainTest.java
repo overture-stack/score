@@ -21,7 +21,16 @@ public class ClientMainTest extends AbstractClientMainTest {
     executeMain("view", "--output-type", "xxx");
 
     assertTrue(getExitCode() == 1);
-    assertTrue(getOutput().contains("Invalid value for --output-type parameter. Allowed values:[bam, sam]"));
+    assertTrue(
+        getOutput().contains("Bad parameter(s): \"--output-type\": couldn't convert \"xxx\" to a value in [bam, sam]"));
+  }
+
+  @Test
+  public void testMainViewFileWithUpperCaseOutputType() throws Exception {
+    executeMain("view", "--output-type", "BAM");
+
+    assertTrue(getExitCode() == 1);
+    assertTrue(getOutput().contains("Command error: No BAM file input specified"));
   }
 
   @Test
@@ -81,6 +90,14 @@ public class ClientMainTest extends AbstractClientMainTest {
 
     assertTrue(getExitCode() == 1);
     assertTrue(getOutput().contains("Invalid option: --object-id: xxx is not a valid UUID"));
+  }
+
+  @Test
+  public void testViewWithBadDateInHeader() throws Exception {
+    val file = "src/test/resources/fixtures/view/94c1f438-acc8-51dd-a44e-e24d32a46c07.bam";
+    executeMain("view", "--header-only", "--input-file", file, "--output-type", "sam");
+
+    assertTrue(getExitCode() == 0);
   }
 
 }

@@ -2,6 +2,7 @@ package org.icgc.dcc.storage.test;
 
 import static com.google.common.base.Strings.repeat;
 import static java.util.concurrent.TimeUnit.MINUTES;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.icgc.dcc.storage.test.util.Assertions.assertDirectories;
 import static org.icgc.dcc.storage.test.util.SpringBootProcess.bootRun;
 
@@ -91,6 +92,8 @@ public class StorageIntegrationTest {
         "-o", fs.getRootDir().toString());
     register.waitFor(1, MINUTES);
 
+    assertThat(register.exitValue()).isEqualTo(0);
+
     //
     // Upload
     //
@@ -100,6 +103,8 @@ public class StorageIntegrationTest {
         "upload",
         "--manifest", fs.getRootDir() + "/manifest.txt");
     upload.waitFor(1, MINUTES);
+
+    assertThat(upload.exitValue()).isEqualTo(0);
 
     //
     // Download
@@ -119,6 +124,8 @@ public class StorageIntegrationTest {
           "--output-layout", "bundle",
           "--output-dir", fs.getDownloadsDir().toString());
       download.waitFor(1, MINUTES);
+
+      assertThat(download.exitValue()).isEqualTo(0);
     }
 
     //
@@ -141,7 +148,7 @@ public class StorageIntegrationTest {
   private void metadataServer() {
     bootRun(
         org.icgc.dcc.metadata.server.ServerMain.class,
-        "--spring.profiles.active=development",
+        "--spring.profiles.active=development,secure", // Secure
         "--logging.file=" + fs.getLogsDir() + "/dcc-metadata-server.log",
         "--server.port=" + metadataPort,
         "--management.port=8544",
@@ -155,7 +162,7 @@ public class StorageIntegrationTest {
   private void storageServer() {
     bootRun(
         resolveJarFile("dcc-storage-server"),
-        "--spring.profiles.active=dev,default",
+        "--spring.profiles.active=dev,secure,default", // Secure
         "--logging.file=" + fs.getLogsDir() + "/dcc-storage-server.log",
         "--server.port=" + storagePort,
         "--auth.server.url=https://localhost:" + authPort + "/oauth/check_token",
@@ -201,11 +208,11 @@ public class StorageIntegrationTest {
   }
 
   private static void banner(String text) {
-    System.out.println("");
-    System.out.println(repeat("#", 100));
-    System.out.println(text);
-    System.out.println(repeat("#", 100));
-    System.out.println("");
+    System.err.println("");
+    System.err.println(repeat("#", 100));
+    System.err.println(text);
+    System.err.println(repeat("#", 100));
+    System.err.println("");
   }
 
 }

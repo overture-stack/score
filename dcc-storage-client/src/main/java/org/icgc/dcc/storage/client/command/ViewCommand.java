@@ -17,6 +17,7 @@
  */
 package org.icgc.dcc.storage.client.command;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 
 import java.io.File;
@@ -26,6 +27,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.icgc.dcc.storage.client.cli.ObjectIdValidator;
+import org.icgc.dcc.storage.client.cli.OutputTypeConverter;
 import org.icgc.dcc.storage.client.download.DownloadService;
 import org.icgc.dcc.storage.client.metadata.Entity;
 import org.icgc.dcc.storage.client.metadata.MetadataService;
@@ -68,7 +70,7 @@ public class ViewCommand extends AbstractClientCommand {
   @Parameter(names = "--output-file", description = "filename to write output to. Uses filename from metadata, or original input filename if not specified")
   private String fileName = "";
 
-  @Parameter(names = "--output-type", description = "output format of query BAM/SAM.")
+  @Parameter(names = "--output-type", description = "output format of query BAM/SAM.", converter = OutputTypeConverter.class)
   private OutputType outputType = OutputType.bam;
 
   @Parameter(names = "--object-id", description = "object id of BAM file to download slice from", validateValueWith = ObjectIdValidator.class)
@@ -128,13 +130,12 @@ public class ViewCommand extends AbstractClientCommand {
   }
 
   private Optional<Entity> getEntity() {
-    return Optional.ofNullable(!oid.trim().isEmpty() ? metadataService.getEntity(oid) : null);
+    return Optional.ofNullable(oid != null && !oid.trim().isEmpty() ? metadataService.getEntity(oid) : null);
   }
 
   private SamReader createSamReader(SamInputResource resource) {
-    // TODO: Consider using LENIENT if it doesn't effect stdout output when warnings occur.
     // Need to use non-STRICT due to header date formats in the wild.
-    return SamReaderFactory.makeDefault().validationStringency(ValidationStringency.SILENT).open(resource);
+    return SamReaderFactory.makeDefault().validationStringency(ValidationStringency.LENIENT).open(resource);
   }
 
   private SamInputResource createInputResource(Optional<Entity> entity) {
@@ -195,11 +196,6 @@ public class ViewCommand extends AbstractClientCommand {
     return result;
   }
 
-  /*
-   * Resource factory methods I tried refactoring them out into static factory methods but they had too many
-   * dependencies (MetaServiceQuery, ObjectDownload)
-   */
-
   /**
    * Assumes that the .BAI index file has the same name as the bamFilePath parameter: <sam/bam file name>.bam.bai
    * 
@@ -210,18 +206,17 @@ public class ViewCommand extends AbstractClientCommand {
 
   private SamInputResource getFileResource(String bamFilePath, String baiFilePath) {
     val bam = new File(bamFilePath);
-    if (!bam.exists()) {
-      throw new IllegalArgumentException("Expected " + bamFilePath + " does not exist");
-    }
+    checkArgument(bam.exists(), "Input BAM file '%s' not found", bamFilePath);
 
-    val bai = new File(baiFilePath);
-    if (!bai.exists()) {
-      throw new IllegalArgumentException("Expected " + baiFilePath
-          + " not found. Consider setting filename with --input-file-index option");
-    }
+    if (outputType == OutputType.bam) {
+      val bai = new File(baiFilePath);
+      checkArgument(bai.exists(),
+          "Input BAI file '%s' not found. Consider setting filename with --input-file-index option", baiFilePath);
 
-    val resource = SamInputResource.of(bam).index(bai);
-    return resource;
+      return SamInputResource.of(bam).index(bai);
+    } else {
+      return SamInputResource.of(bam);
+    }
   }
 
   private SamInputResource getRemoteResource(Entity entity) {

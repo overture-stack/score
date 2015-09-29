@@ -81,7 +81,7 @@
   <properties>
     <!-- Versions - DCC -->
     <dcc-metadata.version>0.0.14</dcc-metadata.version>
-    <dcc-auth.version>1.0.4</dcc-auth.version>
+    <dcc-auth.version>1.0.5</dcc-auth.version>
     
     <!-- Versions - Spring -->
     <spring-boot.version>1.2.6.RELEASE</spring-boot.version>

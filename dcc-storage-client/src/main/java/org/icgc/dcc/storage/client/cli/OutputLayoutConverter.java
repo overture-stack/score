@@ -24,7 +24,7 @@ import org.icgc.dcc.storage.client.command.DownloadCommand.OutputLayout;
 import com.beust.jcommander.ParameterException;
 import com.beust.jcommander.converters.BaseConverter;
 
-public class OutputLayoutConverter extends BaseConverter<Enum<?>> {
+public class OutputLayoutConverter extends BaseConverter<OutputLayout> {
 
   public OutputLayoutConverter(String optionName) {
     super(optionName);
