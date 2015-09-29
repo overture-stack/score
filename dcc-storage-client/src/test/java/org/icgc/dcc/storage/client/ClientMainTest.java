@@ -21,7 +21,7 @@ public class ClientMainTest extends AbstractClientMainTest {
     executeMain("view", "--output-type", "xxx");
 
     assertTrue(getExitCode() == 1);
-    assertTrue(getOutput().contains("Invalid value for --output-type parameter. Allowed values:[BAM, SAM]"));
+    assertTrue(getOutput().contains("Invalid value for --output-type parameter. Allowed values:[bam, sam]"));
   }
 
   @Test
