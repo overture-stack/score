@@ -88,15 +88,15 @@ public class ClientConfig {
     return new DownloadStateStore();
   }
 
-  @Bean(name = "object-store-service-template")
-  public RestTemplate uploadTemplate() {
+  @Bean
+  public RestTemplate serviceTemplate() {
     RestTemplate req = new RestTemplate(clientHttpRequestFactory());
     req.setErrorHandler(new ServiceRetryableResponseErrorHandler());
     return req;
   }
 
-  @Bean(name = "object-store-template")
-  public RestTemplate uploadDataTemplate() {
+  @Bean
+  public RestTemplate dataTemplate() {
     RestTemplate req = new RestTemplate(streamingClientHttpRequestFactory());
     req.setErrorHandler(new AmazonS3RetryableResponseErrorHandler());
     return req;

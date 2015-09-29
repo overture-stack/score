@@ -161,7 +161,7 @@ public class StorageIntegrationTest {
         "--auth.server.url=https://localhost:" + authPort + "/oauth/check_token",
         "--auth.server.clientId=storage",
         "--auth.server.clientsecret=pass",
-        "--metadata.url=https://localhost:" + metadataPort + "/entities",
+        "--metadata.url=https://localhost:" + metadataPort,
         "--endpoints.jmx.domain=storage");
   }
 

@@ -28,7 +28,7 @@ client:
 
 # Metadata server
 metadata:
-  url: https://meta.icgc.org/entities
+  url: https://meta.icgc.org
   ssl:
     enabled: true
     

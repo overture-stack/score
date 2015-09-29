@@ -91,7 +91,7 @@ endpoints:
 
 # Metadata server
 metadata:
-  url: https://meta.icgc.org/entities
+  url: https://meta.icgc.org
 
 ---
 
@@ -131,10 +131,6 @@ server:
 
 collaboratory:
   bucket.name: test.icgc
-
-# Metadata server
-metadata:
-  url: https://meta.icgc.org/entities
 
 ---
 

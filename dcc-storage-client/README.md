@@ -9,7 +9,7 @@ Build
 First run [gencert.sh](../dcc-storage-server/bin/gencert.sh):
 
 ```
-cd object-store-service
+cd dcc-storage-server
 bin/gencert.sh <password>
 ```
 

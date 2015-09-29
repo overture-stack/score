@@ -22,14 +22,13 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 import org.icgc.dcc.storage.server.exception.IdNotFoundException;
 import org.icgc.dcc.storage.server.model.MetadataEntity;
-
-import lombok.NonNull;
-import lombok.extern.slf4j.Slf4j;
-
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
+
+import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
@@ -38,12 +37,12 @@ public class MetadataService {
   private final RestTemplate restTemplate = new RestTemplate();
 
   @Value("${metadata.url}")
-  private String URL;
+  private String metadataUrl;
 
   public MetadataEntity getEntity(@NonNull String id) {
-    log.debug("using " + URL + " for MetaData server");
+    log.debug("using " + metadataUrl + " for MetaData server");
     try {
-      return restTemplate.getForEntity(URL + "/" + id, MetadataEntity.class).getBody();
+      return restTemplate.getForEntity(metadataUrl + "/entities/" + id, MetadataEntity.class).getBody();
     } catch (HttpClientErrorException e) {
       if (e.getStatusCode() == NOT_FOUND) {
         throw new IdNotFoundException(format("Entity %s is not registered on the server.", id));

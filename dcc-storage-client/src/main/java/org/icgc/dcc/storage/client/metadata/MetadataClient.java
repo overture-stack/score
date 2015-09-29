@@ -92,4 +92,5 @@ public class MetadataClient {
   private URL url(String path) {
     return new URL(serverUrl + "/entities" + path);
   }
+
 }
