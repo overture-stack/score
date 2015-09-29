@@ -313,6 +313,7 @@ public class UploadStateStore {
   }
 
   public String getDirectorySeparator() {
+    // https://github.com/scireum/s3ninja/issues/34
     return Boolean.getBoolean("s3ninja") ? "_" : DIRECTORY_SEPARATOR;
   }
 

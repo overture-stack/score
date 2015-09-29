@@ -21,7 +21,6 @@ import static com.google.common.base.Preconditions.checkState;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -43,7 +42,9 @@ import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMFileWriter;
 import htsjdk.samtools.SAMFileWriterFactory;
 import htsjdk.samtools.SamInputResource;
+import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.ValidationStringency;
 import lombok.Cleanup;
 import lombok.val;
 
@@ -51,6 +52,9 @@ import lombok.val;
 @Parameters(separators = "=", commandDescription = "Extract/displays some or all of SAM/BAM file")
 public class ViewCommand extends AbstractClientCommand {
 
+  /**
+   * Options.
+   */
   @Parameter(names = "--contained", description = "output only alignments completely contained in specified region. By default, any alignment"
       + " that intersects with a specified region will be returned")
   private boolean containedOnly = false;
@@ -64,8 +68,8 @@ public class ViewCommand extends AbstractClientCommand {
   @Parameter(names = "--output-file", description = "filename to write output to. Uses filename from metadata, or original input filename if not specified")
   private String fileName = "";
 
-  @Parameter(names = "--output-type", description = "output format of query BAM/SAM. Default: BAM")
-  private OutputType outputType = OutputType.BAM;
+  @Parameter(names = "--output-type", description = "output format of query BAM/SAM.")
+  private OutputType outputType = OutputType.bam;
 
   @Parameter(names = "--object-id", description = "object id of BAM file to download slice from", validateValueWith = ObjectIdValidator.class)
   private String oid;
@@ -81,13 +85,16 @@ public class ViewCommand extends AbstractClientCommand {
   private List<String> query = new ArrayList<String>();
 
   public enum OutputType {
-    BAM, SAM
+    bam, sam
   }
 
+  /**
+   * Dependencies.
+   */
   @Autowired
   private MetadataService metadataService;
   @Autowired
-  private DownloadService downloader;
+  private DownloadService downloadService;
 
   @Override
   public int execute() {
@@ -96,17 +103,16 @@ public class ViewCommand extends AbstractClientCommand {
       val resource = createInputResource(entity);
 
       @Cleanup
-      val reader = SamReaderFactory.makeDefault().open(resource);
+      val reader = createSamReader(resource);
       val header = reader.getFileHeader();
-
-      QueryInterval[] intervals = QueryHandler.parseQueryStrings(header, query);
 
       val outputFileName = generateFileOutputName(entity);
       @Cleanup
-      val writer = createFileWriter(header, outputFileName);
+      val writer = createSamFileWriter(header, outputFileName);
 
       if (!headerOnly) {
         // Perform actual slicing
+        QueryInterval[] intervals = QueryHandler.parseQueryStrings(header, query);
         val iterator = reader.query(intervals, containedOnly);
 
         while (iterator.hasNext()) {
@@ -125,6 +131,12 @@ public class ViewCommand extends AbstractClientCommand {
     return Optional.ofNullable(!oid.trim().isEmpty() ? metadataService.getEntity(oid) : null);
   }
 
+  private SamReader createSamReader(SamInputResource resource) {
+    // TODO: Consider using LENIENT if it doesn't effect stdout output when warnings occur.
+    // Need to use non-STRICT due to header date formats in the wild.
+    return SamReaderFactory.makeDefault().validationStringency(ValidationStringency.SILENT).open(resource);
+  }
+
   private SamInputResource createInputResource(Optional<Entity> entity) {
     SamInputResource resource = null;
     if (entity.isPresent()) {
@@ -141,17 +153,15 @@ public class ViewCommand extends AbstractClientCommand {
     return resource;
   }
 
-  private SAMFileWriter createFileWriter(SAMFileHeader header, String path) {
-    boolean stdout = (path == null) || path.trim().isEmpty();
-
-    final SAMFileWriterFactory factory = new SAMFileWriterFactory();
-    factory.setCreateIndex(true).setUseAsyncIo(true).setCreateMd5File(false);
+  private SAMFileWriter createSamFileWriter(SAMFileHeader header, String path) {
+    val stdout = (path == null) || path.trim().isEmpty();
+    val factory = new SAMFileWriterFactory().setCreateIndex(true).setUseAsyncIo(true).setCreateMd5File(false);
 
     SAMFileWriter result = null;
-    if (outputType == OutputType.BAM) {
+    if (outputType == OutputType.bam) {
       result = stdout ? factory.makeBAMWriter(header, true, System.out) : factory.makeBAMWriter(header, true,
           new File(path));
-    } else if (outputType == OutputType.SAM) {
+    } else if (outputType == OutputType.sam) {
       result = stdout ? factory.makeSAMWriter(header, true, System.out) : factory.makeSAMWriter(header, true,
           new File(path));
     }
@@ -215,17 +225,17 @@ public class ViewCommand extends AbstractClientCommand {
   }
 
   private SamInputResource getRemoteResource(Entity entity) {
-    URL bamFileUrl = downloader.getUrl(entity.getId(), 0, -1);
+    val bamFileUrl = downloadService.getUrl(entity.getId(), 0, -1);
 
     val indexEntity = metadataService.getIndexEntity(entity);
     checkState(indexEntity.isPresent(), "No index file associated with BAM file (object_id = %s)", entity);
 
-    URL indexFileUrl = downloader.getUrl(indexEntity.get().getId());
+    val indexFileUrl = downloadService.getUrl(indexEntity.get().getId());
 
-    NullSourceSeekableHTTPStream bamFileHttpStream = new NullSourceSeekableHTTPStream(bamFileUrl);
-    NullSourceSeekableHTTPStream indexFileHttpStream = new NullSourceSeekableHTTPStream(indexFileUrl);
+    val bamFileHttpStream = new NullSourceSeekableHTTPStream(bamFileUrl);
+    val indexFileHttpStream = new NullSourceSeekableHTTPStream(indexFileUrl);
 
-    SamInputResource resource = SamInputResource.of(bamFileHttpStream).index(indexFileHttpStream);
+    val resource = SamInputResource.of(bamFileHttpStream).index(indexFileHttpStream);
     return resource;
   }
 

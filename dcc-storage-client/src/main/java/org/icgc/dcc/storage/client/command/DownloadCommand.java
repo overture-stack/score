@@ -51,14 +51,14 @@ import lombok.val;
 public class DownloadCommand extends AbstractClientCommand {
 
   public enum OutputLayout {
-    BUNDLE, FILENAME, ID
+    bundle, filename, id
   }
 
   @Parameter(names = { "--output-dir", "--out-dir" /* Deprecated */ }, description = "path to output directory", required = true, validateValueWith = DirectoryValidator.class)
   private File outDir;
 
   @Parameter(names = { "--output-layout" }, description = "layout of the output-dir. One of 'bundle' (nest files in bundle directory), 'filename' (nest files in filename directory), or 'id' (flat list of files named with object-id)", converter = OutputLayoutConverter.class)
-  private OutputLayout layout = OutputLayout.FILENAME;
+  private OutputLayout layout = OutputLayout.filename;
 
   @Parameter(names = "--force", description = "force re-download (override local file)", required = false)
   private boolean force = false;
@@ -169,19 +169,19 @@ public class DownloadCommand extends AbstractClientCommand {
   }
 
   private File getLayoutTarget(Entity entity) {
-    if (layout == OutputLayout.BUNDLE) {
+    if (layout == OutputLayout.bundle) {
       // "bundle/filename"
       val bundleDir = new File(outDir, entity.getGnosId());
       val target = new File(bundleDir, entity.getFileName());
 
       return target;
-    } else if (layout == OutputLayout.FILENAME) {
+    } else if (layout == OutputLayout.filename) {
       // "filename/id"
       val fileDir = new File(outDir, entity.getFileName());
       val target = new File(fileDir, entity.getId());
 
       return target;
-    } else if (layout == OutputLayout.ID) {
+    } else if (layout == OutputLayout.id) {
       // "id"
       val target = getLayoutSource(entity);
 
