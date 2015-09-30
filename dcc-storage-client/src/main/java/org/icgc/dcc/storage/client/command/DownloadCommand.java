@@ -94,6 +94,7 @@ public class DownloadCommand extends AbstractClientCommand {
   @Override
   @SneakyThrows
   public int execute() {
+    terminal.println("\rDownloading...");
     if (!outDir.exists()) {
       terminal.println(terminal.error("Output directory '%s' is missing. Exiting...", outDir.getCanonicalPath()));
       return FAILURE_STATUS;

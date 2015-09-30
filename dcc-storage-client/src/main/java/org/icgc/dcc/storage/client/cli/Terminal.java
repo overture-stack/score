@@ -63,7 +63,7 @@ public class Terminal {
   }
 
   public String warn(String text, Object... args) {
-    return ansi().render("@|orange *** WARN: " + text + "|@", args).toString();
+    return ansi().render("@|yellow *** WARN: " + text + "|@", args).toString();
   }
 
   public String value(String text) {

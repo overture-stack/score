@@ -46,7 +46,7 @@ public class UrlCommand extends AbstractClientCommand {
   public int execute() {
     val offset = 0L;
     val length = -1L;
-    println("Resolving URL for object: %s (offset = %d, length = %d) ", oid, offset, length);
+    println("\rResolving URL for object: %s (offset = %d, length = %d) ", oid, offset, length);
     val url = downloader.getUrl(oid, offset, length);
     println("%s", url);
 

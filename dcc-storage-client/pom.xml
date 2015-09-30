@@ -39,7 +39,7 @@
       <groupId>${project.groupId}</groupId>
       <artifactId>dcc-storage-core</artifactId>
     </dependency>
-    
+
     <!-- DCC - Common -->
     <dependency>
       <groupId>${project.groupId}</groupId>
@@ -130,6 +130,7 @@
           </archive>
         </configuration>
       </plugin>
+
       <!-- Package -->
       <plugin>
         <groupId>org.springframework.boot</groupId>
@@ -167,7 +168,7 @@
   <properties>
     <!-- Versions - DCC -->
     <dcc-common.version>3.8.15.0</dcc-common.version>
-    
+
     <!-- Versions - Genomics -->
     <htsjdk.version>1.138</htsjdk.version>
   </properties>

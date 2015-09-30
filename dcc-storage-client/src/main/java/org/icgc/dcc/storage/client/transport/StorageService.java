@@ -59,8 +59,8 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * responsible for interacting with object upload service
  */
-@Service
 @Slf4j
+@Service
 public class StorageService {
 
   @Autowired
@@ -79,7 +79,6 @@ public class StorageService {
   private String endpoint;
 
   @Autowired
-  @Qualifier("service-retry-template")
   private RetryTemplate retry;
 
   @Autowired

@@ -101,6 +101,7 @@ public class ViewCommand extends AbstractClientCommand {
   @Override
   public int execute() {
     try {
+      println("\rViewing...   ");
       val entity = getEntity();
       val resource = createInputResource(entity);
 
