@@ -14,6 +14,14 @@
   <name>${project.artifactId}</name>
   <description>${project.name}</description>
 
+  <repositories>
+    <repository>
+      <id>sonatype-snapshots</id>
+      <name>sonatype-snapshots</name>
+      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+    </repository>
+  </repositories>
+
   <dependencyManagement>
     <dependencies>
       <dependency>
@@ -39,7 +47,7 @@
       <groupId>${project.groupId}</groupId>
       <artifactId>dcc-storage-core</artifactId>
     </dependency>
-    
+
     <!-- DCC - Common -->
     <dependency>
       <groupId>${project.groupId}</groupId>
@@ -108,6 +116,17 @@
       <version>1.51</version>
     </dependency>
 
+    <dependency>
+      <groupId>co.paralleluniverse</groupId>
+      <artifactId>javafs</artifactId>
+      <version>0.1.0-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>com.google.jimfs</groupId>
+      <artifactId>jimfs</artifactId>
+      <version>1.0</version>
+    </dependency>
+
     <!-- Test - Spring -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
@@ -140,6 +159,14 @@
             <goals>
               <goal>repackage</goal>
             </goals>
+            <configuration>
+              <requiresUnpack>
+                <dependency>
+                  <groupId>com.github.jnr</groupId>
+                  <artifactId>jnr-ffi</artifactId>
+                </dependency>
+              </requiresUnpack>
+            </configuration>
           </execution>
         </executions>
       </plugin>
@@ -167,7 +194,7 @@
   <properties>
     <!-- Versions - DCC -->
     <dcc-common.version>3.8.15.0</dcc-common.version>
-    
+
     <!-- Versions - Genomics -->
     <htsjdk.version>1.138</htsjdk.version>
   </properties>
