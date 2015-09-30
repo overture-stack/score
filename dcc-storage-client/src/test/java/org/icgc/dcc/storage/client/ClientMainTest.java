@@ -3,6 +3,7 @@ package org.icgc.dcc.storage.client;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
+import java.util.UUID;
 
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -36,7 +37,7 @@ public class ClientMainTest extends AbstractClientMainTest {
   @Test
   public void testMainUploadEmptyFile() throws Exception {
     val file = tmp.newFile();
-    executeMain("upload", "--file", file.getCanonicalPath());
+    executeMain("upload", "--object-id", UUID.randomUUID().toString(), "--file", file.getCanonicalPath());
 
     assertTrue(getExitCode() == 1);
     assertTrue(getOutput().contains("Uploads of empty files are not permitted"));
