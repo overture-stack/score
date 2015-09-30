@@ -95,7 +95,7 @@ public class DownloadCommand extends AbstractClientCommand {
   @SneakyThrows
   public int execute() {
     if (!outDir.exists()) {
-      terminal.error("Output directory '" + outDir.getCanonicalPath() + "' is missing. Exiting...");
+      terminal.println(terminal.error("Output directory '%s' is missing. Exiting...", outDir.getCanonicalPath()));
       return FAILURE_STATUS;
     }
 
@@ -108,7 +108,7 @@ public class DownloadCommand extends AbstractClientCommand {
       val manifest = new ManifestReader().readManifest(manifestFile);
       val entries = manifest.getEntries();
       if (entries.isEmpty()) {
-        terminal.error("Manifest '" + manifestFile.getCanonicalPath() + "' is empty. Exiting...");
+        terminal.println(terminal.error("Manifest '%s' is empty. Exiting...", manifestFile.getCanonicalPath()));
         return FAILURE_STATUS;
       }
 
@@ -145,11 +145,13 @@ public class DownloadCommand extends AbstractClientCommand {
       val file = getLayoutTarget(entity);
       if (file.exists()) {
         if (force) {
-          terminal.warn("File '" + file.getCanonicalPath() + "' exists and --force specified. Removing...");
+          terminal
+              .println(terminal.warn("File '%s' exists and --force specified. Removing...", file.getCanonicalPath()));
           checkState(file.delete(), "Could not delete '%s'. Exiting...", file.getCanonicalPath());
 
         } else {
-          terminal.warn("File '" + file.getCanonicalPath() + "' exists and --force not specified. Skipping...");
+          terminal.println(
+              terminal.warn("File '%s' exists and --force not specified. Skipping...", file.getCanonicalPath()));
           continue;
         }
       }
