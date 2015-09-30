@@ -59,7 +59,11 @@ public class Terminal {
   }
 
   public String error(String text) {
-    return ansi().render("@|red " + text + "|@").toString();
+    return ansi().render("@|red *** ERROR: " + text + "|@").toString();
+  }
+
+  public String warn(String text) {
+    return ansi().render("@|orange *** WARN: " + text + "|@").toString();
   }
 
   public String value(String text) {

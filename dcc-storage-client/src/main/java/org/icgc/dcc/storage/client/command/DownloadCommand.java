@@ -56,6 +56,9 @@ public class DownloadCommand extends AbstractClientCommand {
     bundle, filename, id
   }
 
+  /**
+   * Options
+   */
   @Parameter(names = { "--output-dir", "--out-dir" /* Deprecated */ }, description = "path to output directory", required = true, validateValueWith = DirectoryValidator.class)
   private File outDir;
 
@@ -92,7 +95,7 @@ public class DownloadCommand extends AbstractClientCommand {
   @SneakyThrows
   public int execute() {
     if (!outDir.exists()) {
-      println("Output directory '%s' is missing. Exiting.", outDir.getCanonicalPath());
+      terminal.error("Output directory '" + outDir.getCanonicalPath() + "' is missing. Exiting...");
       return FAILURE_STATUS;
     }
 
@@ -105,7 +108,7 @@ public class DownloadCommand extends AbstractClientCommand {
       val manifest = new ManifestReader().readManifest(manifestFile);
       val entries = manifest.getEntries();
       if (entries.isEmpty()) {
-        println("Manifest '%s' is empty. Exiting.", manifestFile.getCanonicalPath());
+        terminal.error("Manifest '" + manifestFile.getCanonicalPath() + "' is empty. Exiting...");
         return FAILURE_STATUS;
       }
 
@@ -115,24 +118,48 @@ public class DownloadCommand extends AbstractClientCommand {
 
   private int downloadObjects(List<String> objectIds) throws IOException {
     val entities = resolveEntities(objectIds);
+    prepareLayout(entities);
 
     int i = 1;
     terminal.println("");
-    for (val entity : entities) {
+    for (val entity : filterEntities(entities)) {
       terminal
           .printLine()
           .printf("[%s/%s] Downloading object: %s (%s)%n", i++, entities.size(), terminal.value(entity.getId()),
               entity.getFileName())
           .printLine();
       downloadService.download(outDir, entity.getId(), offset, length, force);
-      layout(entity);
+      layoutFile(entity);
       terminal.println("");
     }
 
     return SUCCESS_STATUS;
   }
 
-  private void layout(Entity entity) throws IOException {
+  /**
+   * Prepares the local file system for moving files into after they have completed downloading.
+   */
+  @SneakyThrows
+  private void prepareLayout(Set<Entity> entities) {
+    for (val entity : entities) {
+      val file = getLayoutTarget(entity);
+      if (file.exists()) {
+        if (force) {
+          terminal.warn("File '" + file.getCanonicalPath() + "' exists and --force specified. Removing...");
+          checkState(file.delete(), "Could not delete '%s'. Exiting...", file.getCanonicalPath());
+
+        } else {
+          terminal.warn("File '" + file.getCanonicalPath() + "' exists and --force not specified. Skipping...");
+          continue;
+        }
+      }
+    }
+  }
+
+  /**
+   * Move the entity into its final destination.
+   */
+  private void layoutFile(Entity entity) throws IOException {
     val source = getLayoutSource(entity);
     val target = getLayoutTarget(entity);
     if (target.equals(source)) {
@@ -149,6 +176,42 @@ public class DownloadCommand extends AbstractClientCommand {
     Files.move(source, target);
   }
 
+  /**
+   * Get the sourcd file for the supplied {@code entity}.
+   */
+  private File getLayoutSource(Entity entity) {
+    return new File(outDir, entity.getId());
+  }
+
+  /**
+   * Get the destination file for the supplied {@code entity}.
+   */
+  private File getLayoutTarget(Entity entity) {
+    if (layout == OutputLayout.bundle) {
+      // "bundle/filename"
+      val bundleDir = new File(outDir, entity.getGnosId());
+      val target = new File(bundleDir, entity.getFileName());
+
+      return target;
+    } else if (layout == OutputLayout.filename) {
+      // "filename/id"
+      val fileDir = new File(outDir, entity.getFileName());
+      val target = new File(fileDir, entity.getId());
+
+      return target;
+    } else if (layout == OutputLayout.id) {
+      // "id"
+      val target = new File(outDir, entity.getId());
+
+      return target;
+    }
+
+    throw new IllegalStateException("Unsupported layout: " + layout);
+  }
+
+  /**
+   * Lookup entities by {@code objectId} from the metadata service.
+   */
   private Set<Entity> resolveEntities(List<String> objectIds) {
     // Set to remove duplicates
     val entities = ImmutableSet.<Entity> builder();
@@ -167,31 +230,23 @@ public class DownloadCommand extends AbstractClientCommand {
     return entities.build();
   }
 
-  private File getLayoutSource(Entity entity) {
-    return new File(outDir, entity.getId());
-  }
+  /**
+   * Filters downloadable entities.
+   */
+  @SneakyThrows
+  private Set<Entity> filterEntities(Set<Entity> entities) {
+    val filtered = ImmutableSet.<Entity> builder();
+    for (val entity : entities) {
+      val file = getLayoutTarget(entity);
+      val skip = file.exists() && !force;
+      if (skip) {
+        continue;
+      }
 
-  private File getLayoutTarget(Entity entity) {
-    if (layout == OutputLayout.bundle) {
-      // "bundle/filename"
-      val bundleDir = new File(outDir, entity.getGnosId());
-      val target = new File(bundleDir, entity.getFileName());
-
-      return target;
-    } else if (layout == OutputLayout.filename) {
-      // "filename/id"
-      val fileDir = new File(outDir, entity.getFileName());
-      val target = new File(fileDir, entity.getId());
-
-      return target;
-    } else if (layout == OutputLayout.id) {
-      // "id"
-      val target = getLayoutSource(entity);
-
-      return target;
+      filtered.add(entity);
     }
 
-    throw new IllegalStateException("Unsupported layout: " + layout);
+    return filtered.build();
   }
 
 }
