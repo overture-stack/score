@@ -66,13 +66,13 @@ public class UploadCommand extends AbstractClientCommand {
   public int execute() {
     checkState(oid != null || manifestFile != null, "One of --object-id or --manifest must be specified. Exiting...");
 
-    print("\r");
     if (manifestFile != null) {
       val manifest = readManifest();
       for (val entry : manifest.entrySet()) {
         val objectId = (String) entry.getKey();
         val obj = new File((String) entry.getValue());
 
+        print("\r");
         if ((isForce) || (!uploader.isObjectExist(objectId))) {
           println("Start uploading object: '%s' using the object id %s", obj, objectId);
           uploader.upload(obj, objectId, isForce);
@@ -81,7 +81,9 @@ public class UploadCommand extends AbstractClientCommand {
         }
       }
     } else {
-      println("Start uploading file: '%s'", file);
+      checkState(file != null, "--file must be specified if --object-id is specified. Exiting...");
+
+      println("\rStart uploading file: '%s'", file);
       log.info("file: {}", file);
       checkState(file.length() > 0, "Upload file '%s' is empty. Uploads of empty files are not permitted. Aborting...",
           file.getCanonicalPath());
