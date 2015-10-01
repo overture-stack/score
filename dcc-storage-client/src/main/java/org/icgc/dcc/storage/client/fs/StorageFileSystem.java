@@ -15,60 +15,87 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.client.command;
-
-import static com.google.common.base.Preconditions.checkState;
-import static java.util.Collections.emptyMap;
+package org.icgc.dcc.storage.client.fs;
 
 import java.io.IOException;
-import java.net.URI;
+import java.nio.file.FileStore;
 import java.nio.file.FileSystem;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.nio.file.PathMatcher;
+import java.nio.file.WatchService;
+import java.nio.file.attribute.UserPrincipalLookupService;
+import java.nio.file.spi.FileSystemProvider;
+import java.util.Set;
 
-import org.icgc.dcc.storage.client.fs.StorageFileSystemProvider;
-import org.springframework.stereotype.Component;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 
-import com.beust.jcommander.Parameters;
-import com.google.common.base.Throwables;
+/**
+ * See http://stackoverflow.com/questions/22966176/creating-a-custom-filesystem-implementation-in-java/32887126#32887126
+ */
+@RequiredArgsConstructor
+public class StorageFileSystem extends FileSystem {
 
-import co.paralleluniverse.javafs.JavaFS;
-import lombok.SneakyThrows;
-import lombok.val;
-
-@Component
-@Parameters(separators = "=", commandDescription = "Mounts file system")
-public class MountCommand extends AbstractClientCommand {
+  @NonNull
+  private final StorageFileSystemProvider provider;
 
   @Override
-  @SneakyThrows
-  public int execute() {
-    val fileSystem = createFileSystem();
-    val mountPoint = Paths.get("/tmp/mnt");
-    checkState(Files.exists(mountPoint), "Mount point %s does not exist. Exiting...", mountPoint);
-
-    println("\rMounting file system to '%s'...", mountPoint);
-    try {
-      mount(fileSystem, mountPoint);
-    } catch (Throwable t) {
-      t.printStackTrace();
-      Throwables.propagate(t);
-    }
-
-    return SUCCESS_STATUS;
+  public FileSystemProvider provider() {
+    return provider;
   }
 
-  @SneakyThrows
-  private FileSystem createFileSystem() {
-    return new StorageFileSystemProvider().newFileSystem(new URI("icgc://storage"), emptyMap());
+  @Override
+  public void close() throws IOException {
   }
 
-  private void mount(FileSystem fileSystem, Path mountPoint) throws IOException, InterruptedException {
-    val readOnly = true;
-    val logging = true;
-    JavaFS.mount(fileSystem, mountPoint, readOnly, logging);
-    Thread.sleep(Long.MAX_VALUE);
+  @Override
+  public boolean isOpen() {
+    return true;
+  }
+
+  @Override
+  public boolean isReadOnly() {
+    return true;
+  }
+
+  @Override
+  public String getSeparator() {
+    return null;
+  }
+
+  @Override
+  public Iterable<Path> getRootDirectories() {
+    return null;
+  }
+
+  @Override
+  public Iterable<FileStore> getFileStores() {
+    return null;
+  }
+
+  @Override
+  public Set<String> supportedFileAttributeViews() {
+    return null;
+  }
+
+  @Override
+  public Path getPath(String first, String... more) {
+    return null;
+  }
+
+  @Override
+  public PathMatcher getPathMatcher(String syntaxAndPattern) {
+    return null;
+  }
+
+  @Override
+  public UserPrincipalLookupService getUserPrincipalLookupService() {
+    return null;
+  }
+
+  @Override
+  public WatchService newWatchService() throws IOException {
+    return null;
   }
 
 }
