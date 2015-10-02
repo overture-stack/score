@@ -1,6 +1,3 @@
-# Certs
-client.jks
-
 # Eclipse IDE
 .project
 .classpath
