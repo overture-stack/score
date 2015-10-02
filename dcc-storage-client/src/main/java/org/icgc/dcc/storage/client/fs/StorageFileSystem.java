@@ -25,6 +25,7 @@ import java.nio.file.PathMatcher;
 import java.nio.file.WatchService;
 import java.nio.file.attribute.UserPrincipalLookupService;
 import java.nio.file.spi.FileSystemProvider;
+import java.util.Collections;
 import java.util.Set;
 
 import lombok.NonNull;
@@ -60,17 +61,17 @@ public class StorageFileSystem extends FileSystem {
 
   @Override
   public String getSeparator() {
-    return null;
+    return "/";
   }
 
   @Override
   public Iterable<Path> getRootDirectories() {
-    return null;
+    return Collections.singleton(root());
   }
 
   @Override
   public Iterable<FileStore> getFileStores() {
-    return null;
+    return Collections.emptyList();
   }
 
   @Override
@@ -80,12 +81,16 @@ public class StorageFileSystem extends FileSystem {
 
   @Override
   public Path getPath(String first, String... more) {
-    return null;
+    return root();
+  }
+
+  public StoragePath root() {
+    return new StoragePath(this, "/");
   }
 
   @Override
   public PathMatcher getPathMatcher(String syntaxAndPattern) {
-    return null;
+    return (path) -> false;
   }
 
   @Override

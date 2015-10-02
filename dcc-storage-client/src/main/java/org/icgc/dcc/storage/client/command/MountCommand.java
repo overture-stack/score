@@ -65,7 +65,8 @@ public class MountCommand extends AbstractClientCommand {
   }
 
   private void mount(FileSystem fileSystem, Path mountPoint) throws IOException, InterruptedException {
-    val readOnly = true;
+    // To force unmount: diskutil unmount
+    val readOnly = false;
     val logging = true;
     JavaFS.mount(fileSystem, mountPoint, readOnly, logging);
     Thread.sleep(Long.MAX_VALUE);

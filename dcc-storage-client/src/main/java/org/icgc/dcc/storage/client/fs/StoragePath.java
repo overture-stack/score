@@ -27,17 +27,22 @@ import java.nio.file.WatchEvent.Kind;
 import java.nio.file.WatchEvent.Modifier;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
+import java.util.Collections;
 import java.util.Iterator;
 
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
+import lombok.ToString;
 
 /**
  * See http://stackoverflow.com/questions/22966176/creating-a-custom-filesystem-implementation-in-java/32887126#32887126
  */
+@ToString
 @RequiredArgsConstructor
 public class StoragePath implements Path {
 
   private final StorageFileSystem fileSystem;
+  private final String path;
 
   @Override
   public FileSystem getFileSystem() {
@@ -46,107 +51,112 @@ public class StoragePath implements Path {
 
   @Override
   public boolean isAbsolute() {
-    return false;
+    return true;
   }
 
   @Override
   public Path getRoot() {
-    return null;
+    return root();
+  }
+
+  private StoragePath root() {
+    return new StoragePath(fileSystem, "/");
   }
 
   @Override
   public Path getFileName() {
-    return null;
+    return root();
   }
 
   @Override
   public Path getParent() {
-    return null;
+    return root();
   }
 
   @Override
   public int getNameCount() {
-    return 0;
+    return 1;
   }
 
   @Override
   public Path getName(int index) {
-    return null;
+    return root();
   }
 
   @Override
   public Path subpath(int beginIndex, int endIndex) {
-    return null;
+    return root();
   }
 
   @Override
   public boolean startsWith(Path other) {
-    return false;
+    return true;
   }
 
   @Override
   public boolean startsWith(String other) {
-    return false;
+    return true;
   }
 
   @Override
   public boolean endsWith(Path other) {
-    return false;
+    return true;
   }
 
   @Override
   public boolean endsWith(String other) {
-    return false;
+    return true;
   }
 
   @Override
   public Path normalize() {
-    return null;
+    return root();
   }
 
   @Override
   public Path resolve(Path other) {
-    return null;
+    return root();
   }
 
   @Override
   public Path resolve(String other) {
-    return null;
+    return root();
   }
 
   @Override
   public Path resolveSibling(Path other) {
-    return null;
+    return root();
   }
 
   @Override
   public Path resolveSibling(String other) {
-    return null;
+    return root();
   }
 
   @Override
   public Path relativize(Path other) {
-    return null;
+    return root();
   }
 
   @Override
+  @SneakyThrows
   public URI toUri() {
-    return null;
+    return new URI(fileSystem.provider().getScheme() + "://" + path);
   }
 
   @Override
   public Path toAbsolutePath() {
-    return null;
+    return root();
   }
 
   @Override
   public Path toRealPath(LinkOption... options) throws IOException {
-    return null;
+    return root();
   }
 
   @Override
   public File toFile() {
-    return null;
+    throw new UnsupportedOperationException();
   }
 
   @Override
@@ -161,7 +171,7 @@ public class StoragePath implements Path {
 
   @Override
   public Iterator<Path> iterator() {
-    return null;
+    return Collections.singleton((Path) root()).iterator();
   }
 
   @Override
