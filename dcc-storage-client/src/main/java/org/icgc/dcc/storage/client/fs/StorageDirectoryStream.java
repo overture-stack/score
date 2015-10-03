@@ -27,11 +27,11 @@ import lombok.val;
 
 public class StorageDirectoryStream implements DirectoryStream<Path> {
 
-  private Path path;
+  private StoragePath path;
   @SuppressWarnings("unused")
   private Filter<? super Path> filter;
 
-  public StorageDirectoryStream(Path path, Filter<? super Path> filter) {
+  public StorageDirectoryStream(StoragePath path, Filter<? super Path> filter) {
     this.path = path;
     this.filter = filter;
   }
@@ -39,7 +39,7 @@ public class StorageDirectoryStream implements DirectoryStream<Path> {
   @Override
   public Iterator<Path> iterator() {
     if (path.toString().equals("/")) {
-      val value = new StoragePath((StorageFileSystem) path.getFileSystem(), "/file");
+      val value = new StoragePath(path.getFileSystem(), "/file");
       return Collections.singleton((Path) value).iterator();
     }
 

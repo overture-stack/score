@@ -52,11 +52,13 @@ public class StorageFileAttributes implements PosixFileAttributes {
 
   @Override
   public boolean isRegularFile() {
+    // For easy testing
     return !path.toString().equals("/");
   }
 
   @Override
   public boolean isDirectory() {
+    // For easy testing
     return path.toString().equals("/");
   }
 

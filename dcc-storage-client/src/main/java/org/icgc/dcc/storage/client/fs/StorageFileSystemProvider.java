@@ -76,12 +76,12 @@ public class StorageFileSystemProvider extends ReadOnlyFileSystemProvider {
   @Override
   public SeekableByteChannel newByteChannel(Path path, Set<? extends OpenOption> options, FileAttribute<?>... attrs)
       throws IOException {
-    return new StorageSeekableByteChannel();
+    return new StorageSeekableByteChannel((StoragePath) path);
   }
 
   @Override
   public DirectoryStream<Path> newDirectoryStream(Path path, Filter<? super Path> filter) throws IOException {
-    return new StorageDirectoryStream(path, filter);
+    return new StorageDirectoryStream((StoragePath) path, filter);
   }
 
   @Override

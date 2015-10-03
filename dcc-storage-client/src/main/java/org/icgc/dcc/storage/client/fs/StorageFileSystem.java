@@ -17,6 +17,8 @@
  */
 package org.icgc.dcc.storage.client.fs;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 import java.io.IOException;
 import java.nio.file.FileStore;
 import java.nio.file.FileSystem;
@@ -115,9 +117,9 @@ public class StorageFileSystem extends FileSystem {
 
   @Override
   public PathMatcher getPathMatcher(String syntaxAndPattern) {
-    if (!syntaxAndPattern.contains(":")) {
-      throw new IllegalArgumentException("PathMatcher requires input syntax:expression");
-    }
+    checkArgument(syntaxAndPattern.contains(":"), "PathMatcher requires input syntax:expression. Got: '%s'",
+        syntaxAndPattern);
+
     String[] parts = syntaxAndPattern.split(":", 2);
     Pattern pattern;
     if ("glob".equals(parts[0])) {

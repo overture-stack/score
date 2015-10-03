@@ -21,6 +21,7 @@ import static com.google.common.base.Preconditions.checkState;
 import static java.util.Collections.emptyMap;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.net.URI;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
@@ -34,6 +35,8 @@ import com.beust.jcommander.Parameters;
 import com.google.common.base.Throwables;
 
 import co.paralleluniverse.javafs.JavaFS;
+import jnr.ffi.provider.ClosureManager;
+import jnr.ffi.provider.jffi.NativeRuntime;
 import lombok.SneakyThrows;
 import lombok.val;
 
@@ -48,9 +51,11 @@ public class MountCommand extends AbstractClientCommand {
     val mountPoint = Paths.get("/tmp/mnt");
     checkState(Files.exists(mountPoint), "Mount point %s does not exist. Exiting...", mountPoint);
 
-    println("\rMounting file system to '%s'...", mountPoint);
     try {
+      print("\rMounting file system to '%s'...", mountPoint);
       mount(fileSystem, mountPoint);
+      println("\rSuccessfully mounted file system and is now ready for use!", mountPoint);
+      Thread.sleep(Long.MAX_VALUE);
     } catch (Throwable t) {
       t.printStackTrace();
       Throwables.propagate(t);
@@ -64,12 +69,29 @@ public class MountCommand extends AbstractClientCommand {
     return new StorageFileSystemProvider().newFileSystem(new URI("icgc://storage"), emptyMap());
   }
 
+  /**
+   * To force unmount: {@code diskutil unmount}
+   */
   private void mount(FileSystem fileSystem, Path mountPoint) throws IOException, InterruptedException {
-    // To force unmount: diskutil unmount
     val readOnly = false;
-    val logging = true;
+    val logging = false;
     JavaFS.mount(fileSystem, mountPoint, readOnly, logging);
-    Thread.sleep(Long.MAX_VALUE);
+  }
+
+  /**
+   * See
+   * http://docs.spring.io/spring-boot/docs/current/reference/html/executable-jar.html#executable-jar-system-classloader
+   */
+  @SneakyThrows
+  private void prepareMount() {
+    ClosureManager closureManager = NativeRuntime.getInstance().getClosureManager();
+    Field[] fields = closureManager.getClass().getFields();
+    for (val field : fields) {
+      if (field.getName().equals("classLoader")) {
+        field.setAccessible(true);
+        field.set(closureManager, Thread.currentThread().getContextClassLoader());
+      }
+    }
   }
 
 }

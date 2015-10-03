@@ -21,14 +21,21 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SeekableByteChannel;
 
+import javax.naming.OperationNotSupportedException;
+
+import com.google.common.base.Strings;
+
 import lombok.AllArgsConstructor;
+import lombok.SneakyThrows;
 
 @AllArgsConstructor
 public class StorageSeekableByteChannel implements SeekableByteChannel {
 
-  private int position;
+  private final StoragePath path;
+  private long position;
 
-  public StorageSeekableByteChannel() {
+  public StorageSeekableByteChannel(StoragePath path) {
+    this.path = path;
     this.position = 0;
   }
 
@@ -42,13 +49,15 @@ public class StorageSeekableByteChannel implements SeekableByteChannel {
   }
 
   @Override
+  @SneakyThrows
   public int write(ByteBuffer src) throws IOException {
-    return 0;
+    throw new OperationNotSupportedException();
   }
 
   @Override
+  @SneakyThrows
   public SeekableByteChannel truncate(long size) throws IOException {
-    return null;
+    throw new OperationNotSupportedException();
   }
 
   @Override
@@ -58,12 +67,21 @@ public class StorageSeekableByteChannel implements SeekableByteChannel {
 
   @Override
   public int read(ByteBuffer dst) throws IOException {
-    return 0;
+    if (!path.toAbsolutePath().toString().equals("/file")) {
+      return 0;
+    }
+
+    // Example to show that `cat /tmp/mnt/file` and `cp /tmp/mnt/file /tmp/file` works
+    byte[] text = "Hello File".getBytes();
+    byte[] message = ("Hello File" + Strings.repeat("!", 666 - text.length)).getBytes();
+    dst.put(message);
+    return message.length;
   }
 
   @Override
   public SeekableByteChannel position(long newPosition) throws IOException {
-    return new StorageSeekableByteChannel(position);
+    this.position = newPosition;
+    return this;
   }
 
   @Override

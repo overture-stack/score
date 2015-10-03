@@ -20,6 +20,8 @@ package org.icgc.dcc.storage.client.fs.util;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
+import lombok.val;
+
 /**
  * A class for POSIX glob pattern with brace expansions.
  * 
@@ -74,7 +76,7 @@ public class GlobPattern {
    * @param glob the glob pattern string
    */
   public void set(String glob) {
-    StringBuilder regex = new StringBuilder();
+    val regex = new StringBuilder();
     int setOpen = 0;
     int curlyOpen = 0;
     int len = glob.length();

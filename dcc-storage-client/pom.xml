@@ -98,6 +98,13 @@
       <version>1.138</version>
     </dependency>
 
+    <!-- FUSE -->
+    <dependency>
+      <groupId>co.paralleluniverse</groupId>
+      <artifactId>javafs</artifactId>
+      <version>${javafs.version}</version>
+    </dependency>
+
     <!-- Utilities -->
     <dependency>
       <groupId>com.google.guava</groupId>
@@ -114,17 +121,6 @@
       <groupId>org.bouncycastle</groupId>
       <artifactId>bcmail-jdk15on</artifactId>
       <version>1.51</version>
-    </dependency>
-
-    <dependency>
-      <groupId>co.paralleluniverse</groupId>
-      <artifactId>javafs</artifactId>
-      <version>0.1.0-SNAPSHOT</version>
-    </dependency>
-    <dependency>
-      <groupId>com.google.jimfs</groupId>
-      <artifactId>jimfs</artifactId>
-      <version>1.0</version>
     </dependency>
 
     <!-- Test - Spring -->
@@ -160,14 +156,6 @@
             <goals>
               <goal>repackage</goal>
             </goals>
-            <configuration>
-              <requiresUnpack>
-                <dependency>
-                  <groupId>com.github.jnr</groupId>
-                  <artifactId>jnr-ffi</artifactId>
-                </dependency>
-              </requiresUnpack>
-            </configuration>
           </execution>
         </executions>
       </plugin>
@@ -198,6 +186,9 @@
 
     <!-- Versions - Genomics -->
     <htsjdk.version>1.138</htsjdk.version>
+
+    <!-- Versions - FUSE -->
+    <javafs.version>0.1.0-SNAPSHOT</javafs.version>
   </properties>
 
 </project>

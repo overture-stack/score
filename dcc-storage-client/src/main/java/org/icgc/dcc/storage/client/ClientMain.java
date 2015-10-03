@@ -84,6 +84,7 @@ public class ClientMain implements CommandLineRunner {
     terminal.print("\rRunning...");
     val cli = new JCommander(this);
     cli.setAcceptUnknownOptions(true);
+
     cli.setProgramName(APPLICATION_NAME);
     cli.setColumnSize(TerminalFactory.get().getWidth());
 
