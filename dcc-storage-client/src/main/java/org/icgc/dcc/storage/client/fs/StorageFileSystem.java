@@ -27,6 +27,9 @@ import java.nio.file.attribute.UserPrincipalLookupService;
 import java.nio.file.spi.FileSystemProvider;
 import java.util.Collections;
 import java.util.Set;
+import java.util.regex.Pattern;
+
+import org.icgc.dcc.storage.client.fs.util.GlobPattern;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -37,6 +40,14 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class StorageFileSystem extends FileSystem {
 
+  /**
+   * Constants.
+   */
+  public static final String SEPARATOR = "/";
+
+  /**
+   * Dependencies.
+   */
   @NonNull
   private final StorageFileSystemProvider provider;
 
@@ -61,7 +72,7 @@ public class StorageFileSystem extends FileSystem {
 
   @Override
   public String getSeparator() {
-    return "/";
+    return SEPARATOR;
   }
 
   @Override
@@ -71,7 +82,7 @@ public class StorageFileSystem extends FileSystem {
 
   @Override
   public Iterable<FileStore> getFileStores() {
-    return Collections.emptyList();
+    return Collections.singleton(new StorageFileStore());
   }
 
   @Override
@@ -81,16 +92,43 @@ public class StorageFileSystem extends FileSystem {
 
   @Override
   public Path getPath(String first, String... more) {
-    return root();
+    boolean absolute = first.startsWith(SEPARATOR);
+    if (absolute) {
+      first = first.substring(1);
+    }
+
+    String[] parts;
+    if (null != more && more.length > 0) {
+      parts = new String[1 + more.length];
+      parts[0] = first;
+      System.arraycopy(more, 0, parts, 1, more.length);
+    } else {
+      parts = new String[] { first };
+    }
+
+    return new StoragePath(this, parts, absolute);
   }
 
   public StoragePath root() {
-    return new StoragePath(this, "/");
+    return new StoragePath(this, SEPARATOR);
   }
 
   @Override
   public PathMatcher getPathMatcher(String syntaxAndPattern) {
-    return (path) -> false;
+    if (!syntaxAndPattern.contains(":")) {
+      throw new IllegalArgumentException("PathMatcher requires input syntax:expression");
+    }
+    String[] parts = syntaxAndPattern.split(":", 2);
+    Pattern pattern;
+    if ("glob".equals(parts[0])) {
+      pattern = GlobPattern.compile(parts[1]);
+    } else if ("regex".equals(parts[0])) {
+      pattern = Pattern.compile(parts[1]);
+    } else {
+      throw new UnsupportedOperationException("Unknown PathMatcher syntax: " + parts[0]);
+    }
+
+    return new StoragePathMatcher(pattern);
   }
 
   @Override
