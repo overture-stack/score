@@ -64,6 +64,9 @@ public class ViewCommand extends AbstractClientCommand {
   @Parameter(names = "--header-only", description = "output header of SAM/BAM file only")
   private boolean headerOnly = false;
 
+  @Parameter(names = "--no-header", description = "do not output a header of SAM/BAM file when viewing")
+  private boolean noHeader = false;
+
   @Parameter(names = "--output-path", description = "path to an output directory. Stdout if not specified.")
   private String filePath = "";
 
@@ -101,12 +104,13 @@ public class ViewCommand extends AbstractClientCommand {
   @Override
   public int execute() {
     try {
+      println("\rViewing...   ");
       val entity = getEntity();
       val resource = createInputResource(entity);
 
       @Cleanup
       val reader = createSamReader(resource);
-      val header = reader.getFileHeader();
+      val header = noHeader ? emptyHeader() : reader.getFileHeader();
 
       val outputFileName = generateFileOutputName(entity);
       @Cleanup
@@ -232,6 +236,13 @@ public class ViewCommand extends AbstractClientCommand {
 
     val resource = SamInputResource.of(bamFileHttpStream).index(indexFileHttpStream);
     return resource;
+  }
+
+  private static SAMFileHeader emptyHeader() {
+    val header = new SAMFileHeader();
+    header.setAttribute(SAMFileHeader.VERSION_TAG, null); // Unset this since it was set in the ctor
+
+    return header;
   }
 
 }

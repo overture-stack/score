@@ -58,8 +58,12 @@ public class Terminal {
     return value(Long.toString(text));
   }
 
-  public String error(String text) {
-    return ansi().render("@|red " + text + "|@").toString();
+  public String error(String text, Object... args) {
+    return ansi().render("@|red *** ERROR: " + text + "|@", args).toString();
+  }
+
+  public String warn(String text, Object... args) {
+    return ansi().render("@|yellow *** WARN: " + text + "|@", args).toString();
   }
 
   public String value(String text) {

@@ -7,6 +7,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import org.icgc.dcc.storage.client.cli.Terminal;
 import org.icgc.dcc.storage.client.command.ClientCommand;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
@@ -56,16 +57,23 @@ public class ClientMain implements CommandLineRunner {
    * Dependencies.
    */
   @Autowired
+  private Terminal terminal;
+  @Autowired
   private Map<String, ClientCommand> commands;
 
   public static void main(String[] args) {
+    err.print("Starting...");
     try {
       new SpringApplicationBuilder(ClientMain.class).showBanner(false).run(args);
     } catch (Throwable t) {
       err.println("Unknown error starting application. Please see log for details");
       log.error("Exception running: ", t);
+
+      log.info("Exiting...");
       exit.accept(1);
     }
+
+    log.info("Exiting...");
   }
 
   /**
@@ -73,6 +81,7 @@ public class ClientMain implements CommandLineRunner {
    */
   @Override
   public void run(String... params) throws Exception {
+    terminal.print("\rRunning...");
     val cli = new JCommander(this);
     cli.setAcceptUnknownOptions(true);
     cli.setProgramName(APPLICATION_NAME);
@@ -90,8 +99,8 @@ public class ClientMain implements CommandLineRunner {
       cli.parse(params);
 
       if (version) {
-        err.println(Resources.toString(Resources.getResource("banner.txt"), UTF_8));
-        err.println("Version: " + getVersion());
+        terminal.println(Resources.toString(Resources.getResource("banner.txt"), UTF_8));
+        terminal.println("Version: " + getVersion());
         exit.accept(0);
         return;
       }
@@ -104,7 +113,7 @@ public class ClientMain implements CommandLineRunner {
 
       val commandName = cli.getParsedCommand();
       if (commandName == null) {
-        throw new ParameterException("Command name is empty");
+        throw new ParameterException("Command name is empty. Please specify a command to execute");
       }
 
       ClientCommand command = getCommand(commandName);
@@ -116,18 +125,23 @@ public class ClientMain implements CommandLineRunner {
 
       exit.accept(status);
     } catch (MissingCommandException e) {
-      err.println("Missing command: " + e.getMessage());
+      log.error("Missing command: ", e);
+      terminal.println("");
+      terminal.println(terminal.error("Missing command: " + e.getMessage()));
       usage(cli);
 
       exit.accept(1);
     } catch (ParameterException e) {
-      err.println("Bad parameter(s): " + e.getMessage());
-      usage(cli);
+      log.error("Bad parameter(s): ", e);
+      terminal.println("");
+      terminal.println(terminal.error("Bad parameter(s): " + e.getMessage()));
 
       exit.accept(1);
     } catch (Exception e) {
       log.error("Unknown error: ", e);
-      err.println("Command error: " + e.getMessage() + "\n\nPlease check the log for detailed error messages");
+      terminal.println("");
+      terminal.println(
+          terminal.error("Command error: " + e.getMessage() + "\n\nPlease check the log for detailed error messages"));
 
       exit.accept(1);
     }
@@ -144,7 +158,7 @@ public class ClientMain implements CommandLineRunner {
   private void usage(JCommander cli) {
     StringBuilder sb = new StringBuilder();
     cli.usage(sb);
-    err.println(sb.toString());
+    terminal.println(sb.toString());
   }
 
   private String getVersion() {

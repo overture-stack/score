@@ -131,7 +131,7 @@ public class ClientConfig {
 
   }
 
-  @Bean(name = "service-retry-template")
+  @Bean
   public RetryTemplate retryTemplate() {
     RetryTemplate retry = new RetryTemplate();
 

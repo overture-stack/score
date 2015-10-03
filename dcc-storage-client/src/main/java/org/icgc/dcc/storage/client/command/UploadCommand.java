@@ -17,9 +17,12 @@
  */
 package org.icgc.dcc.storage.client.command;
 
+import static com.google.common.base.Preconditions.checkState;
+
 import java.io.File;
 import java.io.FileInputStream;
-import java.util.Map.Entry;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.Properties;
 
 import org.icgc.dcc.storage.client.cli.FileValidator;
@@ -32,14 +35,15 @@ import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 
 import lombok.SneakyThrows;
+import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 /**
  * Handle upload command line arguments
  */
+@Slf4j
 @Component
 @Parameters(separators = "=", commandDescription = "Uploads object(s) to remote storage")
-@Slf4j
 public class UploadCommand extends AbstractClientCommand {
 
   @Parameter(names = "--file", description = "path to file to upload", required = false, validateValueWith = FileValidator.class)
@@ -60,32 +64,40 @@ public class UploadCommand extends AbstractClientCommand {
   @Override
   @SneakyThrows
   public int execute() {
-    if (file != null) {
-      println("Start uploading file: %s", file);
-      log.info("file: {}", file);
-      if (file.length() == 0) {
-        throw new IllegalArgumentException("Upload file '" + file.getCanonicalPath()
-            + "' is empty. Uploads of empty files are not permitted. Aborting...");
+    checkState(oid != null || manifestFile != null, "One of --object-id or --manifest must be specified. Exiting...");
+
+    if (manifestFile != null) {
+      val manifest = readManifest();
+      for (val entry : manifest.entrySet()) {
+        val objectId = (String) entry.getKey();
+        val obj = new File((String) entry.getValue());
+
+        print("\r");
+        if ((isForce) || (!uploader.isObjectExist(objectId))) {
+          println("Start uploading object: '%s' using the object id %s", obj, objectId);
+          uploader.upload(obj, objectId, isForce);
+        } else {
+          println("Object id: %s has been uploaded. Skipping...", objectId);
+        }
       }
+    } else {
+      checkState(file != null, "--file must be specified if --object-id is specified. Exiting...");
+
+      println("\rStart uploading file: '%s'", file);
+      log.info("file: {}", file);
+      checkState(file.length() > 0, "Upload file '%s' is empty. Uploads of empty files are not permitted. Aborting...",
+          file.getCanonicalPath());
 
       uploader.upload(file, oid, isForce);
-
-      return SUCCESS_STATUS;
-    }
-
-    Properties props = new Properties();
-    props.load(new FileInputStream(manifestFile));
-    for (Entry<Object, Object> entry : props.entrySet()) {
-      String objectId = (String) entry.getKey();
-      File obj = new File((String) entry.getValue());
-      if ((isForce) || (!uploader.isObjectExist(objectId))) {
-        println("Start uploading object: %s using the object id: %s", obj, objectId);
-        uploader.upload(obj, objectId, isForce);
-      } else {
-        println("Object id: %s has been uploaded. Skipped.", objectId);
-      }
     }
 
     return SUCCESS_STATUS;
+  }
+
+  private Properties readManifest() throws IOException, FileNotFoundException {
+    val manifest = new Properties();
+    manifest.load(new FileInputStream(manifestFile));
+
+    return manifest;
   }
 }

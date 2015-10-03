@@ -103,21 +103,37 @@ public class StorageIntegrationTest {
         "upload",
         "--manifest", fs.getRootDir() + "/manifest.txt");
     upload.waitFor(1, MINUTES);
-
     assertThat(upload.exitValue()).isEqualTo(0);
+
+    //
+    // Find
+    //
+
+    val entities = findEntities(gnosId);
+    assertThat(entities).isNotEmpty();
+
+    //
+    // URL
+    //
+
+    banner("URLing " + entities.get(0));
+    val url = storageClient(accessToken,
+        "url",
+        "--object-id", entities.get(0).getId());
+    url.waitFor(1, MINUTES);
+    assertThat(url.exitValue()).isEqualTo(0);
 
     //
     // Download
     //
 
-    val entities = findEntities(gnosId);
+    banner("Downloading...");
     for (val entity : entities) {
       if (entity.getFileName().endsWith(".bai")) {
         // Skip BAI files since these will be downloaded when the BAM file is requested
         continue;
       }
 
-      banner("Downloading " + entity);
       val download = storageClient(accessToken,
           "download",
           "--object-id", entity.getId(),
@@ -128,11 +144,21 @@ public class StorageIntegrationTest {
       assertThat(download.exitValue()).isEqualTo(0);
     }
 
-    //
-    // Verify
-    //
-    banner("Verifying...");
     assertDirectories(fs.getDownloadsDir(), fs.getUploadsDir());
+
+    //
+    // View
+    //
+
+    banner("Viewing " + entities.get(0));
+    val view = storageClient(accessToken,
+        "view",
+        "--header-only",
+        "--input-file",
+        new File(new File(fs.getDownloadsDir(), entities.get(0).getGnosId()), entities.get(0).getFileName()).toString(),
+        "--output-type", "sam");
+    view.waitFor(1, MINUTES);
+    assertThat(view.exitValue()).isEqualTo(0);
   }
 
   private void authServer() {
