@@ -30,6 +30,7 @@ import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.Lists;
 
 import lombok.NonNull;
 import lombok.SneakyThrows;
@@ -65,6 +66,10 @@ public class MetadataClient {
     return read("/" + objectId);
   }
 
+  public List<Entity> findEntities() throws EntityNotFoundException {
+    return readAll("/");
+  }
+
   public List<Entity> findEntitiesByGnosId(@NonNull String gnosId) throws EntityNotFoundException {
     return readAll("?gnosId=" + gnosId);
   }
@@ -80,12 +85,21 @@ public class MetadataClient {
 
   @SneakyThrows
   private List<Entity> readAll(@NonNull String path) {
+    val results = Lists.<Entity> newArrayList();
+    boolean last = false;
+    int pageNumber = 1;
     try {
-      val result = MAPPER.readValue(url(path), ObjectNode.class);
-      return MAPPER.convertValue(result.path("content"), new TypeReference<ArrayList<Entity>>() {});
+      while (!last) {
+        val result = MAPPER.readValue(url(path + "?size=2000&page=" + pageNumber), ObjectNode.class);
+        last = result.path("last").asBoolean();
+        List<Entity> page = MAPPER.convertValue(result.path("content"), new TypeReference<ArrayList<Entity>>() {});
+        results.addAll(page);
+        pageNumber++;
+      }
     } catch (FileNotFoundException e) {
       throw new EntityNotFoundException(e);
     }
+    return results;
   }
 
   @SneakyThrows

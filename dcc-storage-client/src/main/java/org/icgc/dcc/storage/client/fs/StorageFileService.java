@@ -17,66 +17,34 @@
  */
 package org.icgc.dcc.storage.client.fs;
 
-import java.io.IOException;
-import java.nio.file.DirectoryStream;
-import java.nio.file.Path;
-import java.util.Iterator;
 import java.util.List;
 
+import org.icgc.dcc.storage.client.download.DownloadService;
 import org.icgc.dcc.storage.client.metadata.Entity;
+import org.icgc.dcc.storage.client.metadata.MetadataClient;
 
-import lombok.SneakyThrows;
-import lombok.val;
+import lombok.Getter;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 
-public class StorageDirectoryStream implements DirectoryStream<Path> {
+@RequiredArgsConstructor
+public class StorageFileService {
 
-  private StoragePath path;
-  private Filter<? super Path> filter;
+  /**
+   * Dependencies
+   */
+  @Getter
+  @NonNull
+  private final MetadataClient metadataClient;
+  @Getter
+  @NonNull
+  private final DownloadService downloadService;
 
-  public StorageDirectoryStream(StoragePath path, Filter<? super Path> filter) {
-    this.path = path;
-    this.filter = filter;
-  }
+  @Getter(lazy = true)
+  private final List<Entity> entities = resolveEntities();
 
-  @Override
-  public Iterator<Path> iterator() {
-    val entities = getEntities();
-    if (path.getNameCount() == 0) {
-      return entities.stream().map(entity -> entity.getGnosId()).distinct().map(this::gnosIdPath)
-          .filter(this::filterPath).iterator();
-    } else {
-      val gnosId = path.getParts()[0];
-      return entities.stream().filter(entity -> entity.getGnosId().equals(gnosId)).map(this::entityPath)
-          .filter(this::filterPath).iterator();
-    }
-  }
-
-  private List<Entity> getEntities() {
-    val fileSystem = path.getFileSystem();
-    return fileSystem.getProvider().getFileService().getEntities();
-  }
-
-  private Path gnosIdPath(String gnosId) {
-    return new StoragePath(
-        path.getFileSystem(),
-        new String[] { gnosId },
-        true);
-  }
-
-  private Path entityPath(Entity entity) {
-    return new StoragePath(
-        path.getFileSystem(),
-        new String[] { entity.getGnosId(), entity.getFileName() },
-        true);
-  }
-
-  @SneakyThrows
-  private boolean filterPath(Path path) {
-    return filter.accept(path);
-  }
-
-  @Override
-  public void close() throws IOException {
+  public List<Entity> resolveEntities() {
+    return metadataClient.findEntities();
   }
 
 }

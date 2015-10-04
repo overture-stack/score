@@ -18,17 +18,19 @@
 package org.icgc.dcc.storage.client.command;
 
 import static com.google.common.base.Preconditions.checkState;
-import static java.util.Collections.emptyMap;
+import static org.springframework.util.ReflectionUtils.findField;
 
 import java.io.IOException;
-import java.lang.reflect.Field;
-import java.net.URI;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import org.icgc.dcc.storage.client.fs.StorageFileSystemProvider;
+import org.icgc.dcc.storage.client.download.DownloadService;
+import org.icgc.dcc.storage.client.fs.StorageFileService;
+import org.icgc.dcc.storage.client.fs.StorageFileSystems;
+import org.icgc.dcc.storage.client.metadata.MetadataClient;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.beust.jcommander.Parameters;
@@ -41,8 +43,13 @@ import lombok.SneakyThrows;
 import lombok.val;
 
 @Component
-@Parameters(separators = "=", commandDescription = "Mounts file system")
+@Parameters(separators = "=", commandDescription = "Mounts a file system view of the remote repository")
 public class MountCommand extends AbstractClientCommand {
+
+  @Autowired
+  private MetadataClient metadataClient;
+  @Autowired
+  private DownloadService downloadService;
 
   @Override
   @SneakyThrows
@@ -66,32 +73,34 @@ public class MountCommand extends AbstractClientCommand {
 
   @SneakyThrows
   private FileSystem createFileSystem() {
-    return new StorageFileSystemProvider().newFileSystem(new URI("icgc://storage"), emptyMap());
+    val fileService = new StorageFileService(metadataClient, downloadService);
+    return StorageFileSystems.newFileSystem(fileService);
   }
 
   /**
    * To force unmount: {@code diskutil unmount}
    */
   private void mount(FileSystem fileSystem, Path mountPoint) throws IOException, InterruptedException {
+    prepareFfi();
+
     val readOnly = false;
     val logging = false;
     JavaFS.mount(fileSystem, mountPoint, readOnly, logging);
   }
 
   /**
-   * See
-   * http://docs.spring.io/spring-boot/docs/current/reference/html/executable-jar.html#executable-jar-system-classloader
+   * @see https://github.com/jnr/jnr-ffi/issues/51
    */
   @SneakyThrows
-  private void prepareMount() {
+  private void prepareFfi() {
     ClosureManager closureManager = NativeRuntime.getInstance().getClosureManager();
-    Field[] fields = closureManager.getClass().getFields();
-    for (val field : fields) {
-      if (field.getName().equals("classLoader")) {
-        field.setAccessible(true);
-        field.set(closureManager, Thread.currentThread().getContextClassLoader());
-      }
-    }
+    val classLoader = findField(closureManager.getClass(), "classLoader");
+    classLoader.setAccessible(true);
+    val asmClassLoader = classLoader.get(closureManager);
+
+    val parent = findField(asmClassLoader.getClass(), "parent");
+    parent.setAccessible(true);
+    parent.set(asmClassLoader, Thread.currentThread().getContextClassLoader());
   }
 
 }

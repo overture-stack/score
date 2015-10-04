@@ -131,7 +131,7 @@ public class StoragePath implements Path {
   @Override
   public Path getName(int i) {
     if (i < 0 || i >= parts.length || (0 == i && parts.length <= 1 && parts[0].isEmpty())) {
-      throw new IllegalArgumentException("invalid name index");
+      throw new IllegalArgumentException("Invalid name index");
     }
     return new StoragePath(fileSystem, Arrays.copyOfRange(parts, 0, i + 1), absolute);
   }

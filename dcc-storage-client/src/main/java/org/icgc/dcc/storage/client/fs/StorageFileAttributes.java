@@ -29,7 +29,7 @@ import com.google.common.collect.ImmutableSet;
 
 public class StorageFileAttributes implements PosixFileAttributes {
 
-  private StoragePath path;
+  private final StoragePath path;
 
   public StorageFileAttributes(Path path) {
     this.path = (StoragePath) path;
@@ -52,14 +52,12 @@ public class StorageFileAttributes implements PosixFileAttributes {
 
   @Override
   public boolean isRegularFile() {
-    // For easy testing
-    return !path.toString().equals("/");
+    return path.toString().contains(".");
   }
 
   @Override
   public boolean isDirectory() {
-    // For easy testing
-    return path.toString().equals("/");
+    return !isRegularFile();
   }
 
   @Override

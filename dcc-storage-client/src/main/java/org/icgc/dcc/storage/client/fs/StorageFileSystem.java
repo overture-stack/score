@@ -33,6 +33,7 @@ import java.util.regex.Pattern;
 
 import org.icgc.dcc.storage.client.fs.util.GlobPattern;
 
+import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
@@ -50,6 +51,7 @@ public class StorageFileSystem extends FileSystem {
   /**
    * Dependencies.
    */
+  @Getter
   @NonNull
   private final StorageFileSystemProvider provider;
 

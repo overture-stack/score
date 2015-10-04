@@ -37,14 +37,28 @@ import java.util.Set;
 
 import org.icgc.dcc.storage.client.fs.util.ReadOnlyFileSystemProvider;
 
+import lombok.Getter;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.val;
 
 /**
  * See http://stackoverflow.com/questions/22966176/creating-a-custom-filesystem-implementation-in-java/32887126#32887126
  */
+@RequiredArgsConstructor
 public class StorageFileSystemProvider extends ReadOnlyFileSystemProvider {
 
+  /**
+   * Dependencies
+   */
+  @Getter
+  @NonNull
+  private final StorageFileService fileService;
+
+  /**
+   * State.
+   */
   private StorageFileSystem fileSystem;
 
   @Override
@@ -85,8 +99,8 @@ public class StorageFileSystemProvider extends ReadOnlyFileSystemProvider {
   }
 
   @Override
-  public boolean isSameFile(Path path, Path path2) throws IOException {
-    return path.toAbsolutePath().equals(path2.toAbsolutePath());
+  public boolean isSameFile(Path path1, Path path2) throws IOException {
+    return path1.toAbsolutePath().equals(path2.toAbsolutePath());
   }
 
   @Override
