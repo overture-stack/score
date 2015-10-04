@@ -33,6 +33,9 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
+
+import org.icgc.dcc.storage.client.metadata.Entity;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -77,6 +80,21 @@ public class StoragePath implements Path {
     this.fileSystem = fileSystem;
     this.parts = parts;
     this.absolute = absolute;
+  }
+
+  public Optional<String> getObjectId() {
+    val fileService = fileSystem.getProvider().getFileService();
+    if (parts.length < 2) {
+      return Optional.empty();
+    }
+
+    val gnosId = parts[0];
+    val fileName = parts[1];
+
+    return fileService.getEntities().stream()
+        .filter(entity -> entity.getGnosId().equals(gnosId) && entity.getFileName().equals(fileName))
+        .map(Entity::getId)
+        .findFirst();
   }
 
   @Override

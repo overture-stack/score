@@ -17,15 +17,14 @@
  */
 package org.icgc.dcc.storage.client.command;
 
-import static com.google.common.base.Preconditions.checkState;
 import static org.springframework.util.ReflectionUtils.findField;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileSystem;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
+import org.icgc.dcc.storage.client.cli.DirectoryValidator;
 import org.icgc.dcc.storage.client.download.DownloadService;
 import org.icgc.dcc.storage.client.fs.StorageFileService;
 import org.icgc.dcc.storage.client.fs.StorageFileSystems;
@@ -33,8 +32,8 @@ import org.icgc.dcc.storage.client.metadata.MetadataClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
-import com.google.common.base.Throwables;
 
 import co.paralleluniverse.javafs.JavaFS;
 import jnr.ffi.provider.ClosureManager;
@@ -43,9 +42,18 @@ import lombok.SneakyThrows;
 import lombok.val;
 
 @Component
-@Parameters(separators = "=", commandDescription = "Mounts a file system view of the remote repository")
+@Parameters(separators = "=", commandDescription = "Mounts a read-only file system view of the remote repository")
 public class MountCommand extends AbstractClientCommand {
 
+  /**
+   * Options
+   */
+  @Parameter(names = "--mount-point", description = "the mount point of the file system", required = true, validateValueWith = DirectoryValidator.class)
+  private File mountPoint;
+
+  /**
+   * Dependencies.
+   */
   @Autowired
   private MetadataClient metadataClient;
   @Autowired
@@ -54,31 +62,29 @@ public class MountCommand extends AbstractClientCommand {
   @Override
   @SneakyThrows
   public int execute() {
-    val fileSystem = createFileSystem();
-    val mountPoint = Paths.get("/tmp/mnt");
-    checkState(Files.exists(mountPoint), "Mount point %s does not exist. Exiting...", mountPoint);
-
     try {
-      print("\rMounting file system to '%s'...", mountPoint);
-      mount(fileSystem, mountPoint);
-      println("\rSuccessfully mounted file system and is now ready for use!", mountPoint);
+      print("\rIndexing remote files (may take a couple minutes)'...");
+      val fileService = new StorageFileService(metadataClient, downloadService);
+      fileService.getEntities(); // Eager-load and cache
+
+      val fileSystem = StorageFileSystems.newFileSystem(fileService);
+
+      print("\rMounting file system to '%s'...                      ", mountPoint.getAbsolutePath());
+      mount(fileSystem, mountPoint.toPath());
+      terminal.print(
+          terminal.label(
+              "\rSuccessfully mounted file system at '" + terminal.value(mountPoint.getAbsolutePath())
+                  + "' and is now ready for use!"));
       Thread.sleep(Long.MAX_VALUE);
-    } catch (Throwable t) {
-      t.printStackTrace();
-      Throwables.propagate(t);
+    } catch (InterruptedException e) {
+      println("\rUnmounting file system...");
     }
 
     return SUCCESS_STATUS;
   }
 
-  @SneakyThrows
-  private FileSystem createFileSystem() {
-    val fileService = new StorageFileService(metadataClient, downloadService);
-    return StorageFileSystems.newFileSystem(fileService);
-  }
-
   /**
-   * To force unmount: {@code diskutil unmount}
+   * To force unmount: {@code diskutil unmount}.
    */
   private void mount(FileSystem fileSystem, Path mountPoint) throws IOException, InterruptedException {
     prepareFfi();

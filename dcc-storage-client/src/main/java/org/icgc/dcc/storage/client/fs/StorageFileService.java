@@ -17,6 +17,7 @@
  */
 package org.icgc.dcc.storage.client.fs;
 
+import java.net.URL;
 import java.util.List;
 
 import org.icgc.dcc.storage.client.download.DownloadService;
@@ -45,6 +46,10 @@ public class StorageFileService {
 
   public List<Entity> resolveEntities() {
     return metadataClient.findEntities();
+  }
+
+  public URL getUrl(String objectId) {
+    return downloadService.getUrl(objectId);
   }
 
 }

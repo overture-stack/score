@@ -36,6 +36,7 @@ public abstract class AbstractClientCommand implements ClientCommand {
 
   protected static void print(String format, Object... args) {
     System.err.printf(format, args);
+    System.err.flush();
   }
 
   protected static void println(String format, Object... args) {

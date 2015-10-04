@@ -1,4 +1,5 @@
 /*
+
  * Copyright (c) 2015 The Ontario Institute for Cancer Research. All rights reserved.                             
  *                                                                                                               
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
@@ -36,6 +37,7 @@ import org.icgc.dcc.storage.client.fs.util.GlobPattern;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.val;
 
 /**
  * See http://stackoverflow.com/questions/22966176/creating-a-custom-filesystem-implementation-in-java/32887126#32887126
@@ -96,21 +98,18 @@ public class StorageFileSystem extends FileSystem {
 
   @Override
   public Path getPath(String first, String... more) {
-    boolean absolute = first.startsWith(SEPARATOR);
-    if (absolute) {
-      first = first.substring(1);
-    }
+    val parent = new StoragePath(this, first);
+    val parentParts = parent.getParts();
 
-    String[] parts;
+    String[] parts = new String[parentParts.length + more.length];
+    System.arraycopy(parent.getParts(), 0, parts, 0, parentParts.length);
+
     if (null != more && more.length > 0) {
-      parts = new String[1 + more.length];
       parts[0] = first;
-      System.arraycopy(more, 0, parts, 1, more.length);
-    } else {
-      parts = new String[] { first };
+      System.arraycopy(more, 0, parentParts, parentParts.length, more.length);
     }
 
-    return new StoragePath(this, parts, absolute);
+    return new StoragePath(this, parts, parent.isAbsolute());
   }
 
   public StoragePath root() {

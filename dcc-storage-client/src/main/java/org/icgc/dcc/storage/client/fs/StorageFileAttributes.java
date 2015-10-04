@@ -72,7 +72,7 @@ public class StorageFileAttributes implements PosixFileAttributes {
 
   @Override
   public long size() {
-    return 666;
+    return 30354;
   }
 
   @Override

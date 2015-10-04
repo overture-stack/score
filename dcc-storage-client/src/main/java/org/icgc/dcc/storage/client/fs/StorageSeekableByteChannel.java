@@ -18,30 +18,37 @@
 package org.icgc.dcc.storage.client.fs;
 
 import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.nio.ByteBuffer;
+import java.nio.channels.Channels;
 import java.nio.channels.SeekableByteChannel;
+import java.util.Optional;
 
 import javax.naming.OperationNotSupportedException;
 
-import com.google.common.base.Strings;
-
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
+import lombok.val;
 
 @AllArgsConstructor
 public class StorageSeekableByteChannel implements SeekableByteChannel {
 
   private final StoragePath path;
+  private final Optional<String> objectId;
+  private final URL url;
   private long position;
 
   public StorageSeekableByteChannel(StoragePath path) {
     this.path = path;
     this.position = 0;
+    this.objectId = path.getObjectId();
+    this.url = getUrl(objectId);
   }
 
   @Override
   public boolean isOpen() {
-    return false;
+    return true;
   }
 
   @Override
@@ -62,20 +69,51 @@ public class StorageSeekableByteChannel implements SeekableByteChannel {
 
   @Override
   public long size() throws IOException {
-    return 0;
+    if (url == null) {
+      return 0;
+    }
+
+    val urlConnection = (HttpURLConnection) url.openConnection();
+    return urlConnection.getContentLengthLong();
   }
 
   @Override
   public int read(ByteBuffer dst) throws IOException {
-    if (!path.toAbsolutePath().toString().equals("/file")) {
+    if (url == null) {
       return 0;
     }
 
-    // Example to show that `cat /tmp/mnt/file` and `cp /tmp/mnt/file /tmp/file` works
-    byte[] text = "Hello File".getBytes();
-    byte[] message = ("Hello File" + Strings.repeat("!", 666 - text.length)).getBytes();
-    dst.put(message);
-    return message.length;
+    val length = (int) Math.min(dst.remaining(), size() - position);
+    val start = position;
+    val end = position + length - 1;
+    val range = start + "-" + end;
+
+    val urlConnection = (HttpURLConnection) url.openConnection();
+    urlConnection.setDoInput(true);
+    urlConnection.setRequestProperty("Range", "bytes=" + range);
+    urlConnection.connect();
+
+    val channel = Channels.newChannel(urlConnection.getInputStream());
+    return channel.read(dst);
+  }
+
+  @SneakyThrows
+  private URL getUrl(Optional<String> objectId) {
+    if (!objectId.isPresent()) {
+      return null;
+    }
+
+    // TODO: Return real URL from Storage Server
+    // val fileService = path.getFileSystem().getProvider().getFileService();
+    // return fileService.getUrl(objectId.get());
+
+    if (path.endsWith("bam")) {
+      return new URL("http://s3.amazonaws.com/iobio/NA12878/NA12878.autsome.bam");
+    } else if (path.endsWith("bai")) {
+      return new URL("http://s3.amazonaws.com/iobio/NA12878/NA12878.autsome.bam.bai");
+    } else {
+      return new URL("http://www.google.com");
+    }
   }
 
   @Override

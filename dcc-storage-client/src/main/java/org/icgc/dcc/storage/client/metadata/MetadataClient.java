@@ -32,6 +32,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Lists;
 
+import lombok.Getter;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.val;
@@ -51,6 +52,7 @@ public class MetadataClient {
    * Configuration.
    */
   @NonNull
+  @Getter
   private final String serverUrl;
 
   @Autowired
