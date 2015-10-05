@@ -26,11 +26,13 @@ import java.nio.file.DirectoryStream.Filter;
 import java.nio.file.FileStore;
 import java.nio.file.FileSystem;
 import java.nio.file.LinkOption;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.OpenOption;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.FileAttributeView;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
@@ -42,10 +44,12 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * See http://stackoverflow.com/questions/22966176/creating-a-custom-filesystem-implementation-in-java/32887126#32887126
  */
+@Slf4j
 @RequiredArgsConstructor
 public class StorageFileSystemProvider extends ReadOnlyFileSystemProvider {
 
@@ -90,17 +94,19 @@ public class StorageFileSystemProvider extends ReadOnlyFileSystemProvider {
   @Override
   public SeekableByteChannel newByteChannel(Path path, Set<? extends OpenOption> options, FileAttribute<?>... attrs)
       throws IOException {
+    log.info("newByteChannel(path={}, options={}, attrs={})", path, options, Arrays.toString(attrs));
     return new StorageSeekableByteChannel((StoragePath) path);
   }
 
   @Override
   public DirectoryStream<Path> newDirectoryStream(Path path, Filter<? super Path> filter) throws IOException {
+    log.info("newDirectoryStream(path={}, filter={})", path, filter);
     return new StorageDirectoryStream((StoragePath) path, filter);
   }
 
   @Override
   public boolean isSameFile(Path path1, Path path2) throws IOException {
-    return path1.toAbsolutePath().equals(path2.toAbsolutePath());
+    return path1.toAbsolutePath().toString().equals(path2.toAbsolutePath().toString());
   }
 
   @Override
@@ -115,10 +121,17 @@ public class StorageFileSystemProvider extends ReadOnlyFileSystemProvider {
 
   @Override
   public void checkAccess(Path path, AccessMode... modes) throws IOException {
+    log.info("checkAccess(path={}, modes={})", path, Arrays.toString(modes));
+
+    // TODO: lookup path and verify existence instead
+    if (path.endsWith(".csi")) {
+      throw new NoSuchFileException("");
+    }
   }
 
   @Override
   public <V extends FileAttributeView> V getFileAttributeView(Path path, Class<V> type, LinkOption... options) {
+    log.info("getFileAttributeView(path={}, type={}, options={})", path, type, Arrays.toString(options));
     return null;
   }
 
@@ -126,16 +139,20 @@ public class StorageFileSystemProvider extends ReadOnlyFileSystemProvider {
   @SuppressWarnings("unchecked")
   public <A extends BasicFileAttributes> A readAttributes(Path path, Class<A> type, LinkOption... options)
       throws IOException {
+    log.info("readAttributes(path={}, type={}, options={})", path, type, Arrays.toString(options));
     return (A) new StorageFileAttributes(path);
   }
 
   @Override
   public Map<String, Object> readAttributes(Path path, String attributes, LinkOption... options) throws IOException {
+    log.info("readAttributes(path={}, attributes={}, options={})", path, attributes, Arrays.toString(options));
     return Collections.emptyMap();
   }
 
   @Override
   public void setAttribute(Path path, String attribute, Object value, LinkOption... options) throws IOException {
+    log.info("setAttribute(path={}, attribute={}, value={}, options={})", path, attribute, value,
+        Arrays.toString(options));
   }
 
 }

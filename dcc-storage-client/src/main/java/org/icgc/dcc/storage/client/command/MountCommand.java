@@ -63,7 +63,7 @@ public class MountCommand extends AbstractClientCommand {
   @SneakyThrows
   public int execute() {
     try {
-      print("\rIndexing remote files (may take a couple minutes)'...");
+      print("\rIndexing remote files. Please wait...");
       val fileService = new StorageFileService(metadataClient, downloadService);
       fileService.getEntities(); // Eager-load and cache
 

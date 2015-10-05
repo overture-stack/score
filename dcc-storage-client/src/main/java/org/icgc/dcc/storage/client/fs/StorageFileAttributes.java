@@ -72,7 +72,13 @@ public class StorageFileAttributes implements PosixFileAttributes {
 
   @Override
   public long size() {
-    return 30354;
+    if (path.endsWith(".bam")) {
+      return 200627495654L;
+    } else if (path.endsWith(".bai")) {
+      return 8264320L;
+    } else {
+      return 258;
+    }
   }
 
   @Override
