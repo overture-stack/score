@@ -38,16 +38,23 @@ import lombok.extern.slf4j.Slf4j;
 @AllArgsConstructor
 public class StorageSeekableByteChannel implements SeekableByteChannel {
 
+  /**
+   * Configuration.
+   */
   private final StoragePath path;
   private final Optional<String> objectId;
   private final URL url;
-  private long position;
-  private long readPosition;
 
   @Getter(lazy = true)
   private final long size = resolveSize();
 
+  /**
+   * State
+   */
+  private long position;
+  private long readPosition;
   private ReadableByteChannel channel;
+  private HttpURLConnection connection;
 
   public StorageSeekableByteChannel(StoragePath path) {
     this.path = path;
@@ -128,17 +135,18 @@ public class StorageSeekableByteChannel implements SeekableByteChannel {
   }
 
   private ReadableByteChannel getChannel(long start, long end) throws IOException {
-    if (channel == null || start != readPosition + 1) {
-      if (channel != null) {
-        channel.close();
+    if (connection == null || start != readPosition + 1) {
+      if (connection != null) {
+        connection.disconnect();
       }
 
-      val urlConnection = (HttpURLConnection) url.openConnection();
-      urlConnection.setDoInput(true);
-      urlConnection.setRequestProperty("Range", formatRange(start, end));
-      urlConnection.connect();
+      log.info("*** Connect: {}-{}", start, end);
+      connection = (HttpURLConnection) url.openConnection();
+      connection.setDoInput(true);
+      connection.setRequestProperty("Range", formatRange(start, size()));
+      connection.connect();
 
-      channel = Channels.newChannel(urlConnection.getInputStream());
+      channel = Channels.newChannel(connection.getInputStream());
     }
 
     readPosition = end;
