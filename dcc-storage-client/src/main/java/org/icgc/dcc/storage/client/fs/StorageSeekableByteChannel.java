@@ -53,6 +53,7 @@ public class StorageSeekableByteChannel implements SeekableByteChannel {
    */
   private long position;
   private long readPosition;
+  private int connectCount;
   private ReadableByteChannel channel;
   private HttpURLConnection connection;
 
@@ -69,8 +70,13 @@ public class StorageSeekableByteChannel implements SeekableByteChannel {
   }
 
   @Override
-  public void close() throws IOException {
+  synchronized public void close() throws IOException {
     channel = null;
+    connectCount = 0;
+    if (connection != null) {
+      connection.disconnect();
+      connection = null;
+    }
   }
 
   @Override
@@ -108,16 +114,19 @@ public class StorageSeekableByteChannel implements SeekableByteChannel {
     }
 
     log.info("--------------------------------------------------------------");
-
     try {
       val length = (int) Math.min(buffer.remaining(), size() - position);
       val start = position;
       val end = position + length - 1;
-      log.info("Position: {}, Read Position: {}, Buffer:  '{}'", position, readPosition, buffer);
-      log.info("Reading '{}:{}-{}'", url, start, end);
+      log.info("Position: {}, Read Position: {}, Buffer: '{}',", position, readPosition, buffer);
+      log.info("Reading '{}:{}-{}', Connect Count: {}", url, start, end, connectCount);
 
       val channel = getChannel();
       val n = channel.read(buffer);
+      if (n < 0) {
+        System.exit(-1);
+      }
+
       readPosition += n;
       log.info("Read: {}, Read Position: {}", n, readPosition);
 
@@ -149,6 +158,8 @@ public class StorageSeekableByteChannel implements SeekableByteChannel {
       readPosition = position;
 
       val range = formatRange(position, size() - 1);
+
+      connectCount++;
 
       log.info("*** Connect - Range: {}", range);
       connection = (HttpURLConnection) url.openConnection();
