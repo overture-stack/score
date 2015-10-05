@@ -107,15 +107,21 @@ public class StorageSeekableByteChannel implements SeekableByteChannel {
       return 0;
     }
 
+    log.info("--------------------------------------------------------------");
+
     try {
       val length = (int) Math.min(buffer.remaining(), size() - position);
       val start = position;
       val end = position + length - 1;
-      log.info("Position: {}, Buffer  '{}'", position, buffer);
+      log.info("Position: {}, Read Position: {}, Buffer:  '{}'", position, readPosition, buffer);
       log.info("Reading '{}:{}-{}'", url, start, end);
 
-      val channel = getChannel(start, end);
-      return channel.read(buffer);
+      val channel = getChannel();
+      val n = channel.read(buffer);
+      readPosition += n;
+      log.info("Read: {}, Read Position: {}", n, readPosition);
+
+      return n;
     } catch (Exception e) {
       log.error("Error reading '{}': {}", path, e);
 
@@ -134,22 +140,24 @@ public class StorageSeekableByteChannel implements SeekableByteChannel {
     return position;
   }
 
-  private ReadableByteChannel getChannel(long start, long end) throws IOException {
-    if (connection == null || start != readPosition + 1) {
+  private ReadableByteChannel getChannel() throws IOException {
+    if (connection == null || position != readPosition) {
       if (connection != null) {
         connection.disconnect();
       }
 
-      log.info("*** Connect: {}-{}", start, end);
+      readPosition = position;
+
+      val range = formatRange(position, size() - 1);
+
+      log.info("*** Connect - Range: {}", range);
       connection = (HttpURLConnection) url.openConnection();
       connection.setDoInput(true);
-      connection.setRequestProperty("Range", formatRange(start, size()));
+      connection.setRequestProperty("Range", range);
       connection.connect();
 
       channel = Channels.newChannel(connection.getInputStream());
     }
-
-    readPosition = end;
 
     return channel;
   }
