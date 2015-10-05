@@ -108,14 +108,14 @@ public class MemoryMappedParallelPartObjectTransport extends ParallelPartObjectT
                   log.debug("Fail checksumm. Reupload part: {}", part);
                   proxy.uploadPart(channel, part, objectId, uploadId);
                 }
-                progress.updateChecksum(1);
+                progress.incrementChecksumParts(1);
               } else {
                 proxy.uploadPart(channel, part, objectId, uploadId);
-                progress.updateProgress(1);
+                progress.incrementParts(1);
               }
             } finally {
               // This is required due to memory mapping which happens natively
-              progress.incrementByteWritten(part.getPartSize());
+              progress.incrementBytesWritten(part.getPartSize());
 
               memory.addAndGet(part.getPartSize());
               tasksSubmitted.decrementAndGet();
@@ -203,10 +203,10 @@ public class MemoryMappedParallelPartObjectTransport extends ParallelPartObjectT
                   if (checksum && isCorrupted(progressChannel, part, outputDir)) {
                     proxy.downloadPart(progressChannel, part, objectId, outputDir);
                   }
-                  progress.updateChecksum(1);
+                  progress.incrementChecksumParts(1);
                 } else {
                   proxy.downloadPart(progressChannel, part, objectId, outputDir);
-                  progress.updateProgress(1);
+                  progress.incrementParts(1);
                 }
                 return memoryChannel;
               } catch (RetryableException | NotResumableException | NotRetryableException e) {
@@ -221,7 +221,7 @@ public class MemoryMappedParallelPartObjectTransport extends ParallelPartObjectT
             }
           } finally {
             // progress.incrementByteRead(part.getPartSize());
-            progress.incrementByteWritten(part.getPartSize());
+            progress.incrementBytesWritten(part.getPartSize());
           }
         }
 

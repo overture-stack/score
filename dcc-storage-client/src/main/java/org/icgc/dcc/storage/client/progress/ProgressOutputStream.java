@@ -36,19 +36,19 @@ public class ProgressOutputStream extends ForwardingOutputStream {
   @Override
   public void write(int b) throws IOException {
     super.write(b);
-    progress.incrementByteWritten(1);
+    progress.incrementBytesWritten(1);
   }
 
   @Override
   public void write(byte[] b) throws IOException {
     super.write(b);
-    progress.incrementByteWritten(b.length);
+    progress.incrementBytesWritten(b.length);
   }
 
   @Override
   public void write(byte[] b, int off, int len) throws IOException {
     super.write(b, off, len);
-    progress.incrementByteWritten(len);
+    progress.incrementBytesWritten(len);
   }
 
 }

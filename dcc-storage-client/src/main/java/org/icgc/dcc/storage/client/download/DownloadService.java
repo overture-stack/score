@@ -162,11 +162,12 @@ public class DownloadService {
   private void resume(List<Part> parts, File outputDirectory, String objectId, boolean checksum) {
     log.info("Resume from previous download...");
 
-    int completedTotal = numCompletedParts(parts);
-    int total = parts.size();
+    int totalParts = parts.size();
+    int competedParts = numCompletedParts(parts);
+    int remainingParts = totalParts - competedParts;
 
-    log.info("{} parts remaining", total);
-    val progress = new Progress(total, total - completedTotal, terminal);
+    log.info("Total parts: {}, completed parts: {}, remaining parts: {}", totalParts, competedParts, remainingParts);
+    val progress = new Progress(terminal, totalParts, competedParts);
     downloadParts(parts, outputDirectory, objectId, objectId, progress, checksum);
 
   }
@@ -203,7 +204,7 @@ public class DownloadService {
     downloadStateStore.init(dir, spec);
 
     // TODO: Assign session id
-    val progress = new Progress(spec.getParts().size(), spec.getParts().size(), terminal);
+    val progress = new Progress(terminal, spec.getParts().size(), 0);
     downloadParts(spec.getParts(), dir, objectId, objectId, progress, false);
   }
 
