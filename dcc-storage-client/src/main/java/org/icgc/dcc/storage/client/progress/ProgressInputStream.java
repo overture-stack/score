@@ -38,7 +38,7 @@ public class ProgressInputStream extends ForwardingInputStream {
   public int read() throws IOException {
     val value = super.read();
     if (value > 0) {
-      progress.incrementByteRead(1);
+      progress.incrementBytesRead(1);
     }
 
     return value;
@@ -48,7 +48,7 @@ public class ProgressInputStream extends ForwardingInputStream {
   public int read(byte[] b) throws IOException {
     val value = super.read(b);
     if (value > 0) {
-      progress.incrementByteRead(value);
+      progress.incrementBytesRead(value);
     }
 
     return value;
@@ -58,7 +58,7 @@ public class ProgressInputStream extends ForwardingInputStream {
   public int read(byte[] b, int off, int len) throws IOException {
     val value = super.read(b, off, len);
     if (value > 0) {
-      progress.incrementByteRead(value);
+      progress.incrementBytesRead(value);
     }
 
     return value;

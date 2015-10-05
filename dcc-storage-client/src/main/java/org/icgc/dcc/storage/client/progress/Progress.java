@@ -1,8 +1,10 @@
 package org.icgc.dcc.storage.client.progress;
 
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
+
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -14,59 +16,74 @@ import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Progress bar for keeping track of the upload/download progress
+ * Progress bar for keeping track of the upload/download progress.
  */
 @Slf4j
 public class Progress {
 
-  private final AtomicInteger totalIncr = new AtomicInteger(0);
-  private final AtomicInteger checksumTotalIncr = new AtomicInteger(0);
-  private final AtomicLong nByteWritten = new AtomicLong(0);
-  private final AtomicLong nByteRead = new AtomicLong(0);
+  /**
+   * Constants.
+   */
+  private static final long DISPLAY_INTERVAL = 1L;
 
-  private final int total;
-  private final Stopwatch stopwatch;
-  private ScheduledExecutorService progressMonitor;
-  private final long DELAY = 1L;
-  private final int checksumTotal;
+  /**
+   * Configuration.
+   */
+  private final int totalParts;
+  private final int totalChecksumParts;
 
-  private long byteReadPerSec;
-  private long byteWrittenPerSec;
-  private long percent;
-  private int checksumPercent = 100;
+  /**
+   * State - Metrics.
+   */
+  private final AtomicInteger completedParts = new AtomicInteger(0);
+  private volatile long partsPercent;
 
-  private Terminal terminal;
+  private final AtomicInteger completedChecksumParts = new AtomicInteger(0);
+  private volatile int checksumPartsPercent = 100;
 
-  public Progress(int total, int numJobs, Terminal terminal) {
-    this.total = total;
-    this.checksumTotal = total - numJobs;
+  private final AtomicLong bytesRead = new AtomicLong(0);
+  private volatile long bytesReadPerSec;
+
+  private final AtomicLong bytesWritten = new AtomicLong(0);
+  private volatile long bytesWrittenPerSec;
+
+  /**
+   * State - Other.
+   */
+  private final Stopwatch stopwatch = Stopwatch.createUnstarted();
+  private volatile ScheduledExecutorService progressMonitor;
+
+  /**
+   * Dependencies.
+   */
+  private final Terminal terminal;
+
+  public Progress(Terminal terminal, int totalParts, int completedParts) {
     this.terminal = terminal;
-    this.stopwatch = Stopwatch.createUnstarted();
-    updateProgress(total - numJobs);
+    this.totalParts = totalParts;
+    this.totalChecksumParts = completedParts;
+
+    incrementParts(completedParts);
   }
 
   public void start() {
     stopwatch.start();
     progressMonitor = Executors.newSingleThreadScheduledExecutor();
-    progressMonitor.scheduleWithFixedDelay(new Runnable() {
-
-      @Override
-      public void run() {
-        display();
-      }
-    }, DELAY, DELAY, TimeUnit.SECONDS);
+    progressMonitor.scheduleWithFixedDelay(this::display, DISPLAY_INTERVAL, DISPLAY_INTERVAL, SECONDS);
   }
 
   public void stop() {
     if (stopwatch.isRunning()) {
       stopwatch.stop();
     }
+
     progressMonitor.shutdownNow();
     try {
-      progressMonitor.awaitTermination(DELAY, TimeUnit.SECONDS);
+      progressMonitor.awaitTermination(DISPLAY_INTERVAL, SECONDS);
     } catch (InterruptedException e) {
-      log.debug("Cannot stop the stopwatch", e);
+      log.debug("Cannot stop the stopwatch: ", e);
     }
+
     display();
     terminal.println("");
     terminal.println("Finalizing...");
@@ -82,40 +99,36 @@ public class Progress {
         .println(
             terminal.label("Total execution time") + ": " + terminal.value(String.format("%15s", stopwatch.toString())))
         .println(terminal.label("Total bytes read    ") + ": "
-            + terminal.value(String.format("%15s", Terminal.formatCount(nByteRead.get()))))
+            + terminal.value(String.format("%15s", Terminal.formatCount(bytesRead.get()))))
         .println(terminal.label("Total bytes written ") + ": "
-            + terminal.value(String.format("%15s", Terminal.formatCount(nByteWritten.get()))));
+            + terminal.value(String.format("%15s", Terminal.formatCount(bytesWritten.get()))));
   }
 
-  public void incrementByteWritten(long incr) {
-    byteWrittenPerSec = nByteWritten.addAndGet(incr) / duration() * 1000;
+  public void incrementParts(int partCount) {
+    partsPercent = completedParts.addAndGet(partCount) * 100 / totalParts;
   }
 
-  public void updateChecksum(int incr) {
-    checksumPercent = checksumTotalIncr.addAndGet(incr) * 100 / checksumTotal;
+  public void incrementChecksumParts(int checksumPartCount) {
+    checksumPartsPercent = completedChecksumParts.addAndGet(checksumPartCount) * 100 / totalChecksumParts;
   }
 
-  private long duration() {
-    return stopwatch.elapsed(TimeUnit.MILLISECONDS) + 1;
+  public void incrementBytesRead(long byteCount) {
+    bytesReadPerSec = bytesRead.addAndGet(byteCount) / duration() * 1000;
   }
 
-  public void incrementByteRead(long incr) {
-    byteReadPerSec = nByteRead.addAndGet(incr) / duration() * 1000;
+  public void incrementBytesWritten(long byteCount) {
+    bytesWrittenPerSec = bytesWritten.addAndGet(byteCount) / duration() * 1000;
   }
 
-  public void updateProgress(int incr) {
-    percent = totalIncr.addAndGet(incr) * 100 / total;
-  }
-
-  public synchronized void display() {
-    StringBuilder bar = new StringBuilder("\r");
-    bar.append(terminal.value(String.format("%3s", percent)));
-    bar.append("% [");
+  private synchronized void display() {
+    val bar = new StringBuilder("\r")
+        .append(terminal.value(String.format("%3s", partsPercent)))
+        .append("% [");
 
     val scale = 0.5f;
 
     for (int i = 0; i < (int) (100 * scale); i++) {
-      val completed = (int) (percent * scale);
+      val completed = (int) (partsPercent * scale);
       if (i <= completed) {
         bar.append(terminal.label("#"));
       } else if (i == completed + 1) {
@@ -125,29 +138,38 @@ public class Progress {
       }
     }
 
-    bar.append("] "
-        + " "
-        + terminal.label("Parts")
-        + ": "
-        + terminal.value(totalIncr.get() + "/" + total)
-        + ", "
-        + terminal.label("Checksum")
-        + ": "
-        + terminal.value(checksumPercent)
-        + "%, "
-        + terminal.label("Write/sec")
-        + ": "
-        + terminal.value(Terminal.formatBytes(byteWrittenPerSec)) + Terminal.formatBytesUnits(byteWrittenPerSec) + "/s"
-        + ", "
-        + terminal.label("Read/sec")
-        + ": "
-        + terminal.value(Terminal.formatBytes(byteReadPerSec)) + Terminal.formatBytesUnits(byteReadPerSec) + "/s");
+    bar
+        .append("] ")
+        .append(" ")
+        .append(terminal.label("Parts"))
+        .append(": ")
+        .append(terminal.value(completedParts.get() + "/" + totalParts))
+        .append(", ")
+        .append(terminal.label("Checksum"))
+        .append(": ")
+        .append(terminal.value(checksumPartsPercent))
+        .append("%, ")
+        .append(terminal.label("Write/sec"))
+        .append(": ")
+        .append(terminal.value(Terminal.formatBytes(bytesWrittenPerSec)))
+        .append(Terminal.formatBytesUnits(bytesWrittenPerSec))
+        .append("/s")
+        .append(", ")
+        .append(terminal.label("Read/sec"))
+        .append(": ")
+        .append(terminal.value(Terminal.formatBytes(bytesReadPerSec)))
+        .append(Terminal.formatBytesUnits(bytesReadPerSec))
+        .append("/s");
 
     val padding = 4;
     for (int i = 0; i < padding; i++)
       bar.append(" ");
 
     terminal.print(bar.toString());
+  }
+
+  private long duration() {
+    return stopwatch.elapsed(MILLISECONDS) + 1;
   }
 
 }

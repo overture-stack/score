@@ -67,7 +67,7 @@ public class PipedParallelPartObjectTransport extends ParallelPartObjectTranspor
               new ProgressDataChannel(new PipedDataChannel(pis, 0, part.getPartSize(), null), progress);
           proxy.uploadPart(dataChannel, part, objectId, uploadId);
           // progress.incrementByteWritten(part.getPartSize());
-          progress.updateProgress(1);
+          progress.incrementParts(1);
           memory.addAndGet(part.getPartSize());
           return part;
         }
@@ -77,7 +77,7 @@ public class PipedParallelPartObjectTransport extends ParallelPartObjectTranspor
       source.slice(part.getOffset(), part.getPartSize()).copyTo(pos);
       pos.close();
       // progress.incrementByteRead(part.getPartSize());
-      progress.updateProgress(0);
+      progress.incrementParts(0);
       long remaining = memory.addAndGet(-part.getPartSize());
       log.debug("Remaining Memory : {}", remaining);
       while (memory.get() < 0) {

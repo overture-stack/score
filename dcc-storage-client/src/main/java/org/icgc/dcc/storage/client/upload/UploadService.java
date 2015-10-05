@@ -104,7 +104,7 @@ public class UploadService {
       throw new NotResumableException(e);
     }
 
-    val progress = new Progress(spec.getParts().size(), spec.getParts().size(), terminal);
+    val progress = new Progress(terminal, spec.getParts().size(), 0);
     uploadParts(spec.getParts(), file, objectId, spec.getUploadId(), progress);
   }
 
@@ -134,8 +134,8 @@ public class UploadService {
     log.info("Resume from the previous upload...");
 
     List<Part> parts = uploadProgress.getParts();
-    int completedTotal = numCompletedParts(parts);
-    int total = parts.size();
+    int completedParts = numCompletedParts(parts);
+    int totalParts = parts.size();
 
     // remove completed parts if don't require checksumming
     if (!checksum) {
@@ -148,7 +148,7 @@ public class UploadService {
       });
     }
 
-    val progress = new Progress(total, total - completedTotal, terminal);
+    val progress = new Progress(terminal, totalParts, completedParts);
     uploadParts(parts, file, uploadProgress.getObjectId(), uploadProgress.getUploadId(), progress);
   }
 

@@ -54,4 +54,10 @@ org.icgc.dcc.storage.client.ClientMain
 upload --manifest src/test/resources/fixtures/upload/manifest.txt
 ```
 
+HTTP Logging
+---
+
+To enable logging of request bodies and headers, append the following to the command line:
+
+`--logging.level.org.apache.http=DEBUG`
 
