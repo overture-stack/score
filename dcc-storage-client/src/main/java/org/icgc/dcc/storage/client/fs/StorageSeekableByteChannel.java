@@ -22,15 +22,19 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.channels.Channels;
+import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.SeekableByteChannel;
 import java.util.Optional;
 
 import javax.naming.OperationNotSupportedException;
 
 import lombok.AllArgsConstructor;
+import lombok.Getter;
 import lombok.SneakyThrows;
 import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @AllArgsConstructor
 public class StorageSeekableByteChannel implements SeekableByteChannel {
 
@@ -38,6 +42,12 @@ public class StorageSeekableByteChannel implements SeekableByteChannel {
   private final Optional<String> objectId;
   private final URL url;
   private long position;
+  private long readPosition;
+
+  @Getter(lazy = true)
+  private final long size = resolveSize();
+
+  private ReadableByteChannel channel;
 
   public StorageSeekableByteChannel(StoragePath path) {
     this.path = path;
@@ -48,11 +58,12 @@ public class StorageSeekableByteChannel implements SeekableByteChannel {
 
   @Override
   public boolean isOpen() {
-    return true;
+    return channel != null;
   }
 
   @Override
   public void close() throws IOException {
+    channel = null;
   }
 
   @Override
@@ -73,28 +84,66 @@ public class StorageSeekableByteChannel implements SeekableByteChannel {
       return 0;
     }
 
+    return getSize();
+  }
+
+  @SneakyThrows
+  private long resolveSize() {
+    // TODO: Get from dcc-storage-server or dcc-metadata-server
     val urlConnection = (HttpURLConnection) url.openConnection();
     return urlConnection.getContentLengthLong();
   }
 
   @Override
-  public int read(ByteBuffer dst) throws IOException {
+  synchronized public int read(ByteBuffer buffer) throws IOException {
     if (url == null) {
       return 0;
     }
 
-    val length = (int) Math.min(dst.remaining(), size() - position);
-    val start = position;
-    val end = position + length - 1;
-    val range = start + "-" + end;
+    try {
+      val length = (int) Math.min(buffer.remaining(), size() - position);
+      val start = position;
+      val end = position + length - 1;
+      log.info("Position: {}, Buffer  '{}'", position, buffer);
+      log.info("Reading '{}:{}-{}'", url, start, end);
 
-    val urlConnection = (HttpURLConnection) url.openConnection();
-    urlConnection.setDoInput(true);
-    urlConnection.setRequestProperty("Range", "bytes=" + range);
-    urlConnection.connect();
+      val channel = getChannel(start, end);
+      return channel.read(buffer);
+    } catch (Exception e) {
+      log.error("Error reading '{}': {}", path, e);
 
-    val channel = Channels.newChannel(urlConnection.getInputStream());
-    return channel.read(dst);
+      throw e;
+    }
+  }
+
+  @Override
+  synchronized public SeekableByteChannel position(long newPosition) throws IOException {
+    this.position = newPosition;
+    return this;
+  }
+
+  @Override
+  synchronized public long position() throws IOException {
+    return position;
+  }
+
+  private ReadableByteChannel getChannel(long start, long end) throws IOException {
+    if (channel == null || start != readPosition + 1) {
+      if (channel != null) {
+        channel.close();
+      }
+
+      val urlConnection = (HttpURLConnection) url.openConnection();
+      urlConnection.setDoInput(true);
+      urlConnection.setRequestProperty("Range", formatRange(start, end));
+      urlConnection.connect();
+
+      channel = Channels.newChannel(urlConnection.getInputStream());
+    }
+
+    readPosition = end;
+
+    return channel;
   }
 
   @SneakyThrows
@@ -107,6 +156,10 @@ public class StorageSeekableByteChannel implements SeekableByteChannel {
     // val fileService = path.getFileSystem().getProvider().getFileService();
     // return fileService.getUrl(objectId.get());
 
+    //
+    // Prototyping
+    //
+
     if (path.endsWith("bam")) {
       return new URL("http://s3.amazonaws.com/iobio/NA12878/NA12878.autsome.bam");
     } else if (path.endsWith("bai")) {
@@ -116,15 +169,8 @@ public class StorageSeekableByteChannel implements SeekableByteChannel {
     }
   }
 
-  @Override
-  public SeekableByteChannel position(long newPosition) throws IOException {
-    this.position = newPosition;
-    return this;
-  }
-
-  @Override
-  public long position() throws IOException {
-    return position;
+  private static String formatRange(final long start, final long end) {
+    return String.format("bytes=%d-%d", start, end);
   }
 
 }
