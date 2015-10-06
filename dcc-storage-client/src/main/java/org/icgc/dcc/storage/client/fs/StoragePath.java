@@ -39,6 +39,7 @@ import org.icgc.dcc.storage.client.metadata.Entity;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.RequiredArgsConstructor;
 import lombok.val;
 
 /**
@@ -46,14 +47,25 @@ import lombok.val;
  * java-filesystem/src/main/java/com/peircean/glusterfs/GlusterPath.java
  */
 @Data
+@RequiredArgsConstructor
 @EqualsAndHashCode(exclude = "pathString")
 public class StoragePath implements Path {
 
+  /**
+   * Dependencies.
+   */
   private final StorageFileSystem fileSystem;
-  private final String[] parts;
 
+  /**
+   * Metadata.
+   */
+  private final String[] parts;
+  private final boolean absolute;
+
+  /**
+   * State.
+   */
   private String pathString;
-  private boolean absolute;
 
   public StoragePath(StorageFileSystem fileSystem, String path) {
     if (null == fileSystem) {
@@ -69,17 +81,14 @@ public class StoragePath implements Path {
     if (path.startsWith(fileSystem.getSeparator())) {
       absolute = true;
       stripped = stripped.substring(1);
+    } else {
+      absolute = false;
     }
+
     if (stripped.endsWith(fileSystem.getSeparator())) {
       stripped = stripped.substring(0, stripped.length() - 1);
     }
     parts = stripped.split(fileSystem.getSeparator());
-  }
-
-  StoragePath(StorageFileSystem fileSystem, String[] parts, boolean absolute) {
-    this.fileSystem = fileSystem;
-    this.parts = parts;
-    this.absolute = absolute;
   }
 
   public Optional<String> getObjectId() {
@@ -211,20 +220,21 @@ public class StoragePath implements Path {
 
   @Override
   public Path normalize() {
-    List<String> newParts = new LinkedList<String>();
-    for (String part : parts) {
+    val newParts = new LinkedList<String>();
+    for (val part : parts) {
       if (part.equals("..")) {
         newParts.remove(newParts.size() - 1);
       } else if (!part.equals(".") && !part.isEmpty()) {
         newParts.add(part);
       }
     }
+
     return new StoragePath(fileSystem, newParts.toArray(new String[] {}), absolute);
   }
 
   @Override
   public Path resolve(Path path) {
-    StoragePath otherPath = (StoragePath) path;
+    val otherPath = (StoragePath) path;
     if (!fileSystem.equals(otherPath.getFileSystem())) {
       throw new IllegalArgumentException("Can not resolve other path because it's on a different filesystem");
     }
@@ -267,8 +277,8 @@ public class StoragePath implements Path {
       throw new IllegalArgumentException("Can only relativize when both paths are absolute");
     }
 
-    StoragePath other = (StoragePath) path;
-    List<String> relativeParts = new LinkedList<String>();
+    val other = (StoragePath) path;
+    val relativeParts = new LinkedList<String>();
     boolean stillCommon = true;
     int lastCommonName = -1;
     for (int i = 0; i < parts.length; i++) {
@@ -285,9 +295,11 @@ public class StoragePath implements Path {
         relativeParts.add("..");
       }
     }
+
     for (int i = lastCommonName + 1; i < other.getParts().length; i++) {
       relativeParts.add(other.getParts()[i]);
     }
+
     return new StoragePath(fileSystem, relativeParts.toArray(new String[] {}), false);
   }
 

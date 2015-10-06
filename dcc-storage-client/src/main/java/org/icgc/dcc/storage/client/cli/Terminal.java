@@ -1,5 +1,6 @@
 package org.icgc.dcc.storage.client.cli;
 
+import static com.google.common.base.Strings.repeat;
 import static org.fusesource.jansi.Ansi.ansi;
 
 import org.fusesource.jansi.Ansi;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Component;
 import com.google.common.base.Strings;
 
 import jline.TerminalFactory;
+import lombok.val;
 
 @Component
 public class Terminal {
@@ -30,6 +32,11 @@ public class Terminal {
   public Terminal printLine() {
     println(line());
     return this;
+  }
+
+  public Terminal printStatus(String text) {
+    clearLine();
+    return print("\r" + text);
   }
 
   public Terminal print(String text) {
@@ -97,6 +104,16 @@ public class Terminal {
 
   public static String formatCount(long count) {
     return String.format("%,d", count);
+  }
+
+  private void clearLine() {
+    val padding = repeat(" ", getWidth());
+    print("\r" + padding);
+  }
+
+  @SuppressWarnings("unused")
+  private static String stripAnsi(String text) {
+    return jline.internal.Ansi.stripAnsi(text);
   }
 
 }

@@ -63,21 +63,23 @@ public class MountCommand extends AbstractClientCommand {
   @SneakyThrows
   public int execute() {
     try {
-      print("\rIndexing remote files. Please wait...");
+      terminal.printStatus("Indexing remote files. Please wait...");
       val fileService = new StorageFileService(metadataClient, downloadService);
       fileService.getEntities(); // Eager-load and cache
 
       val fileSystem = StorageFileSystems.newFileSystem(fileService);
 
-      print("\rMounting file system to '%s'...                      ", mountPoint.getAbsolutePath());
+      terminal.printStatus("Mounting file system to '" + mountPoint.getAbsolutePath() + "'...");
       mount(fileSystem, mountPoint.toPath());
-      terminal.print(
+      terminal.printStatus(
           terminal.label(
-              "\rSuccessfully mounted file system at '" + terminal.value(mountPoint.getAbsolutePath())
+              "Successfully mounted file system at '" + terminal.value(mountPoint.getAbsolutePath())
                   + "' and is now ready for use!"));
+
+      // Wait for interrupt
       Thread.sleep(Long.MAX_VALUE);
     } catch (InterruptedException e) {
-      println("\rUnmounting file system...");
+      terminal.printStatus("Unmounting file system...");
     }
 
     return SUCCESS_STATUS;

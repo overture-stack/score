@@ -100,13 +100,6 @@ public class StorageSeekableByteChannel implements SeekableByteChannel {
     return getSize();
   }
 
-  @SneakyThrows
-  private long resolveSize() {
-    // TODO: Get from dcc-storage-server or dcc-metadata-server
-    val urlConnection = (HttpURLConnection) url.openConnection();
-    return urlConnection.getContentLengthLong();
-  }
-
   @Override
   synchronized public int read(ByteBuffer buffer) throws IOException {
     if (url == null) {
@@ -118,15 +111,16 @@ public class StorageSeekableByteChannel implements SeekableByteChannel {
       val start = position;
       val end = position + length - 1;
 
-      log.info("--------------------------------------------------------------");
-      log.info("Position: {}, Read Position: {}, Buffer: '{}',", position, readPosition, buffer);
-      log.info("Reading '{}:{}-{}', Connect Count: {}", url, start, end, connectCount);
+      log.debug("--------------------------------------------------------------");
+      log.debug("Position: {}, Read Position: {}, Buffer: '{}',", position, readPosition, buffer);
+      log.debug("--------------------------------------------------------------");
+      log.debug("Reading '{}:{}-{}', Connect Count: {}", url, start, end, connectCount);
 
-      val channel = getChannel();
+      val channel = resolveChannel();
       val n = channel.read(buffer);
 
       readPosition += n;
-      log.info("Read: {}, Read Position: {}", n, readPosition);
+      log.debug("Read: {}, Read Position: {}", n, readPosition);
 
       return n;
     } catch (Exception e) {
@@ -147,24 +141,32 @@ public class StorageSeekableByteChannel implements SeekableByteChannel {
     return position;
   }
 
-  private ReadableByteChannel getChannel() throws IOException {
-    if (connection == null || position != readPosition) {
+  @SneakyThrows
+  private long resolveSize() {
+    // TODO: Get from dcc-storage-server or dcc-metadata-server
+    val connection = (HttpURLConnection) url.openConnection();
+    return connection.getContentLengthLong();
+  }
+
+  private ReadableByteChannel resolveChannel() throws IOException {
+    val reset = connection == null || position != readPosition;
+    if (reset) {
+      // Reset
+      readPosition = position;
       if (connection != null) {
         connection.disconnect();
       }
 
-      readPosition = position;
-
       val range = formatRange(position, size() - 1);
+      log.debug("*** Connect - Range: {}", range);
 
-      connectCount++;
-
-      log.info("*** Connect - Range: {}", range);
       connection = (HttpURLConnection) url.openConnection();
       connection.setDoInput(true);
       connection.setRequestProperty("Range", range);
       connection.connect();
+      connectCount++;
 
+      // Wrap
       channel = Channels.newChannel(connection.getInputStream());
     }
 
@@ -185,6 +187,7 @@ public class StorageSeekableByteChannel implements SeekableByteChannel {
     // Prototyping
     //
 
+    // Simple extension match, always pointing to the same file
     if (path.endsWith("bam")) {
       return new URL("http://s3.amazonaws.com/iobio/NA12878/NA12878.autsome.bam");
     } else if (path.endsWith("bai")) {
