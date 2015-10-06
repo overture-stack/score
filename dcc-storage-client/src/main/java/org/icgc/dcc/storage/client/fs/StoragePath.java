@@ -92,7 +92,7 @@ public class StoragePath implements Path {
   }
 
   public Optional<String> getObjectId() {
-    val fileService = fileSystem.getProvider().getFileService();
+    val context = fileSystem.getProvider().getContext();
     if (parts.length < 2) {
       return Optional.empty();
     }
@@ -100,7 +100,7 @@ public class StoragePath implements Path {
     val gnosId = parts[0];
     val fileName = parts[1];
 
-    return fileService.getEntities().stream()
+    return context.getEntities().stream()
         .filter(entity -> entity.getGnosId().equals(gnosId) && entity.getFileName().equals(fileName))
         .map(Entity::getId)
         .findFirst();

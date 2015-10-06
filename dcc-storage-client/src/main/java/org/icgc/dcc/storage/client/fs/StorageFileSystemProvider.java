@@ -64,7 +64,7 @@ public class StorageFileSystemProvider extends ReadOnlyFileSystemProvider {
    */
   @Getter
   @NonNull
-  private final StorageFileService fileService;
+  private final StorageContext context;
 
   /**
    * State.
@@ -101,7 +101,7 @@ public class StorageFileSystemProvider extends ReadOnlyFileSystemProvider {
   public SeekableByteChannel newByteChannel(Path path, Set<? extends OpenOption> options, FileAttribute<?>... attrs)
       throws IOException {
     log.debug("newByteChannel(path={}, options={}, attrs={})", path, options, Arrays.toString(attrs));
-    return new StorageSeekableByteChannel((StoragePath) path);
+    return new StorageSeekableByteChannel((StoragePath) path, context);
   }
 
   @Override
@@ -146,7 +146,7 @@ public class StorageFileSystemProvider extends ReadOnlyFileSystemProvider {
   public <A extends BasicFileAttributes> A readAttributes(Path path, Class<A> type, LinkOption... options)
       throws IOException {
     log.debug("readAttributes(path={}, type={}, options={})", path, type, Arrays.toString(options));
-    return (A) new StorageFileAttributes(path);
+    return (A) new StorageFileAttributes((StoragePath) path, context);
   }
 
   @Override
@@ -162,7 +162,7 @@ public class StorageFileSystemProvider extends ReadOnlyFileSystemProvider {
   }
 
   private List<Entity> getEntities() {
-    val entities = fileService.getEntities();
+    val entities = context.getEntities();
 
     Comparator<Entity> comparison = comparing(entity -> entity.getGnosId());
     comparison = comparison.thenComparing(entity -> entity.getFileName());

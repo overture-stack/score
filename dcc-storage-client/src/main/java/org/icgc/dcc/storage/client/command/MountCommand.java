@@ -26,7 +26,7 @@ import java.nio.file.Path;
 
 import org.icgc.dcc.storage.client.cli.DirectoryValidator;
 import org.icgc.dcc.storage.client.download.DownloadService;
-import org.icgc.dcc.storage.client.fs.StorageFileService;
+import org.icgc.dcc.storage.client.fs.StorageClientContext;
 import org.icgc.dcc.storage.client.fs.StorageFileSystems;
 import org.icgc.dcc.storage.client.metadata.MetadataClient;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -64,10 +64,10 @@ public class MountCommand extends AbstractClientCommand {
   public int execute() {
     try {
       terminal.printStatus("Indexing remote files. Please wait...");
-      val fileService = new StorageFileService(metadataClient, downloadService);
-      fileService.getEntities(); // Eager-load and cache
+      val context = new StorageClientContext(metadataClient, downloadService);
+      context.getEntities(); // Eager-load and cache
 
-      val fileSystem = StorageFileSystems.newFileSystem(fileService);
+      val fileSystem = StorageFileSystems.newFileSystem(context);
 
       terminal.printStatus("Mounting file system to '" + mountPoint.getAbsolutePath() + "'...");
       mount(fileSystem, mountPoint.toPath());

@@ -17,24 +17,15 @@
  */
 package org.icgc.dcc.storage.client.fs;
 
-import static java.util.Collections.emptyMap;
+import java.net.URL;
+import java.util.List;
 
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
+import org.icgc.dcc.storage.client.metadata.Entity;
 
-import lombok.NonNull;
-import lombok.val;
-import lombok.experimental.UtilityClass;
+public interface StorageContext {
 
-@UtilityClass
-public class StorageFileSystems {
+  List<Entity> getEntities();
 
-  public StorageFileSystem newFileSystem(@NonNull StorageContext context) throws IOException, URISyntaxException {
-    val provider = new StorageFileSystemProvider(context);
-    val uri = new URI("icgc://storage");
-
-    return (StorageFileSystem) provider.newFileSystem(uri, emptyMap());
-  }
+  URL getUrl(String objectId);
 
 }

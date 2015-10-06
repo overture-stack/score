@@ -30,16 +30,26 @@ import java.util.regex.Pattern;
 
 import com.google.common.collect.ImmutableSet;
 
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+
+@RequiredArgsConstructor
 public class StorageFileAttributes implements PosixFileAttributes {
 
   private final Pattern REGULAR_FILE_PATTERN = compile(
       /* root */ "/" + /* dir */ "[^/]*/" + /* file */ ".+");
 
+  /**
+   * Configuration.
+   */
+  @NonNull
   private final StoragePath path;
 
-  public StorageFileAttributes(Path path) {
-    this.path = (StoragePath) path;
-  }
+  /**
+   * Metadata.
+   */
+  @NonNull
+  private final StorageContext context;
 
   @Override
   public FileTime lastModifiedTime() {
@@ -68,7 +78,7 @@ public class StorageFileAttributes implements PosixFileAttributes {
 
   @Override
   public boolean isSymbolicLink() {
-    return false;
+    return path.endsWith(".json");
   }
 
   @Override
@@ -82,6 +92,8 @@ public class StorageFileAttributes implements PosixFileAttributes {
       return 200627495654L;
     } else if (path.endsWith(".bai")) {
       return 8264320L;
+    } else if (path.endsWith(".json")) {
+      return 1649;
     } else {
       return 258;
     }

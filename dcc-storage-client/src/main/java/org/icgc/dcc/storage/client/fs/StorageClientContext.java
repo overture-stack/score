@@ -29,7 +29,7 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public class StorageFileService {
+public class StorageClientContext implements StorageContext {
 
   /**
    * Dependencies
@@ -44,12 +44,13 @@ public class StorageFileService {
   @Getter(lazy = true)
   private final List<Entity> entities = resolveEntities();
 
-  public List<Entity> resolveEntities() {
-    return metadataClient.findEntities();
-  }
-
+  @Override
   public URL getUrl(String objectId) {
     return downloadService.getUrl(objectId);
+  }
+
+  private List<Entity> resolveEntities() {
+    return metadataClient.findEntities();
   }
 
 }

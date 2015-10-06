@@ -22,9 +22,11 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Path;
 import java.util.Iterator;
 import java.util.List;
+import java.util.stream.Stream;
 
 import org.icgc.dcc.storage.client.metadata.Entity;
 
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.val;
@@ -35,12 +37,15 @@ public class StorageDirectoryStream implements DirectoryStream<Path> {
   /**
    * Configuration.
    */
+  @NonNull
   private final StoragePath path;
+  @NonNull
   private final Filter<? super Path> filter;
 
   /**
    * Metadata.
    */
+  @NonNull
   private final List<Entity> entities;
 
   @Override
@@ -76,9 +81,15 @@ public class StorageDirectoryStream implements DirectoryStream<Path> {
   }
 
   private Iterator<Path> listGnosDir(String gnosId) {
-    return entities.stream()
+    // Artificial
+    val infoFile = Stream.of(absolutePath(gnosId, gnosId + ".json"));
+
+    // Real
+    val objectFiles = entities.stream()
         .filter(entity -> entity.getGnosId().equals(gnosId))
-        .map(this::entityPath)
+        .map(this::entityPath);
+
+    return Stream.concat(infoFile, objectFiles)
         .filter(this::filterPath).iterator();
   }
 

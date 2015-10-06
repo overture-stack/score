@@ -17,171 +17,24 @@
  */
 package org.icgc.dcc.storage.client.fs;
 
-import java.io.IOException;
-import java.net.HttpURLConnection;
 import java.net.URL;
-import java.nio.ByteBuffer;
-import java.nio.channels.Channels;
-import java.nio.channels.ReadableByteChannel;
-import java.nio.channels.SeekableByteChannel;
-import java.util.Optional;
 
-import javax.naming.OperationNotSupportedException;
+import org.icgc.dcc.storage.client.fs.util.SeekableURLByteChannel;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.NonNull;
 import lombok.SneakyThrows;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
-@AllArgsConstructor
-public class StorageSeekableByteChannel implements SeekableByteChannel {
+public class StorageSeekableByteChannel extends SeekableURLByteChannel {
 
-  /**
-   * Configuration.
-   */
-  private final StoragePath path;
-  private final Optional<String> objectId;
-  private final URL url;
-
-  @Getter(lazy = true)
-  private final long size = resolveSize();
-
-  /**
-   * State
-   */
-  private long position;
-  private long readPosition;
-  private int connectCount;
-  private ReadableByteChannel channel;
-  private HttpURLConnection connection;
-
-  public StorageSeekableByteChannel(StoragePath path) {
-    this.path = path;
-    this.position = 0;
-    this.objectId = path.getObjectId();
-    this.url = getUrl(objectId);
-  }
-
-  @Override
-  public boolean isOpen() {
-    return channel != null;
-  }
-
-  @Override
-  synchronized public void close() throws IOException {
-    channel = null;
-    connectCount = 0;
-    if (connection != null) {
-      connection.disconnect();
-      connection = null;
-    }
-  }
-
-  @Override
-  @SneakyThrows
-  public int write(ByteBuffer src) throws IOException {
-    throw new OperationNotSupportedException();
-  }
-
-  @Override
-  @SneakyThrows
-  public SeekableByteChannel truncate(long size) throws IOException {
-    throw new OperationNotSupportedException();
-  }
-
-  @Override
-  public long size() throws IOException {
-    if (url == null) {
-      return 0;
-    }
-
-    return getSize();
-  }
-
-  @Override
-  synchronized public int read(ByteBuffer buffer) throws IOException {
-    if (url == null) {
-      return 0;
-    }
-
-    try {
-      val length = (int) Math.min(buffer.remaining(), size() - position);
-      val start = position;
-      val end = position + length - 1;
-
-      log.debug("--------------------------------------------------------------");
-      log.debug("Position: {}, Read Position: {}, Buffer: '{}',", position, readPosition, buffer);
-      log.debug("--------------------------------------------------------------");
-      log.debug("Reading '{}:{}-{}', Connect Count: {}", url, start, end, connectCount);
-
-      val channel = resolveChannel();
-      val n = channel.read(buffer);
-
-      readPosition += n;
-      log.debug("Read: {}, Read Position: {}", n, readPosition);
-
-      return n;
-    } catch (Exception e) {
-      log.error("Error reading '{}': {}", path, e);
-
-      throw e;
-    }
-  }
-
-  @Override
-  synchronized public SeekableByteChannel position(long newPosition) throws IOException {
-    this.position = newPosition;
-    return this;
-  }
-
-  @Override
-  synchronized public long position() throws IOException {
-    return position;
+  public StorageSeekableByteChannel(@NonNull StoragePath path, @NonNull StorageContext context) {
+    super(getUrl(path, context));
   }
 
   @SneakyThrows
-  private long resolveSize() {
-    // TODO: Get from dcc-storage-server or dcc-metadata-server
-    val connection = (HttpURLConnection) url.openConnection();
-    return connection.getContentLengthLong();
-  }
-
-  private ReadableByteChannel resolveChannel() throws IOException {
-    val reset = connection == null || position != readPosition;
-    if (reset) {
-      // Reset
-      readPosition = position;
-      if (connection != null) {
-        connection.disconnect();
-      }
-
-      val range = formatRange(position, size() - 1);
-      log.debug("*** Connect - Range: {}", range);
-
-      connection = (HttpURLConnection) url.openConnection();
-      connection.setDoInput(true);
-      connection.setRequestProperty("Range", range);
-      connection.connect();
-      connectCount++;
-
-      // Wrap
-      channel = Channels.newChannel(connection.getInputStream());
-    }
-
-    return channel;
-  }
-
-  @SneakyThrows
-  private URL getUrl(Optional<String> objectId) {
-    if (!objectId.isPresent()) {
-      return null;
-    }
-
+  private static URL getUrl(StoragePath path, StorageContext context) {
     // TODO: Return real URL from Storage Server
-    // val fileService = path.getFileSystem().getProvider().getFileService();
-    // return fileService.getUrl(objectId.get());
+    // val context = path.getFileSystem().getProvider().getContext();
+    // return context.getUrl(objectId.get());
 
     //
     // Prototyping
@@ -192,13 +45,14 @@ public class StorageSeekableByteChannel implements SeekableByteChannel {
       return new URL("http://s3.amazonaws.com/iobio/NA12878/NA12878.autsome.bam");
     } else if (path.endsWith("bai")) {
       return new URL("http://s3.amazonaws.com/iobio/NA12878/NA12878.autsome.bam.bai");
-    } else {
+    } else if (path.endsWith("json")) {
+      return new URL(
+          "https://raw.githubusercontent.com/ICGC-TCGA-PanCancer/s3-transfer-operations/master/s3-transfer-jobs-prod1/completed-jobs/001a5fa1-dcc8-43e6-8815-fac34eb8a3c9.RECA-EU.C0015.C0015T.WGS-BWA-Tumor.json");
+    } else if (path.getObjectId().isPresent()) {
       return new URL("http://www.google.com");
     }
-  }
 
-  private static String formatRange(long start, long end) {
-    return String.format("bytes=%d-%d", start, end);
+    return null;
   }
 
 }
