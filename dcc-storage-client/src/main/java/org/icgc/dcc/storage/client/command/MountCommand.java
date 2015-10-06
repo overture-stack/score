@@ -84,10 +84,10 @@ public class MountCommand extends AbstractClientCommand {
   }
 
   /**
-   * To force unmount: {@code diskutil unmount}.
+   * To force unmount: {@code  diskutil unmount force <mount point>}.
    */
   private void mount(FileSystem fileSystem, Path mountPoint) throws IOException, InterruptedException {
-    prepareFfi();
+    patchFfi();
 
     val readOnly = false;
     val logging = false;
@@ -95,10 +95,12 @@ public class MountCommand extends AbstractClientCommand {
   }
 
   /**
+   * Workaround for unfortunate system classloader usage.
+   * 
    * @see https://github.com/jnr/jnr-ffi/issues/51
    */
   @SneakyThrows
-  private void prepareFfi() {
+  private void patchFfi() {
     ClosureManager closureManager = NativeRuntime.getInstance().getClosureManager();
     val classLoader = findField(closureManager.getClass(), "classLoader");
     classLoader.setAccessible(true);

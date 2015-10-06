@@ -25,58 +25,78 @@ import java.util.List;
 
 import org.icgc.dcc.storage.client.metadata.Entity;
 
+import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.val;
 
+@RequiredArgsConstructor
 public class StorageDirectoryStream implements DirectoryStream<Path> {
 
-  private StoragePath path;
-  private Filter<? super Path> filter;
+  /**
+   * Configuration.
+   */
+  private final StoragePath path;
+  private final Filter<? super Path> filter;
 
-  public StorageDirectoryStream(StoragePath path, Filter<? super Path> filter) {
-    this.path = path;
-    this.filter = filter;
-  }
+  /**
+   * Metadata.
+   */
+  private final List<Entity> entities;
 
   @Override
   public Iterator<Path> iterator() {
-    val entities = getEntities();
-    if (path.getNameCount() == 0) {
-      return entities.stream().map(entity -> entity.getGnosId()).distinct().map(this::gnosIdPath)
-          .filter(this::filterPath).iterator();
+    if (isRoot()) {
+      return listGnosDirs();
     } else {
-      val gnosId = path.getParts()[0];
-      return entities.stream().filter(entity -> entity.getGnosId().equals(gnosId)).map(this::entityPath)
-          .filter(this::filterPath).iterator();
+      val gnosId = getGnosId();
+      return listGnosDir(gnosId);
     }
   }
 
-  private List<Entity> getEntities() {
-    val fileSystem = path.getFileSystem();
-    return fileSystem.getProvider().getFileService().getEntities();
+  @Override
+  public void close() throws IOException {
+    // Stateless
+  }
+
+  private String getGnosId() {
+    return path.getParts()[0];
+  }
+
+  private boolean isRoot() {
+    // Don't trust StoragePath#equals yet
+    return path.toAbsolutePath().toString().equals("/");
+  }
+
+  private Iterator<Path> listGnosDirs() {
+    return entities.stream()
+        .map(entity -> entity.getGnosId())
+        .distinct()
+        .map(this::gnosIdPath)
+        .filter(this::filterPath).iterator();
+  }
+
+  private Iterator<Path> listGnosDir(String gnosId) {
+    return entities.stream()
+        .filter(entity -> entity.getGnosId().equals(gnosId))
+        .map(this::entityPath)
+        .filter(this::filterPath).iterator();
   }
 
   private Path gnosIdPath(String gnosId) {
-    return new StoragePath(
-        path.getFileSystem(),
-        new String[] { gnosId },
-        true);
+    return absolutePath(gnosId);
   }
 
   private Path entityPath(Entity entity) {
-    return new StoragePath(
-        path.getFileSystem(),
-        new String[] { entity.getGnosId(), entity.getFileName() },
-        true);
+    return absolutePath(entity.getGnosId(), entity.getFileName());
+  }
+
+  private Path absolutePath(String... parts) {
+    return new StoragePath(path.getFileSystem(), parts, true);
   }
 
   @SneakyThrows
   private boolean filterPath(Path path) {
     return filter.accept(path);
-  }
-
-  @Override
-  public void close() throws IOException {
   }
 
 }

@@ -17,6 +17,9 @@
  */
 package org.icgc.dcc.storage.client.fs;
 
+import static java.util.Comparator.comparing;
+import static java.util.stream.Collectors.toList;
+
 import java.io.IOException;
 import java.net.URI;
 import java.nio.channels.SeekableByteChannel;
@@ -34,10 +37,13 @@ import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.FileAttributeView;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.icgc.dcc.storage.client.fs.util.ReadOnlyFileSystemProvider;
+import org.icgc.dcc.storage.client.metadata.Entity;
 
 import lombok.Getter;
 import lombok.NonNull;
@@ -101,7 +107,7 @@ public class StorageFileSystemProvider extends ReadOnlyFileSystemProvider {
   @Override
   public DirectoryStream<Path> newDirectoryStream(Path path, Filter<? super Path> filter) throws IOException {
     log.debug("newDirectoryStream(path={}, filter={})", path, filter);
-    return new StorageDirectoryStream((StoragePath) path, filter);
+    return new StorageDirectoryStream((StoragePath) path, filter, getEntities());
   }
 
   @Override
@@ -153,6 +159,14 @@ public class StorageFileSystemProvider extends ReadOnlyFileSystemProvider {
   public void setAttribute(Path path, String attribute, Object value, LinkOption... options) throws IOException {
     log.debug("setAttribute(path={}, attribute={}, value={}, options={})", path, attribute, value,
         Arrays.toString(options));
+  }
+
+  private List<Entity> getEntities() {
+    val entities = fileService.getEntities();
+
+    Comparator<Entity> comparison = comparing(entity -> entity.getGnosId());
+    comparison = comparison.thenComparing(entity -> entity.getFileName());
+    return entities.stream().sorted(comparison).collect(toList());
   }
 
 }

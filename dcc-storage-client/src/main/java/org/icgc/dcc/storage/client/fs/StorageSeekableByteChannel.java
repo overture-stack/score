@@ -113,19 +113,17 @@ public class StorageSeekableByteChannel implements SeekableByteChannel {
       return 0;
     }
 
-    log.info("--------------------------------------------------------------");
     try {
       val length = (int) Math.min(buffer.remaining(), size() - position);
       val start = position;
       val end = position + length - 1;
+
+      log.info("--------------------------------------------------------------");
       log.info("Position: {}, Read Position: {}, Buffer: '{}',", position, readPosition, buffer);
       log.info("Reading '{}:{}-{}', Connect Count: {}", url, start, end, connectCount);
 
       val channel = getChannel();
       val n = channel.read(buffer);
-      if (n < 0) {
-        System.exit(-1);
-      }
 
       readPosition += n;
       log.info("Read: {}, Read Position: {}", n, readPosition);
@@ -196,7 +194,7 @@ public class StorageSeekableByteChannel implements SeekableByteChannel {
     }
   }
 
-  private static String formatRange(final long start, final long end) {
+  private static String formatRange(long start, long end) {
     return String.format("bytes=%d-%d", start, end);
   }
 

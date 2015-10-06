@@ -17,6 +17,8 @@
  */
 package org.icgc.dcc.storage.client.fs;
 
+import static java.util.regex.Pattern.compile;
+
 import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
 import java.nio.file.attribute.GroupPrincipal;
@@ -30,7 +32,8 @@ import com.google.common.collect.ImmutableSet;
 
 public class StorageFileAttributes implements PosixFileAttributes {
 
-  private final Pattern REGULAR_FILE_PATTERN = Pattern.compile("/[^/]*/[^/]*/.+");
+  private final Pattern REGULAR_FILE_PATTERN = compile(
+      /* root */ "/" + /* dir */ "[^/]*/" + /* file */ ".+");
 
   private final StoragePath path;
 
