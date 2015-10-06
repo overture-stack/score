@@ -52,6 +52,7 @@ public class Progress {
    */
   private final Stopwatch stopwatch = Stopwatch.createUnstarted();
   private volatile ScheduledExecutorService progressMonitor;
+  private volatile boolean isTransferStarted;
 
   /**
    * Dependencies.
@@ -67,9 +68,18 @@ public class Progress {
   }
 
   public void start() {
-    stopwatch.start();
     progressMonitor = Executors.newSingleThreadScheduledExecutor();
     progressMonitor.scheduleWithFixedDelay(this::display, DISPLAY_INTERVAL, DISPLAY_INTERVAL, SECONDS);
+  }
+
+  public synchronized void startTransfer() {
+    if (!isTransferStarted) {
+      stopwatch.start();
+    }
+  }
+
+  public boolean isTransferStarted() {
+    return isTransferStarted;
   }
 
   public void stop() {
@@ -108,8 +118,8 @@ public class Progress {
     partsPercent = completedParts.addAndGet(partCount) * 100 / totalParts;
   }
 
-  public void incrementChecksumParts(int checksumPartCount) {
-    checksumPartsPercent = completedChecksumParts.addAndGet(checksumPartCount) * 100 / totalChecksumParts;
+  public void incrementChecksumParts() {
+    checksumPartsPercent = completedChecksumParts.addAndGet(1) * 100 / totalChecksumParts;
   }
 
   public void incrementBytesRead(long byteCount) {

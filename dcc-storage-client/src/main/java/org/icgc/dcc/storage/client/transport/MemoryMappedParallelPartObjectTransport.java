@@ -17,6 +17,8 @@
  */
 package org.icgc.dcc.storage.client.transport;
 
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -30,9 +32,13 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import lombok.AllArgsConstructor;
+import lombok.SneakyThrows;
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
 import org.icgc.dcc.storage.client.download.Downloads;
 import org.icgc.dcc.storage.client.exception.NotResumableException;
@@ -44,10 +50,7 @@ import org.icgc.dcc.storage.core.model.Part;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Ordering;
-
-import lombok.AllArgsConstructor;
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 /**
  * A data transport using memory mapped channels for parallel upload/download
@@ -66,6 +69,7 @@ public class MemoryMappedParallelPartObjectTransport extends ParallelPartObjectT
     @Override
     public void run() {
       try {
+        log.debug("Flushing buffer to disk...");
         channel.commitToDisk();
       } finally {
         log.debug("Memory is free: {}", channel.getLength());
@@ -106,16 +110,19 @@ public class MemoryMappedParallelPartObjectTransport extends ParallelPartObjectT
                 log.debug("Checksumming part: {}", part);
                 if (checksum && isCorrupted(channel, part, file)) {
                   log.debug("Fail checksumm. Reupload part: {}", part);
+                  progress.startTransfer();
                   proxy.uploadPart(channel, part, objectId, uploadId);
+                  progress.incrementBytesWritten(part.getPartSize());
                 }
-                progress.incrementChecksumParts(1);
+                progress.incrementChecksumParts();
               } else {
+                progress.startTransfer();
                 proxy.uploadPart(channel, part, objectId, uploadId);
+                progress.incrementBytesWritten(part.getPartSize());
                 progress.incrementParts(1);
               }
             } finally {
               // This is required due to memory mapping which happens natively
-              progress.incrementBytesWritten(part.getPartSize());
 
               memory.addAndGet(part.getPartSize());
               tasksSubmitted.decrementAndGet();
@@ -157,16 +164,20 @@ public class MemoryMappedParallelPartObjectTransport extends ParallelPartObjectT
     File filename = new File(outputDir, objectId);
     long fileSize = Downloads.calculateTotalSize(parts);
 
-    log.debug("downloading object to file: {}, size:{}", filename.getPath(), fileSize);
-    final ExecutorService downloadExecutorService = Executors.newFixedThreadPool(nThreads);
-    final ScheduledExecutorService memoryCollectorService = Executors.newScheduledThreadPool(Math.max(1, nThreads / 2));
+    log.debug("Downloading object to file: {}, size:{}", filename.getPath(), fileSize);
+    val downloadExecutorService = Executors.newFixedThreadPool(nThreads, new ThreadFactoryBuilder()
+        .setNameFormat("downloader-%s").build());
+    val memoryCollectorService = Executors.newScheduledThreadPool(Math.max(1, nThreads / 2), new ThreadFactoryBuilder()
+        .setNameFormat("memory-cleaner-%s").build());
 
-    AtomicInteger tasksSubmitted = new AtomicInteger();
-    LinkedList<Future<MemoryMappedDataChannel>> results = new LinkedList<Future<MemoryMappedDataChannel>>();
+    val results = new LinkedList<Future<MemoryMappedDataChannel>>();
     progress.start();
+
+    log.debug("Allocating space for file '{}'", filename);
     try (RandomAccessFile fis = new RandomAccessFile(filename, "rw")) {
       fis.setLength(fileSize);
     }
+    log.debug("Finished space allocation for file '{}'", filename);
 
     // This is used to calculate
     if (!Ordering.natural().isOrdered(parts)) {
@@ -177,35 +188,42 @@ public class MemoryMappedParallelPartObjectTransport extends ParallelPartObjectT
     long prevLength = 0;
     long offset = 0;
     for (final Part part : parts) {
-
+      log.debug("Starting part {} download.", part);
       offset += prevLength;
       prevLength = part.getPartSize();
-      final long currOffset = offset;
+      val currOffset = offset;
 
-      tasksSubmitted.incrementAndGet();
+      log.debug("Submiting part # '{}' download.", part.getPartNumber());
       results.push(downloadExecutorService.submit(new Callable<MemoryMappedDataChannel>() {
 
         @Override
         public MemoryMappedDataChannel call() throws Exception {
-          tasksSubmitted.decrementAndGet();
+          // tasksSubmitted.decrementAndGet();
           try (RandomAccessFile rf = new RandomAccessFile(filename, "rw")) {
             try (FileChannel channel = rf.getChannel()) {
               // TODO: the actual position to position the data block into the file might be different from the original
               // position
 
-              final MappedByteBuffer buffer =
-                  channel.map(FileChannel.MapMode.READ_WRITE, currOffset, part.getPartSize());
-              MemoryMappedDataChannel memoryChannel =
-                  new MemoryMappedDataChannel(buffer, part.getOffset(), part.getPartSize(), null);
-              DataChannel progressChannel = new ProgressDataChannel(memoryChannel, progress);
+              val buffer = channel.map(FileChannel.MapMode.READ_WRITE, currOffset, part.getPartSize());
+              log.debug("Created memory buffer of capacity {}", buffer.capacity());
+              val memoryChannel = new MemoryMappedDataChannel(buffer, part.getOffset(), part.getPartSize(), null);
+              val progressChannel = new ProgressDataChannel(memoryChannel, progress);
               try {
+                log.debug("Checking if part #{} is downloaded", part.getPartNumber());
                 if (part.isCompleted()) {
+                  log.debug("Checking if part #{} is corrupted", part.getPartNumber());
                   if (checksum && isCorrupted(progressChannel, part, outputDir)) {
+                    log.debug("Part #{} is corrupted. Re-downloading...", part.getPartNumber());
+                    progress.startTransfer();
                     proxy.downloadPart(progressChannel, part, objectId, outputDir);
+                    progress.incrementBytesWritten(part.getPartSize());
                   }
-                  progress.incrementChecksumParts(1);
+                  progress.incrementChecksumParts();
                 } else {
+                  log.debug("Part #{} is not downloaded. Downloading...", part.getPartNumber());
+                  progress.startTransfer();
                   proxy.downloadPart(progressChannel, part, objectId, outputDir);
+                  progress.incrementBytesWritten(part.getPartSize());
                   progress.incrementParts(1);
                 }
                 return memoryChannel;
@@ -215,20 +233,16 @@ public class MemoryMappedParallelPartObjectTransport extends ParallelPartObjectT
               } catch (Throwable e) {
                 throw new NotRetryableException(e);
               } finally {
-                memoryCollectorService.schedule(new FreeMemory(memoryChannel), FREE_MEMORY_TIME_DELAY,
-                    TimeUnit.MILLISECONDS);
+                log.debug("Submitted task for part #{}", part.getPartNumber());
+                memoryCollectorService.schedule(new FreeMemory(memoryChannel), FREE_MEMORY_TIME_DELAY, MILLISECONDS);
               }
             }
-          } finally {
-            // progress.incrementByteRead(part.getPartSize());
-            progress.incrementBytesWritten(part.getPartSize());
           }
         }
 
       }));
       memory.addAndGet(-part.getPartSize());
       log.debug("Remaining Memory : {}", memory.get());
-      log.debug("Number of tasks submitted: {}", tasksSubmitted.get());
 
       while (memory.get() < 0) {
         try {
