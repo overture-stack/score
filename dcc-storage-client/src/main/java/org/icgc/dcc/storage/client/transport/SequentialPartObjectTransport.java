@@ -62,7 +62,7 @@ public class SequentialPartObjectTransport implements Transport {
       boolean resend = false;
       if (part.getMd5() != null) {
         if (channel.isValidMd5(part.getMd5())) {
-          progress.incrementChecksumParts(1);
+          progress.incrementChecksumParts();
           continue;
         }
         proxy.deleteUploadPart(objectId, uploadId, part);
@@ -70,12 +70,13 @@ public class SequentialPartObjectTransport implements Transport {
         resend = true;
       }
 
+      progress.startTransfer();
       // progress.incrementByteRead(part.getPartSize());
       proxy.uploadPart(channel, part, objectId, uploadId);
       // progress.incrementByteWritten(part.getPartSize());
 
       if (resend) {
-        progress.incrementChecksumParts(1);
+        progress.incrementChecksumParts();
       } else {
         progress.incrementParts(1);
       }

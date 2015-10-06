@@ -102,10 +102,12 @@ public class ParallelPartObjectTransport implements Transport {
               new ProgressDataChannel(new FileDataChannel(file, part.getOffset(), part.getPartSize(), null), progress);
           if (part.isCompleted()) {
             if (isCorrupted(channel, part, file)) {
+              progress.startTransfer();
               proxy.uploadPart(channel, part, objectId, uploadId);
             }
-            progress.incrementChecksumParts(1);
+            progress.incrementChecksumParts();
           } else {
+            progress.startTransfer();
             proxy.uploadPart(channel, part, objectId, uploadId);
             progress.incrementParts(1);
           }
@@ -155,10 +157,12 @@ public class ParallelPartObjectTransport implements Transport {
 
           if (part.isCompleted()) {
             if (checksum && isCorrupted(channel, part, outputDir)) {
+              progress.startTransfer();
               proxy.downloadPart(channel, part, objectId, outputDir);
             }
-            progress.incrementChecksumParts(1);
+            progress.incrementChecksumParts();
           } else {
+            progress.startTransfer();
             proxy.downloadPart(channel, part, objectId, outputDir);
             progress.incrementParts(1);
           }

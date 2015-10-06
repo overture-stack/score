@@ -65,6 +65,7 @@ public class PipedParallelPartObjectTransport extends ParallelPartObjectTranspor
         public Part call() throws Exception {
           DataChannel dataChannel =
               new ProgressDataChannel(new PipedDataChannel(pis, 0, part.getPartSize(), null), progress);
+          progress.startTransfer();
           proxy.uploadPart(dataChannel, part, objectId, uploadId);
           // progress.incrementByteWritten(part.getPartSize());
           progress.incrementParts(1);
