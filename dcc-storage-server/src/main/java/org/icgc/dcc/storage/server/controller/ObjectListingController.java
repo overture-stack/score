@@ -17,23 +17,25 @@
  */
 package org.icgc.dcc.storage.server.controller;
 
-import org.icgc.dcc.storage.server.model.MetadataEntity;
-import org.icgc.dcc.storage.server.service.MetadataService;
+import java.util.List;
+
+import org.icgc.dcc.storage.server.service.ObjectListingService;
+import org.icgc.dcc.storage.server.service.ObjectListingService.ObjectInfo;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+@Component
 @RestController
-@RequestMapping("/test")
-public class TestContoller {
+public class ObjectListingController {
 
   @Autowired
-  MetadataService ms;
+  private ObjectListingService listingService;
 
-  @RequestMapping("/{id}")
-  public MetadataEntity get(@PathVariable("id") String id) {
-    return ms.getEntity(id);
+  @RequestMapping("/listing")
+  public List<ObjectInfo> list() {
+    return listingService.getListing();
   }
 
 }

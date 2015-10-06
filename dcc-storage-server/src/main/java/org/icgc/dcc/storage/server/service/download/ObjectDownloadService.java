@@ -25,9 +25,6 @@ import java.time.ZoneId;
 import java.util.Date;
 import java.util.List;
 
-import lombok.Setter;
-import lombok.extern.slf4j.Slf4j;
-
 import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -51,6 +48,9 @@ import com.amazonaws.services.s3.model.GetObjectRequest;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectInputStream;
 
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * service responsible for object download (full or partial)
  */
@@ -70,9 +70,6 @@ public class ObjectDownloadService {
 
   @Value("${collaboratory.data.directory}")
   private String dataDir;
-
-  @Value("${s3.endpoint}")
-  private String endPoint;
 
   @Value("${collaboratory.download.expiration}")
   private int expiration;
@@ -112,8 +109,7 @@ public class ObjectDownloadService {
     if (forExternalUse) {
       // return as a single part - no matter how large
       parts = partCalculator.specify(0L, -1L);
-    }
-    else {
+    } else {
       parts = partCalculator.divide(offset, length);
     }
     fillUrl(objectKey, parts, forExternalUse);
@@ -171,8 +167,7 @@ public class ObjectDownloadService {
       if (forExternalUse) {
         // there should only be one part - don't include RANGE header in pre-signed URL
         part.setUrl(urlGenerator.getDownloadUrl(bucketName, objectKey, expirationDate));
-      }
-      else {
+      } else {
         part.setUrl(urlGenerator.getDownloadPartUrl(bucketName, objectKey, part, expirationDate));
       }
     }
