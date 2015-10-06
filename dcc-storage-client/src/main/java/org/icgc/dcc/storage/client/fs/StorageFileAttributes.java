@@ -24,10 +24,13 @@ import java.nio.file.attribute.PosixFileAttributes;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.UserPrincipal;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import com.google.common.collect.ImmutableSet;
 
 public class StorageFileAttributes implements PosixFileAttributes {
+
+  private final Pattern REGULAR_FILE_PATTERN = Pattern.compile("/[^/]*/[^/]*/.+");
 
   private final StoragePath path;
 
@@ -52,7 +55,7 @@ public class StorageFileAttributes implements PosixFileAttributes {
 
   @Override
   public boolean isRegularFile() {
-    return path.toString().contains(".");
+    return matches(path, REGULAR_FILE_PATTERN);
   }
 
   @Override
@@ -113,6 +116,10 @@ public class StorageFileAttributes implements PosixFileAttributes {
   @Override
   public Set<PosixFilePermission> permissions() {
     return ImmutableSet.of(PosixFilePermission.OWNER_READ);
+  }
+
+  private static boolean matches(Path path, Pattern patern) {
+    return patern.matcher(path.toString()).matches();
   }
 
 }

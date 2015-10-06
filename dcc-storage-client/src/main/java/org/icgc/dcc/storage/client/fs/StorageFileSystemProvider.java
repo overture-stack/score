@@ -94,13 +94,13 @@ public class StorageFileSystemProvider extends ReadOnlyFileSystemProvider {
   @Override
   public SeekableByteChannel newByteChannel(Path path, Set<? extends OpenOption> options, FileAttribute<?>... attrs)
       throws IOException {
-    log.info("newByteChannel(path={}, options={}, attrs={})", path, options, Arrays.toString(attrs));
+    log.debug("newByteChannel(path={}, options={}, attrs={})", path, options, Arrays.toString(attrs));
     return new StorageSeekableByteChannel((StoragePath) path);
   }
 
   @Override
   public DirectoryStream<Path> newDirectoryStream(Path path, Filter<? super Path> filter) throws IOException {
-    log.info("newDirectoryStream(path={}, filter={})", path, filter);
+    log.debug("newDirectoryStream(path={}, filter={})", path, filter);
     return new StorageDirectoryStream((StoragePath) path, filter);
   }
 
@@ -121,7 +121,7 @@ public class StorageFileSystemProvider extends ReadOnlyFileSystemProvider {
 
   @Override
   public void checkAccess(Path path, AccessMode... modes) throws IOException {
-    log.info("checkAccess(path={}, modes={})", path, Arrays.toString(modes));
+    log.debug("checkAccess(path={}, modes={})", path, Arrays.toString(modes));
 
     // TODO: lookup path and verify existence instead
     if (path.endsWith(".csi")) {
@@ -131,7 +131,7 @@ public class StorageFileSystemProvider extends ReadOnlyFileSystemProvider {
 
   @Override
   public <V extends FileAttributeView> V getFileAttributeView(Path path, Class<V> type, LinkOption... options) {
-    log.info("getFileAttributeView(path={}, type={}, options={})", path, type, Arrays.toString(options));
+    log.debug("getFileAttributeView(path={}, type={}, options={})", path, type, Arrays.toString(options));
     return null;
   }
 
@@ -139,19 +139,19 @@ public class StorageFileSystemProvider extends ReadOnlyFileSystemProvider {
   @SuppressWarnings("unchecked")
   public <A extends BasicFileAttributes> A readAttributes(Path path, Class<A> type, LinkOption... options)
       throws IOException {
-    log.info("readAttributes(path={}, type={}, options={})", path, type, Arrays.toString(options));
+    log.debug("readAttributes(path={}, type={}, options={})", path, type, Arrays.toString(options));
     return (A) new StorageFileAttributes(path);
   }
 
   @Override
   public Map<String, Object> readAttributes(Path path, String attributes, LinkOption... options) throws IOException {
-    log.info("readAttributes(path={}, attributes={}, options={})", path, attributes, Arrays.toString(options));
+    log.debug("readAttributes(path={}, attributes={}, options={})", path, attributes, Arrays.toString(options));
     return Collections.emptyMap();
   }
 
   @Override
   public void setAttribute(Path path, String attribute, Object value, LinkOption... options) throws IOException {
-    log.info("setAttribute(path={}, attribute={}, value={}, options={})", path, attribute, value,
+    log.debug("setAttribute(path={}, attribute={}, value={}, options={})", path, attribute, value,
         Arrays.toString(options));
   }
 
