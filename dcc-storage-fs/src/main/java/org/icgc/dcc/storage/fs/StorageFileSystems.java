@@ -22,6 +22,7 @@ import static java.util.Collections.emptyMap;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Map;
 
 import lombok.NonNull;
 import lombok.val;
@@ -31,10 +32,15 @@ import lombok.experimental.UtilityClass;
 public class StorageFileSystems {
 
   public StorageFileSystem newFileSystem(@NonNull StorageContext context) throws IOException, URISyntaxException {
+    return newFileSystem(context, emptyMap());
+  }
+
+  public StorageFileSystem newFileSystem(@NonNull StorageContext context, Map<String, ?> env)
+      throws IOException, URISyntaxException {
     val provider = new StorageFileSystemProvider(context);
     val uri = new URI("icgc://storage");
 
-    return (StorageFileSystem) provider.newFileSystem(uri, emptyMap());
+    return (StorageFileSystem) provider.newFileSystem(uri, env);
   }
 
 }

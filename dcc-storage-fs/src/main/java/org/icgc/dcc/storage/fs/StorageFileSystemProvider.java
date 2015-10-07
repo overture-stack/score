@@ -69,6 +69,8 @@ public class StorageFileSystemProvider extends ReadOnlyFileSystemProvider {
    * State.
    */
   private StorageFileSystem fileSystem;
+  @SuppressWarnings("unused")
+  private Map<String, ?> env;
 
   @Override
   public String getScheme() {
@@ -77,6 +79,7 @@ public class StorageFileSystemProvider extends ReadOnlyFileSystemProvider {
 
   @Override
   public FileSystem newFileSystem(URI uri, Map<String, ?> env) throws IOException {
+    this.env = env;
     return this.fileSystem = new StorageFileSystem(this);
   }
 

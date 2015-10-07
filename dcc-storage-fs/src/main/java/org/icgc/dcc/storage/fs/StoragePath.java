@@ -95,12 +95,28 @@ public class StoragePath implements Path {
       return Optional.empty();
     }
 
-    val gnosId = parts[0];
-    val fileName = parts[1];
+    val gnosId = getGnosId();
+    val fileName = getFilename();
 
     return context.getFilesByGnosId(gnosId).stream()
         .filter(file -> file.getFileName().equals(fileName))
         .findFirst();
+  }
+
+  public String getFilename() {
+    if (parts.length < 2) {
+      return null;
+    }
+
+    return parts[1];
+  }
+
+  public String getGnosId() {
+    if (parts.length < 1) {
+      return null;
+    }
+
+    return parts[0];
   }
 
   @Override
@@ -119,7 +135,7 @@ public class StoragePath implements Path {
 
   @Override
   public Path getFileName() {
-    if (parts.length == 0 || parts[0].isEmpty()) {
+    if (parts.length == 0 || getGnosId().isEmpty()) {
       return null;
     } else {
       return new StoragePath(fileSystem, parts[parts.length - 1]);
@@ -128,7 +144,7 @@ public class StoragePath implements Path {
 
   @Override
   public Path getParent() {
-    if (parts.length <= 1 || parts[0].isEmpty()) {
+    if (parts.length <= 1 || getGnosId().isEmpty()) {
       if (absolute) {
         return getRoot();
       } else {
@@ -141,7 +157,7 @@ public class StoragePath implements Path {
 
   @Override
   public int getNameCount() {
-    if (parts.length <= 1 && parts[0].isEmpty()) {
+    if (parts.length <= 1 && getGnosId().isEmpty()) {
       if (absolute) {
         return 0;
       } else {
@@ -154,7 +170,7 @@ public class StoragePath implements Path {
 
   @Override
   public Path getName(int i) {
-    if (i < 0 || i >= parts.length || (0 == i && parts.length <= 1 && parts[0].isEmpty())) {
+    if (i < 0 || i >= parts.length || (0 == i && parts.length <= 1 && getGnosId().isEmpty())) {
       throw new IllegalArgumentException("Invalid name index");
     }
     return new StoragePath(fileSystem, Arrays.copyOfRange(parts, 0, i + 1), absolute);
@@ -162,7 +178,7 @@ public class StoragePath implements Path {
 
   @Override
   public Path subpath(int i, int i2) {
-    if ((0 == i && parts.length <= 1 && parts[0].isEmpty())
+    if ((0 == i && parts.length <= 1 && getGnosId().isEmpty())
         || i < 0 || i2 < 0
         || i >= parts.length || i2 > parts.length
         || i > i2) {
@@ -236,7 +252,7 @@ public class StoragePath implements Path {
       throw new IllegalArgumentException("Can not resolve other path because it's on a different filesystem");
     }
 
-    if (otherPath.isAbsolute() || (absolute && parts.length == 1 && parts[0].isEmpty())) {
+    if (otherPath.isAbsolute() || (absolute && parts.length == 1 && getGnosId().isEmpty())) {
       return new StoragePath(fileSystem, otherPath.getParts(), true);
     }
 
@@ -343,7 +359,7 @@ public class StoragePath implements Path {
   @Override
   public Iterator<Path> iterator() {
     List<Path> list = new ArrayList<Path>(parts.length);
-    if (parts.length >= 1 && !parts[0].isEmpty()) {
+    if (parts.length >= 1 && !getGnosId().isEmpty()) {
       for (String p : parts) {
         list.add(new StoragePath(fileSystem, p));
       }

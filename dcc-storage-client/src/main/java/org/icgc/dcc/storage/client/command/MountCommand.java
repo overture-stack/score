@@ -17,14 +17,22 @@
  */
 package org.icgc.dcc.storage.client.command;
 
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
+
 import java.io.File;
+import java.util.List;
+import java.util.stream.Stream;
 
 import org.icgc.dcc.storage.client.cli.DirectoryValidator;
+import org.icgc.dcc.storage.client.cli.FileValidator;
 import org.icgc.dcc.storage.client.download.DownloadService;
+import org.icgc.dcc.storage.client.manifest.ManifestReader;
 import org.icgc.dcc.storage.client.metadata.MetadataClient;
 import org.icgc.dcc.storage.client.mount.MountService;
 import org.icgc.dcc.storage.client.mount.MountStorageContext;
 import org.icgc.dcc.storage.client.transport.StorageService;
+import org.icgc.dcc.storage.core.model.ObjectInfo;
 import org.icgc.dcc.storage.fs.StorageFileSystems;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -44,6 +52,8 @@ public class MountCommand extends AbstractClientCommand {
    */
   @Parameter(names = "--mount-point", description = "the mount point of the file system", required = true, validateValueWith = DirectoryValidator.class)
   private File mountPoint;
+  @Parameter(names = "--manifest", description = "path to manifest file", required = false, validateValueWith = FileValidator.class)
+  private File manifestFile;
 
   /**
    * Dependencies.
@@ -64,10 +74,23 @@ public class MountCommand extends AbstractClientCommand {
       terminal.printStatus("Indexing remote entities. Please wait...");
       val entities = metadataClient.findEntities();
       terminal.printStatus("Indexing remote objects. Please wait...");
-      val objects = storageService.listObjects();
+      List<ObjectInfo> objects = storageService.listObjects();
+
+      if (manifestFile != null) {
+        val manifest = new ManifestReader().readManifest(manifestFile);
+
+        val objectIds = manifest.getEntries().stream()
+            .flatMap(entry -> Stream.of(entry.getFileUuid(), entry.getIndexFileUuid()))
+            .collect(toSet());
+
+        objects = objects.stream()
+            .filter(object -> objectIds.contains(object.getId()))
+            .collect(toList());
+      }
 
       terminal.printStatus("Mounting file system to '" + mountPoint.getAbsolutePath() + "'...");
       val context = new MountStorageContext(downloadService, entities, objects);
+
       val fileSystem = StorageFileSystems.newFileSystem(context);
       mountService.mount(fileSystem, mountPoint.toPath());
 
