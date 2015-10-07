@@ -15,73 +15,59 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.client.fs;
+package org.icgc.dcc.storage.client.mount;
 
-import static com.google.common.collect.Maps.uniqueIndex;
-import static org.icgc.dcc.storage.fs.StorageFile.storageFile;
+import static org.springframework.util.ReflectionUtils.findField;
 
-import java.net.URL;
-import java.util.List;
+import java.io.IOException;
+import java.nio.file.FileSystem;
+import java.nio.file.Path;
 
-import org.icgc.dcc.storage.client.download.DownloadService;
-import org.icgc.dcc.storage.client.metadata.Entity;
-import org.icgc.dcc.storage.core.model.ObjectInfo;
-import org.icgc.dcc.storage.fs.StorageContext;
-import org.icgc.dcc.storage.fs.StorageFile;
+import org.springframework.stereotype.Service;
 
-import com.google.common.collect.ImmutableList;
-
-import lombok.Getter;
+import co.paralleluniverse.javafs.JavaFS;
+import jnr.ffi.provider.ClosureManager;
+import jnr.ffi.provider.jffi.NativeRuntime;
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.val;
 
-@RequiredArgsConstructor
-public class StorageClientContext implements StorageContext {
+@Service
+public class MountService {
 
-  /**
-   * Dependencies
-   */
-  @NonNull
-  private final DownloadService downloadService;
+  public void mount(@NonNull FileSystem fileSystem, @NonNull Path mountPoint) throws IOException, InterruptedException {
+    patchFfi();
 
-  /**
-   * Caches.
-   */
-  private final List<Entity> entities;
-  private final List<ObjectInfo> objects;
-
-  @Getter(lazy = true)
-  private final List<StorageFile> files = resolveFiles();
-
-  @Override
-  public URL getUrl(String objectId) {
-    return downloadService.getUrl(objectId);
+    val readOnly = true;
+    val logging = false;
+    JavaFS.mount(fileSystem, mountPoint, readOnly, logging);
   }
 
-  private List<StorageFile> resolveFiles() {
-    val entityIndex = uniqueIndex(entities, Entity::getId);
+  /**
+   * To force unmount: {@code  diskutil unmount force <mount point>}.
+   */
+  public void unmount(@NonNull Path mountPoint) throws IOException {
+    JavaFS.unmount(mountPoint);
+  }
 
-    val files = ImmutableList.<StorageFile> builder();
-    for (val object : objects) {
-      val id = object.getId();
-      val entity = entityIndex.get(id);
-      if (entity == null) {
-        continue;
-      }
+  /**
+   * Workaround for unfortunate system class loader usage.
+   * 
+   * @see https://github.com/jnr/jnr-ffi/issues/51
+   */
+  @SneakyThrows
+  private void patchFfi() {
+    ClosureManager closureManager = NativeRuntime.getInstance().getClosureManager();
 
-      // Join entity to object
-      files.add(
-          storageFile()
-              .id(id)
-              .fileName(entity.getFileName())
-              .gnosId(entity.getGnosId())
-              .lastModified(object.getLastModified())
-              .size(object.getSize())
-              .build());
-    }
+    // Get inner class loader
+    val classLoader = findField(closureManager.getClass(), "classLoader");
+    classLoader.setAccessible(true);
+    val asmClassLoader = classLoader.get(closureManager);
 
-    return files.build();
+    // Update to use context class loader over the default system class loader
+    val parent = findField(asmClassLoader.getClass(), "parent");
+    parent.setAccessible(true);
+    parent.set(asmClassLoader, Thread.currentThread().getContextClassLoader());
   }
 
 }

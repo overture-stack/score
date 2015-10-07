@@ -37,7 +37,7 @@ import lombok.RequiredArgsConstructor;
 public class StorageFileAttributes implements PosixFileAttributes {
 
   private final Pattern REGULAR_FILE_PATTERN = compile(
-      /* root */ "/" + /* dir */ "[^/]*/" + /* file */ ".+");
+      "/" + "[^/]*/" + ".+"); // <root>/ <dir>/ <file>
 
   /**
    * Configuration.

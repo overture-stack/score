@@ -111,6 +111,7 @@ public class SeekableURLByteChannel implements SeekableByteChannel {
       log.debug("--------------------------------------------------------------");
       log.debug("Reading '{}:{}-{}', Connect Count: {}", url, start, end, connectCount);
 
+      // TODO: Retry on connection timeout
       val channel = resolveChannel();
       val n = channel.read(buffer);
 

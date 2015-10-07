@@ -17,17 +17,13 @@
  */
 package org.icgc.dcc.storage.client.command;
 
-import static org.springframework.util.ReflectionUtils.findField;
-
 import java.io.File;
-import java.io.IOException;
-import java.nio.file.FileSystem;
-import java.nio.file.Path;
 
 import org.icgc.dcc.storage.client.cli.DirectoryValidator;
 import org.icgc.dcc.storage.client.download.DownloadService;
-import org.icgc.dcc.storage.client.fs.StorageClientContext;
 import org.icgc.dcc.storage.client.metadata.MetadataClient;
+import org.icgc.dcc.storage.client.mount.MountService;
+import org.icgc.dcc.storage.client.mount.MountStorageContext;
 import org.icgc.dcc.storage.client.transport.StorageService;
 import org.icgc.dcc.storage.fs.StorageFileSystems;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,9 +32,6 @@ import org.springframework.stereotype.Component;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 
-import co.paralleluniverse.javafs.JavaFS;
-import jnr.ffi.provider.ClosureManager;
-import jnr.ffi.provider.jffi.NativeRuntime;
 import lombok.SneakyThrows;
 import lombok.val;
 
@@ -61,6 +54,8 @@ public class MountCommand extends AbstractClientCommand {
   private DownloadService downloadService;
   @Autowired
   private StorageService storageService;
+  @Autowired
+  private MountService mountService;
 
   @Override
   @SneakyThrows
@@ -72,9 +67,9 @@ public class MountCommand extends AbstractClientCommand {
       val objects = storageService.listObjects();
 
       terminal.printStatus("Mounting file system to '" + mountPoint.getAbsolutePath() + "'...");
-      val context = new StorageClientContext(downloadService, entities, objects);
+      val context = new MountStorageContext(downloadService, entities, objects);
       val fileSystem = StorageFileSystems.newFileSystem(context);
-      mount(fileSystem, mountPoint.toPath());
+      mountService.mount(fileSystem, mountPoint.toPath());
 
       terminal.printStatus(
           terminal.label(
@@ -88,34 +83,6 @@ public class MountCommand extends AbstractClientCommand {
     }
 
     return SUCCESS_STATUS;
-  }
-
-  /**
-   * To force unmount: {@code  diskutil unmount force <mount point>}.
-   */
-  private void mount(FileSystem fileSystem, Path mountPoint) throws IOException, InterruptedException {
-    patchFfi();
-
-    val readOnly = true;
-    val logging = false;
-    JavaFS.mount(fileSystem, mountPoint, readOnly, logging);
-  }
-
-  /**
-   * Workaround for unfortunate system classloader usage.
-   * 
-   * @see https://github.com/jnr/jnr-ffi/issues/51
-   */
-  @SneakyThrows
-  private void patchFfi() {
-    ClosureManager closureManager = NativeRuntime.getInstance().getClosureManager();
-    val classLoader = findField(closureManager.getClass(), "classLoader");
-    classLoader.setAccessible(true);
-    val asmClassLoader = classLoader.get(closureManager);
-
-    val parent = findField(asmClassLoader.getClass(), "parent");
-    parent.setAccessible(true);
-    parent.set(asmClassLoader, Thread.currentThread().getContextClassLoader());
   }
 
 }
