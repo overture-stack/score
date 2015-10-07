@@ -15,26 +15,44 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.client.fs;
+package org.icgc.dcc.storage.fs;
 
-import static java.util.Collections.emptyMap;
+import java.net.URL;
 
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
+import org.icgc.dcc.storage.fs.util.SeekableURLByteChannel;
 
 import lombok.NonNull;
-import lombok.val;
-import lombok.experimental.UtilityClass;
+import lombok.SneakyThrows;
 
-@UtilityClass
-public class StorageFileSystems {
+public class StorageSeekableByteChannel extends SeekableURLByteChannel {
 
-  public StorageFileSystem newFileSystem(@NonNull StorageContext context) throws IOException, URISyntaxException {
-    val provider = new StorageFileSystemProvider(context);
-    val uri = new URI("icgc://storage");
+  public StorageSeekableByteChannel(@NonNull StoragePath path, @NonNull StorageContext context) {
+    super(getUrl(path, context));
+  }
 
-    return (StorageFileSystem) provider.newFileSystem(uri, emptyMap());
+  @SneakyThrows
+  private static URL getUrl(StoragePath path, StorageContext context) {
+    // TODO: Return real URL from Storage Server
+    // val context = path.getFileSystem().getProvider().getContext();
+    // return context.getUrl(objectId.get());
+
+    //
+    // Prototyping
+    //
+
+    // Simple extension match, always pointing to the same file
+    if (path.endsWith("bam")) {
+      return new URL("http://s3.amazonaws.com/iobio/NA12878/NA12878.autsome.bam");
+    } else if (path.endsWith("bai")) {
+      return new URL("http://s3.amazonaws.com/iobio/NA12878/NA12878.autsome.bam.bai");
+    } else if (path.endsWith("json")) {
+      return new URL(
+          "https://raw.githubusercontent.com/ICGC-TCGA-PanCancer/s3-transfer-operations/master/s3-transfer-jobs-prod1/completed-jobs/001a5fa1-dcc8-43e6-8815-fac34eb8a3c9.RECA-EU.C0015.C0015T.WGS-BWA-Tumor.json");
+    } else if (path.getObjectId().isPresent()) {
+      return new URL("http://www.google.com");
+    }
+
+    return null;
   }
 
 }

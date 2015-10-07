@@ -15,7 +15,7 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.client.fs;
+package org.icgc.dcc.storage.fs;
 
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
@@ -23,8 +23,6 @@ import java.nio.file.Path;
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Stream;
-
-import org.icgc.dcc.storage.client.metadata.Entity;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -46,7 +44,7 @@ public class StorageDirectoryStream implements DirectoryStream<Path> {
    * Metadata.
    */
   @NonNull
-  private final List<Entity> entities;
+  private final List<StorageFile> files;
 
   @Override
   public Iterator<Path> iterator() {
@@ -73,8 +71,8 @@ public class StorageDirectoryStream implements DirectoryStream<Path> {
   }
 
   private Iterator<Path> listGnosDirs() {
-    return entities.stream()
-        .map(entity -> entity.getGnosId())
+    return files.stream()
+        .map(file -> file.getGnosId())
         .distinct()
         .map(this::gnosIdPath)
         .filter(this::filterPath).iterator();
@@ -85,9 +83,9 @@ public class StorageDirectoryStream implements DirectoryStream<Path> {
     val infoFile = Stream.of(absolutePath(gnosId, gnosId + ".json"));
 
     // Real
-    val objectFiles = entities.stream()
+    val objectFiles = files.stream()
         .filter(entity -> entity.getGnosId().equals(gnosId))
-        .map(this::entityPath);
+        .map(this::filePath);
 
     return Stream.concat(infoFile, objectFiles)
         .filter(this::filterPath).iterator();
@@ -97,8 +95,8 @@ public class StorageDirectoryStream implements DirectoryStream<Path> {
     return absolutePath(gnosId);
   }
 
-  private Path entityPath(Entity entity) {
-    return absolutePath(entity.getGnosId(), entity.getFileName());
+  private Path filePath(StorageFile file) {
+    return absolutePath(file.getGnosId(), file.getFileName());
   }
 
   private Path absolutePath(String... parts) {

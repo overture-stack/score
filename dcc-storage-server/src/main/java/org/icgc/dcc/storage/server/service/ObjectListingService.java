@@ -21,6 +21,7 @@ import java.io.File;
 import java.util.List;
 import java.util.function.Consumer;
 
+import org.icgc.dcc.storage.core.model.ObjectInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
@@ -88,15 +89,6 @@ public class ObjectListingService {
 
   private static String getObjectId(S3ObjectSummary objectSummary) {
     return new File(objectSummary.getKey()).getName();
-  }
-
-  @lombok.Value
-  public static class ObjectInfo {
-
-    String id;
-    long lastModified;
-    long size;
-
   }
 
 }

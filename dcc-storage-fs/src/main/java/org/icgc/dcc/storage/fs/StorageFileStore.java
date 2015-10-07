@@ -15,39 +15,65 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.client.fs.util;
+package org.icgc.dcc.storage.fs;
 
 import java.io.IOException;
-import java.nio.file.CopyOption;
-import java.nio.file.Path;
-import java.nio.file.ReadOnlyFileSystemException;
-import java.nio.file.attribute.FileAttribute;
-import java.nio.file.spi.FileSystemProvider;
+import java.nio.file.FileStore;
+import java.nio.file.attribute.FileAttributeView;
+import java.nio.file.attribute.FileStoreAttributeView;
 
-public abstract class ReadOnlyFileSystemProvider extends FileSystemProvider {
+public class StorageFileStore extends FileStore {
+
+  public static final String ICGCFS = "icgcfs";
 
   @Override
-  public final void createDirectory(Path dir, FileAttribute<?>... attrs) throws IOException {
-    throwReadOnly();
+  public String type() {
+    return ICGCFS;
   }
 
   @Override
-  public final void delete(Path path) throws IOException {
-    throwReadOnly();
+  public boolean supportsFileAttributeView(String name) {
+    return false;
   }
 
   @Override
-  public final void copy(Path source, Path target, CopyOption... options) throws IOException {
-    throwReadOnly();
+  public boolean supportsFileAttributeView(Class<? extends FileAttributeView> type) {
+    return false;
   }
 
   @Override
-  public final void move(Path source, Path target, CopyOption... options) throws IOException {
-    throwReadOnly();
+  public String name() {
+    return "icgc";
   }
 
-  private void throwReadOnly() throws ReadOnlyFileSystemException {
-    throw new ReadOnlyFileSystemException();
+  @Override
+  public boolean isReadOnly() {
+    return true;
+  }
+
+  @Override
+  public long getUsableSpace() throws IOException {
+    return 0;
+  }
+
+  @Override
+  public long getUnallocatedSpace() throws IOException {
+    return 0;
+  }
+
+  @Override
+  public long getTotalSpace() throws IOException {
+    return 0;
+  }
+
+  @Override
+  public <V extends FileStoreAttributeView> V getFileStoreAttributeView(Class<V> type) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public Object getAttribute(String attribute) throws IOException {
+    throw new UnsupportedOperationException();
   }
 
 }

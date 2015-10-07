@@ -16,7 +16,7 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.client.fs;
+package org.icgc.dcc.storage.fs;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -32,7 +32,7 @@ import java.util.Collections;
 import java.util.Set;
 import java.util.regex.Pattern;
 
-import org.icgc.dcc.storage.client.fs.util.GlobPattern;
+import org.icgc.dcc.storage.fs.util.GlobPattern;
 
 import lombok.Getter;
 import lombok.NonNull;

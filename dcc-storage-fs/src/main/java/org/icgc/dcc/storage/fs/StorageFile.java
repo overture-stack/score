@@ -15,17 +15,24 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.client.fs;
+package org.icgc.dcc.storage.fs;
 
-import java.net.URL;
-import java.util.List;
+import lombok.Builder;
+import lombok.Value;
 
-import org.icgc.dcc.storage.client.metadata.Entity;
+@Value
+@Builder
+public class StorageFile {
 
-public interface StorageContext {
+  String id;
+  String fileName;
+  String gnosId;
 
-  List<Entity> getEntities();
+  long lastModified;
+  long size;
 
-  URL getUrl(String objectId);
+  public static StorageFileBuilder storageFile() {
+    return builder();
+  }
 
 }

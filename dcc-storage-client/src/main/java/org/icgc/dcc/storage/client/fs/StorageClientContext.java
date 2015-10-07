@@ -17,16 +17,24 @@
  */
 package org.icgc.dcc.storage.client.fs;
 
+import static com.google.common.collect.Maps.uniqueIndex;
+import static org.icgc.dcc.storage.fs.StorageFile.storageFile;
+
 import java.net.URL;
 import java.util.List;
 
 import org.icgc.dcc.storage.client.download.DownloadService;
 import org.icgc.dcc.storage.client.metadata.Entity;
-import org.icgc.dcc.storage.client.metadata.MetadataClient;
+import org.icgc.dcc.storage.core.model.ObjectInfo;
+import org.icgc.dcc.storage.fs.StorageContext;
+import org.icgc.dcc.storage.fs.StorageFile;
+
+import com.google.common.collect.ImmutableList;
 
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.val;
 
 @RequiredArgsConstructor
 public class StorageClientContext implements StorageContext {
@@ -34,23 +42,46 @@ public class StorageClientContext implements StorageContext {
   /**
    * Dependencies
    */
-  @Getter
-  @NonNull
-  private final MetadataClient metadataClient;
-  @Getter
   @NonNull
   private final DownloadService downloadService;
 
+  /**
+   * Caches.
+   */
+  private final List<Entity> entities;
+  private final List<ObjectInfo> objects;
+
   @Getter(lazy = true)
-  private final List<Entity> entities = resolveEntities();
+  private final List<StorageFile> files = resolveFiles();
 
   @Override
   public URL getUrl(String objectId) {
     return downloadService.getUrl(objectId);
   }
 
-  private List<Entity> resolveEntities() {
-    return metadataClient.findEntities();
+  private List<StorageFile> resolveFiles() {
+    val entityIndex = uniqueIndex(entities, Entity::getId);
+
+    val files = ImmutableList.<StorageFile> builder();
+    for (val object : objects) {
+      val id = object.getId();
+      val entity = entityIndex.get(id);
+      if (entity == null) {
+        continue;
+      }
+
+      // Join entity to object
+      files.add(
+          storageFile()
+              .id(id)
+              .fileName(entity.getFileName())
+              .gnosId(entity.getGnosId())
+              .lastModified(object.getLastModified())
+              .size(object.getSize())
+              .build());
+    }
+
+    return files.build();
   }
 
 }

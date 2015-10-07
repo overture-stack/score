@@ -15,65 +15,24 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.client.fs;
+package org.icgc.dcc.storage.fs;
 
-import java.io.IOException;
-import java.nio.file.FileStore;
-import java.nio.file.attribute.FileAttributeView;
-import java.nio.file.attribute.FileStoreAttributeView;
+import java.nio.file.Path;
+import java.nio.file.PathMatcher;
+import java.util.regex.Pattern;
 
-public class StorageFileStore extends FileStore {
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 
-  public static final String ICGCFS = "icgcfs";
+@RequiredArgsConstructor
+public class StoragePathMatcher implements PathMatcher {
 
-  @Override
-  public String type() {
-    return ICGCFS;
-  }
-
-  @Override
-  public boolean supportsFileAttributeView(String name) {
-    return false;
-  }
+  @NonNull
+  private final Pattern pattern;
 
   @Override
-  public boolean supportsFileAttributeView(Class<? extends FileAttributeView> type) {
-    return false;
-  }
-
-  @Override
-  public String name() {
-    return "icgc";
-  }
-
-  @Override
-  public boolean isReadOnly() {
-    return true;
-  }
-
-  @Override
-  public long getUsableSpace() throws IOException {
-    return 0;
-  }
-
-  @Override
-  public long getUnallocatedSpace() throws IOException {
-    return 0;
-  }
-
-  @Override
-  public long getTotalSpace() throws IOException {
-    return 0;
-  }
-
-  @Override
-  public <V extends FileStoreAttributeView> V getFileStoreAttributeView(Class<V> type) {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public Object getAttribute(String attribute) throws IOException {
-    throw new UnsupportedOperationException();
+  public boolean matches(Path path) {
+    return pattern.matcher(path.toString()).matches();
   }
 
 }

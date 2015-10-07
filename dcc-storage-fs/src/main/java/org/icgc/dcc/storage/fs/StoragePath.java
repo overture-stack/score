@@ -15,7 +15,7 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.client.fs;
+package org.icgc.dcc.storage.fs;
 
 import java.io.File;
 import java.io.IOException;
@@ -34,8 +34,6 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
-
-import org.icgc.dcc.storage.client.metadata.Entity;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -100,9 +98,9 @@ public class StoragePath implements Path {
     val gnosId = parts[0];
     val fileName = parts[1];
 
-    return context.getEntities().stream()
-        .filter(entity -> entity.getGnosId().equals(gnosId) && entity.getFileName().equals(fileName))
-        .map(Entity::getId)
+    return context.getFiles().stream()
+        .filter(file -> file.getGnosId().equals(gnosId) && file.getFileName().equals(fileName))
+        .map(StorageFile::getId)
         .findFirst();
   }
 

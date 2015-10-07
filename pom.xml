@@ -18,6 +18,7 @@
   <modules>
     <module>dcc-storage-core</module>
     <module>dcc-storage-client</module>
+    <module>dcc-storage-fs</module>
     <module>dcc-storage-server</module>
     <module>dcc-storage-test</module>
   </modules>
@@ -31,13 +32,13 @@
   </repositories>
 
   <dependencies>
-  
+
     <!-- Utilities -->
     <dependency>
       <groupId>org.projectlombok</groupId>
       <artifactId>lombok</artifactId>
     </dependency>
-    
+
   </dependencies>
 
   <dependencyManagement>
@@ -47,6 +48,11 @@
       <dependency>
         <groupId>${project.groupId}</groupId>
         <artifactId>dcc-storage-core</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>dcc-storage-fs</artifactId>
         <version>${project.version}</version>
       </dependency>
 
@@ -75,14 +81,14 @@
         <version>${aws-java-sdk.version}</version>
       </dependency>
     </dependencies>
-    
+
   </dependencyManagement>
 
   <properties>
     <!-- Versions - DCC -->
     <dcc-metadata.version>0.0.14</dcc-metadata.version>
     <dcc-auth.version>1.0.5</dcc-auth.version>
-    
+
     <!-- Versions - Spring -->
     <spring-boot.version>1.2.6.RELEASE</spring-boot.version>
     <spring-retry.version>1.1.2.RELEASE</spring-retry.version>

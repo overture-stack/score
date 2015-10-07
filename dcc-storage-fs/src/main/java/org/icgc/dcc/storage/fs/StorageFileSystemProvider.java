@@ -15,7 +15,7 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.client.fs;
+package org.icgc.dcc.storage.fs;
 
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.toList;
@@ -42,8 +42,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.icgc.dcc.storage.client.fs.util.ReadOnlyFileSystemProvider;
-import org.icgc.dcc.storage.client.metadata.Entity;
+import org.icgc.dcc.storage.fs.util.ReadOnlyFileSystemProvider;
 
 import lombok.Getter;
 import lombok.NonNull;
@@ -107,7 +106,8 @@ public class StorageFileSystemProvider extends ReadOnlyFileSystemProvider {
   @Override
   public DirectoryStream<Path> newDirectoryStream(Path path, Filter<? super Path> filter) throws IOException {
     log.debug("newDirectoryStream(path={}, filter={})", path, filter);
-    return new StorageDirectoryStream((StoragePath) path, filter, getEntities());
+    val files = getFiles();
+    return new StorageDirectoryStream((StoragePath) path, filter, files);
   }
 
   @Override
@@ -161,12 +161,12 @@ public class StorageFileSystemProvider extends ReadOnlyFileSystemProvider {
         Arrays.toString(options));
   }
 
-  private List<Entity> getEntities() {
-    val entities = context.getEntities();
+  private List<StorageFile> getFiles() {
+    val files = context.getFiles();
 
-    Comparator<Entity> comparison = comparing(entity -> entity.getGnosId());
-    comparison = comparison.thenComparing(entity -> entity.getFileName());
-    return entities.stream().sorted(comparison).collect(toList());
+    Comparator<StorageFile> comparison = comparing(file -> file.getGnosId());
+    comparison = comparison.thenComparing(file -> file.getFileName());
+    return files.stream().sorted(comparison).collect(toList());
   }
 
 }

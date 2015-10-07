@@ -27,8 +27,9 @@ import java.nio.file.Path;
 import org.icgc.dcc.storage.client.cli.DirectoryValidator;
 import org.icgc.dcc.storage.client.download.DownloadService;
 import org.icgc.dcc.storage.client.fs.StorageClientContext;
-import org.icgc.dcc.storage.client.fs.StorageFileSystems;
 import org.icgc.dcc.storage.client.metadata.MetadataClient;
+import org.icgc.dcc.storage.client.transport.StorageService;
+import org.icgc.dcc.storage.fs.StorageFileSystems;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -58,19 +59,23 @@ public class MountCommand extends AbstractClientCommand {
   private MetadataClient metadataClient;
   @Autowired
   private DownloadService downloadService;
+  @Autowired
+  private StorageService storageService;
 
   @Override
   @SneakyThrows
   public int execute() {
     try {
-      terminal.printStatus("Indexing remote files. Please wait...");
-      val context = new StorageClientContext(metadataClient, downloadService);
-      context.getEntities(); // Eager-load and cache
-
-      val fileSystem = StorageFileSystems.newFileSystem(context);
+      terminal.printStatus("Indexing remote entities. Please wait...");
+      val entities = metadataClient.findEntities();
+      terminal.printStatus("Indexing remote objects. Please wait...");
+      val objects = storageService.listObjects();
 
       terminal.printStatus("Mounting file system to '" + mountPoint.getAbsolutePath() + "'...");
+      val context = new StorageClientContext(downloadService, entities, objects);
+      val fileSystem = StorageFileSystems.newFileSystem(context);
       mount(fileSystem, mountPoint.toPath());
+
       terminal.printStatus(
           terminal.label(
               "Successfully mounted file system at '" + terminal.value(mountPoint.getAbsolutePath())
@@ -91,7 +96,7 @@ public class MountCommand extends AbstractClientCommand {
   private void mount(FileSystem fileSystem, Path mountPoint) throws IOException, InterruptedException {
     patchFfi();
 
-    val readOnly = false;
+    val readOnly = true;
     val logging = false;
     JavaFS.mount(fileSystem, mountPoint, readOnly, logging);
   }

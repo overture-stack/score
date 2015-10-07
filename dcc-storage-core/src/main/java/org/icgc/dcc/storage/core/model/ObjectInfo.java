@@ -15,27 +15,19 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.server.controller;
+package org.icgc.dcc.storage.core.model;
 
-import java.util.List;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-import org.icgc.dcc.storage.core.model.ObjectInfo;
-import org.icgc.dcc.storage.server.service.ObjectListingService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class ObjectInfo {
 
-@Component
-@RestController
-public class ObjectListingController {
-
-  @Autowired
-  private ObjectListingService listingService;
-
-  @RequestMapping("/listing")
-  public List<ObjectInfo> list() {
-    return listingService.getListing();
-  }
+  String id;
+  long lastModified;
+  long size;
 
 }

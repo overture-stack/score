@@ -15,27 +15,39 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.server.controller;
+package org.icgc.dcc.storage.fs.util;
 
-import java.util.List;
+import java.io.IOException;
+import java.nio.file.CopyOption;
+import java.nio.file.Path;
+import java.nio.file.ReadOnlyFileSystemException;
+import java.nio.file.attribute.FileAttribute;
+import java.nio.file.spi.FileSystemProvider;
 
-import org.icgc.dcc.storage.core.model.ObjectInfo;
-import org.icgc.dcc.storage.server.service.ObjectListingService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+public abstract class ReadOnlyFileSystemProvider extends FileSystemProvider {
 
-@Component
-@RestController
-public class ObjectListingController {
+  @Override
+  public final void createDirectory(Path dir, FileAttribute<?>... attrs) throws IOException {
+    throwReadOnly();
+  }
 
-  @Autowired
-  private ObjectListingService listingService;
+  @Override
+  public final void delete(Path path) throws IOException {
+    throwReadOnly();
+  }
 
-  @RequestMapping("/listing")
-  public List<ObjectInfo> list() {
-    return listingService.getListing();
+  @Override
+  public final void copy(Path source, Path target, CopyOption... options) throws IOException {
+    throwReadOnly();
+  }
+
+  @Override
+  public final void move(Path source, Path target, CopyOption... options) throws IOException {
+    throwReadOnly();
+  }
+
+  private void throwReadOnly() throws ReadOnlyFileSystemException {
+    throw new ReadOnlyFileSystemException();
   }
 
 }

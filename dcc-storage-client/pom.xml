@@ -47,6 +47,10 @@
       <groupId>${project.groupId}</groupId>
       <artifactId>dcc-storage-core</artifactId>
     </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>dcc-storage-fs</artifactId>
+    </dependency>
 
     <!-- DCC - Common -->
     <dependency>
@@ -96,13 +100,6 @@
       <groupId>com.github.samtools</groupId>
       <artifactId>htsjdk</artifactId>
       <version>1.138</version>
-    </dependency>
-
-    <!-- FUSE -->
-    <dependency>
-      <groupId>co.paralleluniverse</groupId>
-      <artifactId>javafs</artifactId>
-      <version>${javafs.version}</version>
     </dependency>
 
     <!-- Utilities -->

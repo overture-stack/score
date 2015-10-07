@@ -15,24 +15,15 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.client.fs;
+package org.icgc.dcc.storage.fs;
 
-import java.nio.file.Path;
-import java.nio.file.PathMatcher;
-import java.util.regex.Pattern;
+import java.net.URL;
+import java.util.List;
 
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
+public interface StorageContext {
 
-@RequiredArgsConstructor
-public class StoragePathMatcher implements PathMatcher {
+  List<StorageFile> getFiles();
 
-  @NonNull
-  private final Pattern pattern;
-
-  @Override
-  public boolean matches(Path path) {
-    return pattern.matcher(path.toString()).matches();
-  }
+  URL getUrl(String objectId);
 
 }

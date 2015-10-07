@@ -17,6 +17,8 @@
  */
 package org.icgc.dcc.storage.client.transport;
 
+import static org.springframework.http.HttpMethod.GET;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -29,12 +31,14 @@ import org.icgc.dcc.storage.client.exception.NotResumableException;
 import org.icgc.dcc.storage.client.exception.NotRetryableException;
 import org.icgc.dcc.storage.client.exception.RetryableException;
 import org.icgc.dcc.storage.core.model.DataChannel;
+import org.icgc.dcc.storage.core.model.ObjectInfo;
 import org.icgc.dcc.storage.core.model.ObjectSpecification;
 import org.icgc.dcc.storage.core.model.Part;
 import org.icgc.dcc.storage.core.model.UploadProgress;
 import org.icgc.dcc.storage.core.util.ObjectStoreUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -83,6 +87,20 @@ public class StorageService {
 
   @Autowired
   private DownloadStateStore downloadStateStore;
+
+  public List<ObjectInfo> listObjects() throws IOException {
+    log.debug("Listing objects...");
+    return retry.execute(new RetryCallback<List<ObjectInfo>, IOException>() {
+
+      @Override
+      public List<ObjectInfo> doWithRetry(RetryContext ctx) throws IOException {
+        val requestEntity = defaultRequestEntity();
+        return serviceTemplate.exchange(endpoint + "/listing", GET, requestEntity,
+            new ParameterizedTypeReference<List<ObjectInfo>>() {}).getBody();
+      }
+
+    });
+  }
 
   public UploadProgress getProgress(String objectId, long fileSize) throws IOException {
     return retry.execute(new RetryCallback<UploadProgress, IOException>() {
@@ -373,6 +391,10 @@ public class StorageService {
         return true;
       }
     });
+  }
+
+  private HttpEntity<Object> defaultRequestEntity() {
+    return new HttpEntity<Object>(defaultHeaders());
   }
 
   private HttpHeaders defaultHeaders() {
