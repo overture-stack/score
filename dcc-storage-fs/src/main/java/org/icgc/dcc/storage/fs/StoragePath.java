@@ -89,7 +89,7 @@ public class StoragePath implements Path {
     parts = stripped.split(fileSystem.getSeparator());
   }
 
-  public Optional<String> getObjectId() {
+  public Optional<StorageFile> getFile() {
     val context = fileSystem.getProvider().getContext();
     if (parts.length < 2) {
       return Optional.empty();
@@ -98,9 +98,8 @@ public class StoragePath implements Path {
     val gnosId = parts[0];
     val fileName = parts[1];
 
-    return context.getFiles().stream()
-        .filter(file -> file.getGnosId().equals(gnosId) && file.getFileName().equals(fileName))
-        .map(StorageFile::getId)
+    return context.getFilesByGnosId(gnosId).stream()
+        .filter(file -> file.getFileName().equals(fileName))
         .findFirst();
   }
 

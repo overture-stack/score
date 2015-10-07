@@ -53,17 +53,17 @@ public class StorageFileAttributes implements PosixFileAttributes {
 
   @Override
   public FileTime lastModifiedTime() {
-    return FileTime.fromMillis(0);
+    return FileTime.fromMillis(path.getFile().isPresent() ? path.getFile().get().getLastModified() : 0);
   }
 
   @Override
   public FileTime lastAccessTime() {
-    return FileTime.fromMillis(0);
+    return lastModifiedTime();
   }
 
   @Override
   public FileTime creationTime() {
-    return FileTime.fromMillis(0);
+    return lastModifiedTime();
   }
 
   @Override
@@ -88,15 +88,7 @@ public class StorageFileAttributes implements PosixFileAttributes {
 
   @Override
   public long size() {
-    if (path.endsWith(".bam")) {
-      return 200627495654L;
-    } else if (path.endsWith(".bai")) {
-      return 8264320L;
-    } else if (path.endsWith(".json")) {
-      return 1649;
-    } else {
-      return 258;
-    }
+    return path.getFile().isPresent() ? path.getFile().get().getSize() : 1649;
   }
 
   @Override

@@ -17,24 +17,31 @@
  */
 package org.icgc.dcc.storage.fs;
 
+import java.io.IOException;
 import java.net.URL;
 
 import org.icgc.dcc.storage.fs.util.SeekableURLByteChannel;
 
 import lombok.NonNull;
 import lombok.SneakyThrows;
+import lombok.val;
 
 public class StorageSeekableByteChannel extends SeekableURLByteChannel {
 
+  private final StoragePath path;
+
   public StorageSeekableByteChannel(@NonNull StoragePath path, @NonNull StorageContext context) {
     super(getUrl(path, context));
+    this.path = path;
   }
 
   @SneakyThrows
   private static URL getUrl(StoragePath path, StorageContext context) {
-    // TODO: Return real URL from Storage Server
-    // val context = path.getFileSystem().getProvider().getContext();
-    // return context.getUrl(objectId.get());
+    if (path.getFile().isPresent()) {
+      val objectId = path.getFile().get().getId();
+      val url = context.getUrl(objectId);
+      return url;
+    }
 
     //
     // Prototyping
@@ -48,11 +55,20 @@ public class StorageSeekableByteChannel extends SeekableURLByteChannel {
     } else if (path.endsWith("json")) {
       return new URL(
           "https://raw.githubusercontent.com/ICGC-TCGA-PanCancer/s3-transfer-operations/master/s3-transfer-jobs-prod1/completed-jobs/001a5fa1-dcc8-43e6-8815-fac34eb8a3c9.RECA-EU.C0015.C0015T.WGS-BWA-Tumor.json");
-    } else if (path.getObjectId().isPresent()) {
+    } else if (path.getFile().isPresent()) {
       return new URL("http://www.google.com");
     }
 
     return null;
+  }
+
+  @Override
+  public long size() throws IOException {
+    if (path.getFile().isPresent()) {
+      return path.getFile().get().getSize();
+    }
+
+    return super.size();
   }
 
 }

@@ -59,7 +59,7 @@ public class MountStorageContext implements StorageContext {
   @Getter(lazy = true)
   private final List<StorageFile> files = resolveFiles();
   @Getter(lazy = true, value = PRIVATE)
-  private final Map<String, StorageFile> fileIndex = resolveFileIndex();
+  private final Map<String, StorageFile> fileIdIndex = resolveFileIndex();
   @Getter(lazy = true, value = PRIVATE)
   private final Multimap<String, StorageFile> fileGnosIdIndex = resolveFileGnosIdIndex();
 
@@ -71,7 +71,7 @@ public class MountStorageContext implements StorageContext {
 
   @Override
   public StorageFile getFileById(String id) {
-    return getFileIndex().get(id);
+    return getFileIdIndex().get(id);
   }
 
   @Override

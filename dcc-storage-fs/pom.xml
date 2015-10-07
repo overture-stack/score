@@ -16,13 +16,6 @@
 
   <dependencies>
 
-    <!-- FUSE -->
-    <dependency>
-      <groupId>co.paralleluniverse</groupId>
-      <artifactId>javafs</artifactId>
-      <version>${javafs.version}</version>
-    </dependency>
-
     <!-- Utilities -->
     <dependency>
       <groupId>com.google.guava</groupId>
@@ -30,10 +23,5 @@
     </dependency>
 
   </dependencies>
-
-  <properties>
-    <!-- Versions - FUSE -->
-    <javafs.version>0.1.0-SNAPSHOT</javafs.version>
-  </properties>
 
 </project>

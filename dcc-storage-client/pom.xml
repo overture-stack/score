@@ -95,6 +95,13 @@
       <version>2.13</version>
     </dependency>
 
+    <!-- FUSE -->
+    <dependency>
+      <groupId>co.paralleluniverse</groupId>
+      <artifactId>javafs</artifactId>
+      <version>${javafs.version}</version>
+    </dependency>
+
     <!-- Genomics -->
     <dependency>
       <groupId>com.github.samtools</groupId>
