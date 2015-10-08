@@ -66,9 +66,6 @@ public class ViewCommand extends AbstractClientCommand {
   @Parameter(names = "--header-only", description = "output header of SAM/BAM file only")
   private boolean headerOnly = false;
 
-  @Parameter(names = "--output-path", description = "path to an output directory. Stdout if not specified.")
-  private String filePath = "";
-
   @Parameter(names = "--output-file", description = "filename to write output to. Uses filename from metadata, or original input filename if not specified")
   private String fileName = "";
 
@@ -111,9 +108,8 @@ public class ViewCommand extends AbstractClientCommand {
       val reader = createSamReader(resource);
       val header = reader.getFileHeader();
 
-      val outputFileName = generateFileOutputName(entity);
       @Cleanup
-      val writer = createSamFileWriter(header, outputFileName);
+      val writer = createSamFileWriter(header, fileName);
 
       if (!headerOnly) {
         // Perform actual slicing
@@ -171,33 +167,6 @@ public class ViewCommand extends AbstractClientCommand {
         .makeSAMWriter(header, true, outputStream);
   }
 
-  private String generateFileOutputName(Optional<Entity> entity) {
-    String result = ""; // stdout
-    // check for explicit path + filename
-    if (!filePath.trim().isEmpty()) {
-      if (fileName.trim().isEmpty()) {
-        // generated name depends on whether user has specified object id or local bam file name
-        result = generateDefaultFilename(entity);
-      } else {
-        // use supplied filename
-        result = filePath + File.separator + fileName;
-      }
-    }
-    return result;
-  }
-
-  private String generateDefaultFilename(Optional<Entity> entity) {
-    String result = "";
-    if (bamFilePath.trim().isEmpty()) {
-      result = filePath + File.separator + entity.get().getFileName();
-    } else {
-      // use filename of input file
-      String fileName = new File(bamFilePath).getName();
-      result = filePath + File.separator + "extract-" + fileName;
-    }
-    return result;
-  }
-
   /**
    * Assumes that the .BAI index file has the same name as the bamFilePath parameter: <sam/bam file name>.bam.bai
    * 
@@ -232,8 +201,7 @@ public class ViewCommand extends AbstractClientCommand {
     val bamFileHttpStream = new NullSourceSeekableHTTPStream(bamFileUrl);
     val indexFileHttpStream = new NullSourceSeekableHTTPStream(indexFileUrl);
 
-    val resource = SamInputResource.of(bamFileHttpStream).index(indexFileHttpStream);
-    return resource;
+    return SamInputResource.of(bamFileHttpStream).index(indexFileHttpStream);
   }
 
 }
