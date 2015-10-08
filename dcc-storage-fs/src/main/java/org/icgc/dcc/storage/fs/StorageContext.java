@@ -22,6 +22,8 @@ import java.util.Collection;
 
 public interface StorageContext {
 
+  boolean isAuthorized();
+
   Collection<StorageFile> getFiles();
 
   StorageFile getFileById(String id);

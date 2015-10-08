@@ -23,6 +23,7 @@ import static java.util.stream.Collectors.toList;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.channels.SeekableByteChannel;
+import java.nio.file.AccessDeniedException;
 import java.nio.file.AccessMode;
 import java.nio.file.DirectoryStream;
 import java.nio.file.DirectoryStream.Filter;
@@ -136,6 +137,9 @@ public class StorageFileSystemProvider extends ReadOnlyFileSystemProvider {
   @Override
   public void checkAccess(Path path, AccessMode... modes) throws IOException {
     log.debug("checkAccess(path={}, modes={})", path, Arrays.toString(modes));
+    if (!context.isAuthorized()) {
+      throw new AccessDeniedException("Not authorized with underlying storage system!");
+    }
 
     // TODO: lookup path and verify existence instead
     if (path.endsWith(".csi")) {

@@ -68,6 +68,20 @@ public class MountStorageContext implements StorageContext {
   private final Multimap<String, StorageFile> fileGnosIdIndex = resolveFileGnosIdIndex();
   @Getter(lazy = true, value = PRIVATE)
   private final LoadingCache<String, URL> urlCache = createURLCache();
+  @Getter(lazy = true)
+  private final boolean authorized = resolveAuthorized();
+
+  public boolean resolveAuthorized() {
+    try {
+      val probe = objects.get(0);
+      val probeUrl = downloadService.getUrl(probe.getId());
+      probeUrl.openStream();
+    } catch (Exception e) {
+      return false;
+    }
+
+    return true;
+  }
 
   @Override
   @SneakyThrows

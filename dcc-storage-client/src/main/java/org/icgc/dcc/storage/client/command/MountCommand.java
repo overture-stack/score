@@ -85,7 +85,14 @@ public class MountCommand extends AbstractClientCommand {
       if (hasManifest()) {
         objects = filterManifestObjects(manifestFile, objects);
       }
+
+      terminal.printStatus(terminal.step(i++) + " Checking access. Please wait...");
       val context = new MountStorageContext(downloadService, entities, objects);
+      if (!context.isAuthorized()) {
+        terminal.println("");
+        terminal.println(terminal.error("Access denied. Exiting..."));
+        return FAILURE_STATUS;
+      }
 
       if (hasManifest()) {
         terminal.printStatus(terminal.step(i++) + " Applying manifest view :\n");
