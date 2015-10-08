@@ -79,7 +79,7 @@ public class MetadataClient {
   @SneakyThrows
   private Entity read(@NonNull String path) {
     try {
-      return MAPPER.readValue(url(path), Entity.class);
+      return MAPPER.readValue(resolveUrl(path), Entity.class);
     } catch (FileNotFoundException e) {
       throw new EntityNotFoundException(e);
     }
@@ -89,10 +89,12 @@ public class MetadataClient {
   private List<Entity> readAll(@NonNull String path) {
     val results = Lists.<Entity> newArrayList();
     boolean last = false;
-    int pageNumber = 1;
+    int pageNumber = 0;
+
     try {
       while (!last) {
-        val result = MAPPER.readValue(url(path + "?size=2000&page=" + pageNumber), ObjectNode.class);
+        val url = resolveUrl(path + (path.contains("?") ? "&" : "?") + "size=2000&page=" + pageNumber);
+        val result = MAPPER.readValue(url, ObjectNode.class);
         last = result.path("last").asBoolean();
         List<Entity> page = MAPPER.convertValue(result.path("content"), new TypeReference<ArrayList<Entity>>() {});
         results.addAll(page);
@@ -105,7 +107,7 @@ public class MetadataClient {
   }
 
   @SneakyThrows
-  private URL url(String path) {
+  private URL resolveUrl(String path) {
     return new URL(serverUrl + "/entities" + path);
   }
 
