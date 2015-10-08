@@ -17,11 +17,13 @@
  */
 package org.icgc.dcc.storage.client.mount;
 
+import static com.google.common.collect.Iterables.getLast;
 import static com.google.common.collect.Maps.uniqueIndex;
 import static com.google.common.collect.Multimaps.index;
 import static lombok.AccessLevel.PRIVATE;
 import static org.icgc.dcc.storage.fs.StorageFile.storageFile;
 
+import java.io.IOException;
 import java.net.URL;
 import java.util.Collection;
 import java.util.List;
@@ -71,13 +73,21 @@ public class MountStorageContext implements StorageContext {
   @Getter(lazy = true)
   private final boolean authorized = resolveAuthorized();
 
+  @SneakyThrows
   public boolean resolveAuthorized() {
     try {
-      val probe = objects.get(0);
+      // TODO: Figure out why getFirst fails. All objects should exist! May need to filter out junk bucket paths on
+      // server
+      val probe = getLast(objects);
       val probeUrl = downloadService.getUrl(probe.getId());
       probeUrl.openStream();
-    } catch (Exception e) {
-      return false;
+    } catch (IOException e) {
+      // FIXME: Hack!
+      if (e.getMessage().contains(" 403 ")) {
+        return false;
+      }
+
+      throw e;
     }
 
     return true;
