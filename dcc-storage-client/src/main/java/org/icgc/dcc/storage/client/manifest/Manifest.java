@@ -20,6 +20,7 @@ package org.icgc.dcc.storage.client.manifest;
 import java.util.List;
 
 import lombok.Builder;
+import lombok.NonNull;
 import lombok.Value;
 
 /**
@@ -29,6 +30,7 @@ import lombok.Value;
 @Value
 public class Manifest {
 
+  @NonNull
   private final List<ManifestEntry> entries;
 
   @Value
@@ -46,6 +48,10 @@ public class Manifest {
     String donorId;
     String projectId;
 
+  }
+
+  public long getTotalSize() {
+    return entries.stream().mapToLong(entry -> Long.valueOf(entry.getFileSize())).sum();
   }
 
 }

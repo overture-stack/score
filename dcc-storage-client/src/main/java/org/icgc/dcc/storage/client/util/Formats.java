@@ -15,32 +15,29 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.fs;
+package org.icgc.dcc.storage.client.util;
 
-import static org.icgc.dcc.storage.fs.util.Formats.formatBytes;
-import static org.icgc.dcc.storage.fs.util.Formats.formatBytesUnits;
+public class Formats {
 
-import lombok.Builder;
-import lombok.Value;
+  public static String formatBytes(long bytes) {
+    int unit = 1000;
+    if (bytes < unit) return Long.toString(bytes);
 
-@Value
-@Builder
-public class StorageFile {
+    int exp = (int) (Math.log(bytes) / Math.log(unit));
 
-  String id;
-  String fileName;
-  String gnosId;
-
-  long lastModified;
-  long size;
-
-  public static StorageFileBuilder storageFile() {
-    return builder();
+    return String.format("%.1f", bytes / Math.pow(unit, exp));
   }
 
-  @Override
-  public String toString() {
-    return String.format("%s: %s/%s @ %s %s", id, gnosId, fileName, formatBytes(size), formatBytesUnits(size));
+  public static String formatBytesUnits(long bytes) {
+    int unit = 1000;
+    if (bytes < unit) return "B";
+
+    int exp = (int) (Math.log(bytes) / Math.log(unit));
+    return "KMGTPE".charAt(exp - 1) + "";
+  }
+
+  public static String formatCount(long count) {
+    return String.format("%,d", count);
   }
 
 }

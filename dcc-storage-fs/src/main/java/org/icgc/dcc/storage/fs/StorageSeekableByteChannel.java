@@ -43,22 +43,6 @@ public class StorageSeekableByteChannel extends SeekableURLByteChannel {
       return url;
     }
 
-    //
-    // Prototyping
-    //
-
-    // Simple extension match, always pointing to the same file
-    if (path.endsWith("bam")) {
-      return new URL("http://s3.amazonaws.com/iobio/NA12878/NA12878.autsome.bam");
-    } else if (path.endsWith("bai")) {
-      return new URL("http://s3.amazonaws.com/iobio/NA12878/NA12878.autsome.bam.bai");
-    } else if (path.endsWith("json")) {
-      return new URL(
-          "https://raw.githubusercontent.com/ICGC-TCGA-PanCancer/s3-transfer-operations/master/s3-transfer-jobs-prod1/completed-jobs/001a5fa1-dcc8-43e6-8815-fac34eb8a3c9.RECA-EU.C0015.C0015T.WGS-BWA-Tumor.json");
-    } else if (path.getFile().isPresent()) {
-      return new URL("http://www.google.com");
-    }
-
     return null;
   }
 

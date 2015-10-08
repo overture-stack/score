@@ -103,6 +103,11 @@ public class StorageFileSystemProvider extends ReadOnlyFileSystemProvider {
   public SeekableByteChannel newByteChannel(Path path, Set<? extends OpenOption> options, FileAttribute<?>... attrs)
       throws IOException {
     log.debug("newByteChannel(path={}, options={}, attrs={})", path, options, Arrays.toString(attrs));
+    if (path.getFileName().equals(".info")) {
+      // TODO: Implement
+      ;
+    }
+
     return new StorageSeekableByteChannel((StoragePath) path, context);
   }
 

@@ -78,7 +78,7 @@ public class StorageFileAttributes implements PosixFileAttributes {
 
   @Override
   public boolean isSymbolicLink() {
-    return path.endsWith(".json");
+    return path.getFileName().equals(".info.txt");
   }
 
   @Override
@@ -88,7 +88,7 @@ public class StorageFileAttributes implements PosixFileAttributes {
 
   @Override
   public long size() {
-    return path.getFile().isPresent() ? path.getFile().get().getSize() : 1649;
+    return path.getFile().isPresent() ? path.getFile().get().getSize() : 0;
   }
 
   @Override

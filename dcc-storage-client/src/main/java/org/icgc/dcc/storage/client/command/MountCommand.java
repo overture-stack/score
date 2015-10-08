@@ -19,6 +19,8 @@ package org.icgc.dcc.storage.client.command;
 
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
+import static org.icgc.dcc.storage.fs.util.Formats.formatBytes;
+import static org.icgc.dcc.storage.fs.util.Formats.formatBytesUnits;
 
 import java.io.File;
 import java.util.List;
@@ -42,7 +44,9 @@ import com.beust.jcommander.Parameters;
 
 import lombok.SneakyThrows;
 import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Component
 @Parameters(separators = "=", commandDescription = "Mounts a read-only file system view of the remote repository")
 public class MountCommand extends AbstractClientCommand {
@@ -71,41 +75,72 @@ public class MountCommand extends AbstractClientCommand {
   @SneakyThrows
   public int execute() {
     try {
-      terminal.printStatus("Indexing remote entities. Please wait...");
+      int i = 1;
+      terminal.printStatus(terminal.step(i++) + " Indexing remote entities. Please wait...");
       val entities = metadataClient.findEntities();
-      terminal.printStatus("Indexing remote objects. Please wait...");
+
+      terminal.printStatus(terminal.step(i++) + " Indexing remote objects. Please wait...");
       List<ObjectInfo> objects = storageService.listObjects();
 
-      if (manifestFile != null) {
-        val manifest = new ManifestReader().readManifest(manifestFile);
-
-        val objectIds = manifest.getEntries().stream()
-            .flatMap(entry -> Stream.of(entry.getFileUuid(), entry.getIndexFileUuid()))
-            .collect(toSet());
-
-        objects = objects.stream()
-            .filter(object -> objectIds.contains(object.getId()))
-            .collect(toList());
+      if (hasManifest()) {
+        objects = filterManifestObjects(manifestFile, objects);
       }
-
-      terminal.printStatus("Mounting file system to '" + mountPoint.getAbsolutePath() + "'...");
       val context = new MountStorageContext(downloadService, entities, objects);
 
+      if (hasManifest()) {
+        terminal.printStatus(terminal.step(i++) + " Applying manifest view :\n");
+
+        terminal.printLine();
+        long totalSize = 0;
+        for (val file : context.getFiles()) {
+          terminal.println(" - " + file.toString());
+
+          totalSize += file.getSize();
+        }
+        terminal.printLine();
+        terminal.println(" Total size: " + formatBytes(totalSize) + " " + formatBytesUnits(totalSize) + "\n");
+      }
+
+      terminal.printStatus(terminal.step(i++) + " Mounting file system to '" + mountPoint.getAbsolutePath() + "'...");
       val fileSystem = StorageFileSystems.newFileSystem(context);
       mountService.mount(fileSystem, mountPoint.toPath());
 
       terminal.printStatus(
           terminal.label(
-              "Successfully mounted file system at '" + terminal.value(mountPoint.getAbsolutePath())
-                  + "' and is now ready for use!"));
+              "Successfully mounted file system at " + terminal.value(mountPoint.getAbsolutePath())
+                  + " and is now ready for use!"));
+
+      // Let the user know we are done... when the time is right
+      Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+        terminal.printStatus(terminal.label("Shut down. Good bye!\n"));
+      }));
 
       // Wait for interrupt
       Thread.sleep(Long.MAX_VALUE);
-    } catch (InterruptedException e) {
-      terminal.printStatus("Unmounting file system...");
+    } catch (Exception e) {
+      log.error("Unknown error:", e);
+      throw e;
     }
 
     return SUCCESS_STATUS;
+
+  }
+
+  private boolean hasManifest() {
+    return manifestFile != null;
+  }
+
+  private static List<ObjectInfo> filterManifestObjects(File manifestFile, List<ObjectInfo> objects) {
+    val manifest = new ManifestReader().readManifest(manifestFile);
+
+    val objectIds = manifest.getEntries().stream()
+        .flatMap(entry -> Stream.of(entry.getFileUuid(), entry.getIndexFileUuid()))
+        .collect(toSet());
+
+    objects = objects.stream()
+        .filter(object -> objectIds.contains(object.getId()))
+        .collect(toList());
+    return objects;
   }
 
 }

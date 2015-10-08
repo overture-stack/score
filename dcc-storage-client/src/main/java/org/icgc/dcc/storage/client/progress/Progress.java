@@ -2,6 +2,9 @@ package org.icgc.dcc.storage.client.progress;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.icgc.dcc.storage.client.util.Formats.formatBytes;
+import static org.icgc.dcc.storage.client.util.Formats.formatBytesUnits;
+import static org.icgc.dcc.storage.client.util.Formats.formatCount;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -99,9 +102,9 @@ public class Progress {
         .println(
             terminal.label("Total execution time") + ": " + terminal.value(String.format("%15s", stopwatch.toString())))
         .println(terminal.label("Total bytes read    ") + ": "
-            + terminal.value(String.format("%15s", Terminal.formatCount(bytesRead.get()))))
+            + terminal.value(String.format("%15s", formatCount(bytesRead.get()))))
         .println(terminal.label("Total bytes written ") + ": "
-            + terminal.value(String.format("%15s", Terminal.formatCount(bytesWritten.get()))));
+            + terminal.value(String.format("%15s", formatCount(bytesWritten.get()))));
   }
 
   public void incrementParts(int partCount) {
@@ -151,14 +154,14 @@ public class Progress {
         .append("%, ")
         .append(terminal.label("Write/sec"))
         .append(": ")
-        .append(terminal.value(Terminal.formatBytes(bytesWrittenPerSec)))
-        .append(Terminal.formatBytesUnits(bytesWrittenPerSec))
+        .append(terminal.value(formatBytes(bytesWrittenPerSec)))
+        .append(formatBytesUnits(bytesWrittenPerSec))
         .append("/s")
         .append(", ")
         .append(terminal.label("Read/sec"))
         .append(": ")
-        .append(terminal.value(Terminal.formatBytes(bytesReadPerSec)))
-        .append(Terminal.formatBytesUnits(bytesReadPerSec))
+        .append(terminal.value(formatBytes(bytesReadPerSec)))
+        .append(formatBytesUnits(bytesReadPerSec))
         .append("/s");
 
     val padding = 4;

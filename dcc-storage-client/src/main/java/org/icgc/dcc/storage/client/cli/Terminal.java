@@ -61,6 +61,10 @@ public class Terminal {
     return ansi().render("@|green " + text + "|@").toString();
   }
 
+  public String step(int i) {
+    return "[" + label(Integer.toString(i)) + "]";
+  }
+
   public String value(long text) {
     return value(Long.toString(text));
   }
@@ -85,28 +89,7 @@ public class Terminal {
     return TerminalFactory.get().getWidth();
   }
 
-  public static String formatBytes(long bytes) {
-    int unit = 1000;
-    if (bytes < unit) return Long.toString(bytes);
-
-    int exp = (int) (Math.log(bytes) / Math.log(unit));
-
-    return String.format("%.1f", bytes / Math.pow(unit, exp));
-  }
-
-  public static String formatBytesUnits(long bytes) {
-    int unit = 1000;
-    if (bytes < unit) return "B";
-
-    int exp = (int) (Math.log(bytes) / Math.log(unit));
-    return "KMGTPE".charAt(exp - 1) + "";
-  }
-
-  public static String formatCount(long count) {
-    return String.format("%,d", count);
-  }
-
-  private void clearLine() {
+  public void clearLine() {
     val padding = repeat(" ", getWidth());
     print("\r" + padding);
   }

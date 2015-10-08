@@ -80,7 +80,7 @@ public class StorageDirectoryStream implements DirectoryStream<Path> {
 
   private Iterator<Path> listGnosDir(String gnosId) {
     // Artificial
-    val infoFile = Stream.of(absolutePath(gnosId, gnosId + ".json"));
+    val infoFile = Stream.of(absolutePath(".info.txt"));
 
     // Real
     val objectFiles = files.stream()

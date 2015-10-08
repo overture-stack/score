@@ -33,12 +33,16 @@ import org.icgc.dcc.storage.core.model.ObjectInfo;
 import org.icgc.dcc.storage.fs.StorageContext;
 import org.icgc.dcc.storage.fs.StorageFile;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Multimap;
 
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.val;
 
 @RequiredArgsConstructor
@@ -62,11 +66,13 @@ public class MountStorageContext implements StorageContext {
   private final Map<String, StorageFile> fileIdIndex = resolveFileIndex();
   @Getter(lazy = true, value = PRIVATE)
   private final Multimap<String, StorageFile> fileGnosIdIndex = resolveFileGnosIdIndex();
+  @Getter(lazy = true, value = PRIVATE)
+  private final LoadingCache<String, URL> urlCache = createURLCache();
 
   @Override
+  @SneakyThrows
   public URL getUrl(String objectId) {
-    // TODO: Add caching to minimize presigned url generation
-    return downloadService.getUrl(objectId);
+    return getUrlCache().get(objectId);
   }
 
   @Override
@@ -110,6 +116,10 @@ public class MountStorageContext implements StorageContext {
 
   private Multimap<String, StorageFile> resolveFileGnosIdIndex() {
     return index(getFiles(), StorageFile::getGnosId);
+  }
+
+  private LoadingCache<String, URL> createURLCache() {
+    return CacheBuilder.newBuilder().build(CacheLoader.from(objectId -> downloadService.getUrl(objectId)));
   }
 
 }
