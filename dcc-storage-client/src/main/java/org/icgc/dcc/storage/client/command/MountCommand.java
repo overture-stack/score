@@ -37,6 +37,7 @@ import org.icgc.dcc.storage.client.transport.StorageService;
 import org.icgc.dcc.storage.core.model.ObjectInfo;
 import org.icgc.dcc.storage.fs.StorageFileSystems;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import com.beust.jcommander.Parameter;
@@ -48,6 +49,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
+@Profile("experimental")
 @Parameters(separators = "=", commandDescription = "Mounts a read-only file system view of the remote repository")
 public class MountCommand extends AbstractClientCommand {
 
