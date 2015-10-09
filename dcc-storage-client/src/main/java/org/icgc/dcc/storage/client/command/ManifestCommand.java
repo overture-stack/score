@@ -17,8 +17,8 @@
  */
 package org.icgc.dcc.storage.client.command;
 
-import org.icgc.dcc.storage.client.cli.ObjectIdValidator;
-import org.icgc.dcc.storage.client.download.DownloadService;
+import org.icgc.dcc.storage.client.manifest.ManfiestService;
+import org.icgc.dcc.storage.client.manifest.ManifestResource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -29,32 +29,30 @@ import lombok.SneakyThrows;
 import lombok.val;
 
 /**
- * Resolves URL for a supplied object id.
+ * Resolves a manifest and displays it.
  */
 @Component
-@Parameters(separators = "=", commandDescription = "Resolves the URL of the remote object")
-public class UrlCommand extends AbstractClientCommand {
+@Parameters(separators = "=", commandDescription = "Resolves a manifest and displays it")
+public class ManifestCommand extends AbstractClientCommand {
 
   /**
    * Options.
    */
-  @Parameter(names = "--object-id", description = "object id to resolve URL for", required = true, validateValueWith = ObjectIdValidator.class)
-  private String oid;
+  @Parameter(names = "--manifest", description = "path to manifest id, url or file", required = true)
+  private String manifestSpec;
 
   /**
    * Dependencies.
    */
   @Autowired
-  private DownloadService downloader;
+  private ManfiestService manfiestService;
 
   @Override
   @SneakyThrows
   public int execute() {
-    val offset = 0L;
-    val length = -1L;
-    terminal.printf("\rResolving URL for object: %s (offset = %d, length = %d)\n", oid, offset, length);
-    val url = downloader.getUrl(oid, offset, length);
-    System.out.printf("%s", url);
+    terminal.printf("\rResolving manfiest for '%s'\n", manifestSpec);
+    val manifestContent = manfiestService.getManifestContent(new ManifestResource(manifestSpec));
+    System.out.printf("%s", manifestContent);
 
     return SUCCESS_STATUS;
   }

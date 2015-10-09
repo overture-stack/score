@@ -17,12 +17,16 @@
  */
 package org.icgc.dcc.storage.client.manifest;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+
+import com.google.common.io.Resources;
 
 import lombok.SneakyThrows;
 import lombok.val;
@@ -42,19 +46,20 @@ public class ManfiestService {
   private String portalUrl;
 
   @SneakyThrows
+  public String getManifestContent(ManifestResource resource) {
+    val url = resolveManifestUrl(resource);
+    return Resources.toString(url, UTF_8);
+  }
+
+  @SneakyThrows
   public Manifest getManifest(ManifestResource resource) {
-    if (resource.getType() == ManifestResource.Type.URL) {
-      return getManifestByURL(new URL(resource.getValue()));
-    } else if (resource.getType() == ManifestResource.Type.ID) {
-      return getManifestById(resource.getValue());
-    } else {
-      return getManifestByFile(new File(resource.getValue()));
-    }
+    val url = resolveManifestUrl(resource);
+    return getManifestByURL(url);
   }
 
   @SneakyThrows
   public Manifest getManifestById(String manifestId) {
-    val url = resolveManifestUrl(manifestId);
+    val url = resolvePortalManifestUrl(manifestId);
     return READER.readManifest(url);
   }
 
@@ -68,7 +73,18 @@ public class ManfiestService {
     return READER.readManifest(manifestFile);
   }
 
-  private URL resolveManifestUrl(String manifestId) throws MalformedURLException {
+  @SneakyThrows
+  private URL resolveManifestUrl(ManifestResource resource) {
+    if (resource.getType() == ManifestResource.Type.URL) {
+      return new URL(resource.getValue());
+    } else if (resource.getType() == ManifestResource.Type.ID) {
+      return resolvePortalManifestUrl(resource.getValue());
+    } else {
+      return new File(resource.getValue()).toURI().toURL();
+    }
+  }
+
+  private URL resolvePortalManifestUrl(String manifestId) throws MalformedURLException {
     return new URL(String.format("%s/api/v1/repository/manifests/%s", portalUrl, manifestId));
   }
 

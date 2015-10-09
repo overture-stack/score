@@ -49,13 +49,13 @@ public class UploadCommand extends AbstractClientCommand {
   /**
    * Options.
    */
-  @Parameter(names = "--file", description = "path to file to upload", required = false, validateValueWith = FileValidator.class)
+  @Parameter(names = "--file", description = "path to file to upload", validateValueWith = FileValidator.class)
   private File file;
-  @Parameter(names = "--manifest", description = "path to manifest file", required = false, validateValueWith = FileValidator.class)
+  @Parameter(names = "--manifest", description = "path to manifest file", validateValueWith = FileValidator.class)
   private File manifestFile;
   @Parameter(names = "--force", description = "force re-upload", required = false)
   private boolean isForce = false;
-  @Parameter(names = "--object-id", description = "object id assigned to upload file", required = false, validateValueWith = ObjectIdValidator.class)
+  @Parameter(names = "--object-id", description = "object id assigned to upload file", validateValueWith = ObjectIdValidator.class)
   private String oid;
 
   /**

@@ -63,17 +63,17 @@ public class DownloadCommand extends AbstractClientCommand {
   private File outDir;
   @Parameter(names = { "--output-layout" }, description = "layout of the output-dir. One of 'bundle' (nest files in bundle directory), 'filename' (nest files in filename directory), or 'id' (flat list of files named with object-id)", converter = OutputLayoutConverter.class)
   private OutputLayout layout = OutputLayout.filename;
-  @Parameter(names = "--force", description = "force re-download (override local file)", required = false)
+  @Parameter(names = "--force", description = "force re-download (override local file)")
   private boolean force = false;
-  @Parameter(names = "--manifest", description = "path to manifest id, url or file", required = false)
+  @Parameter(names = "--manifest", description = "path to manifest id, url or file")
   private String manifestSpec;
-  @Parameter(names = "--object-id", description = "object id to download", required = false, validateValueWith = ObjectIdValidator.class)
+  @Parameter(names = "--object-id", description = "object id to download", validateValueWith = ObjectIdValidator.class)
   private String oid;
-  @Parameter(names = "--offset", description = "position in source file to begin download from", required = false)
+  @Parameter(names = "--offset", description = "position in source file to begin download from")
   private long offset = 0;
-  @Parameter(names = "--length", description = "the number of bytes to download (in bytes)", required = false)
+  @Parameter(names = "--length", description = "the number of bytes to download (in bytes)")
   private long length = -1;
-  @Parameter(names = "--index", description = "download file index if available?", required = false)
+  @Parameter(names = "--index", description = "download file index if available?")
   private boolean index = true;
 
   /**
