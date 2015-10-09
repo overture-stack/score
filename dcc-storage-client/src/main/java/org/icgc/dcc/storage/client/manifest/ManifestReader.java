@@ -22,6 +22,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 import java.util.List;
 
 import org.icgc.dcc.storage.client.manifest.Manifest.ManifestEntry;
@@ -29,9 +30,10 @@ import org.icgc.dcc.storage.client.manifest.Manifest.ManifestEntry;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
-import com.google.common.io.Files;
 import com.google.common.io.LineProcessor;
+import com.google.common.io.Resources;
 
+import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.val;
 
@@ -43,8 +45,13 @@ public class ManifestReader {
   private static final Splitter LINE_PARSER = Splitter.on('\t').trimResults();
 
   @SneakyThrows
-  public Manifest readManifest(File manifestFile) {
-    return Files.readLines(manifestFile, UTF_8, new ManifestLineProcessor());
+  public Manifest readManifest(@NonNull File manifestFile) {
+    return readManifest(manifestFile.toURI().toURL());
+  }
+
+  @SneakyThrows
+  public Manifest readManifest(@NonNull URL manifestFile) {
+    return Resources.readLines(manifestFile, UTF_8, new ManifestLineProcessor());
   }
 
   private static class ManifestLineProcessor implements LineProcessor<Manifest> {

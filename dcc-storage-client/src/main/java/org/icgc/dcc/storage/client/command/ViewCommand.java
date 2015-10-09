@@ -56,38 +56,31 @@ import lombok.val;
 @Parameters(separators = "=", commandDescription = "Extract/displays some or all of SAM/BAM file")
 public class ViewCommand extends AbstractClientCommand {
 
+  public enum OutputType {
+    bam, sam
+  }
+
   /**
    * Options.
    */
   @Parameter(names = "--contained", description = "output only alignments completely contained in specified region. By default, any alignment"
       + " that intersects with a specified region will be returned")
   private boolean containedOnly = false;
-
   @Parameter(names = "--header-only", description = "output header of SAM/BAM file only")
   private boolean headerOnly = false;
-
   @Parameter(names = "--output-file", description = "filename to write output to. Uses filename from metadata, or original input filename if not specified")
   private String fileName = "";
-
   @Parameter(names = "--output-type", description = "output format of query.", converter = OutputTypeConverter.class)
   private OutputType outputType = OutputType.sam;
-
   @Parameter(names = "--object-id", description = "object id of BAM file to download slice from", validateValueWith = ObjectIdValidator.class)
   private String oid;
-
   @Parameter(names = "--input-file", description = "local path to BAM file. Overrides specification of --object-id")
   private String bamFilePath = "";
-
   @Parameter(names = "--input-file-index", description = "explicit local path to index file (requires --input-file)")
   private String baiFilePath = "";
-
   @Parameter(names = "--query", description = "query to define extract from BAM file (coordinate format 'sequence:start-end'). Multiple"
       + " ranges separated by space", variableArity = true)
   private List<String> query = new ArrayList<String>();
-
-  public enum OutputType {
-    bam, sam
-  }
 
   /**
    * Dependencies.

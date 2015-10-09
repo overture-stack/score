@@ -46,18 +46,21 @@ import lombok.extern.slf4j.Slf4j;
 @Parameters(separators = "=", commandDescription = "Uploads object(s) to remote storage")
 public class UploadCommand extends AbstractClientCommand {
 
+  /**
+   * Options.
+   */
   @Parameter(names = "--file", description = "path to file to upload", required = false, validateValueWith = FileValidator.class)
   private File file;
-
   @Parameter(names = "--manifest", description = "path to manifest file", required = false, validateValueWith = FileValidator.class)
   private File manifestFile;
-
   @Parameter(names = "--force", description = "force re-upload", required = false)
   private boolean isForce = false;
-
   @Parameter(names = "--object-id", description = "object id assigned to upload file", required = false, validateValueWith = ObjectIdValidator.class)
   private String oid;
 
+  /**
+   * Dependencies.
+   */
   @Autowired
   private UploadService uploader;
 
@@ -100,4 +103,5 @@ public class UploadCommand extends AbstractClientCommand {
 
     return manifest;
   }
+
 }

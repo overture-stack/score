@@ -18,53 +18,51 @@
 package org.icgc.dcc.storage.client.slicing;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Iterators;
 
+import lombok.val;
+
 public class QueryParser {
 
-  private static Splitter queryScrubber = Splitter.on(CharMatcher.anyOf(":-")).omitEmptyStrings().trimResults();
+  private static Splitter QUERY_SPLITTER = Splitter.on(CharMatcher.anyOf(":-")).omitEmptyStrings().trimResults();
 
   public static List<Slice> parse(List<String> queries) {
-    List<Slice> result = new ArrayList<Slice>();
-    for (String region : queries) {
+    val result = new ArrayList<Slice>();
+    for (val region : queries) {
       result.add(parse(region));
     }
+
     return result;
   }
 
   public static Integer parseIntArgument(String s) {
-    return Integer.parseInt(s.replace(",", ""));
+    val stripped = s.replace(",", "");
+    return Integer.parseInt(stripped);
   }
 
   public static Slice parse(String query) {
-    Iterable<String> tokens = queryScrubber.split(query);
-    Iterator<String> it = tokens.iterator();
-    int count = Iterators.size(tokens.iterator());
+    val tokens = QUERY_SPLITTER.split(query);
+    val it = tokens.iterator();
+    val count = Iterators.size(tokens.iterator());
 
-    Slice result = null;
     try {
       switch (count) {
       case 1:
-        result = new Slice(it.next());
-        break;
+        return new Slice(it.next());
       case 2:
-        result = new Slice(it.next(), parseIntArgument(it.next()));
-        break;
+        return new Slice(it.next(), parseIntArgument(it.next()));
       case 3:
-        result =
-            new Slice(it.next(), parseIntArgument(it.next()), parseIntArgument(it.next()));
-        break;
+        return new Slice(it.next(), parseIntArgument(it.next()), parseIntArgument(it.next()));
       default:
         throw new IllegalArgumentException(String.format("Unrecognizable region %s", query));
       }
     } catch (NumberFormatException nfe) {
       throw new IllegalArgumentException(String.format("Invalid region specified %s", query), nfe);
     }
-    return result;
   }
+
 }

@@ -15,12 +15,61 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.client.download;
+package org.icgc.dcc.storage.client.manifest;
 
+import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URL;
 
-/**
- * 
- */
-public class FileIndex {
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
+import lombok.SneakyThrows;
+import lombok.val;
+
+@Service
+public class ManfiestService {
+
+  /**
+   * Constants
+   */
+  private static final ManifestReader READER = new ManifestReader();
+
+  /**
+   * Configuration
+   */
+  @Value("${portal.url}")
+  private String portalUrl;
+
+  @SneakyThrows
+  public Manifest getManifest(ManifestResource resource) {
+    if (resource.getType() == ManifestResource.Type.URL) {
+      return getManifestByURL(new URL(resource.getValue()));
+    } else if (resource.getType() == ManifestResource.Type.ID) {
+      return getManifestById(resource.getValue());
+    } else {
+      return getManifestByFile(new File(resource.getValue()));
+    }
+  }
+
+  @SneakyThrows
+  public Manifest getManifestById(String manifestId) {
+    val url = resolveManifestUrl(manifestId);
+    return READER.readManifest(url);
+  }
+
+  @SneakyThrows
+  public Manifest getManifestByURL(URL manifestUrl) {
+    return READER.readManifest(manifestUrl);
+  }
+
+  @SneakyThrows
+  public Manifest getManifestByFile(File manifestFile) {
+    return READER.readManifest(manifestFile);
+  }
+
+  private URL resolveManifestUrl(String manifestId) throws MalformedURLException {
+    return new URL(String.format("%s/api/v1/repository/manifests/%s", portalUrl, manifestId));
+  }
 
 }

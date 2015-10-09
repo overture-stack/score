@@ -32,12 +32,15 @@ import com.google.common.collect.ImmutableSet;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.val;
 
 @RequiredArgsConstructor
 public class StorageFileAttributes implements PosixFileAttributes {
 
   private final Pattern REGULAR_FILE_PATTERN = compile(
       "/" + "[^/]*/" + ".+"); // <root>/ <dir>/ <file>
+
+  private final static FileTime DEFAULT_TIME = FileTime.fromMillis(System.currentTimeMillis());
 
   /**
    * Configuration.
@@ -53,7 +56,8 @@ public class StorageFileAttributes implements PosixFileAttributes {
 
   @Override
   public FileTime lastModifiedTime() {
-    return FileTime.fromMillis(path.getFile().isPresent() ? path.getFile().get().getLastModified() : 0);
+    val real = path.getFile().isPresent();
+    return real ? FileTime.fromMillis(path.getFile().get().getLastModified()) : DEFAULT_TIME;
   }
 
   @Override
@@ -78,6 +82,7 @@ public class StorageFileAttributes implements PosixFileAttributes {
 
   @Override
   public boolean isSymbolicLink() {
+    // TODO: Add content
     return path.getFileName().equals(".info.txt");
   }
 

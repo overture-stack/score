@@ -23,6 +23,7 @@ import java.util.regex.Pattern;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.val;
 
 @RequiredArgsConstructor
 public class StoragePathMatcher implements PathMatcher {
@@ -32,7 +33,10 @@ public class StoragePathMatcher implements PathMatcher {
 
   @Override
   public boolean matches(Path path) {
-    return pattern.matcher(path.toString()).matches();
+    val text = path.toString();
+    val matcher = pattern.matcher(text);
+
+    return matcher.matches();
   }
 
 }

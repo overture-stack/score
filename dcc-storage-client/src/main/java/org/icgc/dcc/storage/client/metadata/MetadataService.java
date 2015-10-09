@@ -17,6 +17,7 @@
  */
 package org.icgc.dcc.storage.client.metadata;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +30,10 @@ public class MetadataService {
 
   @Autowired
   private MetadataClient metadataClient;
+
+  public List<Entity> getEntities() {
+    return metadataClient.findEntities();
+  }
 
   public Entity getEntity(String objectId) {
     return metadataClient.findEntity(objectId);

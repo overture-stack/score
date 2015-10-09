@@ -34,6 +34,10 @@ public class Terminal {
     return this;
   }
 
+  public Terminal printStatusStep(int stepNumber, String text) {
+    return printStatus(step(stepNumber) + " " + text);
+  }
+
   public Terminal printStatus(String text) {
     clearLine();
     return print("\r" + text);
@@ -61,8 +65,8 @@ public class Terminal {
     return ansi().render("@|green " + text + "|@").toString();
   }
 
-  public String step(int i) {
-    return "[" + label(Integer.toString(i)) + "]";
+  private String step(int stepNumber) {
+    return "[" + label(Integer.toString(stepNumber)) + "]";
   }
 
   public String value(long text) {

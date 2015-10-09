@@ -18,8 +18,7 @@
 package org.icgc.dcc.storage.client.cli;
 
 import static java.lang.String.format;
-
-import java.util.UUID;
+import static org.icgc.dcc.storage.client.util.UUIDs.tryParse;
 
 import com.beust.jcommander.IValueValidator;
 import com.beust.jcommander.ParameterException;
@@ -34,14 +33,6 @@ public class ObjectIdValidator implements IValueValidator<String> {
 
     if (tryParse(objectId) == null) {
       parameterException(name, objectId, "is not a valid UUID");
-    }
-  }
-
-  private UUID tryParse(String objectId) {
-    try {
-      return UUID.fromString(objectId);
-    } catch (IllegalArgumentException e) {
-      return null;
     }
   }
 

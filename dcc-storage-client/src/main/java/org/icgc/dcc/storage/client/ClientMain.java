@@ -66,7 +66,7 @@ public class ClientMain implements CommandLineRunner {
     try {
       new SpringApplicationBuilder(ClientMain.class).showBanner(false).run(args);
     } catch (Throwable t) {
-      err.println("Unknown error starting application. Please see log for details");
+      err.println("\nUnknown error starting application. Please see log for details");
       log.error("Exception running: ", t);
 
       log.info("Exiting...");
@@ -153,13 +153,14 @@ public class ClientMain implements CommandLineRunner {
   }
 
   private ClientCommand getCommand(String commandName) {
-    return commands.get(commandName + "Command");
+    val beanName = commandName + "Command";
+    return commands.get(beanName);
   }
 
   private void usage(JCommander cli) {
-    StringBuilder sb = new StringBuilder();
-    cli.usage(sb);
-    terminal.println(sb.toString());
+    val builder = new StringBuilder();
+    cli.usage(builder);
+    terminal.println(builder.toString());
   }
 
   private String getVersion() {

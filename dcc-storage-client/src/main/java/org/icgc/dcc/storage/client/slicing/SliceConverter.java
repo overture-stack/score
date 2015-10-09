@@ -17,40 +17,46 @@
  */
 package org.icgc.dcc.storage.client.slicing;
 
-import htsjdk.samtools.QueryInterval;
-import htsjdk.samtools.SAMSequenceDictionary;
-
-import java.util.Comparator;
 import java.util.List;
 
+import org.icgc.dcc.storage.client.util.AlphanumComparator;
+
+import htsjdk.samtools.QueryInterval;
+import htsjdk.samtools.SAMSequenceDictionary;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.val;
 
 @RequiredArgsConstructor
 public class SliceConverter {
 
+  /**
+   * Dependencies.
+   */
   @NonNull
   private final SAMSequenceDictionary samDictionary;
 
-  public QueryInterval convert(Slice slice) {
-    int ix = samDictionary.getSequenceIndex(slice.getSequence());
-    QueryInterval interval = new QueryInterval(ix, slice.getStart(), slice.getEnd());
-    return interval;
+  public QueryInterval convert(@NonNull Slice slice) {
+    val index = samDictionary.getSequenceIndex(slice.getSequence());
+    return new QueryInterval(index, slice.getStart(), slice.getEnd());
   }
 
-  public QueryInterval[] convert(List<Slice> slices) {
-    QueryInterval[] result = new QueryInterval[slices.size()];
+  public QueryInterval[] convert(@NonNull List<Slice> slices) {
     sortSlices(slices);
+
     int index = 0;
-    for (Slice s : slices) {
-      result[index] = convert(s);
+    QueryInterval[] result = new QueryInterval[slices.size()];
+    for (val slice : slices) {
+      result[index] = convert(slice);
       index++;
     }
+
     return result;
   }
 
   public void sortSlices(List<Slice> slices) {
-    Comparator<Slice> groupByComparator = new AlphanumComparator().thenComparing(Slice::getStart);
+    val groupByComparator = new AlphanumComparator().thenComparing(Slice::getStart);
     slices.sort(groupByComparator);
   }
+
 }

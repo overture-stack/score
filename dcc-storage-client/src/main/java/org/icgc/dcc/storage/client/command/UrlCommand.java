@@ -35,9 +35,15 @@ import lombok.val;
 @Parameters(separators = "=", commandDescription = "Resolves the URL of the remote object")
 public class UrlCommand extends AbstractClientCommand {
 
+  /**
+   * Options.
+   */
   @Parameter(names = "--object-id", description = "object id to resolve URL for", required = true, validateValueWith = ObjectIdValidator.class)
   private String oid;
 
+  /**
+   * Dependencies.
+   */
   @Autowired
   private DownloadService downloader;
 
@@ -52,4 +58,5 @@ public class UrlCommand extends AbstractClientCommand {
 
     return SUCCESS_STATUS;
   }
+
 }

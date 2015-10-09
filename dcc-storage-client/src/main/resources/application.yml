@@ -32,6 +32,9 @@ metadata:
   ssl:
     enabled: true
     
+portal:
+  url: https://dcc.icgc.org  
+    
 logging:
   file: target/logs/client.log
 

@@ -15,27 +15,48 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.client.slicing;
+package org.icgc.dcc.storage.client.manifest;
 
-import java.util.List;
+import static org.icgc.dcc.storage.client.util.UUIDs.isUUID;
 
-import htsjdk.samtools.QueryInterval;
-import htsjdk.samtools.SAMFileHeader;
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
+import lombok.Getter;
 import lombok.NonNull;
-import lombok.val;
 
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
-public final class QueryHandler {
+@Getter
+public class ManifestResource {
 
-  public static QueryInterval[] parseQueryStrings(@NonNull SAMFileHeader header, @NonNull List<String> query) {
-    // Handle if multiple ranges specified
-    val slices = QueryParser.parse(query);
-    val converter = new SliceConverter(header.getSequenceDictionary());
+  public enum Type {
 
-    QueryInterval[] intervals = converter.convert(slices);
-    return intervals;
+    ID, URL, FILE
+
+  }
+
+  private final ManifestResource.Type type;
+  private final String value;
+
+  public ManifestResource(@NonNull String value) {
+    super();
+    this.value = value.trim();
+    this.type = resoveType(value);
+  }
+
+  private static Type resoveType(String value) {
+    if (isURL(value)) {
+      return Type.URL;
+    } else if (isUUID(value)) {
+      return Type.ID;
+    } else {
+      return Type.FILE;
+    }
+  }
+
+  private static boolean isURL(String manifestSpec) {
+    return manifestSpec.startsWith("http:/") || manifestSpec.startsWith("https:/");
+  }
+
+  @Override
+  public String toString() {
+    return value;
   }
 
 }

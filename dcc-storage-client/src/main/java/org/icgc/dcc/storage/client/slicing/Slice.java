@@ -17,27 +17,23 @@
  */
 package org.icgc.dcc.storage.client.slicing;
 
-import lombok.Data;
+import lombok.RequiredArgsConstructor;
+import lombok.Value;
 
-@Data
+@Value
+@RequiredArgsConstructor
 public class Slice {
 
-  private String sequence;
-  private int start = -1;
-  private int end = -1;
+  String sequence;
+  int start;
+  int end;
 
   public Slice(String seq) {
-    sequence = seq;
+    this(seq, -1);
   }
 
-  public Slice(String seq, int st) {
-    this(seq);
-    start = st;
-  }
-
-  public Slice(String seq, int st, int e) {
-    this(seq, st);
-    end = e;
+  public Slice(String sequence, int start) {
+    this(sequence, start, -1);
   }
 
 }

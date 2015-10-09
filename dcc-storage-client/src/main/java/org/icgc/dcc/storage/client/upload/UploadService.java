@@ -49,6 +49,9 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 public class UploadService {
 
+  /**
+   * Dependencies.
+   */
   @Autowired
   private StorageService storageService;
   @Autowired
@@ -56,6 +59,9 @@ public class UploadService {
   @Autowired
   private Terminal terminal;
 
+  /**
+   * Configuration.
+   */
   @Value("${client.upload.retryNumber}")
   private int retryNumber;
 

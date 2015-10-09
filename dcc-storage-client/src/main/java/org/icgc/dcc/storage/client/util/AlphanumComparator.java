@@ -15,9 +15,11 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.client.slicing;
+package org.icgc.dcc.storage.client.util;
 
 import java.util.Comparator;
+
+import org.icgc.dcc.storage.client.slicing.Slice;
 
 /*
  * The Alphanum Algorithm is an improved sorting algorithm for strings

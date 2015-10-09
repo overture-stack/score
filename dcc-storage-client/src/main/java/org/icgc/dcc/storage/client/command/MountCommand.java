@@ -27,10 +27,10 @@ import java.util.List;
 import java.util.stream.Stream;
 
 import org.icgc.dcc.storage.client.cli.DirectoryValidator;
-import org.icgc.dcc.storage.client.cli.FileValidator;
 import org.icgc.dcc.storage.client.download.DownloadService;
-import org.icgc.dcc.storage.client.manifest.ManifestReader;
-import org.icgc.dcc.storage.client.metadata.MetadataClient;
+import org.icgc.dcc.storage.client.manifest.ManfiestService;
+import org.icgc.dcc.storage.client.manifest.ManifestResource;
+import org.icgc.dcc.storage.client.metadata.MetadataService;
 import org.icgc.dcc.storage.client.mount.MountService;
 import org.icgc.dcc.storage.client.mount.MountStorageContext;
 import org.icgc.dcc.storage.client.transport.StorageService;
@@ -58,18 +58,20 @@ public class MountCommand extends AbstractClientCommand {
    */
   @Parameter(names = "--mount-point", description = "the mount point of the file system", required = true, validateValueWith = DirectoryValidator.class)
   private File mountPoint;
-  @Parameter(names = "--manifest", description = "path to manifest file", required = false, validateValueWith = FileValidator.class)
-  private File manifestFile;
+  @Parameter(names = "--manifest", description = "path to manifest id, url or file")
+  private String manifestSpec;
 
   /**
    * Dependencies.
    */
   @Autowired
-  private MetadataClient metadataClient;
+  private ManfiestService manfiestService;
   @Autowired
-  private DownloadService downloadService;
+  private MetadataService metadataServices;
   @Autowired
   private StorageService storageService;
+  @Autowired
+  private DownloadService downloadService;
   @Autowired
   private MountService mountService;
 
@@ -78,17 +80,17 @@ public class MountCommand extends AbstractClientCommand {
   public int execute() {
     try {
       int i = 1;
-      terminal.printStatus(terminal.step(i++) + " Indexing remote entities. Please wait...");
-      val entities = metadataClient.findEntities();
+      terminal.printStatusStep(i++, "Indexing remote entities. Please wait...");
+      val entities = metadataServices.getEntities();
 
-      terminal.printStatus(terminal.step(i++) + " Indexing remote objects. Please wait...");
+      terminal.printStatusStep(i++, "Indexing remote objects. Please wait...");
       List<ObjectInfo> objects = storageService.listObjects();
-
       if (hasManifest()) {
-        objects = filterManifestObjects(manifestFile, objects);
+        // Manifest is a filtered view y'all!
+        objects = filterManifestObjects(manifestSpec, objects);
       }
 
-      terminal.printStatus(terminal.step(i++) + " Checking access. Please wait...");
+      terminal.printStatusStep(i++, "Checking access. Please wait...");
       val context = new MountStorageContext(downloadService, entities, objects);
       if (!context.isAuthorized()) {
         terminal.println("");
@@ -97,7 +99,7 @@ public class MountCommand extends AbstractClientCommand {
       }
 
       if (hasManifest()) {
-        terminal.printStatus(terminal.step(i++) + " Applying manifest view :\n");
+        terminal.printStatusStep(i++, "Applying manifest view:\n");
 
         terminal.printLine();
         long totalSize = 0;
@@ -110,7 +112,7 @@ public class MountCommand extends AbstractClientCommand {
         terminal.println(" Total size: " + formatBytes(totalSize) + " " + formatBytesUnits(totalSize) + "\n");
       }
 
-      terminal.printStatus(terminal.step(i++) + " Mounting file system to '" + mountPoint.getAbsolutePath() + "'...");
+      terminal.printStatusStep(i++, "Mounting file system to '" + mountPoint.getAbsolutePath() + "'...");
       val fileSystem = StorageFileSystems.newFileSystem(context);
       mountService.mount(fileSystem, mountPoint.toPath());
 
@@ -126,6 +128,8 @@ public class MountCommand extends AbstractClientCommand {
 
       // Wait for interrupt
       Thread.sleep(Long.MAX_VALUE);
+    } catch (InterruptedException ie) {
+      return SUCCESS_STATUS;
     } catch (Exception e) {
       log.error("Unknown error:", e);
       throw e;
@@ -136,20 +140,19 @@ public class MountCommand extends AbstractClientCommand {
   }
 
   private boolean hasManifest() {
-    return manifestFile != null;
+    return manifestSpec != null;
   }
 
-  private static List<ObjectInfo> filterManifestObjects(File manifestFile, List<ObjectInfo> objects) {
-    val manifest = new ManifestReader().readManifest(manifestFile);
+  private List<ObjectInfo> filterManifestObjects(String manifestSpec, List<ObjectInfo> objects) {
+    val manifest = manfiestService.getManifest(new ManifestResource(manifestSpec));
 
     val objectIds = manifest.getEntries().stream()
         .flatMap(entry -> Stream.of(entry.getFileUuid(), entry.getIndexFileUuid()))
         .collect(toSet());
 
-    objects = objects.stream()
+    return objects.stream()
         .filter(object -> objectIds.contains(object.getId()))
         .collect(toList());
-    return objects;
   }
 
 }

@@ -26,11 +26,11 @@ import java.util.List;
 import java.util.Set;
 
 import org.icgc.dcc.storage.client.cli.DirectoryValidator;
-import org.icgc.dcc.storage.client.cli.FileValidator;
 import org.icgc.dcc.storage.client.cli.ObjectIdValidator;
 import org.icgc.dcc.storage.client.cli.OutputLayoutConverter;
 import org.icgc.dcc.storage.client.download.DownloadService;
-import org.icgc.dcc.storage.client.manifest.ManifestReader;
+import org.icgc.dcc.storage.client.manifest.ManfiestService;
+import org.icgc.dcc.storage.client.manifest.ManifestResource;
 import org.icgc.dcc.storage.client.metadata.Entity;
 import org.icgc.dcc.storage.client.metadata.MetadataService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -61,25 +61,18 @@ public class DownloadCommand extends AbstractClientCommand {
    */
   @Parameter(names = { "--output-dir", "--out-dir" /* Deprecated */ }, description = "path to output directory", required = true, validateValueWith = DirectoryValidator.class)
   private File outDir;
-
   @Parameter(names = { "--output-layout" }, description = "layout of the output-dir. One of 'bundle' (nest files in bundle directory), 'filename' (nest files in filename directory), or 'id' (flat list of files named with object-id)", converter = OutputLayoutConverter.class)
   private OutputLayout layout = OutputLayout.filename;
-
   @Parameter(names = "--force", description = "force re-download (override local file)", required = false)
   private boolean force = false;
-
-  @Parameter(names = "--manifest", description = "path to manifest file", required = false, validateValueWith = FileValidator.class)
-  private File manifestFile;
-
+  @Parameter(names = "--manifest", description = "path to manifest id, url or file", required = false)
+  private String manifestSpec;
   @Parameter(names = "--object-id", description = "object id to download", required = false, validateValueWith = ObjectIdValidator.class)
   private String oid;
-
   @Parameter(names = "--offset", description = "position in source file to begin download from", required = false)
   private long offset = 0;
-
   @Parameter(names = "--length", description = "the number of bytes to download (in bytes)", required = false)
   private long length = -1;
-
   @Parameter(names = "--index", description = "download file index if available?", required = false)
   private boolean index = true;
 
@@ -87,9 +80,11 @@ public class DownloadCommand extends AbstractClientCommand {
    * Dependencies
    */
   @Autowired
-  private DownloadService downloadService;
+  private ManfiestService manfiestService;
   @Autowired
   private MetadataService metadataService;
+  @Autowired
+  private DownloadService downloadService;
 
   @Override
   @SneakyThrows
@@ -106,10 +101,10 @@ public class DownloadCommand extends AbstractClientCommand {
       return downloadObjects(ImmutableList.of(oid));
     } else {
       // Manifest based
-      val manifest = new ManifestReader().readManifest(manifestFile);
+      val manifest = manfiestService.getManifest(new ManifestResource(manifestSpec));
       val entries = manifest.getEntries();
       if (entries.isEmpty()) {
-        terminal.println(terminal.error("Manifest '%s' is empty. Exiting...", manifestFile.getCanonicalPath()));
+        terminal.println(terminal.error("Manifest '%s' is empty. Exiting...", manifest));
         return FAILURE_STATUS;
       }
 

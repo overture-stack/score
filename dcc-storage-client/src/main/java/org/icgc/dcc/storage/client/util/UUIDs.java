@@ -15,27 +15,22 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.client.slicing;
+package org.icgc.dcc.storage.client.util;
 
-import java.util.List;
+import java.util.UUID;
 
-import htsjdk.samtools.QueryInterval;
-import htsjdk.samtools.SAMFileHeader;
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
-import lombok.NonNull;
-import lombok.val;
+public class UUIDs {
 
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
-public final class QueryHandler {
+  public static UUID tryParse(String value) {
+    try {
+      return UUID.fromString(value);
+    } catch (IllegalArgumentException e) {
+      return null;
+    }
+  }
 
-  public static QueryInterval[] parseQueryStrings(@NonNull SAMFileHeader header, @NonNull List<String> query) {
-    // Handle if multiple ranges specified
-    val slices = QueryParser.parse(query);
-    val converter = new SliceConverter(header.getSequenceDictionary());
-
-    QueryInterval[] intervals = converter.convert(slices);
-    return intervals;
+  public static boolean isUUID(String value) {
+    return tryParse(value) != null;
   }
 
 }

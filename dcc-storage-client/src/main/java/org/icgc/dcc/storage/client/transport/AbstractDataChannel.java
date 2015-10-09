@@ -29,7 +29,7 @@ import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Abstract channel for data upload
+ * A representation of a channel for data tranfser.
  */
 @Slf4j
 public abstract class AbstractDataChannel implements DataChannel {
