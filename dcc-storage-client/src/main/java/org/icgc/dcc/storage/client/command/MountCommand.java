@@ -23,6 +23,7 @@ import static org.icgc.dcc.storage.fs.util.Formats.formatBytes;
 import static org.icgc.dcc.storage.fs.util.Formats.formatBytesUnits;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -30,6 +31,7 @@ import org.icgc.dcc.storage.client.cli.DirectoryValidator;
 import org.icgc.dcc.storage.client.download.DownloadService;
 import org.icgc.dcc.storage.client.manifest.ManfiestService;
 import org.icgc.dcc.storage.client.manifest.ManifestResource;
+import org.icgc.dcc.storage.client.metadata.Entity;
 import org.icgc.dcc.storage.client.metadata.MetadataService;
 import org.icgc.dcc.storage.client.mount.MountService;
 import org.icgc.dcc.storage.client.mount.MountStorageContext;
@@ -42,6 +44,8 @@ import org.springframework.stereotype.Component;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.SneakyThrows;
 import lombok.val;
@@ -60,6 +64,8 @@ public class MountCommand extends AbstractClientCommand {
   private File mountPoint;
   @Parameter(names = "--manifest", description = "path to manifest id, url or file")
   private String manifestSpec;
+  @Parameter(names = "--cache", description = "cache metadata on disk locally and use if available")
+  private boolean cache;
 
   /**
    * Dependencies.
@@ -80,11 +86,12 @@ public class MountCommand extends AbstractClientCommand {
   public int execute() {
     try {
       int i = 1;
+
       terminal.printStatusStep(i++, "Indexing remote entities. Please wait...");
-      val entities = metadataServices.getEntities();
+      val entities = resolveEntities();
 
       terminal.printStatusStep(i++, "Indexing remote objects. Please wait...");
-      List<ObjectInfo> objects = storageService.listObjects();
+      List<ObjectInfo> objects = resolveObjects();
       if (hasManifest()) {
         // Manifest is a filtered view y'all!
         objects = filterManifestObjects(manifestSpec, objects);
@@ -137,6 +144,32 @@ public class MountCommand extends AbstractClientCommand {
 
     return SUCCESS_STATUS;
 
+  }
+
+  private List<ObjectInfo> resolveObjects() throws IOException {
+    val objectsFile = new File(".objects.json");
+    if (cache && objectsFile.exists()) {
+      return new ObjectMapper().readValue(objectsFile, new TypeReference<List<ObjectInfo>>() {});
+    } else if (cache) {
+      val objects = storageService.listObjects();
+      new ObjectMapper().writeValue(objectsFile, objects);
+      return objects;
+    } else {
+      return storageService.listObjects();
+    }
+  }
+
+  private List<Entity> resolveEntities() throws IOException {
+    val entitiesFile = new File(".entities.json");
+    if (cache && entitiesFile.exists()) {
+      return new ObjectMapper().readValue(entitiesFile, new TypeReference<List<Entity>>() {});
+    } else if (cache) {
+      val entities = metadataServices.getEntities();
+      new ObjectMapper().writeValue(entitiesFile, entities);
+      return entities;
+    } else {
+      return metadataServices.getEntities();
+    }
   }
 
   private boolean hasManifest() {
