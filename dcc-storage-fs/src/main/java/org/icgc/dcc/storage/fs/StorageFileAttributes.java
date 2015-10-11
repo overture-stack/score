@@ -103,26 +103,12 @@ public class StorageFileAttributes implements PosixFileAttributes {
 
   @Override
   public UserPrincipal owner() {
-    return new UserPrincipal() {
-
-      @Override
-      public String getName() {
-        return "icgc-user";
-      }
-
-    };
+    return null;
   }
 
   @Override
   public GroupPrincipal group() {
-    return new GroupPrincipal() {
-
-      @Override
-      public String getName() {
-        return "icgc-group";
-      }
-
-    };
+    return null;
   }
 
   @Override

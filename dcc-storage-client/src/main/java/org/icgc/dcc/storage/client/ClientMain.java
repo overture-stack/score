@@ -138,11 +138,11 @@ public class ClientMain implements CommandLineRunner {
       terminal.println(terminal.error("Bad parameter(s): " + e.getMessage()));
 
       exit.accept(1);
-    } catch (Exception e) {
-      log.error("Unknown error: ", e);
+    } catch (Throwable t) {
+      log.error("Unknown error: ", t);
       terminal.println("");
       terminal.println(
-          terminal.error("Command error: " + e.getMessage() + "\n\nPlease check the log for detailed error messages"));
+          terminal.error("Command error: " + t.getMessage() + "\n\nPlease check the log for detailed error messages"));
 
       exit.accept(1);
     }

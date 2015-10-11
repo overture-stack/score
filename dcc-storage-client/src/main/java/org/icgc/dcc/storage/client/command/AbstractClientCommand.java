@@ -34,13 +34,4 @@ public abstract class AbstractClientCommand implements ClientCommand {
   @Autowired
   protected Terminal terminal;
 
-  protected static void print(String format, Object... args) {
-    System.err.printf(format, args);
-    System.err.flush();
-  }
-
-  protected static void println(String format, Object... args) {
-    print(format + "%n", args);
-  }
-
 }

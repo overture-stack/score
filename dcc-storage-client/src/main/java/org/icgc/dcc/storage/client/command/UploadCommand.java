@@ -75,18 +75,18 @@ public class UploadCommand extends AbstractClientCommand {
         val objectId = (String) entry.getKey();
         val obj = new File((String) entry.getValue());
 
-        print("\r");
+        terminal.print("\r");
         if ((isForce) || (!uploader.isObjectExist(objectId))) {
-          println("Start uploading object: '%s' using the object id %s", obj, objectId);
+          terminal.printf("Start uploading object: '%s' using the object id %s%n", obj, objectId);
           uploader.upload(obj, objectId, isForce);
         } else {
-          println("Object id: %s has been uploaded. Skipping...", objectId);
+          terminal.printf("Object id: %s has been uploaded. Skipping...%n", objectId);
         }
       }
     } else {
       checkState(file != null, "--file must be specified if --object-id is specified. Exiting...");
 
-      println("\rStart uploading file: '%s'", file);
+      terminal.printf("\rStart uploading file: '%s'%n", file);
       log.info("file: {}", file);
       checkState(file.length() > 0, "Upload file '%s' is empty. Uploads of empty files are not permitted. Aborting...",
           file.getCanonicalPath());
