@@ -46,11 +46,11 @@ public class ClientMainTest extends AbstractClientMainTest {
   @Test
   public void testMainDownloadWithNonExistentManifest() throws Exception {
     val file = new File("/foo");
-    val outDir = tmp.newFile();
+    val outDir = tmp.newFolder();
     executeMain("download", "--manifest", file.getCanonicalPath(), "--out-dir", outDir.getCanonicalPath());
 
     assertTrue(getExitCode() == 1);
-    assertTrue(getOutput().contains("Bad parameter(s): Invalid option: --manifest: /foo does not exist"));
+    assertTrue(getOutput().contains("Command error: /foo (No such file or directory)"));
   }
 
   @Test
