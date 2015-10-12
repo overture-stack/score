@@ -47,7 +47,7 @@ public class ClientMainTest extends AbstractClientMainTest {
   public void testMainDownloadWithNonExistentManifest() throws Exception {
     val file = new File("/foo");
     val outDir = tmp.newFolder();
-    executeMain("download", "--manifest", file.getCanonicalPath(), "--out-dir", outDir.getCanonicalPath());
+    executeMain("download", "--manifest", file.getCanonicalPath(), "--output-dir", outDir.getCanonicalPath());
 
     assertTrue(getExitCode() == 1);
     assertTrue(getOutput().contains("Command error: /foo (No such file or directory)"));
@@ -67,7 +67,7 @@ public class ClientMainTest extends AbstractClientMainTest {
   public void testMainDownloadWithEmptyManifest() throws Exception {
     val file = tmp.newFile();
     val outDir = tmp.newFolder();
-    executeMain("download", "--manifest", file.getCanonicalPath(), "--out-dir", outDir.getCanonicalPath());
+    executeMain("download", "--manifest", file.getCanonicalPath(), "--output-dir", outDir.getCanonicalPath());
 
     assertTrue(getExitCode() == 1);
     assertTrue(getOutput().contains(" is empty. Exiting."));
@@ -78,7 +78,7 @@ public class ClientMainTest extends AbstractClientMainTest {
   public void testMainDownloadWithPopulatedManifest() throws Exception {
     val file = new File("src/test/resources/fixtures/download/manifest.txt");
     val outDir = tmp.newFolder();
-    executeMain("download", "--manifest", file.getCanonicalPath(), "--out-dir", outDir.getCanonicalPath());
+    executeMain("download", "--manifest", file.getCanonicalPath(), "--output-dir", outDir.getCanonicalPath());
 
     assertTrue(getExitCode() == 1);
     assertTrue(getOutput().contains(" is empty. Exiting."));
