@@ -50,7 +50,7 @@ public class ManifestCommand extends AbstractClientCommand {
   @Override
   @SneakyThrows
   public int execute() {
-    terminal.printf("\rResolving manfiest for '%s'\n", manifestSpec);
+    terminal.printStatus("Resolving manfiest for '" + manifestSpec + "'");
     val manifestContent = manfiestService.getManifestContent(new ManifestResource(manifestSpec));
     System.out.printf("%s", manifestContent);
 

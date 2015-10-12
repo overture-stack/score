@@ -17,7 +17,6 @@
  */
 package org.icgc.dcc.storage.client.command;
 
-import static com.google.common.base.Preconditions.checkState;
 import static java.util.stream.Collectors.toList;
 
 import java.io.File;
@@ -59,9 +58,9 @@ public class DownloadCommand extends AbstractClientCommand {
   /**
    * Options
    */
-  @Parameter(names = { "--output-dir", "--out-dir" /* Deprecated */ }, description = "path to output directory", required = true, validateValueWith = DirectoryValidator.class)
+  @Parameter(names = "--output-dir", description = "path to output directory", required = true, validateValueWith = DirectoryValidator.class)
   private File outDir;
-  @Parameter(names = { "--output-layout" }, description = "layout of the output-dir. One of 'bundle' (nest files in bundle directory), 'filename' (nest files in filename directory), or 'id' (flat list of files named with object-id)", converter = OutputLayoutConverter.class)
+  @Parameter(names = "--output-layout", description = "layout of the output-dir. One of 'bundle' (nest files in bundle directory), 'filename' (nest files in filename directory), or 'id' (flat list of files named with object-id)", converter = OutputLayoutConverter.class)
   private OutputLayout layout = OutputLayout.filename;
   @Parameter(names = "--force", description = "force re-download (override local file)")
   private boolean force = false;
@@ -89,9 +88,9 @@ public class DownloadCommand extends AbstractClientCommand {
   @Override
   @SneakyThrows
   public int execute() {
-    terminal.println("\rDownloading...");
+    terminal.printStatus("Downloading...");
     if (!outDir.exists()) {
-      terminal.println(terminal.error("Output directory '%s' is missing. Exiting...", outDir.getCanonicalPath()));
+      terminal.printError("Output directory '%s' is missing. Exiting...", outDir.getCanonicalPath());
       return FAILURE_STATUS;
     }
 
@@ -104,7 +103,7 @@ public class DownloadCommand extends AbstractClientCommand {
       val manifest = manfiestService.getManifest(new ManifestResource(manifestSpec));
       val entries = manifest.getEntries();
       if (entries.isEmpty()) {
-        terminal.println(terminal.error("Manifest '%s' is empty. Exiting...", manifest));
+        terminal.printError("Manifest '%s' is empty. Exiting...", manifest);
         return FAILURE_STATUS;
       }
 
@@ -141,13 +140,10 @@ public class DownloadCommand extends AbstractClientCommand {
       val file = getLayoutTarget(entity);
       if (file.exists()) {
         if (force) {
-          terminal
-              .println(terminal.warn("File '%s' exists and --force specified. Removing...", file.getCanonicalPath()));
-          checkState(file.delete(), "Could not delete '%s'. Exiting...", file.getCanonicalPath());
-
+          terminal.printWarn("File '%s' exists and --force specified. Removing...", file.getCanonicalPath());
+          checkParameter(file.delete(), "Could not delete '%s'. Exiting...", file.getCanonicalPath());
         } else {
-          terminal.println(
-              terminal.warn("File '%s' exists and --force not specified. Skipping...", file.getCanonicalPath()));
+          terminal.printWarn("File '%s' exists and --force not specified. Skipping...", file.getCanonicalPath());
           continue;
         }
       }
@@ -165,10 +161,10 @@ public class DownloadCommand extends AbstractClientCommand {
     }
 
     val targetDir = target.getParentFile();
-    checkState(targetDir.exists() || targetDir.mkdirs(),
+    checkParameter(targetDir.exists() || targetDir.mkdirs(),
         "Could not create layout target directory %s", targetDir);
 
-    checkState(!target.exists() || force && target.delete(),
+    checkParameter(!target.exists() || force && target.delete(),
         "Layout target '%s' already exists and --force was not specified.", target);
 
     Files.move(source, target);

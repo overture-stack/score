@@ -34,13 +34,21 @@ public class Terminal {
     return this;
   }
 
-  public Terminal printStatusStep(int stepNumber, String text) {
+  public Terminal printStatus(int stepNumber, String text) {
     return printStatus(step(stepNumber) + " " + text);
   }
 
   public Terminal printStatus(String text) {
     clearLine();
     return print("\r" + text);
+  }
+
+  public Terminal printError(String text, Object... args) {
+    return print("\n" + error(text, args) + "\n");
+  }
+
+  public Terminal printWarn(String text, Object... args) {
+    return print("\n" + warn(text, args) + "\n");
   }
 
   public Terminal print(String text) {
@@ -74,11 +82,11 @@ public class Terminal {
   }
 
   public String error(String text, Object... args) {
-    return ansi().render("@|red *** ERROR: " + text + "|@", args).toString();
+    return ansi().render("@|red,bold ERROR:|@ @|red " + text + "|@", args).toString();
   }
 
   public String warn(String text, Object... args) {
-    return ansi().render("@|yellow *** WARN: " + text + "|@", args).toString();
+    return ansi().render("@|yellow,bold WARN:|@ @|yellow " + text + "|@", args).toString();
   }
 
   public String value(String text) {

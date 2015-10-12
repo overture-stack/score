@@ -57,6 +57,7 @@ import com.amazonaws.services.s3.model.SSEAlgorithm;
 import com.google.common.hash.Hashing;
 import com.google.common.hash.HashingInputStream;
 
+import lombok.SneakyThrows;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
@@ -88,7 +89,8 @@ public class StorageService {
   @Autowired
   private DownloadStateStore downloadStateStore;
 
-  public List<ObjectInfo> listObjects() throws IOException {
+  @SneakyThrows
+  public List<ObjectInfo> listObjects() {
     log.debug("Listing objects...");
     return retry.execute(new RetryCallback<List<ObjectInfo>, IOException>() {
 

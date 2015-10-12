@@ -46,6 +46,7 @@ import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Supplier;
 
 import lombok.SneakyThrows;
 import lombok.val;
@@ -62,10 +63,10 @@ public class MountCommand extends AbstractClientCommand {
    */
   @Parameter(names = "--mount-point", description = "the mount point of the file system", required = true, validateValueWith = DirectoryValidator.class)
   private File mountPoint;
-  @Parameter(names = "--manifest", description = "path to manifest id, url or file")
+  @Parameter(names = "--manifest", description = "manifest id (from the Data Portal), url or file path")
   private String manifestSpec;
-  @Parameter(names = "--cache", description = "cache metadata on disk locally and use if available")
-  private boolean cache;
+  @Parameter(names = "--cache-metadata", description = "to speedup load times, cache metadata on disk locally and use if available")
+  private boolean cacheMetadata;
 
   /**
    * Dependencies.
@@ -87,26 +88,25 @@ public class MountCommand extends AbstractClientCommand {
     try {
       int i = 1;
 
-      terminal.printStatusStep(i++, "Indexing remote entities. Please wait...");
+      terminal.printStatus(i++, "Indexing remote entities. Please wait...");
       val entities = resolveEntities();
 
-      terminal.printStatusStep(i++, "Indexing remote objects. Please wait...");
+      terminal.printStatus(i++, "Indexing remote objects. Please wait...");
       List<ObjectInfo> objects = resolveObjects();
       if (hasManifest()) {
         // Manifest is a filtered view y'all!
         objects = filterManifestObjects(manifestSpec, objects);
       }
 
-      terminal.printStatusStep(i++, "Checking access. Please wait...");
+      terminal.printStatus(i++, "Checking access. Please wait...");
       val context = new MountStorageContext(downloadService, entities, objects);
       if (!context.isAuthorized()) {
-        terminal.println("");
-        terminal.println(terminal.error("Access denied. Exiting..."));
+        terminal.printError("Access denied. Exiting...");
         return FAILURE_STATUS;
       }
 
       if (hasManifest()) {
-        terminal.printStatusStep(i++, "Applying manifest view:\n");
+        terminal.printStatus(i++, "Applying manifest view:\n");
 
         terminal.printLine();
         long totalSize = 0;
@@ -119,7 +119,7 @@ public class MountCommand extends AbstractClientCommand {
         terminal.println(" Total size: " + formatBytes(totalSize) + " " + formatBytesUnits(totalSize) + "\n");
       }
 
-      terminal.printStatusStep(i++, "Mounting file system to '" + mountPoint.getAbsolutePath() + "'...");
+      terminal.printStatus(i++, "Mounting file system to '" + mountPoint.getAbsolutePath() + "'...");
       val fileSystem = StorageFileSystems.newFileSystem(context);
       mountService.mount(fileSystem, mountPoint.toPath());
 
@@ -143,33 +143,29 @@ public class MountCommand extends AbstractClientCommand {
     }
 
     return SUCCESS_STATUS;
-
   }
 
   private List<ObjectInfo> resolveObjects() throws IOException {
-    val objectsFile = new File(".objects.json");
-    if (cache && objectsFile.exists()) {
-      return new ObjectMapper().readValue(objectsFile, new TypeReference<List<ObjectInfo>>() {});
-    } else if (cache) {
-      val objects = storageService.listObjects();
-      new ObjectMapper().writeValue(objectsFile, objects);
-      return objects;
-    } else {
-      return storageService.listObjects();
-    }
+    return resolveList("objects", () -> storageService.listObjects(), new TypeReference<List<ObjectInfo>>() {});
   }
 
   private List<Entity> resolveEntities() throws IOException {
-    val entitiesFile = new File(".entities.json");
-    if (cache && entitiesFile.exists()) {
-      return new ObjectMapper().readValue(entitiesFile, new TypeReference<List<Entity>>() {});
-    } else if (cache) {
-      val entities = metadataServices.getEntities();
-      new ObjectMapper().writeValue(entitiesFile, entities);
-      return entities;
-    } else {
-      return metadataServices.getEntities();
+    return resolveList("entities", () -> metadataServices.getEntities(), new TypeReference<List<Entity>>() {});
+  }
+
+  @SneakyThrows
+  private <T> List<T> resolveList(String name, Supplier<List<T>> factory, TypeReference<List<T>> typeReference) {
+    val cacheFile = new File("." + name + ".cache");
+    if (cacheMetadata && cacheFile.exists()) {
+      return new ObjectMapper().readValue(cacheFile, typeReference);
     }
+
+    val values = factory.get();
+    if (cacheMetadata) {
+      new ObjectMapper().writeValue(cacheFile, values);
+    }
+
+    return values;
   }
 
   private boolean hasManifest() {

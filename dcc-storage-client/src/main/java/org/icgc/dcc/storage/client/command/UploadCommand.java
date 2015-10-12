@@ -17,8 +17,6 @@
  */
 package org.icgc.dcc.storage.client.command;
 
-import static com.google.common.base.Preconditions.checkState;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -67,7 +65,8 @@ public class UploadCommand extends AbstractClientCommand {
   @Override
   @SneakyThrows
   public int execute() {
-    checkState(oid != null || manifestFile != null, "One of --object-id or --manifest must be specified. Exiting...");
+    checkParameter(oid != null || manifestFile != null,
+        "One of --object-id or --manifest must be specified. Exiting...");
 
     if (manifestFile != null) {
       val manifest = readManifest();
@@ -84,11 +83,12 @@ public class UploadCommand extends AbstractClientCommand {
         }
       }
     } else {
-      checkState(file != null, "--file must be specified if --object-id is specified. Exiting...");
+      checkParameter(file != null, "--file must be specified if --object-id is specified. Exiting...");
 
       terminal.printf("\rStart uploading file: '%s'%n", file);
       log.info("file: {}", file);
-      checkState(file.length() > 0, "Upload file '%s' is empty. Uploads of empty files are not permitted. Aborting...",
+      checkParameter(file.length() > 0,
+          "Upload file '%s' is empty. Uploads of empty files are not permitted. Aborting...",
           file.getCanonicalPath());
 
       uploader.upload(file, oid, isForce);

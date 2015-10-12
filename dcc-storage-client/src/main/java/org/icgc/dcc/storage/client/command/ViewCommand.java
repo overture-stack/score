@@ -17,9 +17,6 @@
  */
 package org.icgc.dcc.storage.client.command;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkState;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -170,11 +167,11 @@ public class ViewCommand extends AbstractClientCommand {
 
   private SamInputResource getFileResource(String bamFilePath, String baiFilePath) {
     val bam = new File(bamFilePath);
-    checkArgument(bam.exists(), "Input BAM file '%s' not found", bamFilePath);
+    checkParameter(bam.exists(), "Input BAM file '%s' not found", bamFilePath);
 
     if (outputType == OutputType.bam) {
       val bai = new File(baiFilePath);
-      checkArgument(bai.exists(),
+      checkParameter(bai.exists(),
           "Input BAI file '%s' not found. Consider setting filename with --input-file-index option", baiFilePath);
 
       return SamInputResource.of(bam).index(bai);
@@ -187,7 +184,7 @@ public class ViewCommand extends AbstractClientCommand {
     val bamFileUrl = downloadService.getUrl(entity.getId(), 0, -1);
 
     val indexEntity = metadataService.getIndexEntity(entity);
-    checkState(indexEntity.isPresent(), "No index file associated with BAM file (object_id = %s)", entity);
+    checkParameter(indexEntity.isPresent(), "No index file associated with BAM file (object_id = %s)", entity);
 
     val indexFileUrl = downloadService.getUrl(indexEntity.get().getId());
 
