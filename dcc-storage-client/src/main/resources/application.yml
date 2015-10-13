@@ -37,6 +37,9 @@ portal:
     
 logging:
   file: target/logs/client.log
+  
+mount:
+  logging: false
 
 ---
 

@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.nio.file.FileSystem;
 import java.nio.file.Path;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import co.paralleluniverse.javafs.JavaFS;
@@ -35,11 +36,13 @@ import lombok.val;
 @Service
 public class MountService {
 
+  @Value("${mount.logging}")
+  private boolean logging;
+
   public void mount(@NonNull FileSystem fileSystem, @NonNull Path mountPoint) throws IOException, InterruptedException {
     patchFfi();
 
     val readOnly = true;
-    val logging = false;
     JavaFS.mount(fileSystem, mountPoint, readOnly, logging);
   }
 
