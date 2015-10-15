@@ -17,25 +17,39 @@
  */
 package org.icgc.dcc.storage.fs.util;
 
+import static com.google.common.net.HttpHeaders.RANGE;
+import static java.util.concurrent.TimeUnit.SECONDS;
+
+import java.io.EOFException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.ByteBuffer;
-import java.nio.channels.Channels;
-import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.SeekableByteChannel;
 
 import javax.naming.OperationNotSupportedException;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * A read-only {@link SeekableByteChannel} implementation that is backed by an {@link HttpURLConnection}.
+ * <p>
+ * The connection should support the HTTP {@code Range} header in order to support random access into the remote
+ * resource at the specified {@link #url}.
+ */
 @Slf4j
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class SeekableURLByteChannel implements SeekableByteChannel {
+
+  /**
+   * Constants.
+   */
+  private static final int READ_TIMEOUT_MS = (int) SECONDS.toMillis(30);
 
   /**
    * Configuration.
@@ -46,28 +60,26 @@ public class SeekableURLByteChannel implements SeekableByteChannel {
   private final long size = resolveSize();
 
   /**
-   * State
+   * State - Metrics
    */
   protected long position;
-  protected long readPosition;
+  protected long lastPosition;
   protected int connectCount;
-  protected ReadableByteChannel channel;
-  protected HttpURLConnection connection;
 
-  public SeekableURLByteChannel(URL url) {
-    this.position = 0;
-    this.url = url;
-  }
+  /**
+   * State - Data
+   */
+  protected InputStream inputStream;
+  protected HttpURLConnection connection;
 
   @Override
   public boolean isOpen() {
-    return channel != null;
+    return inputStream != null;
   }
 
   @Override
   synchronized public void close() throws IOException {
-    channel = null;
-    connectCount = 0;
+    inputStream = null;
     if (connection != null) {
       connection.disconnect();
       connection = null;
@@ -88,17 +100,19 @@ public class SeekableURLByteChannel implements SeekableByteChannel {
 
   @Override
   public long size() throws IOException {
-    if (url == null) {
-      return 0;
-    }
-
     return getSize();
   }
 
   @Override
   synchronized public int read(ByteBuffer buffer) throws IOException {
-    if (url == null) {
+    if (buffer.remaining() == 0) {
+      // Nothing to fill
       return 0;
+    }
+
+    if (position == size()) {
+      // EOF
+      return -1;
     }
 
     try {
@@ -107,16 +121,14 @@ public class SeekableURLByteChannel implements SeekableByteChannel {
       val end = position + length - 1;
 
       log.debug("--------------------------------------------------------------");
-      log.debug("Position: {}, Read Position: {}, Buffer: '{}',", position, readPosition, buffer);
+      log.debug("Current position: {}, Last position: {}, Buffer: '{}',", position, lastPosition, buffer);
       log.debug("--------------------------------------------------------------");
-      log.debug("Reading '{}:{}-{}', Connect Count: {}", url, start, end, connectCount);
 
-      // TODO: Retry on connection timeout
-      val channel = resolveChannel();
-      val n = channel.read(buffer);
-
-      readPosition += n;
-      log.debug("Read: {}, Read Position: {}", n, readPosition);
+      log.debug("Reading range '{}:{}-{}', Connect count: {}", url, start, end, connectCount);
+      val n = read(buffer, length);
+      position += n;
+      lastPosition = position;
+      log.debug("Read bytes: {}, Current position: {}", n, position);
 
       return n;
     } catch (Exception e) {
@@ -128,7 +140,9 @@ public class SeekableURLByteChannel implements SeekableByteChannel {
 
   @Override
   synchronized public SeekableByteChannel position(long newPosition) throws IOException {
-    this.position = newPosition;
+    lastPosition = position;
+    position = newPosition;
+
     return this;
   }
 
@@ -137,18 +151,33 @@ public class SeekableURLByteChannel implements SeekableByteChannel {
     return position;
   }
 
+  private int read(ByteBuffer buffer, int length) throws IOException, EOFException {
+    val inputStream = resolveInputStream();
+
+    int n = 0;
+    byte[] bytes = new byte[length];
+    while (n < length) {
+      // TODO: Reconnect on timeout?
+      int count = inputStream.read(bytes, n, length - n);
+      if (count < 0) throw new EOFException();
+      n += count;
+    }
+
+    buffer.put(bytes);
+
+    return n;
+  }
+
   @SneakyThrows
   private long resolveSize() {
-    // TODO: Get from dcc-storage-server or dcc-metadata-server
     val connection = (HttpURLConnection) url.openConnection();
     return connection.getContentLengthLong();
   }
 
-  private ReadableByteChannel resolveChannel() throws IOException {
-    val reset = connection == null || position != readPosition;
-    if (reset) {
-      // Reset
-      readPosition = position;
+  private InputStream resolveInputStream() throws IOException {
+    // Is new or non-serial read relative to the last read request
+    val reconnect = connection == null || position != lastPosition;
+    if (reconnect) {
       if (connection != null) {
         connection.disconnect();
       }
@@ -157,16 +186,15 @@ public class SeekableURLByteChannel implements SeekableByteChannel {
       log.debug("*** Connect - Range: {}", range);
 
       connection = (HttpURLConnection) url.openConnection();
-      connection.setDoInput(true);
-      connection.setRequestProperty("Range", range);
+      connection.setRequestProperty(RANGE, range);
+      connection.setReadTimeout(READ_TIMEOUT_MS);
       connection.connect();
-      connectCount++;
 
-      // Wrap
-      channel = Channels.newChannel(connection.getInputStream());
+      inputStream = connection.getInputStream();
+      connectCount++;
     }
 
-    return channel;
+    return inputStream;
   }
 
   private static String formatRange(long start, long end) {
