@@ -80,7 +80,7 @@ public class ClientMain implements CommandLineRunner {
    */
   @Override
   public void run(String... params) throws Exception {
-    terminal.print("\rRunning...");
+    terminal.printStatus("Running...");
     val cli = new JCommander(this);
     cli.setAcceptUnknownOptions(true);
 
@@ -129,22 +129,18 @@ public class ClientMain implements CommandLineRunner {
       exit.accept(status);
     } catch (MissingCommandException e) {
       log.error("Missing command: ", e);
-      terminal.println("");
-      terminal.println(terminal.error("Missing command: " + e.getMessage()));
+      terminal.printError("Missing command: " + e.getMessage());
       usage(cli);
 
       exit.accept(1);
     } catch (ParameterException e) {
       log.error("Bad parameter(s): ", e);
-      terminal.println("");
-      terminal.println(terminal.error("Bad parameter(s): " + e.getMessage()));
+      terminal.printError("Bad parameter(s): " + e.getMessage());
 
       exit.accept(1);
     } catch (Throwable t) {
       log.error("Unknown error: ", t);
-      terminal.println("");
-      terminal.println(
-          terminal.error("Command error: " + t.getMessage() + "\n\nPlease check the log for detailed error messages"));
+      terminal.printError("Command error: " + t.getMessage() + "\n\nPlease check the log for detailed error messages");
 
       exit.accept(1);
     }

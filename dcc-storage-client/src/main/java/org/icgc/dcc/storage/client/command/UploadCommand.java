@@ -32,7 +32,6 @@ import org.springframework.stereotype.Component;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 
-import lombok.SneakyThrows;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
@@ -63,8 +62,7 @@ public class UploadCommand extends AbstractClientCommand {
   private UploadService uploader;
 
   @Override
-  @SneakyThrows
-  public int execute() {
+  public int execute() throws Exception {
     checkParameter(oid != null || manifestFile != null,
         "One of --object-id or --manifest must be specified. Exiting...");
 

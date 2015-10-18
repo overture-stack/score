@@ -83,8 +83,7 @@ public class MountCommand extends AbstractClientCommand {
   private MountService mountService;
 
   @Override
-  @SneakyThrows
-  public int execute() {
+  public int execute() throws Exception {
     try {
       int i = 1;
 

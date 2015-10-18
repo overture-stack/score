@@ -25,7 +25,6 @@ import org.springframework.stereotype.Component;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 
-import lombok.SneakyThrows;
 import lombok.val;
 
 /**
@@ -48,8 +47,7 @@ public class UrlCommand extends AbstractClientCommand {
   private DownloadService downloader;
 
   @Override
-  @SneakyThrows
-  public int execute() {
+  public int execute() throws Exception {
     val offset = 0L;
     val length = -1L;
     terminal.printf("\rResolving URL for object: %s (offset = %d, length = %d)\n", oid, offset, length);

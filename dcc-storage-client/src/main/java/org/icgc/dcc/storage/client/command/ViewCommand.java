@@ -36,6 +36,7 @@ import org.springframework.stereotype.Component;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
+import com.google.common.base.Throwables;
 
 import htsjdk.samtools.QueryInterval;
 import htsjdk.samtools.SAMFileHeader;
@@ -45,10 +46,13 @@ import htsjdk.samtools.SamInputResource;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.ValidationStringency;
+import htsjdk.samtools.util.RuntimeIOException;
 import lombok.Cleanup;
 import lombok.SneakyThrows;
 import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Component
 @Parameters(separators = "=", commandDescription = "Extract/displays some or all of SAM/BAM file")
 public class ViewCommand extends AbstractClientCommand {
@@ -88,31 +92,27 @@ public class ViewCommand extends AbstractClientCommand {
   private DownloadService downloadService;
 
   @Override
-  public int execute() {
-    try {
-      terminal.println("\rViewing...   ");
-      val entity = getEntity();
-      val resource = createInputResource(entity);
+  public int execute() throws Exception {
+    terminal.printStatus("Viewing...");
+    val entity = getEntity();
+    val resource = createInputResource(entity);
 
-      @Cleanup
-      val reader = createSamReader(resource);
-      val header = reader.getFileHeader();
+    @Cleanup
+    val reader = createSamReader(resource);
+    val header = reader.getFileHeader();
 
-      @Cleanup
-      val writer = createSamFileWriter(header, fileName);
+    @Cleanup
+    val writer = createSamFileWriter(header, fileName);
 
-      if (!headerOnly) {
-        // Perform actual slicing
-        QueryInterval[] intervals = QueryHandler.parseQueryStrings(header, query);
-        val iterator = reader.query(intervals, containedOnly);
+    if (!headerOnly) {
+      // Perform actual slicing
+      QueryInterval[] intervals = QueryHandler.parseQueryStrings(header, query);
+      val iterator = reader.query(intervals, containedOnly);
 
-        while (iterator.hasNext()) {
-          val record = iterator.next();
-          writer.addAlignment(record);
-        }
+      while (iterator.hasNext()) {
+        val record = iterator.next();
+        writer.addAlignment(record);
       }
-    } catch (IOException e) {
-      throw new RuntimeException(e);
     }
 
     return SUCCESS_STATUS;
@@ -122,9 +122,20 @@ public class ViewCommand extends AbstractClientCommand {
     return Optional.ofNullable(oid != null && !oid.trim().isEmpty() ? metadataService.getEntity(oid) : null);
   }
 
+  @SneakyThrows
   private SamReader createSamReader(SamInputResource resource) {
-    // Need to use non-STRICT due to header date formats in the wild.
-    return SamReaderFactory.makeDefault().validationStringency(ValidationStringency.LENIENT).open(resource);
+    try {
+      // Need to use non-STRICT due to header date formats in the wild.
+      return SamReaderFactory.makeDefault().validationStringency(ValidationStringency.LENIENT).open(resource);
+    } catch (RuntimeIOException e) {
+      log.error("Error opening SamReader: ", e);
+      val rootCause = Throwables.getRootCause(e);
+      if (rootCause instanceof IOException) {
+        throw new RuntimeException("Error opening SAM resource: " + rootCause.getMessage(), rootCause);
+      }
+
+      throw e;
+    }
   }
 
   private SamInputResource createInputResource(Optional<Entity> entity) {

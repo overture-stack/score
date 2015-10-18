@@ -37,6 +37,6 @@ public interface ClientCommand {
    * 
    * @return the status code
    */
-  int execute();
+  int execute() throws Exception;
 
 }

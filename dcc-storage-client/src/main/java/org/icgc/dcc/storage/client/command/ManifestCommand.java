@@ -25,7 +25,6 @@ import org.springframework.stereotype.Component;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 
-import lombok.SneakyThrows;
 import lombok.val;
 
 /**
@@ -48,8 +47,7 @@ public class ManifestCommand extends AbstractClientCommand {
   private ManfiestService manfiestService;
 
   @Override
-  @SneakyThrows
-  public int execute() {
+  public int execute() throws Exception {
     terminal.printStatus("Resolving manfiest for '" + manifestSpec + "'");
     val manifestContent = manfiestService.getManifestContent(new ManifestResource(manifestSpec));
     System.out.printf("%s", manifestContent);
