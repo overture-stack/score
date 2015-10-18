@@ -144,7 +144,7 @@ public class Terminal {
 
   public void clearLine() {
     val padding = repeat(" ", getWidth());
-    print("\r" + padding);
+    print("\r" + padding + "\r");
   }
 
   private static Ansi ansi() {

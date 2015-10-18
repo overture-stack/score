@@ -38,7 +38,7 @@ public class UrlCommand extends AbstractClientCommand {
    * Options.
    */
   @Parameter(names = "--object-id", description = "object id to resolve URL for", required = true, validateValueWith = ObjectIdValidator.class)
-  private String oid;
+  private String objectId;
 
   /**
    * Dependencies.
@@ -50,8 +50,8 @@ public class UrlCommand extends AbstractClientCommand {
   public int execute() throws Exception {
     val offset = 0L;
     val length = -1L;
-    terminal.printf("\rResolving URL for object: %s (offset = %d, length = %d)\n", oid, offset, length);
-    val url = downloader.getUrl(oid, offset, length);
+    terminal.printf("\rResolving URL for object: %s\n", terminal.value(objectId));
+    val url = downloader.getUrl(objectId, offset, length);
     System.out.printf("%s", url);
 
     return SUCCESS_STATUS;

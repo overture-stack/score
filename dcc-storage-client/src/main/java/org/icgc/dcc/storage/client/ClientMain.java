@@ -99,16 +99,17 @@ public class ClientMain implements CommandLineRunner {
       cli.parse(params);
 
       if (version) {
-        terminal.print("\r");
-        terminal.println(terminal.label("> ") + terminal.value("ICGC DCC ") + "Storage Client");
+        title();
         terminal.println(terminal.label("  Version: ") + getVersion());
         terminal.println(terminal.label("  Built:   ") + getScmInfo().get("git.build.time"));
         terminal.println(terminal.label("  Contact: ") + terminal.email("dcc-support@icgc.org"));
+        terminal.println("");
         exit.accept(0);
         return;
       }
 
       if (help) {
+        title();
         usage(cli);
         exit.accept(0);
         return;
@@ -146,6 +147,10 @@ public class ClientMain implements CommandLineRunner {
     }
   }
 
+  private void title() {
+    terminal.printStatus(terminal.label("> ") + terminal.value("ICGC DCC ") + "Storage Client\n");
+  }
+
   private String getCommandName(String beanName) {
     return beanName.replace("Command", "");
   }
@@ -158,7 +163,17 @@ public class ClientMain implements CommandLineRunner {
   private void usage(JCommander cli) {
     val builder = new StringBuilder();
     cli.usage(builder);
-    terminal.println(builder.toString());
+    String text = builder.toString();
+    text = text.replaceAll("(--\\S+)", "@|bold $1|@");
+    text = text.replaceAll("(Options:)", "@|green $1|@");
+    text = text.replaceAll("(Commands:)", "@|green $1|@");
+    text = text.replaceAll("(download      )", "@|blue $1|@");
+    text = text.replaceAll("(manifest      )", "@|blue $1|@");
+    text = text.replaceAll("(mount      )", "@|blue $1|@");
+    text = text.replaceAll("(upload      )", "@|blue $1|@");
+    text = text.replaceAll("(url      )", "@|blue $1|@");
+    text = text.replaceAll("(view      )", "@|blue $1|@");
+    terminal.println(terminal.ansi(text));
   }
 
   private String getVersion() {

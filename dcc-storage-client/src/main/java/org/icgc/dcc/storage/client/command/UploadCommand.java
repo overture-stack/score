@@ -53,7 +53,7 @@ public class UploadCommand extends AbstractClientCommand {
   @Parameter(names = "--force", description = "force re-upload", required = false)
   private boolean isForce = false;
   @Parameter(names = "--object-id", description = "object id assigned to upload file", validateValueWith = ObjectIdValidator.class)
-  private String oid;
+  private String objectId;
 
   /**
    * Dependencies.
@@ -63,7 +63,7 @@ public class UploadCommand extends AbstractClientCommand {
 
   @Override
   public int execute() throws Exception {
-    checkParameter(oid != null || manifestFile != null,
+    checkParameter(objectId != null || manifestFile != null,
         "One of --object-id or --manifest must be specified. Exiting...");
 
     if (manifestFile != null) {
@@ -89,7 +89,7 @@ public class UploadCommand extends AbstractClientCommand {
           "Upload file '%s' is empty. Uploads of empty files are not permitted. Aborting...",
           file.getCanonicalPath());
 
-      uploader.upload(file, oid, isForce);
+      uploader.upload(file, objectId, isForce);
     }
 
     return SUCCESS_STATUS;

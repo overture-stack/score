@@ -74,7 +74,7 @@ public class ViewCommand extends AbstractClientCommand {
   @Parameter(names = "--output-type", description = "output format of query.", converter = OutputTypeConverter.class)
   private OutputType outputType = OutputType.sam;
   @Parameter(names = "--object-id", description = "object id of BAM file to download slice from", validateValueWith = ObjectIdValidator.class)
-  private String oid;
+  private String objectId;
   @Parameter(names = "--input-file", description = "local path to BAM file. Overrides specification of --object-id")
   private String bamFilePath = "";
   @Parameter(names = "--input-file-index", description = "explicit local path to index file (requires --input-file)")
@@ -119,7 +119,7 @@ public class ViewCommand extends AbstractClientCommand {
   }
 
   private Optional<Entity> getEntity() {
-    return Optional.ofNullable(oid != null && !oid.trim().isEmpty() ? metadataService.getEntity(oid) : null);
+    return Optional.ofNullable(objectId != null && !objectId.trim().isEmpty() ? metadataService.getEntity(objectId) : null);
   }
 
   @SneakyThrows

@@ -67,7 +67,7 @@ public class DownloadCommand extends AbstractClientCommand {
   @Parameter(names = "--manifest", description = "path to manifest id, url or file")
   private String manifestSpec;
   @Parameter(names = "--object-id", description = "object id to download", validateValueWith = ObjectIdValidator.class)
-  private String oid;
+  private String objectId;
   @Parameter(names = "--offset", description = "position in source file to begin download from")
   private long offset = 0;
   @Parameter(names = "--length", description = "the number of bytes to download (in bytes)")
@@ -93,10 +93,10 @@ public class DownloadCommand extends AbstractClientCommand {
       return FAILURE_STATUS;
     }
 
-    val single = oid != null;
+    val single = objectId != null;
     if (single) {
       // Ad-hoc single
-      return downloadObjects(ImmutableList.of(oid));
+      return downloadObjects(ImmutableList.of(objectId));
     } else {
       // Manifest based
       val manifest = manfiestService.getManifest(new ManifestResource(manifestSpec));
