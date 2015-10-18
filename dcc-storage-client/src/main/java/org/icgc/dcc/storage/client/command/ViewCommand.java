@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import org.icgc.dcc.storage.client.cli.FileValidator;
 import org.icgc.dcc.storage.client.cli.ObjectIdValidator;
 import org.icgc.dcc.storage.client.cli.OutputTypeConverter;
 import org.icgc.dcc.storage.client.download.DownloadService;
@@ -75,10 +76,10 @@ public class ViewCommand extends AbstractClientCommand {
   private OutputType outputType = OutputType.sam;
   @Parameter(names = "--object-id", description = "object id of BAM file to download slice from", validateValueWith = ObjectIdValidator.class)
   private String objectId;
-  @Parameter(names = "--input-file", description = "local path to BAM file. Overrides specification of --object-id")
-  private String bamFilePath = "";
-  @Parameter(names = "--input-file-index", description = "explicit local path to index file (requires --input-file)")
-  private String baiFilePath = "";
+  @Parameter(names = "--input-file", description = "local path to BAM file. Overrides specification of --object-id", validateValueWith = FileValidator.class)
+  private File bamFile;
+  @Parameter(names = "--input-file-index", description = "explicit local path to index file (requires --input-file)", validateValueWith = FileValidator.class)
+  private File baiFile;
   @Parameter(names = "--query", description = "query to define extract from BAM file (coordinate format 'sequence:start-end'). Multiple"
       + " ranges separated by space", variableArity = true)
   private List<String> query = new ArrayList<String>();
@@ -94,6 +95,10 @@ public class ViewCommand extends AbstractClientCommand {
   @Override
   public int execute() throws Exception {
     terminal.printStatus("Viewing...");
+
+    checkParameter(objectId != null || bamFile != null,
+        "One of --object-id or --input-file must be specified");
+
     val entity = getEntity();
     val resource = createInputResource(entity);
 
@@ -119,7 +124,8 @@ public class ViewCommand extends AbstractClientCommand {
   }
 
   private Optional<Entity> getEntity() {
-    return Optional.ofNullable(objectId != null && !objectId.trim().isEmpty() ? metadataService.getEntity(objectId) : null);
+    return Optional
+        .ofNullable(objectId != null && !objectId.trim().isEmpty() ? metadataService.getEntity(objectId) : null);
   }
 
   @SneakyThrows
@@ -143,14 +149,15 @@ public class ViewCommand extends AbstractClientCommand {
     if (entity.isPresent()) {
       resource = getRemoteResource(entity.get());
     } else {
-      if (bamFilePath.trim().isEmpty()) {
-        throw new IllegalArgumentException("No BAM file input specified");
-      } else if (baiFilePath.trim().isEmpty()) {
-        resource = getFileResource(bamFilePath);
-      } else {
-        resource = getFileResource(bamFilePath, baiFilePath);
+      if (baiFile == null) {
+        // Samtools convention
+        baiFile = new File(bamFile.getAbsolutePath() + ".bai");
+        checkParameter(baiFile.exists(), "The implied BAI file '%s' does not exist", baiFile.getAbsolutePath());
       }
+
+      resource = getFileResource(bamFile, baiFile);
     }
+
     return resource;
   }
 
@@ -168,26 +175,11 @@ public class ViewCommand extends AbstractClientCommand {
         .makeSAMWriter(header, true, outputStream);
   }
 
-  /**
-   * Assumes that the .BAI index file has the same name as the bamFilePath parameter: <sam/bam file name>.bam.bai
-   * 
-   */
-  private SamInputResource getFileResource(String bamFilePath) {
-    return getFileResource(bamFilePath, bamFilePath + ".bai");
-  }
-
-  private SamInputResource getFileResource(String bamFilePath, String baiFilePath) {
-    val bam = new File(bamFilePath);
-    checkParameter(bam.exists(), "Input BAM file '%s' not found", bamFilePath);
-
+  private SamInputResource getFileResource(File bamFile, File baiFile) {
     if (outputType == OutputType.bam) {
-      val bai = new File(baiFilePath);
-      checkParameter(bai.exists(),
-          "Input BAI file '%s' not found. Consider setting filename with --input-file-index option", baiFilePath);
-
-      return SamInputResource.of(bam).index(bai);
+      return SamInputResource.of(bamFile).index(baiFile);
     } else {
-      return SamInputResource.of(bam);
+      return SamInputResource.of(bamFile);
     }
   }
 

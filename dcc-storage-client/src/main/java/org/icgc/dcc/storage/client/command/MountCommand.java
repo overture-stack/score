@@ -100,7 +100,7 @@ public class MountCommand extends AbstractClientCommand {
       terminal.printStatus(i++, "Checking access. Please wait");
       val context = new MountStorageContext(downloadService, entities, objects);
       if (!terminal.printWaiting(context::isAuthorized)) {
-        terminal.printError("Access denied. Exiting...");
+        terminal.printError("Access denied");
         return FAILURE_STATUS;
       }
 

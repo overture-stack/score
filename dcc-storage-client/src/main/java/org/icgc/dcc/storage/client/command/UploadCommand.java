@@ -64,7 +64,7 @@ public class UploadCommand extends AbstractClientCommand {
   @Override
   public int execute() throws Exception {
     checkParameter(objectId != null || manifestFile != null,
-        "One of --object-id or --manifest must be specified. Exiting...");
+        "One of --object-id or --manifest must be specified");
 
     if (manifestFile != null) {
       val manifest = readManifest();
@@ -81,7 +81,7 @@ public class UploadCommand extends AbstractClientCommand {
         }
       }
     } else {
-      checkParameter(file != null, "--file must be specified if --object-id is specified. Exiting...");
+      checkParameter(file != null, "--file must be specified if --object-id is specified");
 
       terminal.printf("\rStart uploading file: '%s'%n", file);
       log.info("file: {}", file);

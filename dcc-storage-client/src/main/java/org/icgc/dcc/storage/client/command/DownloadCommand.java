@@ -89,7 +89,7 @@ public class DownloadCommand extends AbstractClientCommand {
   public int execute() throws Exception {
     terminal.printStatus("Downloading...");
     if (!outDir.exists()) {
-      terminal.printError("Output directory '%s' is missing. Exiting...", outDir.getCanonicalPath());
+      terminal.printError("Output directory '%s' is missing", outDir.getCanonicalPath());
       return FAILURE_STATUS;
     }
 
@@ -102,7 +102,7 @@ public class DownloadCommand extends AbstractClientCommand {
       val manifest = manfiestService.getManifest(new ManifestResource(manifestSpec));
       val entries = manifest.getEntries();
       if (entries.isEmpty()) {
-        terminal.printError("Manifest '%s' is empty. Exiting...", manifest);
+        terminal.printError("Manifest '%s' is empty", manifest);
         return FAILURE_STATUS;
       }
 
@@ -140,7 +140,7 @@ public class DownloadCommand extends AbstractClientCommand {
       if (file.exists()) {
         if (force) {
           terminal.printWarn("File '%s' exists and --force specified. Removing...", file.getCanonicalPath());
-          checkParameter(file.delete(), "Could not delete '%s'. Exiting...", file.getCanonicalPath());
+          checkParameter(file.delete(), "Could not delete '%s'", file.getCanonicalPath());
         } else {
           terminal.printWarn("File '%s' exists and --force not specified. Skipping...", file.getCanonicalPath());
           continue;
@@ -164,7 +164,7 @@ public class DownloadCommand extends AbstractClientCommand {
         "Could not create layout target directory %s", targetDir);
 
     checkParameter(!target.exists() || force && target.delete(),
-        "Layout target '%s' already exists and --force was not specified.", target);
+        "Layout target '%s' already exists and --force was not specified", target);
 
     Files.move(source, target);
   }
