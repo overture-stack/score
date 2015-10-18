@@ -1,7 +1,6 @@
 package org.icgc.dcc.storage.client.cli;
 
 import static com.google.common.base.Strings.repeat;
-import static org.fusesource.jansi.Ansi.ansi;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
@@ -102,8 +101,16 @@ public class Terminal {
     return this;
   }
 
+  public String ansi(String text) {
+    return ansi().render(text).toString();
+  }
+
   public String label(String text) {
     return ansi().render("@|green " + text + "|@").toString();
+  }
+
+  public String email(String text) {
+    return ansi().render("@|blue,underline " + text + "|@").toString();
   }
 
   private String step(int stepNumber) {
@@ -137,6 +144,10 @@ public class Terminal {
   public void clearLine() {
     val padding = repeat(" ", getWidth());
     print("\r" + padding);
+  }
+
+  private static Ansi ansi() {
+    return Ansi.ansi();
   }
 
   @SuppressWarnings("unused")

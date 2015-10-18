@@ -2,7 +2,6 @@ package org.icgc.dcc.storage.client;
 
 import static com.google.common.base.Objects.firstNonNull;
 import static java.lang.System.err;
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.icgc.dcc.common.core.util.VersionUtils.getScmInfo;
 
 import java.util.Map;
@@ -20,7 +19,6 @@ import com.beust.jcommander.JCommander;
 import com.beust.jcommander.MissingCommandException;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
-import com.google.common.io.Resources;
 
 import jline.TerminalFactory;
 import lombok.val;
@@ -101,12 +99,11 @@ public class ClientMain implements CommandLineRunner {
       cli.parse(params);
 
       if (version) {
-        terminal.clearLine();
-        terminal.println(Resources.toString(Resources.getResource("banner.txt"), UTF_8));
-        terminal.printLine();
-        terminal.println(terminal.label("Version: ") + terminal.value(getVersion()));
-        terminal.println(terminal.label("Built:   ") + terminal.value(getScmInfo().get("git.build.time")));
-        terminal.printLine();
+        terminal.print("\r");
+        terminal.println(terminal.label("> ") + terminal.value("ICGC DCC ") + "Storage Client");
+        terminal.println(terminal.label("  Version: ") + getVersion());
+        terminal.println(terminal.label("  Built:   ") + getScmInfo().get("git.build.time"));
+        terminal.println(terminal.label("  Contact: ") + terminal.email("dcc-support@icgc.org"));
         exit.accept(0);
         return;
       }
