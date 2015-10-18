@@ -114,10 +114,6 @@ public class Terminal {
     return ansi().render("@|blue,underline " + text + "|@").toString();
   }
 
-  private String step(int stepNumber) {
-    return "[" + label(Integer.toString(stepNumber)) + "]";
-  }
-
   public String value(long text) {
     return value(Long.toString(text));
   }
@@ -151,6 +147,10 @@ public class Terminal {
   public void clearLine() {
     val padding = repeat(" ", getWidth());
     print("\r" + padding + "\r");
+  }
+
+  private String step(int stepNumber) {
+    return "[" + label(Integer.toString(stepNumber)) + "]";
   }
 
   private static Ansi ansi() {

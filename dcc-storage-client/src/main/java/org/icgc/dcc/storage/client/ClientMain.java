@@ -1,8 +1,7 @@
 package org.icgc.dcc.storage.client;
 
-import static com.google.common.base.Objects.firstNonNull;
 import static java.lang.System.err;
-import static org.icgc.dcc.common.core.util.VersionUtils.getScmInfo;
+import static org.icgc.dcc.storage.client.util.SingletonBeansInitializer.singletonBeans;
 
 import java.util.Map;
 import java.util.function.Consumer;
@@ -17,7 +16,6 @@ import org.springframework.context.annotation.Configuration;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.MissingCommandException;
-import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
 
 import jline.TerminalFactory;
@@ -45,16 +43,10 @@ public class ClientMain implements CommandLineRunner {
   public static Consumer<Integer> exit = System::exit;
 
   /**
-   * Options.
-   */
-  @Parameter(names = "--help", description = "shows help message", required = false, help = true)
-  private boolean help = false;
-  @Parameter(names = "--version", description = "shows version information", required = false, help = true)
-  private boolean version = false;
-
-  /**
    * Dependencies.
    */
+  @Autowired
+  private JCommander cli;
   @Autowired
   private Terminal terminal;
   @Autowired
@@ -63,7 +55,12 @@ public class ClientMain implements CommandLineRunner {
   public static void main(String[] args) {
     err.print("Starting...");
     try {
-      new SpringApplicationBuilder(ClientMain.class).showBanner(false).run(args);
+      val cli = new JCommander(new ClientMain());
+      cli.setAcceptUnknownOptions(true);
+      cli.setProgramName(APPLICATION_NAME);
+      cli.setColumnSize(TerminalFactory.get().getWidth());
+
+      new SpringApplicationBuilder(ClientMain.class).showBanner(false).initializers(singletonBeans(cli)).run(args);
     } catch (Throwable t) {
       err.println("\nUnknown error starting application. Please see log for details");
       log.error("Exception running: ", t);
@@ -81,12 +78,6 @@ public class ClientMain implements CommandLineRunner {
   @Override
   public void run(String... params) throws Exception {
     terminal.printStatus("Running...");
-    val cli = new JCommander(this);
-    cli.setAcceptUnknownOptions(true);
-
-    cli.setProgramName(APPLICATION_NAME);
-    cli.setColumnSize(TerminalFactory.get().getWidth());
-
     try {
       for (val entry : commands.entrySet()) {
         val beanName = entry.getKey();
@@ -97,23 +88,6 @@ public class ClientMain implements CommandLineRunner {
       }
 
       cli.parse(params);
-
-      if (version) {
-        title();
-        terminal.println(terminal.label("  Version: ") + getVersion());
-        terminal.println(terminal.label("  Built:   ") + getScmInfo().get("git.build.time"));
-        terminal.println(terminal.label("  Contact: ") + terminal.email("dcc-support@icgc.org"));
-        terminal.println("");
-        exit.accept(0);
-        return;
-      }
-
-      if (help) {
-        title();
-        usage(cli);
-        exit.accept(0);
-        return;
-      }
 
       val commandName = cli.getParsedCommand();
       if (commandName == null) {
@@ -131,7 +105,6 @@ public class ClientMain implements CommandLineRunner {
     } catch (MissingCommandException e) {
       log.error("Missing command: ", e);
       terminal.printError("Missing command: " + e.getMessage());
-      usage(cli);
 
       exit.accept(1);
     } catch (ParameterException e) {
@@ -147,10 +120,6 @@ public class ClientMain implements CommandLineRunner {
     }
   }
 
-  private void title() {
-    terminal.printStatus("\n" + terminal.label("> ") + terminal.value("ICGC DCC ") + "Storage Client\n\n");
-  }
-
   private String getCommandName(String beanName) {
     return beanName.replace("Command", "");
   }
@@ -158,26 +127,6 @@ public class ClientMain implements CommandLineRunner {
   private ClientCommand getCommand(String commandName) {
     val beanName = commandName + "Command";
     return commands.get(beanName);
-  }
-
-  private void usage(JCommander cli) {
-    val builder = new StringBuilder();
-    cli.usage(builder);
-    String text = builder.toString();
-    text = text.replaceAll("(--\\S+)", "@|bold $1|@");
-    text = text.replaceAll("(Options:)", "@|green $1|@");
-    text = text.replaceAll("(Commands:)", "@|green $1|@");
-    text = text.replaceAll("(download      )", "@|blue $1|@");
-    text = text.replaceAll("(manifest      )", "@|blue $1|@");
-    text = text.replaceAll("(mount      )", "@|blue $1|@");
-    text = text.replaceAll("(upload      )", "@|blue $1|@");
-    text = text.replaceAll("(url      )", "@|blue $1|@");
-    text = text.replaceAll("(view      )", "@|blue $1|@");
-    terminal.println(terminal.ansi(text));
-  }
-
-  private String getVersion() {
-    return firstNonNull(getClass().getPackage().getImplementationVersion(), "[unknown version]");
   }
 
 }

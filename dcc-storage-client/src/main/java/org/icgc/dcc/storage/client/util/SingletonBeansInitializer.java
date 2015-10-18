@@ -15,35 +15,42 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.client.command;
+package org.icgc.dcc.storage.client.util;
 
-import org.icgc.dcc.storage.client.cli.Terminal;
-import org.icgc.dcc.storage.client.config.ClientProperties;
-import org.springframework.beans.factory.annotation.Autowired;
+import static lombok.AccessLevel.PRIVATE;
 
-import com.beust.jcommander.ParameterException;
+import org.springframework.context.ApplicationContextInitializer;
+import org.springframework.context.ConfigurableApplicationContext;
 
-/**
- * Abstract class to handle command line arugments
- */
-public abstract class AbstractClientCommand implements ClientCommand {
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import lombok.val;
+
+@RequiredArgsConstructor(access = PRIVATE)
+public class SingletonBeansInitializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {
 
   /**
-   * Dependencies.
+   * Beans.
    */
-  @Autowired
-  protected ClientProperties properties;
-  @Autowired
-  protected Terminal terminal;
+  @NonNull
+  private final Object[] singletonBeans;
 
-  protected static void checkParameter(boolean expression, String errorMessageTemplate, Object... errorMessageArgs) {
-    if (!expression) {
-      throw new ParameterException(String.format(errorMessageTemplate, errorMessageArgs));
+  public static SingletonBeansInitializer singletonBeans(Object... singletonBeans) {
+    return new SingletonBeansInitializer(singletonBeans);
+  }
+
+  @Override
+  public void initialize(ConfigurableApplicationContext applicationContext) {
+    for (val singletonBean : singletonBeans) {
+      registerBean(applicationContext, singletonBean);
     }
   }
 
-  protected void title() {
-    terminal.printStatus("\n" + terminal.label("> ") + terminal.value("ICGC DCC ") + "Storage Client\n\n");
+  private void registerBean(ConfigurableApplicationContext applicationContext, Object singletonBean) {
+    val beanName = singletonBean.getClass().getCanonicalName();
+
+    val factory = applicationContext.getBeanFactory();
+    factory.registerSingleton(beanName, singletonBean);
   }
 
 }

@@ -17,33 +17,57 @@
  */
 package org.icgc.dcc.storage.client.command;
 
-import org.icgc.dcc.storage.client.cli.Terminal;
-import org.icgc.dcc.storage.client.config.ClientProperties;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
-import com.beust.jcommander.ParameterException;
+import com.beust.jcommander.JCommander;
+import com.beust.jcommander.Parameters;
+
+import lombok.val;
 
 /**
- * Abstract class to handle command line arugments
+ * Resolves URL for a supplied object id.
  */
-public abstract class AbstractClientCommand implements ClientCommand {
+@Component
+@Parameters(separators = "=", commandDescription = "Displays help information")
+public class HelpCommand extends AbstractClientCommand {
 
   /**
    * Dependencies.
    */
   @Autowired
-  protected ClientProperties properties;
-  @Autowired
-  protected Terminal terminal;
+  private JCommander cli;
 
-  protected static void checkParameter(boolean expression, String errorMessageTemplate, Object... errorMessageArgs) {
-    if (!expression) {
-      throw new ParameterException(String.format(errorMessageTemplate, errorMessageArgs));
-    }
+  @Override
+  public int execute() throws Exception {
+    title();
+    usage();
+    return SUCCESS_STATUS;
   }
 
-  protected void title() {
-    terminal.printStatus("\n" + terminal.label("> ") + terminal.value("ICGC DCC ") + "Storage Client\n\n");
+  private void usage() {
+    val builder = new StringBuilder();
+    cli.usage(builder);
+    String text = builder.toString();
+
+    // Options
+    text = text.replaceAll("(--\\S+)", "@|bold $1|@");
+
+    // Sections
+    text = text.replaceAll("(Options:)", "@|green $1|@");
+    text = text.replaceAll("(Commands:)", "@|green $1|@");
+
+    // Commands
+    text = text.replaceAll("(download      )", "@|blue $1|@");
+    text = text.replaceAll("(help      )", "@|blue $1|@");
+    text = text.replaceAll("(manifest      )", "@|blue $1|@");
+    text = text.replaceAll("(mount      )", "@|blue $1|@");
+    text = text.replaceAll("(upload      )", "@|blue $1|@");
+    text = text.replaceAll("(url      )", "@|blue $1|@");
+    text = text.replaceAll("(version      )", "@|blue $1|@");
+    text = text.replaceAll("(view      )", "@|blue $1|@");
+
+    terminal.println(terminal.ansi(text));
   }
 
 }

@@ -17,33 +17,48 @@
  */
 package org.icgc.dcc.storage.client.command;
 
-import org.icgc.dcc.storage.client.cli.Terminal;
-import org.icgc.dcc.storage.client.config.ClientProperties;
-import org.springframework.beans.factory.annotation.Autowired;
+import static com.google.common.base.Objects.firstNonNull;
+import static org.icgc.dcc.common.core.util.VersionUtils.getScmInfo;
 
-import com.beust.jcommander.ParameterException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import com.beust.jcommander.JCommander;
+import com.beust.jcommander.Parameters;
+
+import lombok.val;
 
 /**
- * Abstract class to handle command line arugments
+ * Resolves URL for a supplied object id.
  */
-public abstract class AbstractClientCommand implements ClientCommand {
+@Component
+@Parameters(separators = "=", commandDescription = "Displays version information")
+public class VersionCommand extends AbstractClientCommand {
 
   /**
    * Dependencies.
    */
   @Autowired
-  protected ClientProperties properties;
-  @Autowired
-  protected Terminal terminal;
+  private JCommander cli;
 
-  protected static void checkParameter(boolean expression, String errorMessageTemplate, Object... errorMessageArgs) {
-    if (!expression) {
-      throw new ParameterException(String.format(errorMessageTemplate, errorMessageArgs));
-    }
+  @Override
+  public int execute() throws Exception {
+    title();
+    version();
+    return SUCCESS_STATUS;
   }
 
-  protected void title() {
-    terminal.printStatus("\n" + terminal.label("> ") + terminal.value("ICGC DCC ") + "Storage Client\n\n");
+  private void version() {
+    val builder = new StringBuilder();
+    cli.usage(builder);
+    terminal.println(terminal.label("  Version: ") + getVersion());
+    terminal.println(terminal.label("  Built:   ") + getScmInfo().get("git.build.time"));
+    terminal.println(terminal.label("  Contact: ") + terminal.email("dcc-support@icgc.org"));
+    terminal.println("");
+  }
+
+  private String getVersion() {
+    return firstNonNull(getClass().getPackage().getImplementationVersion(), "[unknown version]");
   }
 
 }

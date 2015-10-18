@@ -150,12 +150,13 @@ public class StorageIntegrationTest {
     // View
     //
 
-    banner("Viewing " + entities.get(0));
+    val bamFile = entities.stream().filter(entity -> entity.getFileName().endsWith(".bam")).findFirst().get();
+    banner("Viewing " + bamFile);
     val view = storageClient(accessToken,
         "view",
         "--header-only",
         "--input-file",
-        new File(new File(fs.getDownloadsDir(), entities.get(0).getGnosId()), entities.get(0).getFileName()).toString(),
+        new File(new File(fs.getDownloadsDir(), bamFile.getGnosId()), bamFile.getFileName()).toString(),
         "--output-type", "sam");
     view.waitFor(1, MINUTES);
     assertThat(view.exitValue()).isEqualTo(0);
