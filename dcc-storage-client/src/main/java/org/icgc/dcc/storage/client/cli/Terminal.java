@@ -123,10 +123,16 @@ public class Terminal {
   }
 
   public String error(String text, Object... args) {
-    return ansi().render("@|red,bold ERROR:|@ @|red " + text.replace("%", "%%") + "|@", args).toString();
+    if (args.length == 0) {
+      text = text.replace("%", "%%");
+    }
+    return ansi().render("@|red,bold ERROR:|@ @|red " + text + "|@", args).toString();
   }
 
   public String warn(String text, Object... args) {
+    if (args.length == 0) {
+      text = text.replace("%", "%%");
+    }
     return ansi().render("@|yellow,bold WARN:|@ @|yellow " + text + "|@", args).toString();
   }
 

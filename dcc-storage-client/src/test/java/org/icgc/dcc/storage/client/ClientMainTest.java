@@ -31,7 +31,7 @@ public class ClientMainTest extends AbstractClientMainTest {
     executeMain("view", "--output-type", "BAM");
 
     assertTrue(getExitCode() == 1);
-    assertTrue(getOutput().contains("Command error: No BAM file input specified"));
+    assertTrue(getOutput().contains("One of --object-id or --input-file must be specified"));
   }
 
   @Test
@@ -70,7 +70,7 @@ public class ClientMainTest extends AbstractClientMainTest {
     executeMain("download", "--manifest", file.getCanonicalPath(), "--output-dir", outDir.getCanonicalPath());
 
     assertTrue(getExitCode() == 1);
-    assertTrue(getOutput().contains(" is empty. Exiting."));
+    assertTrue(getOutput().contains(" is empty"));
   }
 
   @Ignore

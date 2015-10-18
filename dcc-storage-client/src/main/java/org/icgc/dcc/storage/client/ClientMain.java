@@ -148,7 +148,7 @@ public class ClientMain implements CommandLineRunner {
   }
 
   private void title() {
-    terminal.printStatus(terminal.label("> ") + terminal.value("ICGC DCC ") + "Storage Client\n");
+    terminal.printStatus("\n" + terminal.label("> ") + terminal.value("ICGC DCC ") + "Storage Client\n\n");
   }
 
   private String getCommandName(String beanName) {
