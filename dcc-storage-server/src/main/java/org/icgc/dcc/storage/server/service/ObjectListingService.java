@@ -17,6 +17,8 @@
  */
 package org.icgc.dcc.storage.server.service;
 
+import static org.icgc.dcc.storage.core.util.UUIDs.isUUID;
+
 import java.io.File;
 import java.util.List;
 import java.util.function.Consumer;
@@ -59,7 +61,10 @@ public class ObjectListingService {
     val listing = Lists.<ObjectInfo> newArrayList();
 
     readBucket(bucketName, dataDir, (objectSummary) -> {
-      listing.add(createInfo(objectSummary));
+      ObjectInfo info = createInfo(objectSummary);
+      if (info.getId() != null) {
+        listing.add(info);
+      }
     });
 
     return listing;
@@ -88,7 +93,10 @@ public class ObjectListingService {
   }
 
   private static String getObjectId(S3ObjectSummary objectSummary) {
-    return new File(objectSummary.getKey()).getName();
+    val name = new File(objectSummary.getKey()).getName();
+
+    // Only UUIDs correspond to published objects
+    return isUUID(name) ? name : null;
   }
 
 }

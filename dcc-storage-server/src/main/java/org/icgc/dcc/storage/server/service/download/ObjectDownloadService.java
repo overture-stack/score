@@ -152,7 +152,7 @@ public class ObjectDownloadService {
     } catch (AmazonServiceException e) {
       log.error("Exception thrown by Amazon S3", e);
       if (e.getStatusCode() == HttpStatus.NOT_FOUND.value() || !e.isRetryable()) {
-        throw new InternalUnrecoverableError(new IdNotFoundException(objectId));
+        throw new IdNotFoundException(objectId);
       } else {
         throw new RetryableException(e);
       }

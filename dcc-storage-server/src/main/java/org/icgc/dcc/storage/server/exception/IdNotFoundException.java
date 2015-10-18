@@ -17,13 +17,14 @@
  */
 package org.icgc.dcc.storage.server.exception;
 
-import org.springframework.http.HttpStatus;
+import static org.springframework.http.HttpStatus.NOT_FOUND;
+
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 /**
  * an exception to represent a "ID Not Found"
  */
-@ResponseStatus(HttpStatus.NOT_FOUND)
+@ResponseStatus(NOT_FOUND)
 public class IdNotFoundException extends RuntimeException {
 
   public IdNotFoundException(String message) {

@@ -17,7 +17,7 @@
  */
 package org.icgc.dcc.storage.client.manifest;
 
-import static org.icgc.dcc.storage.client.util.UUIDs.isUUID;
+import static org.icgc.dcc.storage.core.util.UUIDs.isUUID;
 
 import lombok.Getter;
 import lombok.NonNull;

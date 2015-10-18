@@ -18,7 +18,7 @@
 package org.icgc.dcc.storage.client.cli;
 
 import static java.lang.String.format;
-import static org.icgc.dcc.storage.client.util.UUIDs.tryParse;
+import static org.icgc.dcc.storage.core.util.UUIDs.tryParse;
 
 import com.beust.jcommander.IValueValidator;
 import com.beust.jcommander.ParameterException;
