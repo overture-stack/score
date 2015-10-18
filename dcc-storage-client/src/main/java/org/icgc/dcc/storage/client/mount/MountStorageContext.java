@@ -77,7 +77,7 @@ public class MountStorageContext implements StorageContext {
   public boolean resolveAuthorized() {
     try {
       // TODO: Figure out why getFirst fails. All objects should exist! May need to filter out junk bucket paths on
-      // server
+      // server as this could be causing the failure.
       val probe = getLast(objects);
       val probeUrl = downloadService.getUrl(probe.getId());
       probeUrl.openStream();

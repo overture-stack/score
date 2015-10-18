@@ -3,6 +3,7 @@ package org.icgc.dcc.storage.client;
 import static com.google.common.base.Objects.firstNonNull;
 import static java.lang.System.err;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.icgc.dcc.common.core.util.VersionUtils.getScmInfo;
 
 import java.util.Map;
 import java.util.function.Consumer;
@@ -100,8 +101,12 @@ public class ClientMain implements CommandLineRunner {
       cli.parse(params);
 
       if (version) {
+        terminal.clearLine();
         terminal.println(Resources.toString(Resources.getResource("banner.txt"), UTF_8));
-        terminal.println("Version: " + getVersion());
+        terminal.printLine();
+        terminal.println(terminal.label("Version: ") + terminal.value(getVersion()));
+        terminal.println(terminal.label("Built:   ") + terminal.value(getScmInfo().get("git.build.time")));
+        terminal.printLine();
         exit.accept(0);
         return;
       }
@@ -117,7 +122,7 @@ public class ClientMain implements CommandLineRunner {
         throw new ParameterException("Command name is empty. Please specify a command to execute");
       }
 
-      ClientCommand command = getCommand(commandName);
+      val command = getCommand(commandName);
       if (command == null) {
         throw new ParameterException("Unknown command: " + commandName);
       }

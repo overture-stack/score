@@ -88,19 +88,19 @@ public class MountCommand extends AbstractClientCommand {
     try {
       int i = 1;
 
-      terminal.printStatus(i++, "Indexing remote entities. Please wait...");
-      val entities = resolveEntities();
+      terminal.printStatus(i++, "Indexing remote entities. Please wait");
+      val entities = terminal.printWaiting(this::resolveEntities);
 
-      terminal.printStatus(i++, "Indexing remote objects. Please wait...");
-      List<ObjectInfo> objects = resolveObjects();
+      terminal.printStatus(i++, "Indexing remote objects. Please wait");
+      List<ObjectInfo> objects = terminal.printWaiting(this::resolveObjects);
       if (hasManifest()) {
         // Manifest is a filtered view y'all!
         objects = filterManifestObjects(manifestSpec, objects);
       }
 
-      terminal.printStatus(i++, "Checking access. Please wait...");
+      terminal.printStatus(i++, "Checking access. Please wait");
       val context = new MountStorageContext(downloadService, entities, objects);
-      if (!context.isAuthorized()) {
+      if (!terminal.printWaiting(context::isAuthorized)) {
         terminal.printError("Access denied. Exiting...");
         return FAILURE_STATUS;
       }

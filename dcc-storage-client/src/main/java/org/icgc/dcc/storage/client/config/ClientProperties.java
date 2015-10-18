@@ -87,4 +87,5 @@ public class ClientProperties {
     private int retryTimeout = 1;
 
   }
+
 }

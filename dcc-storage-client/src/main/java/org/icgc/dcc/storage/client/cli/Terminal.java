@@ -3,6 +3,9 @@ package org.icgc.dcc.storage.client.cli;
 import static com.google.common.base.Strings.repeat;
 import static org.fusesource.jansi.Ansi.ansi;
 
+import java.util.concurrent.Callable;
+import java.util.concurrent.Executors;
+
 import org.fusesource.jansi.Ansi;
 import org.fusesource.jansi.AnsiConsole;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,11 +15,15 @@ import org.springframework.stereotype.Component;
 import com.google.common.base.Strings;
 
 import jline.TerminalFactory;
+import lombok.SneakyThrows;
 import lombok.val;
 
 @Component
 public class Terminal {
 
+  /**
+   * Configuration.
+   */
   private final boolean silent;
 
   @Autowired
@@ -31,6 +38,32 @@ public class Terminal {
 
   public Terminal printLine() {
     println(line());
+    return this;
+  }
+
+  @SneakyThrows
+  public <T> T printWaiting(Callable<T> task) {
+    val executor = Executors.newSingleThreadExecutor();
+    try {
+      val future = executor.submit(task);
+      while (!future.isDone()) {
+        Thread.sleep(2000L);
+        print(".");
+      }
+
+      return future.get();
+    } finally {
+      executor.shutdownNow();
+    }
+  }
+
+  @SneakyThrows
+  public Terminal printWaiting(Runnable task) {
+    printWaiting(() -> {
+      task.run();
+      return null;
+    });
+
     return this;
   }
 

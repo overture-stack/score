@@ -15,66 +15,26 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.client.mount;
+package org.icgc.dcc.storage.client.cli;
 
-import static org.springframework.util.ReflectionUtils.findField;
+import org.junit.Test;
 
-import java.io.IOException;
-import java.nio.file.FileSystem;
-import java.nio.file.Path;
-
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-
-import co.paralleluniverse.javafs.JavaFS;
-import jnr.ffi.provider.ClosureManager;
-import jnr.ffi.provider.jffi.NativeRuntime;
-import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.val;
 
-@Service
-public class MountService {
+public class TerminalTest {
 
-  /**
-   * Configuration.
-   */
-  @Value("${mount.logging}")
-  private boolean logging;
-
-  public void mount(@NonNull FileSystem fileSystem, @NonNull Path mountPoint) throws IOException, InterruptedException {
-    patchFfi();
-
-    // TODO: Pass options to mount when it supports it
-    val readOnly = true;
-    JavaFS.mount(fileSystem, mountPoint, readOnly, logging);
+  @Test
+  public void testPrintWaiting() {
+    val terminal = new Terminal(true, false);
+    val result = terminal.printWaiting(this::doWork);
+    System.out.println(result);
   }
 
-  /**
-   * To force unmount: {@code diskutil unmount force <mount point>}.
-   */
-  public void unmount(@NonNull Path mountPoint) throws IOException {
-    JavaFS.unmount(mountPoint);
-  }
-
-  /**
-   * Workaround for unfortunate system class loader usage.
-   * 
-   * @see https://github.com/jnr/jnr-ffi/issues/51
-   */
   @SneakyThrows
-  private void patchFfi() {
-    ClosureManager closureManager = NativeRuntime.getInstance().getClosureManager();
-
-    // Get inner class loader
-    val classLoader = findField(closureManager.getClass(), "classLoader");
-    classLoader.setAccessible(true);
-    val asmClassLoader = classLoader.get(closureManager);
-
-    // Update to use context class loader over the default system class loader
-    val parent = findField(asmClassLoader.getClass(), "parent");
-    parent.setAccessible(true);
-    parent.set(asmClassLoader, Thread.currentThread().getContextClassLoader());
+  String doWork() {
+    Thread.sleep(3000);
+    return "42";
   }
 
 }
