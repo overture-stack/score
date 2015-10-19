@@ -24,10 +24,12 @@ public class Terminal {
    * Configuration.
    */
   private final boolean silent;
+  private final jline.Terminal delegate;
 
   @Autowired
   public Terminal(@Value("${client.ansi}") boolean ansi, @Value("${client.silent}") boolean silent) {
     this.silent = silent;
+    this.delegate = TerminalFactory.get();
 
     Ansi.setEnabled(ansi);
     if (ansi) {
@@ -141,7 +143,11 @@ public class Terminal {
   }
 
   public int getWidth() {
-    return TerminalFactory.get().getWidth();
+    try {
+      return delegate.getWidth();
+    } catch (Throwable t) {
+      return 80;
+    }
   }
 
   public void clearLine() {
