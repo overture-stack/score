@@ -22,9 +22,12 @@ import static org.springframework.util.ReflectionUtils.findField;
 import java.io.IOException;
 import java.nio.file.FileSystem;
 import java.nio.file.Path;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+
+import com.beust.jcommander.internal.Maps;
 
 import co.paralleluniverse.javafs.JavaFS;
 import jnr.ffi.provider.ClosureManager;
@@ -41,13 +44,14 @@ public class MountService {
    */
   @Value("${mount.logging}")
   private boolean logging;
+  private Map<String, String> options = Maps.newHashMap();
 
   public void mount(@NonNull FileSystem fileSystem, @NonNull Path mountPoint) throws IOException, InterruptedException {
     patchFfi();
 
     // TODO: Pass options to mount when it supports it
     val readOnly = true;
-    JavaFS.mount(fileSystem, mountPoint, readOnly, logging);
+    JavaFS.mount(fileSystem, mountPoint, readOnly, logging, options);
   }
 
   /**

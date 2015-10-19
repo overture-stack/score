@@ -192,7 +192,7 @@
     <htsjdk.version>1.138</htsjdk.version>
 
     <!-- Versions - FUSE -->
-    <javafs.version>0.1.0-SNAPSHOT</javafs.version>
+    <javafs.version>0.1.0</javafs.version>
   </properties>
 
 </project>

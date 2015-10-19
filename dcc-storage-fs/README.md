@@ -9,6 +9,6 @@ ICGC storage file system for the ICGC storage system.
 Requires `osxfuse`
 
 ### Linux
-Requires `libfuse2`
+Requires `libfuse2`,`fuse` packages
 
 
