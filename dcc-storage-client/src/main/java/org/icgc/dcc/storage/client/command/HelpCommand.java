@@ -50,22 +50,26 @@ public class HelpCommand extends AbstractClientCommand {
     cli.usage(builder);
     String text = builder.toString();
 
-    // Options
-    text = text.replaceAll("(--\\S+)", "@|bold $1|@");
-
     // Sections
-    text = text.replaceAll("(Options:)", "@|green $1|@");
-    text = text.replaceAll("(Commands:)", "@|green $1|@");
+    text = text
+        .replaceAll("(Options:)", "@|green $1|@")
+        .replaceAll("(Commands:)", "@|green $1|@");
 
     // Commands
-    text = text.replaceAll("(download      )", "@|blue $1|@");
-    text = text.replaceAll("(help      )", "@|blue $1|@");
-    text = text.replaceAll("(manifest      )", "@|blue $1|@");
-    text = text.replaceAll("(mount      )", "@|blue $1|@");
-    text = text.replaceAll("(upload      )", "@|blue $1|@");
-    text = text.replaceAll("(url      )", "@|blue $1|@");
-    text = text.replaceAll("(version      )", "@|blue $1|@");
-    text = text.replaceAll("(view      )", "@|blue $1|@");
+    text = text
+        .replaceAll("(download      )", "@|blue $1|@")
+        .replaceAll("(help      )", "@|blue $1|@")
+        .replaceAll("(manifest      )", "@|blue $1|@")
+        .replaceAll("(mount      )", "@|blue $1|@")
+        .replaceAll("(upload      )", "@|blue $1|@")
+        .replaceAll("(url      )", "@|blue $1|@")
+        .replaceAll("(version      )", "@|blue $1|@")
+        .replaceAll("(view      )", "@|blue $1|@");
+
+    // Options
+    text = text
+        .replaceAll("(--\\S+)", "@|bold $1|@")
+        .replaceAll("( \\* )", "@|yellow $1|@");
 
     terminal.println(terminal.ansi(text));
   }

@@ -17,6 +17,7 @@
  */
 package org.icgc.dcc.storage.client.command;
 
+import org.icgc.dcc.storage.client.cli.ManifestResourceConverter;
 import org.icgc.dcc.storage.client.manifest.ManfiestService;
 import org.icgc.dcc.storage.client.manifest.ManifestResource;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,8 +38,8 @@ public class ManifestCommand extends AbstractClientCommand {
   /**
    * Options.
    */
-  @Parameter(names = "--manifest", description = "path to manifest id, url or file", required = true)
-  private String manifestSpec;
+  @Parameter(names = "--manifest", description = "path to manifest id, url or file", required = true, converter = ManifestResourceConverter.class)
+  private ManifestResource manifestResource;
 
   /**
    * Dependencies.
@@ -48,8 +49,8 @@ public class ManifestCommand extends AbstractClientCommand {
 
   @Override
   public int execute() throws Exception {
-    terminal.printStatus("Resolving manfiest for '" + manifestSpec + "'");
-    val manifestContent = manfiestService.getManifestContent(new ManifestResource(manifestSpec));
+    terminal.printStatus("Resolving manfiest for '" + manifestResource + "'");
+    val manifestContent = manfiestService.getManifestContent(manifestResource);
     System.out.printf("%s", manifestContent);
 
     return SUCCESS_STATUS;

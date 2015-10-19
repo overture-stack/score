@@ -21,8 +21,6 @@ import org.icgc.dcc.storage.client.cli.Terminal;
 import org.icgc.dcc.storage.client.config.ClientProperties;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import com.beust.jcommander.ParameterException;
-
 /**
  * Abstract class to handle command line arugments
  */
@@ -35,12 +33,6 @@ public abstract class AbstractClientCommand implements ClientCommand {
   protected ClientProperties properties;
   @Autowired
   protected Terminal terminal;
-
-  protected static void checkParameter(boolean expression, String errorMessageTemplate, Object... errorMessageArgs) {
-    if (!expression) {
-      throw new ParameterException(String.format(errorMessageTemplate, errorMessageArgs));
-    }
-  }
 
   protected void title() {
     terminal.printStatus("\n" + terminal.label("> ") + terminal.value("ICGC DCC ") + "Storage Client\n\n");

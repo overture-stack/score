@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 The Ontario Institute for Cancer Research. All rights reserved.                             
+ * Copyright (c) 2013 The Ontario Institute for Cancer Research. All rights reserved.                             
  *                                                                                                               
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
  * You should have received a copy of the GNU General Public License along with                                  
@@ -15,38 +15,27 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.client.command;
+package org.icgc.dcc.storage.client.cli;
 
-import static com.google.common.base.Objects.firstNonNull;
-import static org.icgc.dcc.common.core.util.VersionUtils.getScmInfo;
+import org.icgc.dcc.storage.client.manifest.ManifestResource;
 
-import org.springframework.stereotype.Component;
+import com.beust.jcommander.ParameterException;
+import com.beust.jcommander.converters.BaseConverter;
 
-import com.beust.jcommander.Parameters;
+public class ManifestResourceConverter extends BaseConverter<ManifestResource> {
 
-/**
- * Resolves URL for a supplied object id.
- */
-@Component
-@Parameters(separators = "=", commandDescription = "Displays version information")
-public class VersionCommand extends AbstractClientCommand {
+  public ManifestResourceConverter(String optionName) {
+    super(optionName);
+  }
 
   @Override
-  public int execute() throws Exception {
-    title();
-    version();
-    return SUCCESS_STATUS;
-  }
-
-  private void version() {
-    terminal.println(terminal.label("  Version: ") + getVersion());
-    terminal.println(terminal.label("  Built:   ") + getScmInfo().get("git.build.time"));
-    terminal.println(terminal.label("  Contact: ") + terminal.email("dcc-support@icgc.org"));
-    terminal.println("");
-  }
-
-  private String getVersion() {
-    return firstNonNull(getClass().getPackage().getImplementationVersion(), "[unknown version]");
+  public ManifestResource convert(String value) {
+    try {
+      return new ManifestResource(value);
+    } catch (Exception ex) {
+      throw new ParameterException(
+          getErrorString(value, "a manifest resource by id, url or file"));
+    }
   }
 
 }

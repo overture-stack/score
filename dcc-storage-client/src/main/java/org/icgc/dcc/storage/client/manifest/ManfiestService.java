@@ -60,17 +60,25 @@ public class ManfiestService {
   @SneakyThrows
   public Manifest getManifestById(String manifestId) {
     val url = resolvePortalManifestUrl(manifestId);
-    return READER.readManifest(url);
+    return readManifestByURL(url);
   }
 
   @SneakyThrows
   public Manifest getManifestByURL(URL manifestUrl) {
-    return READER.readManifest(manifestUrl);
+    return readManifestByURL(manifestUrl);
   }
 
   @SneakyThrows
   public Manifest getManifestByFile(File manifestFile) {
     return READER.readManifest(manifestFile);
+  }
+
+  private Manifest readManifestByURL(URL url) {
+    try {
+      return READER.readManifest(url);
+    } catch (Exception e) {
+      throw new RuntimeException("Could not read manifest from '" + url + "': " + e.getMessage(), e);
+    }
   }
 
   @SneakyThrows

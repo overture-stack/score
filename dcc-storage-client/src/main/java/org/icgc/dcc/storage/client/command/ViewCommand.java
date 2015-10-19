@@ -17,6 +17,8 @@
  */
 package org.icgc.dcc.storage.client.command;
 
+import static org.icgc.dcc.storage.client.cli.Parameters.checkParameter;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -71,7 +73,7 @@ public class ViewCommand extends AbstractClientCommand {
   @Parameter(names = "--header-only", description = "output header of SAM/BAM file only")
   private boolean headerOnly = false;
   @Parameter(names = "--output-file", description = "filename to write output to. Uses filename from metadata, or original input filename if not specified")
-  private String fileName = "";
+  private String fileName;
   @Parameter(names = "--output-type", description = "output format of query.", converter = OutputTypeConverter.class)
   private OutputType outputType = OutputType.sam;
   @Parameter(names = "--object-id", description = "object id of BAM file to download slice from", validateValueWith = ObjectIdValidator.class)
@@ -82,7 +84,7 @@ public class ViewCommand extends AbstractClientCommand {
   private File baiFile;
   @Parameter(names = "--query", description = "query to define extract from BAM file (coordinate format 'sequence:start-end'). Multiple"
       + " ranges separated by space", variableArity = true)
-  private List<String> query = new ArrayList<String>();
+  private List<String> query = new ArrayList<>();
 
   /**
    * Dependencies.
@@ -95,9 +97,7 @@ public class ViewCommand extends AbstractClientCommand {
   @Override
   public int execute() throws Exception {
     terminal.printStatus("Viewing...");
-
-    checkParameter(objectId != null || bamFile != null,
-        "One of --object-id or --input-file must be specified");
+    checkParameter(objectId != null || bamFile != null, "One of --object-id or --input-file must be specified");
 
     val entity = getEntity();
     val resource = createInputResource(entity);
@@ -145,31 +145,29 @@ public class ViewCommand extends AbstractClientCommand {
   }
 
   private SamInputResource createInputResource(Optional<Entity> entity) {
-    SamInputResource resource = null;
     if (entity.isPresent()) {
-      resource = getRemoteResource(entity.get());
+      return getRemoteResource(entity.get());
     } else {
       if (baiFile == null) {
-        // Samtools convention
+        // Use samtools convention
         baiFile = new File(bamFile.getAbsolutePath() + ".bai");
         checkParameter(baiFile.exists(), "The implied BAI file '%s' does not exist", baiFile.getAbsolutePath());
+        checkParameter(baiFile.canRead(), "The implied BAI file '%s' is not readable", baiFile.getAbsolutePath());
       }
 
-      resource = getFileResource(bamFile, baiFile);
+      return getFileResource(bamFile, baiFile);
     }
-
-    return resource;
   }
 
   @SneakyThrows
-  private SAMFileWriter createSamFileWriter(SAMFileHeader header, String path) {
-    val stdout = (path == null) || path.trim().isEmpty();
+  private SAMFileWriter createSamFileWriter(SAMFileHeader header, String fileName) {
     val factory = new SAMFileWriterFactory()
         .setCreateIndex(false)
         .setCreateMd5File(false)
         .setUseAsyncIo(true);
 
-    val outputStream = stdout ? System.out : new FileOutputStream(new File(path));
+    val stdout = (fileName == null) || fileName.trim().isEmpty();
+    val outputStream = stdout ? System.out : new FileOutputStream(new File(fileName));
 
     return outputType == OutputType.bam ? factory.makeBAMWriter(header, true, outputStream) : factory
         .makeSAMWriter(header, true, outputStream);
@@ -184,14 +182,13 @@ public class ViewCommand extends AbstractClientCommand {
   }
 
   private SamInputResource getRemoteResource(Entity entity) {
-    val bamFileUrl = downloadService.getUrl(entity.getId(), 0, -1);
-
     val indexEntity = metadataService.getIndexEntity(entity);
-    checkParameter(indexEntity.isPresent(), "No index file associated with BAM file (object_id = %s)", entity);
+    checkParameter(indexEntity.isPresent(), "No index file associated with BAM file with object id '%s'",
+        entity.getId());
 
-    val indexFileUrl = downloadService.getUrl(indexEntity.get().getId());
-
+    val bamFileUrl = downloadService.getUrl(entity.getId(), 0, -1);
     val bamFileHttpStream = new NullSourceSeekableHTTPStream(bamFileUrl);
+    val indexFileUrl = downloadService.getUrl(indexEntity.get().getId());
     val indexFileHttpStream = new NullSourceSeekableHTTPStream(indexFileUrl);
 
     return SamInputResource.of(bamFileHttpStream).index(indexFileHttpStream);

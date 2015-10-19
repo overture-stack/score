@@ -84,14 +84,6 @@ public class Terminal {
     return print("\n" + warn(text, args) + "\n");
   }
 
-  public Terminal print(String text) {
-    if (!silent) {
-      System.err.print(text);
-      System.err.flush();
-    }
-    return this;
-  }
-
   public Terminal println(String text) {
     print(text + "\n");
     return this;
@@ -99,6 +91,14 @@ public class Terminal {
 
   public Terminal printf(String text, Object... args) {
     print(String.format(text, args));
+    return this;
+  }
+
+  public Terminal print(String text) {
+    if (!silent) {
+      System.err.print(text);
+      System.err.flush();
+    }
     return this;
   }
 

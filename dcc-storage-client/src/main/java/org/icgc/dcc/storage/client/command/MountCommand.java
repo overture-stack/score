@@ -19,6 +19,7 @@ package org.icgc.dcc.storage.client.command;
 
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
+import static org.icgc.dcc.storage.client.cli.Parameters.checkParameter;
 import static org.icgc.dcc.storage.fs.util.Formats.formatBytes;
 import static org.icgc.dcc.storage.fs.util.Formats.formatBytesUnits;
 
@@ -39,13 +40,13 @@ import org.icgc.dcc.storage.client.transport.StorageService;
 import org.icgc.dcc.storage.core.model.ObjectInfo;
 import org.icgc.dcc.storage.fs.StorageFileSystems;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Stopwatch;
 import com.google.common.base.Supplier;
 
 import lombok.SneakyThrows;
@@ -54,7 +55,6 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
-@Profile("experimental")
 @Parameters(separators = "=", commandDescription = "Mounts a read-only file system view of the remote repository")
 public class MountCommand extends AbstractClientCommand {
 
@@ -64,7 +64,7 @@ public class MountCommand extends AbstractClientCommand {
   @Parameter(names = "--mount-point", description = "the mount point of the file system", required = true, validateValueWith = DirectoryValidator.class)
   private File mountPoint;
   @Parameter(names = "--manifest", description = "manifest id (from the Data Portal), url or file path")
-  private String manifestSpec;
+  private ManifestResource manifestResource;
   @Parameter(names = "--cache-metadata", description = "to speedup load times, cache metadata on disk locally and use if available")
   private boolean cacheMetadata;
 
@@ -84,6 +84,8 @@ public class MountCommand extends AbstractClientCommand {
 
   @Override
   public int execute() throws Exception {
+    checkParameter(mountPoint.canExecute(), "Cannot mount to '%s'. Please check permissions and try again", mountPoint);
+
     try {
       int i = 1;
 
@@ -94,7 +96,7 @@ public class MountCommand extends AbstractClientCommand {
       List<ObjectInfo> objects = terminal.printWaiting(this::resolveObjects);
       if (hasManifest()) {
         // Manifest is a filtered view y'all!
-        objects = filterManifestObjects(manifestSpec, objects);
+        objects = filterManifestObjects(objects);
       }
 
       terminal.printStatus(i++, "Checking access. Please wait");
@@ -127,9 +129,10 @@ public class MountCommand extends AbstractClientCommand {
               "Successfully mounted file system at " + terminal.value(mountPoint.getAbsolutePath())
                   + " and is now ready for use!"));
 
-      // Let the user know we are done... when the time is right
+      // Let the user know we are done when the JVM exits
+      val watch = Stopwatch.createStarted();
       Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-        terminal.printStatus(terminal.label("Shut down. Good bye!\n"));
+        terminal.printStatus(terminal.label("Shut down mount after " + watch + ". Good bye!\n"));
       }));
 
       // Wait for interrupt
@@ -168,11 +171,11 @@ public class MountCommand extends AbstractClientCommand {
   }
 
   private boolean hasManifest() {
-    return manifestSpec != null;
+    return manifestResource != null;
   }
 
-  private List<ObjectInfo> filterManifestObjects(String manifestSpec, List<ObjectInfo> objects) {
-    val manifest = manfiestService.getManifest(new ManifestResource(manifestSpec));
+  private List<ObjectInfo> filterManifestObjects(List<ObjectInfo> objects) {
+    val manifest = manfiestService.getManifest(manifestResource);
 
     val objectIds = manifest.getEntries().stream()
         .flatMap(entry -> Stream.of(entry.getFileUuid(), entry.getIndexFileUuid()))

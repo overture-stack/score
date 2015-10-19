@@ -1,6 +1,8 @@
 package org.icgc.dcc.storage.client;
 
 import static java.lang.System.err;
+import static org.icgc.dcc.storage.client.cli.Parameters.checkParameter;
+import static org.icgc.dcc.storage.client.command.ClientCommand.FAILURE_STATUS;
 import static org.icgc.dcc.storage.client.util.SingletonBeansInitializer.singletonBeans;
 
 import java.util.Map;
@@ -8,6 +10,7 @@ import java.util.function.Consumer;
 
 import org.icgc.dcc.storage.client.cli.Terminal;
 import org.icgc.dcc.storage.client.command.ClientCommand;
+import org.icgc.dcc.storage.client.metadata.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.builder.SpringApplicationBuilder;
@@ -16,6 +19,7 @@ import org.springframework.context.annotation.Configuration;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.MissingCommandException;
+import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
 
 import jline.TerminalFactory;
@@ -43,6 +47,14 @@ public class ClientMain implements CommandLineRunner {
   public static Consumer<Integer> exit = System::exit;
 
   /**
+   * Options.
+   */
+  @Parameter(names = "--help", description = "shows help message", required = false, help = true)
+  private boolean help = false;
+  @Parameter(names = "--version", description = "shows version information", required = false, help = true)
+  private boolean version = false;
+
+  /**
    * Dependencies.
    */
   @Autowired
@@ -55,18 +67,23 @@ public class ClientMain implements CommandLineRunner {
   public static void main(String[] args) {
     err.print("Starting...");
     try {
-      val cli = new JCommander(new ClientMain());
-      cli.setAcceptUnknownOptions(true);
+      // Setup
+      val cli = new JCommander();
       cli.setProgramName(APPLICATION_NAME);
       cli.setColumnSize(TerminalFactory.get().getWidth());
+      cli.setAcceptUnknownOptions(true); // For Spring Boot configuration overrides
 
-      new SpringApplicationBuilder(ClientMain.class).showBanner(false).initializers(singletonBeans(cli)).run(args);
+      // Run
+      new SpringApplicationBuilder(ClientMain.class)
+          .showBanner(false)
+          .initializers(singletonBeans(cli))
+          .run(args);
     } catch (Throwable t) {
       err.println("\nUnknown error starting application. Please see log for details");
       log.error("Exception running: ", t);
 
       log.info("Exiting...");
-      exit.accept(1);
+      exit(FAILURE_STATUS);
     }
 
     log.info("Exiting...");
@@ -78,55 +95,80 @@ public class ClientMain implements CommandLineRunner {
   @Override
   public void run(String... params) throws Exception {
     terminal.printStatus("Running...");
+
     try {
-      for (val entry : commands.entrySet()) {
-        val beanName = entry.getKey();
-        val commandName = getCommandName(beanName);
-        val command = entry.getValue();
+      // Parse
+      parseParams(params);
 
-        cli.addCommand(commandName, command);
-      }
+      // Resolve
+      val command = resolveCommand();
 
-      cli.parse(params);
-
-      val commandName = cli.getParsedCommand();
-      if (commandName == null) {
-        throw new ParameterException("Command name is empty. Please specify a command to execute");
-      }
-
-      val command = getCommand(commandName);
-      if (command == null) {
-        throw new ParameterException("Unknown command: " + commandName);
-      }
-
-      int status = command.execute();
-
-      exit.accept(status);
+      // Execute
+      exit(command.execute());
     } catch (MissingCommandException e) {
       log.error("Missing command: ", e);
       terminal.printError("Missing command: " + e.getMessage());
 
-      exit.accept(1);
+      exit(FAILURE_STATUS);
     } catch (ParameterException e) {
       log.error("Bad parameter(s): ", e);
       terminal.printError("Bad parameter(s): " + e.getMessage());
 
-      exit.accept(1);
+      exit(FAILURE_STATUS);
+    } catch (EntityNotFoundException e) {
+      log.error("Entity not found: ", e);
+      terminal.printError("Entity not found: " + e.getMessage());
+
+      exit(FAILURE_STATUS);
     } catch (Throwable t) {
       log.error("Unknown error: ", t);
       terminal.printError("Command error: " + t.getMessage() + "\n\nPlease check the log for detailed error messages");
 
-      exit.accept(1);
+      exit(FAILURE_STATUS);
     }
   }
 
-  private String getCommandName(String beanName) {
-    return beanName.replace("Command", "");
+  private void parseParams(String... params) {
+    cli.addObject(this);
+
+    for (val entry : commands.entrySet()) {
+      val beanName = entry.getKey();
+      val commandName = getCommandName(beanName);
+      val command = entry.getValue();
+
+      cli.addCommand(commandName, command);
+    }
+
+    cli.parse(params);
+  }
+
+  private ClientCommand resolveCommand() {
+    if (version) {
+      return getCommand("version");
+    } else if (help) {
+      return getCommand("help");
+    } else {
+      val commandName = cli.getParsedCommand();
+      checkParameter(commandName != null, "Command name is empty. Please specify a command to execute");
+
+      val command = getCommand(commandName);
+      checkParameter(command != null, "Unknown command: %s", commandName);
+
+      return command;
+    }
   }
 
   private ClientCommand getCommand(String commandName) {
     val beanName = commandName + "Command";
     return commands.get(beanName);
+  }
+
+  private static String getCommandName(String beanName) {
+    return beanName.replace("Command", "");
+  }
+
+  private static void exit(int status) {
+    exit.accept(status);
   }
 
 }

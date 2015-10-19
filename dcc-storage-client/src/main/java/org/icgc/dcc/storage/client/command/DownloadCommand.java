@@ -18,6 +18,7 @@
 package org.icgc.dcc.storage.client.command;
 
 import static java.util.stream.Collectors.toList;
+import static org.icgc.dcc.storage.client.cli.Parameters.checkParameter;
 
 import java.io.File;
 import java.io.IOException;
@@ -25,6 +26,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.icgc.dcc.storage.client.cli.DirectoryValidator;
+import org.icgc.dcc.storage.client.cli.ManifestResourceConverter;
 import org.icgc.dcc.storage.client.cli.ObjectIdValidator;
 import org.icgc.dcc.storage.client.cli.OutputLayoutConverter;
 import org.icgc.dcc.storage.client.download.DownloadService;
@@ -59,18 +61,18 @@ public class DownloadCommand extends AbstractClientCommand {
    * Options
    */
   @Parameter(names = "--output-dir", description = "path to output directory", required = true, validateValueWith = DirectoryValidator.class)
-  private File outDir;
+  private File outputDir;
   @Parameter(names = "--output-layout", description = "layout of the output-dir. One of 'bundle' (nest files in bundle directory), 'filename' (nest files in filename directory), or 'id' (flat list of files named with object-id)", converter = OutputLayoutConverter.class)
   private OutputLayout layout = OutputLayout.filename;
   @Parameter(names = "--force", description = "force re-download (override local file)")
   private boolean force = false;
-  @Parameter(names = "--manifest", description = "path to manifest id, url or file")
-  private String manifestSpec;
+  @Parameter(names = "--manifest", description = "path to manifest id, url or file", converter = ManifestResourceConverter.class)
+  private ManifestResource manifestResource;
   @Parameter(names = "--object-id", description = "object id to download", validateValueWith = ObjectIdValidator.class)
   private String objectId;
-  @Parameter(names = "--offset", description = "position in source file to begin download from")
+  @Parameter(names = "--offset", description = "the byte position in source file to begin download from")
   private long offset = 0;
-  @Parameter(names = "--length", description = "the number of bytes to download (in bytes)")
+  @Parameter(names = "--length", description = "the number of bytes to download")
   private long length = -1;
   @Parameter(names = "--index", description = "download file index if available?")
   private boolean index = true;
@@ -88,10 +90,10 @@ public class DownloadCommand extends AbstractClientCommand {
   @Override
   public int execute() throws Exception {
     terminal.printStatus("Downloading...");
-    if (!outDir.exists()) {
-      terminal.printError("Output directory '%s' is missing", outDir.getCanonicalPath());
-      return FAILURE_STATUS;
-    }
+    checkParameter(objectId != null || manifestResource != null, "One of --object-id or --manifest must be specified");
+    checkParameter(outputDir.exists(), "Output directory '%s' is missing", outputDir.getCanonicalPath());
+    checkParameter(outputDir.canWrite(), "Cannot write to output dir '%s'. Please check permissions and try again",
+        outputDir);
 
     val single = objectId != null;
     if (single) {
@@ -99,10 +101,10 @@ public class DownloadCommand extends AbstractClientCommand {
       return downloadObjects(ImmutableList.of(objectId));
     } else {
       // Manifest based
-      val manifest = manfiestService.getManifest(new ManifestResource(manifestSpec));
+      val manifest = manfiestService.getManifest(manifestResource);
       val entries = manifest.getEntries();
       if (entries.isEmpty()) {
-        terminal.printError("Manifest '%s' is empty", manifestSpec);
+        terminal.printError("Manifest '%s' is empty", manifestResource);
         return FAILURE_STATUS;
       }
 
@@ -122,7 +124,7 @@ public class DownloadCommand extends AbstractClientCommand {
           .printf("[%s/%s] Downloading object: %s (%s)%n", i++, entities.size(), terminal.value(entity.getId()),
               entity.getFileName())
           .printLine();
-      downloadService.download(outDir, entity.getId(), offset, length, force);
+      downloadService.download(outputDir, entity.getId(), offset, length, force);
       layoutFile(entity);
       terminal.println("");
     }
@@ -160,9 +162,7 @@ public class DownloadCommand extends AbstractClientCommand {
     }
 
     val targetDir = target.getParentFile();
-    checkParameter(targetDir.exists() || targetDir.mkdirs(),
-        "Could not create layout target directory %s", targetDir);
-
+    checkParameter(targetDir.exists() || targetDir.mkdirs(), "Could not create layout target directory %s", targetDir);
     checkParameter(!target.exists() || force && target.delete(),
         "Layout target '%s' already exists and --force was not specified", target);
 
@@ -173,7 +173,7 @@ public class DownloadCommand extends AbstractClientCommand {
    * Get the sourcd file for the supplied {@code entity}.
    */
   private File getLayoutSource(Entity entity) {
-    return new File(outDir, entity.getId());
+    return new File(outputDir, entity.getId());
   }
 
   /**
@@ -182,19 +182,19 @@ public class DownloadCommand extends AbstractClientCommand {
   private File getLayoutTarget(Entity entity) {
     if (layout == OutputLayout.bundle) {
       // "bundle/filename"
-      val bundleDir = new File(outDir, entity.getGnosId());
+      val bundleDir = new File(outputDir, entity.getGnosId());
       val target = new File(bundleDir, entity.getFileName());
 
       return target;
     } else if (layout == OutputLayout.filename) {
       // "filename/id"
-      val fileDir = new File(outDir, entity.getFileName());
+      val fileDir = new File(outputDir, entity.getFileName());
       val target = new File(fileDir, entity.getId());
 
       return target;
     } else if (layout == OutputLayout.id) {
       // "id"
-      val target = new File(outDir, entity.getId());
+      val target = new File(outputDir, entity.getId());
 
       return target;
     }

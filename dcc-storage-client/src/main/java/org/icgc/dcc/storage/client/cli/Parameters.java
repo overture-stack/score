@@ -15,38 +15,23 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.client.command;
+package org.icgc.dcc.storage.client.cli;
 
-import static com.google.common.base.Objects.firstNonNull;
-import static org.icgc.dcc.common.core.util.VersionUtils.getScmInfo;
+import static lombok.AccessLevel.PRIVATE;
 
-import org.springframework.stereotype.Component;
+import com.beust.jcommander.ParameterException;
 
-import com.beust.jcommander.Parameters;
+import lombok.NoArgsConstructor;
+import lombok.NonNull;
 
-/**
- * Resolves URL for a supplied object id.
- */
-@Component
-@Parameters(separators = "=", commandDescription = "Displays version information")
-public class VersionCommand extends AbstractClientCommand {
+@NoArgsConstructor(access = PRIVATE)
+public class Parameters {
 
-  @Override
-  public int execute() throws Exception {
-    title();
-    version();
-    return SUCCESS_STATUS;
-  }
-
-  private void version() {
-    terminal.println(terminal.label("  Version: ") + getVersion());
-    terminal.println(terminal.label("  Built:   ") + getScmInfo().get("git.build.time"));
-    terminal.println(terminal.label("  Contact: ") + terminal.email("dcc-support@icgc.org"));
-    terminal.println("");
-  }
-
-  private String getVersion() {
-    return firstNonNull(getClass().getPackage().getImplementationVersion(), "[unknown version]");
+  public static void checkParameter(boolean expression, @NonNull String errorMessageTemplate,
+      Object... errorMessageArgs) {
+    if (!expression) {
+      throw new ParameterException(String.format(errorMessageTemplate, errorMessageArgs));
+    }
   }
 
 }

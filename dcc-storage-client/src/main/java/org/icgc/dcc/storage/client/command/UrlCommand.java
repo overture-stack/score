@@ -17,6 +17,8 @@
  */
 package org.icgc.dcc.storage.client.command;
 
+import java.net.URL;
+
 import org.icgc.dcc.storage.client.cli.ObjectIdValidator;
 import org.icgc.dcc.storage.client.download.DownloadService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,13 +50,18 @@ public class UrlCommand extends AbstractClientCommand {
 
   @Override
   public int execute() throws Exception {
+    terminal.printStatus("Resolving URL for object: " + terminal.value(objectId) + "\n");
     val offset = 0L;
     val length = -1L;
-    terminal.printf("\rResolving URL for object: %s\n", terminal.value(objectId));
     val url = downloader.getUrl(objectId, offset, length);
-    System.out.printf("%s", url);
+
+    display(url);
 
     return SUCCESS_STATUS;
+  }
+
+  private void display(URL url) {
+    System.out.printf("%s", url);
   }
 
 }

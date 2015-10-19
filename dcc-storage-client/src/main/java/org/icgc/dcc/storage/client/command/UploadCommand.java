@@ -17,6 +17,8 @@
  */
 package org.icgc.dcc.storage.client.command;
 
+import static org.icgc.dcc.storage.client.cli.Parameters.checkParameter;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -63,8 +65,7 @@ public class UploadCommand extends AbstractClientCommand {
 
   @Override
   public int execute() throws Exception {
-    checkParameter(objectId != null || manifestFile != null,
-        "One of --object-id or --manifest must be specified");
+    checkParameter(objectId != null || manifestFile != null, "One of --object-id or --manifest must be specified");
 
     if (manifestFile != null) {
       val manifest = readManifest();
@@ -74,7 +75,7 @@ public class UploadCommand extends AbstractClientCommand {
 
         terminal.print("\r");
         if ((isForce) || (!uploader.isObjectExist(objectId))) {
-          terminal.printf("Start uploading object: '%s' using the object id %s%n", obj, objectId);
+          terminal.printf("Uploading object: '%s' using the object id %s%n", obj, objectId);
           uploader.upload(obj, objectId, isForce);
         } else {
           terminal.printf("Object id: %s has been uploaded. Skipping...%n", objectId);
@@ -83,11 +84,10 @@ public class UploadCommand extends AbstractClientCommand {
     } else {
       checkParameter(file != null, "--file must be specified if --object-id is specified");
 
-      terminal.printf("\rStart uploading file: '%s'%n", file);
+      terminal.printf("\rUploading file: '%s'%n", file);
       log.info("file: {}", file);
       checkParameter(file.length() > 0,
-          "Upload file '%s' is empty. Uploads of empty files are not permitted. Aborting...",
-          file.getCanonicalPath());
+          "Upload file '%s' is empty. Uploads of empty files are not permitted. Aborting...", file.getCanonicalPath());
 
       uploader.upload(file, objectId, isForce);
     }

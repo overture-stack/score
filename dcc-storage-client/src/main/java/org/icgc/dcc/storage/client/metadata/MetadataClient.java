@@ -81,7 +81,7 @@ public class MetadataClient {
     try {
       return MAPPER.readValue(resolveUrl(path), Entity.class);
     } catch (FileNotFoundException e) {
-      throw new EntityNotFoundException(e);
+      throw new EntityNotFoundException(e.getMessage());
     }
   }
 
@@ -101,8 +101,9 @@ public class MetadataClient {
         pageNumber++;
       }
     } catch (FileNotFoundException e) {
-      throw new EntityNotFoundException(e);
+      throw new EntityNotFoundException(e.getMessage());
     }
+
     return results;
   }
 

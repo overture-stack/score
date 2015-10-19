@@ -50,7 +50,7 @@ public class ClientMainTest extends AbstractClientMainTest {
     executeMain("download", "--manifest", file.getCanonicalPath(), "--output-dir", outDir.getCanonicalPath());
 
     assertTrue(getExitCode() == 1);
-    assertTrue(getOutput().contains("Command error: /foo (No such file or directory)"));
+    assertTrue(getOutput().contains("Could not read manifest from 'file:/foo': /foo (No such file or directory)"));
   }
 
   @Test
