@@ -47,6 +47,7 @@ public class Manifest {
     String indexFileUuid;
     String donorId;
     String projectId;
+    String study;
 
   }
 

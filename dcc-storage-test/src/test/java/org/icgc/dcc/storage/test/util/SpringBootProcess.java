@@ -29,25 +29,26 @@ import lombok.val;
  */
 public class SpringBootProcess {
 
-  public static Process bootRun(Class<?> mainClass, String... config) {
-    return bootRun(mainClass, new String[] {}, config);
+  public static Process bootRun(Class<?> mainClass, String... systemProperties) {
+    return bootRun(mainClass, new String[] {}, systemProperties);
   }
 
-  public static Process bootRun(Class<?> mainClass, String[] args, String... config) {
+  public static Process bootRun(Class<?> mainClass, String[] args, String... systemProperties) {
     val jarFile = new File(mainClass.getProtectionDomain().getCodeSource().getLocation().getPath());
-    return bootRun(jarFile, args, config);
+    return bootRun(jarFile, args, systemProperties);
   }
 
-  public static Process bootRun(File jarFile, String... config) {
-    return bootRun(jarFile, new String[] {}, config);
+  public static Process bootRun(File jarFile, String... systemProperties) {
+    return bootRun(jarFile, new String[] {}, systemProperties);
   }
 
   @SneakyThrows
-  public static Process bootRun(File jarFile, String[] args, String... config) {
+  public static Process bootRun(File jarFile, String[] args, String... systemProperties) {
     args = ImmutableList.<String> builder()
-        .add("java", "-Ds3ninja=true", "-jar", jarFile.getCanonicalPath())
-        .add(args)
-        .add(config).build()
+        .add("java")
+        .add(systemProperties)
+        .add("-Ds3ninja=true", "-jar", jarFile.getCanonicalPath())
+        .add(args).build()
         .toArray(new String[args.length + 1]);
 
     val process = new ProcessBuilder(args).inheritIO().start();

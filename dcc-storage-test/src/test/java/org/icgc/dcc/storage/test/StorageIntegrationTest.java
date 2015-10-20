@@ -129,7 +129,7 @@ public class StorageIntegrationTest {
 
     banner("Downloading...");
     for (val entity : entities) {
-      if (entity.getFileName().endsWith(".bai")) {
+      if (isBaiFile(entity)) {
         // Skip BAI files since these will be downloaded when the BAM file is requested
         continue;
       }
@@ -150,7 +150,7 @@ public class StorageIntegrationTest {
     // View
     //
 
-    val bamFile = entities.stream().filter(entity -> entity.getFileName().endsWith(".bam")).findFirst().get();
+    val bamFile = getBamFile(entities);
     banner("Viewing " + bamFile);
     val view = storageClient(accessToken,
         "view",
@@ -165,64 +165,72 @@ public class StorageIntegrationTest {
   private void authServer() {
     bootRun(
         org.icgc.dcc.auth.server.ServerMain.class,
-        "--spring.profiles.active=dev,no_scope_validation", // Don't validate if user has scopes
-        "--logging.file=" + fs.getLogsDir() + "/dcc-auth-server.log",
-        "--server.port=" + authPort,
-        "--management.port=8543",
-        "--endpoints.jmx.domain=auth");
+        "-Dspring.profiles.active=dev,no_scope_validation", // Don't validate if user has scopes
+        "-Dlogging.file=" + fs.getLogsDir() + "/dcc-auth-server.log",
+        "-Dserver.port=" + authPort,
+        "-Dmanagement.port=8543",
+        "-Dendpoints.jmx.domain=auth");
   }
 
   private void metadataServer() {
     bootRun(
         org.icgc.dcc.metadata.server.ServerMain.class,
-        "--spring.profiles.active=development,secure", // Secure
-        "--logging.file=" + fs.getLogsDir() + "/dcc-metadata-server.log",
-        "--server.port=" + metadataPort,
-        "--management.port=8544",
-        "--endpoints.jmx.domain=metadata",
-        "--auth.server.url=https://localhost:" + authPort + "/oauth/check_token",
-        "--auth.server.clientId=metadata",
-        "--auth.server.clientsecret=pass",
-        "--spring.data.mongodb.uri=mongodb://localhost:" + mongo.getPort() + "/dcc-metadata");
+        "-Dspring.profiles.active=development,secure", // Secure
+        "-Dlogging.file=" + fs.getLogsDir() + "/dcc-metadata-server.log",
+        "-Dserver.port=" + metadataPort,
+        "-Dmanagement.port=8544",
+        "-Dendpoints.jmx.domain=metadata",
+        "-Dauth.server.url=https://localhost:" + authPort + "/oauth/check_token",
+        "-Dauth.server.clientId=metadata",
+        "-Dauth.server.clientsecret=pass",
+        "-Dspring.data.mongodb.uri=mongodb://localhost:" + mongo.getPort() + "/dcc-metadata");
   }
 
   private void storageServer() {
     bootRun(
         resolveJarFile("dcc-storage-server"),
-        "--spring.profiles.active=dev,secure,default", // Secure
-        "--logging.file=" + fs.getLogsDir() + "/dcc-storage-server.log",
-        "--server.port=" + storagePort,
-        "--auth.server.url=https://localhost:" + authPort + "/oauth/check_token",
-        "--auth.server.clientId=storage",
-        "--auth.server.clientsecret=pass",
-        "--metadata.url=https://localhost:" + metadataPort,
-        "--endpoints.jmx.domain=storage");
+        "-Dspring.profiles.active=dev,secure,default", // Secure
+        "-Dlogging.file=" + fs.getLogsDir() + "/dcc-storage-server.log",
+        "-Dserver.port=" + storagePort,
+        "-Dauth.server.url=https://localhost:" + authPort + "/oauth/check_token",
+        "-Dauth.server.clientId=storage",
+        "-Dauth.server.clientsecret=pass",
+        "-Dmetadata.url=https://localhost:" + metadataPort,
+        "-Dendpoints.jmx.domain=storage");
   }
 
   private Process metadataClient(String accessToken, String... args) {
     return bootRun(
         org.icgc.dcc.metadata.client.ClientMain.class,
         args,
-        "--spring.profiles.active=development",
-        "--logging.file=" + fs.getLogsDir() + "/dcc-metadata-client.log",
-        "--client.upload.servicePort=" + storagePort,
-        "--server.baseUrl=https://localhost:" + metadataPort,
-        "--accessToken=" + accessToken);
+        "-Dspring.profiles.active=development",
+        "-Dlogging.file=" + fs.getLogsDir() + "/dcc-metadata-client.log",
+        "-Dclient.upload.servicePort=" + storagePort,
+        "-Dserver.baseUrl=https://localhost:" + metadataPort,
+        "-DaccessToken=" + accessToken);
   }
 
   private Process storageClient(String accessToken, String... args) {
     return bootRun(
         resolveJarFile("dcc-storage-client"),
         args,
-        "--logging.file=" + fs.getLogsDir() + "/dcc-storage-client.log",
-        "--metadata.url=https://localhost:" + metadataPort,
-        "--metadata.ssl.enabled=false",
-        "--accessToken=" + accessToken);
+        "-Dlogging.file=" + fs.getLogsDir() + "/dcc-storage-client.log",
+        "-Dmetadata.url=https://localhost:" + metadataPort,
+        "-Dmetadata.ssl.enabled=false",
+        "-DaccessToken=" + accessToken);
   }
 
   private List<Entity> findEntities(String gnosId) {
     val metadataClient = new MetadataClient("https://localhost:" + metadataPort, false);
     return metadataClient.findEntitiesByGnosId(gnosId);
+  }
+
+  private static Entity getBamFile(List<Entity> entities) {
+    return entities.stream().filter(entity -> entity.getFileName().endsWith(".bam")).findFirst().get();
+  }
+
+  private static boolean isBaiFile(Entity entity) {
+    return entity.getFileName().endsWith(".bai");
   }
 
   private static File resolveJarFile(String artifactId) {

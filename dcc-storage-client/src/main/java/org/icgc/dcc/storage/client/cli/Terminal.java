@@ -1,6 +1,7 @@
 package org.icgc.dcc.storage.client.cli;
 
 import static com.google.common.base.Strings.repeat;
+import static org.fusesource.jansi.Ansi.Color.GREEN;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
@@ -21,15 +22,21 @@ import lombok.val;
 public class Terminal {
 
   /**
+   * Constants.
+   */
+  private final boolean SPIN_WAITING = false;
+
+  /**
    * Configuration.
    */
+  private final boolean ansi;
   private final boolean silent;
-  private final jline.Terminal delegate;
+  private final jline.Terminal delegate = TerminalFactory.get();
 
   @Autowired
   public Terminal(@Value("${client.ansi}") boolean ansi, @Value("${client.silent}") boolean silent) {
+    this.ansi = ansi;
     this.silent = silent;
-    this.delegate = TerminalFactory.get();
 
     Ansi.setEnabled(ansi);
     if (ansi) {
@@ -43,13 +50,29 @@ public class Terminal {
   }
 
   @SneakyThrows
+  @SuppressWarnings("unused")
   public <T> T printWaiting(Callable<T> task) {
     val executor = Executors.newSingleThreadExecutor();
     try {
       val future = executor.submit(task);
+
+      int i = 0;
       while (!future.isDone()) {
-        Thread.sleep(2000L);
-        print(".");
+        if (ansi && SPIN_WAITING) {
+          Thread.sleep(50L);
+          val animation = "|/-\\";
+
+          if (i > 0) {
+            // Erase
+            print(ansi().cursorLeft(2).toString());
+          }
+
+          val state = " " + ansi().fg(GREEN).a(animation.charAt(i++ % animation.length())).reset().toString();
+          print(state);
+        } else {
+          Thread.sleep(2000L);
+          print(".");
+        }
       }
 
       return future.get();

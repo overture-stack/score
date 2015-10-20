@@ -3,12 +3,12 @@
 # Copyright 2015(c) The Ontario Institute for Cancer Research. All rights reserved.
 #
 # Description:
-# 	Runs the ICGC DCC storage client to upload/download/slice files in the Amazon S3 oicr.icgc bucket
+# 	Runs the ICGC DCC storage client to upload/download/slice files in cloud environments
 
 BASE_DIR=`dirname $0`/..; export BASE_DIR
 CLIENT_DIR="$(cd ${BASE_DIR} && pwd -P)"
 
-exec java -Xms2G -Xmx3G \
+exec java -Xmx3G \
 	-Dspring.profiles.active=amazon \
 	-Dlogging.file=${BASE_DIR}/logs/client.log \
 	-Dspring.config.location=${CLIENT_DIR}/conf/ \

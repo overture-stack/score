@@ -45,9 +45,11 @@ public class MountService {
   private boolean logging;
 
   /**
-   * See http://sourceforge.net/p/fuse/fuse/ci/master/tree/README
+   * FUSE mount options
+   * 
+   * @see http://sourceforge.net/p/fuse/fuse/ci/master/tree/README
    */
-  private Map<String, String> options = new HashMap<String, String>() {
+  private final Map<String, String> options = new HashMap<String, String>() {
 
     {
       // Prevent async_read read-ahead which will cause multiple reconnects with HTTP backend

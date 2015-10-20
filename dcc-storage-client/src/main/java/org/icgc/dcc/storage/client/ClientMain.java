@@ -71,12 +71,12 @@ public class ClientMain implements CommandLineRunner {
       val cli = new JCommander();
       cli.setProgramName(APPLICATION_NAME);
       cli.setColumnSize(TerminalFactory.get().getWidth());
-      cli.setAcceptUnknownOptions(true); // For Spring Boot configuration overrides
 
       // Run
       new SpringApplicationBuilder(ClientMain.class)
-          .showBanner(false)
-          .initializers(singletonBeans(cli))
+          .showBanner(false) // Not appropriate for tool
+          .initializers(singletonBeans(cli)) // Add cli to context
+          .addCommandLineProperties(false) // Only use formal parameters defined in cli
           .run(args);
     } catch (Throwable t) {
       err.println("\nUnknown error starting application. Please see log for details");

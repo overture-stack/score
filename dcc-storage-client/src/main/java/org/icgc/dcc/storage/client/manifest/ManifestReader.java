@@ -91,12 +91,13 @@ public class ManifestReader {
         .indexFileUuid(values.get(i++))
         .donorId(values.get(i++))
         .projectId(values.get(i++))
+        .study(values.get(i++))
         .build();
   }
 
   private static List<String> parseLine(String line) {
     val values = LINE_PARSER.splitToList(line);
-    val expectedColumns = 10;
+    val expectedColumns = 11;
     val actualColumns = values.size();
     checkState(expectedColumns == actualColumns, "Expected %s columns found %s for line '%s'",
         expectedColumns, actualColumns, line);

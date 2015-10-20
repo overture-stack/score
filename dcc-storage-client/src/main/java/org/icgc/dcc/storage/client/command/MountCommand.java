@@ -120,9 +120,8 @@ public class MountCommand extends AbstractClientCommand {
         terminal.println(" Total size: " + formatBytes(totalSize) + " " + formatBytesUnits(totalSize) + "\n");
       }
 
-      terminal.printStatus(i++, "Mounting file system to '" + mountPoint.getAbsolutePath() + "'...");
-      val fileSystem = StorageFileSystems.newFileSystem(context);
-      mountService.mount(fileSystem, mountPoint.toPath());
+      terminal.printStatus(i++, "Mounting file system to '" + mountPoint.getAbsolutePath() + "'");
+      terminal.printWaiting(() -> mount(context));
 
       terminal.printStatus(
           terminal.label(
@@ -145,6 +144,12 @@ public class MountCommand extends AbstractClientCommand {
     }
 
     return SUCCESS_STATUS;
+  }
+
+  @SneakyThrows
+  private void mount(MountStorageContext context) {
+    val fileSystem = StorageFileSystems.newFileSystem(context);
+    mountService.mount(fileSystem, mountPoint.toPath());
   }
 
   private List<ObjectInfo> resolveObjects() throws IOException {
