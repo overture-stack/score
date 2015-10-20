@@ -78,3 +78,5 @@ DownloadPartRequest.java
 # collaboratory
 service.jks
 application-prod.properties
+
+dcc-storage-client/deploy/
