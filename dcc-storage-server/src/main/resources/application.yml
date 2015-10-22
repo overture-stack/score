@@ -48,10 +48,10 @@ spring:
   
 s3:
   endpoint: s3-external-1.amazonaws.com
-  masterEncryptionKeyId: 08f7a205-3957-42c5-aae6-6166251c7565
+  masterEncryptionKeyId: af628f04-ac12-4b11-bf83-6545fd44ad18
 
 collaboratory:
-  bucket.name: oicr.icgc.collaboratory
+  bucket.name: oicr.icgc
 
 ---
 
@@ -65,6 +65,8 @@ spring:
 
 s3:
   endpoint: https://www.cancercollaboratory.org:9080
+  masterEncryptionKeyId: 
+
 
 ---
 
@@ -109,8 +111,8 @@ auth:
     clientSecret: pass
     uploadScope: s3.upload
     downloadScope: s3.download
-    #uploadScope: os.upload
-    #downloadScope: os.download
+    #uploadScope=collab.upload
+    #downloadScope=collab.download
 
 ---
 
