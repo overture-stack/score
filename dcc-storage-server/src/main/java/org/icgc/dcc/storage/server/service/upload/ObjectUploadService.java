@@ -206,8 +206,7 @@ public class ObjectUploadService {
   public void finalizeUploadPart(String objectId, String uploadId, int partNumber, String md5, String eTag) {
     if (md5 != null && eTag != null && !md5.isEmpty() && !eTag.isEmpty()) {
       if (isPartExist(ObjectStoreUtil.getObjectKey(dataDir, objectId), uploadId, partNumber, eTag)) {
-        stateStore.finalizeUploadPart(objectId, uploadId, partNumber, md5,
-            eTag);
+        stateStore.finalizeUploadPart(objectId, uploadId, partNumber, md5, eTag);
       } else {
         throw new NotRetryableException(new IOException("Part does not exist: " + partNumber));
       }
