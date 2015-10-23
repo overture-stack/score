@@ -22,7 +22,6 @@ import com.beust.jcommander.MissingCommandException;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
 
-import jline.TerminalFactory;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
@@ -70,7 +69,6 @@ public class ClientMain implements CommandLineRunner {
       // Setup
       val cli = new JCommander();
       cli.setProgramName(APPLICATION_NAME);
-      cli.setColumnSize(TerminalFactory.get().getWidth());
 
       // Run
       new SpringApplicationBuilder(ClientMain.class)

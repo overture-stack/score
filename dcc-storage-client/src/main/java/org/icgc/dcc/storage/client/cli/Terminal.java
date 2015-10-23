@@ -31,17 +31,30 @@ public class Terminal {
    */
   private final boolean ansi;
   private final boolean silent;
-  private final jline.Terminal delegate = TerminalFactory.get();
+  private final jline.Terminal delegate;
 
   @Autowired
   public Terminal(@Value("${client.ansi}") boolean ansi, @Value("${client.silent}") boolean silent) {
     this.ansi = ansi;
     this.silent = silent;
 
+    if (isTty()) {
+      // See http://stackoverflow.com/questions/29911077/sbt-hangs-when-running-with-chef-solo
+      System.setProperty("jline.terminal", "jline.UnsupportedTerminal");
+    }
+
+    this.delegate = TerminalFactory.get();
+
     Ansi.setEnabled(ansi);
     if (ansi) {
       AnsiConsole.systemInstall();
     }
+  }
+
+  public static boolean isTty() {
+    // See
+    // http://stackoverflow.com/questions/1403772/how-can-i-check-if-a-java-programs-input-output-streams-are-connected-to-a-term
+    return System.console() == null;
   }
 
   public Terminal printLine() {
