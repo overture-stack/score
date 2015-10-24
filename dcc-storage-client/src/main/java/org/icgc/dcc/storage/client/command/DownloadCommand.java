@@ -46,11 +46,8 @@ import com.google.common.io.Files;
 import lombok.SneakyThrows;
 import lombok.val;
 
-/**
- * Handle download command line arguments
- */
 @Component
-@Parameters(separators = "=", commandDescription = "Retrieve object(s) from remote storage")
+@Parameters(separators = "=", commandDescription = "Retrieve file object(s) from the remote storage repository")
 public class DownloadCommand extends AbstractClientCommand {
 
   public enum OutputLayout {

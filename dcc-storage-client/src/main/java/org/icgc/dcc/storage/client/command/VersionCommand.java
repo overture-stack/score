@@ -24,16 +24,13 @@ import org.springframework.stereotype.Component;
 
 import com.beust.jcommander.Parameters;
 
-/**
- * Resolves URL for a supplied object id.
- */
 @Component
-@Parameters(separators = "=", commandDescription = "Displays version information")
+@Parameters(separators = "=", commandDescription = "Display application version information")
 public class VersionCommand extends AbstractClientCommand {
 
   @Override
   public int execute() throws Exception {
-    title();
+    printTitle();
     version();
     return SUCCESS_STATUS;
   }

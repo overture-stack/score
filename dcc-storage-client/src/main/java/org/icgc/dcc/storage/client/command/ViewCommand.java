@@ -57,7 +57,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
-@Parameters(separators = "=", commandDescription = "Extract/displays some or all of SAM/BAM file")
+@Parameters(separators = "=", commandDescription = "Locally store/display some or all of a remote SAM/BAM file object")
 public class ViewCommand extends AbstractClientCommand {
 
   public enum OutputType {

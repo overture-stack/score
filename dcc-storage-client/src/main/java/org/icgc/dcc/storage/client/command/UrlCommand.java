@@ -29,11 +29,8 @@ import com.beust.jcommander.Parameters;
 
 import lombok.val;
 
-/**
- * Resolves URL for a supplied object id.
- */
 @Component
-@Parameters(separators = "=", commandDescription = "Resolves the URL of the remote object")
+@Parameters(separators = "=", commandDescription = "Resolve the URL of a specified remote file object")
 public class UrlCommand extends AbstractClientCommand {
 
   /**

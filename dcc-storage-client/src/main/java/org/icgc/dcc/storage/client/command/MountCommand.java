@@ -17,12 +17,14 @@
  */
 package org.icgc.dcc.storage.client.command;
 
+import static com.google.common.base.Objects.firstNonNull;
 import static com.google.common.collect.Maps.newHashMap;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.icgc.dcc.storage.client.cli.Parameters.checkParameter;
-import static org.icgc.dcc.storage.fs.util.Formats.formatBytes;
-import static org.icgc.dcc.storage.fs.util.Formats.formatBytesUnits;
+import static org.icgc.dcc.storage.client.mount.MountService.INTERNAL_OPTIONS;
+import static org.icgc.dcc.storage.client.util.Formats.formatBytes;
+import static org.icgc.dcc.storage.client.util.Formats.formatBytesUnits;
 
 import java.io.File;
 import java.io.IOException;
@@ -31,6 +33,7 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 import org.icgc.dcc.storage.client.cli.DirectoryValidator;
+import org.icgc.dcc.storage.client.cli.ManifestResourceConverter;
 import org.icgc.dcc.storage.client.cli.MountOptionsConverter;
 import org.icgc.dcc.storage.client.download.DownloadService;
 import org.icgc.dcc.storage.client.manifest.ManfiestService;
@@ -58,7 +61,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
-@Parameters(separators = "=", commandDescription = "Mounts a read-only FUSE file system view of the remote repository")
+@Parameters(separators = "=", commandDescription = "Mount a read-only FUSE file system view of the remote storage repository")
 public class MountCommand extends AbstractClientCommand {
 
   /**
@@ -66,11 +69,13 @@ public class MountCommand extends AbstractClientCommand {
    */
   @Parameter(names = "--mount-point", description = "the mount point of the  FUSE file system", required = true, validateValueWith = DirectoryValidator.class)
   private File mountPoint;
-  @Parameter(names = "--manifest", description = "manifest id (from the Data Portal), url or file path")
+  @Parameter(names = "--manifest", description = "manifest id (from the Data Portal), url or file path", converter = ManifestResourceConverter.class)
   private ManifestResource manifestResource;
   @Parameter(names = "--cache-metadata", description = "to speedup load times, cache metadata on disk locally and use if available")
   private boolean cacheMetadata;
-  @Parameter(names = "--options", description = "the mount options of the file system (e.g. --options user_allow_other,allow_other,fsname=icgc,debug)", converter = MountOptionsConverter.class)
+  @Parameter(names = "--options", description = "the mount options of the file system (e.g. --options user_allow_other,allow_other,fsname=icgc,debug) "
+      + "in addition to those specified internally: " + INTERNAL_OPTIONS
+      + ". See http://sourceforge.net/p/fuse/fuse/ci/master/tree/README?format=raw for details", converter = MountOptionsConverter.class)
   private Map<String, String> options = newHashMap();
 
   /**
@@ -95,7 +100,7 @@ public class MountCommand extends AbstractClientCommand {
       int i = 1;
 
       //
-      // Index
+      // Collect and index metadata
       //
 
       terminal.printStatus(i++, "Indexing remote entities. Please wait");
@@ -109,7 +114,7 @@ public class MountCommand extends AbstractClientCommand {
       }
 
       //
-      // Authorization
+      // Check access
       //
 
       terminal.printStatus(i++, "Checking access. Please wait");
@@ -120,7 +125,7 @@ public class MountCommand extends AbstractClientCommand {
       }
 
       //
-      // Report
+      // Report manifest
       //
 
       if (hasManifest()) {
@@ -134,11 +139,7 @@ public class MountCommand extends AbstractClientCommand {
 
       terminal.printStatus(i++, "Mounting file system to '" + mountPoint.getAbsolutePath() + "'");
       terminal.printWaiting(() -> mount(context));
-
-      terminal.printStatus(
-          terminal.label(
-              "Successfully mounted file system at " + terminal.value(mountPoint.getAbsolutePath())
-                  + " and is now ready for use!"));
+      reportMount();
 
       //
       // Wait
@@ -147,7 +148,7 @@ public class MountCommand extends AbstractClientCommand {
       // Let the user know we are done when the JVM exits
       val watch = Stopwatch.createStarted();
       Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-        terminal.printStatus(terminal.label("Shut down mount after " + watch + ". Good bye!\n"));
+        reportSummary(context, watch);
       }));
 
       // Wait for interrupt
@@ -178,6 +179,24 @@ public class MountCommand extends AbstractClientCommand {
     }
     terminal.printLine();
     terminal.println(" Total size: " + formatBytes(totalSize) + " " + formatBytesUnits(totalSize) + "\n");
+  }
+
+  private void reportMount() {
+    val location = terminal.value(mountPoint.getAbsolutePath());
+    terminal.printStatus(
+        terminal.label("Successfully mounted file system at " + location + " and is now ready for use!"));
+  }
+
+  private void reportSummary(MountStorageContext context, Stopwatch watch) {
+    val time = terminal.value(watch.toString());
+    val connects = terminal.value(firstNonNull(context.getMetrics().get("connectCount"), 0) + " connects");
+    val n = firstNonNull(context.getMetrics().get("byteCount"), 0L);
+    val bytes = terminal.value(formatBytes(n) + " " + formatBytesUnits(n));
+    terminal.printStatus(
+        terminal.label(
+            "Shut down mount after " + time +
+                " with a total of " + connects +
+                " and " + bytes + " bytes read. Good bye!\n"));
   }
 
   private List<ObjectInfo> resolveObjects() throws IOException {

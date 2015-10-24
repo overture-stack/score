@@ -17,6 +17,8 @@
  */
 package org.icgc.dcc.storage.client.ssl;
 
+import static com.google.common.base.Preconditions.checkState;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.math.BigInteger;
@@ -31,9 +33,6 @@ import java.security.cert.CertificateExpiredException;
 import java.security.cert.CertificateNotYetValidException;
 import java.security.cert.X509Certificate;
 
-import lombok.Cleanup;
-import lombok.SneakyThrows;
-
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x500.X500NameBuilder;
 import org.bouncycastle.asn1.x500.style.BCStyle;
@@ -45,6 +44,10 @@ import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.icgc.dcc.storage.client.config.ClientProperties.SSLProperties;
 import org.joda.time.LocalDate;
+
+import lombok.Cleanup;
+import lombok.SneakyThrows;
+import lombok.val;
 
 /**
  * a tool to generate client side certificate
@@ -73,8 +76,10 @@ public class ClientKeyTool {
     KeyStore ks = loadStore();
     Certificate cert = findCertifcate(ks);
     if (!ssl.getKeyStore().exists() || cert == null) {
-      ssl.getKeyStore().getFile().getParentFile().mkdirs();
-      KeyPair keyPair = createKeyPair();
+      val keystoreDir = ssl.getKeyStore().getFile().getParentFile();
+      checkState(keystoreDir.mkdirs());
+
+      val keyPair = createKeyPair();
       cert = createCertificate(keyPair);
       ks.setKeyEntry(ssl.getKeyAlias(), keyPair.getPrivate(),
           ssl.getKeyStorePassword().toCharArray(), new Certificate[] { cert });

@@ -20,9 +20,11 @@ Modules
 ---
 Top level system modules:
 
-- [Core](object-store-core/README.md)
-- [Client ](object-store-client/README.md)
-- [Server](object-store-service/README.md)
+- [Core](dcc-storage-core/README.md)
+- [Client](dcc-storage-client/README.md)
+- [File System](dcc-storage-fs/README.md)
+- [Server](dcc-storage-server/README.md)
+- [Test](dcc-storage-test/README.md)
 
 Changes
 ---

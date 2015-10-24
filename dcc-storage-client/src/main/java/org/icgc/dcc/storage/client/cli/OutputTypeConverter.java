@@ -24,6 +24,8 @@ import org.icgc.dcc.storage.client.command.ViewCommand.OutputType;
 import com.beust.jcommander.ParameterException;
 import com.beust.jcommander.converters.BaseConverter;
 
+import lombok.val;
+
 public class OutputTypeConverter extends BaseConverter<OutputType> {
 
   public OutputTypeConverter(String optionName) {
@@ -35,8 +37,8 @@ public class OutputTypeConverter extends BaseConverter<OutputType> {
     try {
       return OutputType.valueOf(value.toLowerCase());
     } catch (Exception ex) {
-      throw new ParameterException(
-          getErrorString(value, "a value in " + Arrays.toString(OutputType.values())));
+      val types = Arrays.toString(OutputType.values());
+      throw new ParameterException(getErrorString(value, "a value in " + types));
     }
   }
 

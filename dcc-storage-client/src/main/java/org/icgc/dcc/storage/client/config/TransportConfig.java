@@ -42,7 +42,7 @@ public class TransportConfig {
   StorageService proxy;
 
   @Bean
-  public Transport.Builder TransportBuilder() {
+  public Transport.Builder builder() {
     Transport.Builder builder;
     switch (properties.getFileFrom()) {
     case "memory":

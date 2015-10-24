@@ -62,32 +62,34 @@ import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * responsible for interacting with object upload service
+ * Service responsible for interacting with the remote upload service.
  */
 @Slf4j
 @Service
 public class StorageService {
 
-  @Autowired
-  private ClientProperties properties;
-
-  @Autowired
-  @Qualifier("serviceTemplate")
-  private RestTemplate serviceTemplate;
-
-  @Autowired
-  @Qualifier("dataTemplate")
-  private RestTemplate dataTemplate;
-
+  /**
+   * Configuration.
+   */
   @Autowired
   @Qualifier("endpoint")
   private String endpoint;
-
   @Autowired
-  private RetryTemplate retry;
+  private ClientProperties properties;
 
+  /**
+   * Dependencies.
+   */
   @Autowired
   private DownloadStateStore downloadStateStore;
+  @Autowired
+  @Qualifier("serviceTemplate")
+  private RestTemplate serviceTemplate;
+  @Autowired
+  @Qualifier("dataTemplate")
+  private RestTemplate dataTemplate;
+  @Autowired
+  private RetryTemplate retry;
 
   @SneakyThrows
   public List<ObjectInfo> listObjects() {
@@ -400,7 +402,7 @@ public class StorageService {
   }
 
   private HttpHeaders defaultHeaders() {
-    HttpHeaders requestHeaders = new HttpHeaders();
+    val requestHeaders = new HttpHeaders();
     requestHeaders.set("access-token", getToken());
     return requestHeaders;
   }

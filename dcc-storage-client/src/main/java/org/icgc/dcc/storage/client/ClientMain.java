@@ -2,6 +2,7 @@ package org.icgc.dcc.storage.client;
 
 import static java.lang.System.err;
 import static org.icgc.dcc.storage.client.cli.Parameters.checkParameter;
+import static org.icgc.dcc.storage.client.command.ClientCommand.APPLICATION_NAME;
 import static org.icgc.dcc.storage.client.command.ClientCommand.FAILURE_STATUS;
 import static org.icgc.dcc.storage.client.util.SingletonBeansInitializer.singletonBeans;
 
@@ -34,11 +35,6 @@ import lombok.extern.slf4j.Slf4j;
 public class ClientMain implements CommandLineRunner {
 
   /**
-   * Constants.
-   */
-  private static final String APPLICATION_NAME = "dcc-storage-client";
-
-  /**
    * Exit handler.
    * <p>
    * This can be changed in testing environments in order to prevent JVM exiting before the test is complete.
@@ -48,7 +44,7 @@ public class ClientMain implements CommandLineRunner {
   /**
    * Options.
    */
-  @Parameter(names = "--help", description = "shows help message", required = false, help = true)
+  @Parameter(names = "--help", description = "shows help information", required = false, help = true)
   private boolean help = false;
   @Parameter(names = "--version", description = "shows version information", required = false, help = true)
   private boolean version = false;
@@ -123,6 +119,30 @@ public class ClientMain implements CommandLineRunner {
       terminal.printError("Command error: " + t.getMessage() + "\n\nPlease check the log for detailed error messages");
 
       exit(FAILURE_STATUS);
+    }
+  }
+
+  protected void help() {
+    terminal.println("params: ");
+    for (val param : cli.getParameters()) {
+      terminal.println("  " + param.getNames() + ": " + param);
+    }
+
+    for (val entry : cli.getCommands().entrySet()) {
+      val commandName = entry.getKey();
+
+      terminal.println(commandName + ": " + cli.getCommandDescription(commandName));
+    }
+
+    for (val entry : cli.getCommands().entrySet()) {
+      val commandName = entry.getKey();
+      val command = entry.getValue();
+
+      terminal.println("name: " + commandName);
+      terminal.println("params: ");
+      for (val param : command.getParameters()) {
+        terminal.println("  " + param.getNames() + ": " + param);
+      }
     }
   }
 

@@ -17,6 +17,8 @@
  */
 package org.icgc.dcc.storage.client.transport;
 
+import static com.google.common.base.Preconditions.checkState;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -47,6 +49,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.SneakyThrows;
+import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -152,7 +155,7 @@ public class ParallelPartObjectTransport implements Transport {
         public Part call() throws Exception {
           DataChannel channel =
               new ProgressDataChannel(
-                  new FileDataChannel(getPartFileName(outputDir, part), part.getOffset(), part.getPartSize(), null),
+                  new FileDataChannel(getPartFile(outputDir, part), part.getOffset(), part.getPartSize(), null),
                   progress);
 
           if (part.isCompleted()) {
@@ -202,8 +205,9 @@ public class ParallelPartObjectTransport implements Transport {
   }
 
   private void cleanup(List<Part> parts, File outputDir) {
-    for (Part part : parts) {
-      getPartFileName(outputDir, part).delete();
+    for (val part : parts) {
+      val partFile = getPartFile(outputDir, part);
+      checkState(partFile.delete());
     }
   }
 
@@ -295,7 +299,7 @@ public class ParallelPartObjectTransport implements Transport {
       fos.setLength(Downloads.calculateTotalSize(parts));
       FileChannel target = fos.getChannel();
       for (Part part : parts) {
-        File partFile = getPartFileName(outputDir, part);
+        File partFile = getPartFile(outputDir, part);
         try (FileInputStream fis = new FileInputStream(partFile)) {
           fis.getChannel().transferTo(0, partFile.length(), target);
         }
@@ -304,7 +308,7 @@ public class ParallelPartObjectTransport implements Transport {
   }
 
   @SneakyThrows
-  private File getPartFileName(File outDir, Part part) {
+  private File getPartFile(File outDir, Part part) {
     return new File(outDir, "." + objectId + "-" + String.valueOf(part.getPartNumber()));
   }
 

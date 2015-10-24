@@ -23,6 +23,11 @@ package org.icgc.dcc.storage.client.command;
 public interface ClientCommand {
 
   /**
+   * The name of the application.
+   */
+  static final String APPLICATION_NAME = "dcc-storage-client";
+
+  /**
    * Status code returned when a command is successful.
    */
   static final int SUCCESS_STATUS = 0;

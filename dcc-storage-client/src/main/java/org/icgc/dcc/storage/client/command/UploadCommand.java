@@ -34,15 +34,13 @@ import org.springframework.stereotype.Component;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 
+import lombok.Cleanup;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * Handle upload command line arguments
- */
 @Slf4j
 @Component
-@Parameters(separators = "=", commandDescription = "Uploads object(s) to remote storage")
+@Parameters(separators = "=", commandDescription = "Upload file object(s) to the remote storage repository")
 public class UploadCommand extends AbstractClientCommand {
 
   /**
@@ -96,8 +94,11 @@ public class UploadCommand extends AbstractClientCommand {
   }
 
   private Properties readManifest() throws IOException, FileNotFoundException {
+    @Cleanup
+    FileInputStream inputStream = new FileInputStream(manifestFile);
+
     val manifest = new Properties();
-    manifest.load(new FileInputStream(manifestFile));
+    manifest.load(inputStream);
 
     return manifest;
   }

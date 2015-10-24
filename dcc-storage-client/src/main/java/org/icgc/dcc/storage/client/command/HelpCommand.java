@@ -17,20 +17,33 @@
  */
 package org.icgc.dcc.storage.client.command;
 
+import static com.google.common.base.Objects.firstNonNull;
+import static com.google.common.base.Strings.padEnd;
+import static com.google.common.base.Strings.repeat;
+import static org.icgc.dcc.storage.client.cli.Parameters.checkParameter;
+
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.beust.jcommander.JCommander;
+import com.beust.jcommander.Parameter;
+import com.beust.jcommander.ParameterDescription;
 import com.beust.jcommander.Parameters;
+import com.beust.jcommander.internal.Lists;
 
 import lombok.val;
 
-/**
- * Resolves URL for a supplied object id.
- */
 @Component
-@Parameters(separators = "=", commandDescription = "Displays help information")
+@Parameters(separators = "=", commandDescription = "Display help information for a specified command name")
 public class HelpCommand extends AbstractClientCommand {
+
+  /**
+   * Options.
+   */
+  @Parameter(description = "[command]")
+  private List<String> commandNames = Lists.newArrayList();
 
   /**
    * Dependencies.
@@ -40,38 +53,90 @@ public class HelpCommand extends AbstractClientCommand {
 
   @Override
   public int execute() throws Exception {
-    title();
-    usage();
+    checkParameter(commandNames.size() <= 1, "At most one command name is expected, got %s", commandNames.size());
+
+    if (commandNames.isEmpty()) {
+      printAppUsage();
+    } else {
+      printCommandUsage();
+    }
+
     return SUCCESS_STATUS;
   }
 
-  private void usage() {
-    val builder = new StringBuilder();
-    cli.usage(builder);
-    String text = builder.toString();
+  private void printAppUsage() {
+    printTitle();
 
-    // Sections
-    text = text
-        .replaceAll("(Options:)", "@|green $1|@")
-        .replaceAll("(Commands:)", "@|green $1|@");
+    printUsage("[options] [command] [command options]");
 
-    // Commands
-    text = text
-        .replaceAll("(download      )", "@|blue $1|@")
-        .replaceAll("(help      )", "@|blue $1|@")
-        .replaceAll("(manifest      )", "@|blue $1|@")
-        .replaceAll("(mount      )", "@|blue $1|@")
-        .replaceAll("(upload      )", "@|blue $1|@")
-        .replaceAll("(url      )", "@|blue $1|@")
-        .replaceAll("(version      )", "@|blue $1|@")
-        .replaceAll("(view      )", "@|blue $1|@");
+    printParams(cli);
 
-    // Options
-    text = text
-        .replaceAll("(--\\S+)", "@|bold $1|@")
-        .replaceAll("( \\* )", "@|yellow $1|@");
+    printHeading("Commands");
+    for (val commandName : cli.getCommands().keySet()) {
+      val description = cli.getCommandDescription(commandName);
+      terminal.println("    " + terminal.ansi("@|blue " + padEnd(commandName, 10, ' ') + "|@") + description);
+    }
+  }
 
-    terminal.println(terminal.ansi(text));
+  private void printCommandUsage() {
+    val commandName = commandNames.get(0);
+    val command = cli.getCommands().get(commandName);
+
+    val mainParam = firstNonNull(command.getMainParameterDescription(), "");
+    val description = cli.getCommandDescription(commandName);
+    terminal.clearLine();
+    printUsage(commandName + " [options] " + mainParam);
+    printHeading("Command");
+    terminal.println("    " + terminal.ansi("@|blue " + commandName + "|@") + "   " + description);
+    printParams(command);
+  }
+
+  private void printParams(JCommander command) {
+    printHeading("Options");
+    for (val param : command.getParameters()) {
+      printParam(param);
+    }
+  }
+
+  private void printParam(ParameterDescription param) {
+    val name = terminal.ansi("@|bold " + param.getNames() + "|@");
+    val required = param.getParameter().required() ? terminal.ansi(" @|yellow *|@") : "  ";
+    terminal.println(" " + required + " " + name);
+    terminal.println("      " + wrap(param.getDescription(), 6));
+    if (param.getDefault() != null) {
+      terminal.println("       Default: " + param.getDefault());
+    }
+  }
+
+  private void printUsage(String usage) {
+    terminal.println("Usage: " + APPLICATION_NAME + " " + usage);
+  }
+
+  private void printHeading(String heading) {
+    terminal.println("  " + terminal.ansi("@|green " + heading + ":|@"));
+  }
+
+  private String wrap(String text, int indent) {
+    val rightPadding = 10;
+    val max = terminal.getWidth() - indent - rightPadding;
+    String[] words = text.split(" ");
+    int current = indent;
+    int i = 0;
+
+    val wrapped = new StringBuilder();
+    while (i < words.length) {
+      val word = words[i];
+      if (word.length() > max || current + word.length() <= max) {
+        wrapped.append(" ").append(word);
+        current += word.length() + 1;
+      } else {
+        wrapped.append("\n").append(repeat(" ", indent + 1)).append(word);
+        current = indent;
+      }
+      i++;
+    }
+
+    return wrapped.toString();
   }
 
 }

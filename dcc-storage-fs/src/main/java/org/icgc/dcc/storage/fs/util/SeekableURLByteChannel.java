@@ -65,6 +65,7 @@ public class SeekableURLByteChannel implements SeekableByteChannel {
   protected long position;
   protected long lastPosition;
   protected int connectCount;
+  protected int byteCount;
 
   /**
    * State - Data
@@ -126,6 +127,7 @@ public class SeekableURLByteChannel implements SeekableByteChannel {
 
       log.debug("Reading range '{}:{}-{}', Connect count: {}", url, start, end, connectCount);
       val n = read(buffer, length);
+      byteCount += n;
       position += n;
       lastPosition = position;
       log.debug("Read bytes: {}, Current position: {}", n, position);

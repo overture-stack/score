@@ -15,42 +15,64 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.client.command;
+package org.icgc.dcc.storage.client.mount;
 
-import org.icgc.dcc.storage.client.cli.ManifestResourceConverter;
-import org.icgc.dcc.storage.client.manifest.ManfiestService;
-import org.icgc.dcc.storage.client.manifest.ManifestResource;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import static com.google.common.collect.Iterables.get;
+import static java.util.stream.Collectors.joining;
+import static lombok.AccessLevel.PRIVATE;
 
-import com.beust.jcommander.Parameter;
-import com.beust.jcommander.Parameters;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.function.Function;
 
+import com.google.common.base.Splitter;
+import com.google.common.collect.Maps;
+
+import lombok.NoArgsConstructor;
 import lombok.val;
 
-@Component
-@Parameters(separators = "=", commandDescription = "Resolve a file object manifest and display it")
-public class ManifestCommand extends AbstractClientCommand {
+@NoArgsConstructor(access = PRIVATE)
+public class MountOptions {
 
   /**
-   * Options.
+   * Constants.
    */
-  @Parameter(names = "--manifest", description = "path to manifest id, url or file", required = true, converter = ManifestResourceConverter.class)
-  private ManifestResource manifestResource;
+  private static final Splitter OPTIONS_SPLITTER = Splitter.on(",")
+      .omitEmptyStrings()
+      .trimResults();
+  private static final Splitter OPTION_SPLITTER = Splitter.on("=")
+      .omitEmptyStrings()
+      .trimResults();
 
-  /**
-   * Dependencies.
-   */
-  @Autowired
-  private ManfiestService manfiestService;
+  public static Map<String, String> parseOptions(String value) {
+    val options = Maps.<String, String> newLinkedHashMap();
+    val list = splitOptions(value);
+    for (val element : list) {
+      val option = splitOption(element);
 
-  @Override
-  public int execute() throws Exception {
-    terminal.printStatus("Resolving manfiest for '" + manifestResource + "'");
-    val manifestContent = manfiestService.getManifestContent(manifestResource);
-    System.out.printf("%s", manifestContent);
+      val k = get(option, 0);
+      val v = get(option, 1, null);
+      options.put(k, v);
+    }
 
-    return SUCCESS_STATUS;
+    return options;
+  }
+
+  public static String formatOptions(Map<String, String> options) {
+    return options.entrySet().stream().map(formatOption()).collect(joining(","));
+  }
+
+  private static Function<? super Entry<String, String>, ? extends String> formatOption() {
+    return entry -> entry.getKey() + (entry.getValue() == null ? "" : "=" + entry.getValue());
+  }
+
+  private static List<String> splitOptions(String value) {
+    return OPTIONS_SPLITTER.splitToList(value);
+  }
+
+  private static List<String> splitOption(final java.lang.String element) {
+    return OPTION_SPLITTER.splitToList(element);
   }
 
 }

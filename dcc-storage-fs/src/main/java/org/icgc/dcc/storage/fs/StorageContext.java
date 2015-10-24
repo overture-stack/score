@@ -32,4 +32,6 @@ public interface StorageContext {
 
   URL getUrl(String objectId);
 
+  void incrementCount(String name, long value);
+
 }

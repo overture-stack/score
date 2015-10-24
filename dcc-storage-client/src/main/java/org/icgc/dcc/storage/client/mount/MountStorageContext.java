@@ -28,6 +28,7 @@ import java.net.URL;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.icgc.dcc.storage.client.download.DownloadService;
 import org.icgc.dcc.storage.client.metadata.Entity;
@@ -72,6 +73,8 @@ public class MountStorageContext implements StorageContext {
   private final LoadingCache<String, URL> urlCache = createURLCache();
   @Getter(lazy = true)
   private final boolean authorized = resolveAuthorized();
+  @Getter
+  private Map<String, Long> metrics = new ConcurrentHashMap<>();
 
   @SneakyThrows
   public boolean resolveAuthorized() {
@@ -107,6 +110,14 @@ public class MountStorageContext implements StorageContext {
   @Override
   public Collection<StorageFile> getFilesByGnosId(String gnosId) {
     return getFileGnosIdIndex().get(gnosId);
+  }
+
+  @Override
+  public void incrementCount(String name, long n) {
+    val value = metrics.get(name);
+    val count = (value == null ? 0 : value) + n;
+
+    metrics.put(name, count);
   }
 
   private List<StorageFile> resolveFiles() {

@@ -17,12 +17,12 @@
  */
 package org.icgc.dcc.storage.client.mount;
 
+import static org.icgc.dcc.storage.client.mount.MountOptions.parseOptions;
 import static org.springframework.util.ReflectionUtils.findField;
 
 import java.io.IOException;
 import java.nio.file.FileSystem;
 import java.nio.file.Path;
-import java.util.HashMap;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -51,28 +51,25 @@ public class MountService {
    * 
    * @see http://sourceforge.net/p/fuse/fuse/ci/master/tree/README
    */
-  private final Map<String, String> options = new HashMap<String, String>() {
-
-    {
+  public static final String INTERNAL_OPTIONS =
+      // @formatter:off
       // Prevent async_read read-ahead which will cause multiple reconnects with HTTP backend
-      put("sync_read", null);
+      "sync_read," + 
 
       // This option disables flushing the cache of the file contents on every open(2). This
       // should only be enabled on filesystems, where the file data is never changed
       // externally (not through the mounted FUSE filesystem).
-      put("kernel_cache", null);
+      "kernel_cache," + 
 
       // Set the maximum number of bytes to read-ahead. he default is determined by the kernel. On linux-2.6.22 or
       // earlier it's 131072
-      put("max_readahead", "1048576"); // 1 MB
+      "max_readahead=1048576," + // 1 MB
 
       // File metadata caching
-      put("entry_timeout", "3600"); // 1 hr
-      put("negative_timeout", "3600"); // 1 hr
-      put("attr_timeout", "3600"); // 1 hr
-    }
-
-  };
+      "entry_timeout=3600,"    + // 1 hr
+      "negative_timeout=3600," + // 1 hr
+      "attr_timeout=3600";       // 1 hr
+      // @formatter:on
 
   public void mount(@NonNull FileSystem fileSystem, @NonNull Path mountPoint, Map<String, String> options)
       throws IOException, InterruptedException {
@@ -90,9 +87,9 @@ public class MountService {
   }
 
   private Map<String, String> resolveOptions(Map<String, String> additionalOptions) {
-    val combined = Maps.<String, String> newHashMap();
+    val combined = Maps.<String, String> newLinkedHashMap();
     combined.putAll(additionalOptions);
-    combined.putAll(options);
+    combined.putAll(parseOptions(INTERNAL_OPTIONS));
 
     return combined;
   }

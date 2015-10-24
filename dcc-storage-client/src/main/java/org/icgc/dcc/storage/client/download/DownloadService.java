@@ -17,6 +17,7 @@
  */
 package org.icgc.dcc.storage.client.download;
 
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Iterables.getOnlyElement;
 
 import java.io.File;
@@ -119,7 +120,7 @@ public class DownloadService {
         if (redo) {
           File objFile = Downloads.getDownloadFile(outputDirectory, objectId);
           if (objFile.exists()) {
-            objFile.delete();
+            checkState(objFile.delete());
           }
           startNewDownload(outputDirectory, objectId, offset, length);
         } else {

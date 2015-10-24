@@ -2,7 +2,6 @@ package org.icgc.dcc.storage.client;
 
 import java.util.function.Consumer;
 
-import org.icgc.dcc.storage.client.ClientMain;
 import org.junit.Rule;
 import org.springframework.boot.test.OutputCapture;
 
@@ -35,8 +34,8 @@ public abstract class AbstractClientMainTest {
     @Override
     public void accept(Integer exitCode) {
       this.exitCode = exitCode;
-
     }
+
   }
 
 }

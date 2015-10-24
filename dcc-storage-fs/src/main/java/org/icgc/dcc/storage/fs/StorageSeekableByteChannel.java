@@ -28,11 +28,20 @@ import lombok.val;
 
 public class StorageSeekableByteChannel extends SeekableURLByteChannel {
 
+  /**
+   * Configuration.
+   */
   private final StoragePath path;
+
+  /**
+   * Dependencies
+   */
+  private final StorageContext context;
 
   public StorageSeekableByteChannel(@NonNull StoragePath path, @NonNull StorageContext context) {
     super(getUrl(path, context));
     this.path = path;
+    this.context = context;
   }
 
   @SneakyThrows
@@ -53,6 +62,13 @@ public class StorageSeekableByteChannel extends SeekableURLByteChannel {
     }
 
     return super.size();
+  }
+
+  @Override
+  synchronized public void close() throws IOException {
+    super.close();
+    context.incrementCount("connectCount", connectCount);
+    context.incrementCount("byteCount", byteCount);
   }
 
 }

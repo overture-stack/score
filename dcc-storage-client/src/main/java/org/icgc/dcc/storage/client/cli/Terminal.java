@@ -80,7 +80,8 @@ public class Terminal {
             print(ansi().cursorLeft(2).toString());
           }
 
-          val state = " " + ansi().fg(GREEN).a(animation.charAt(i++ % animation.length())).reset().toString();
+          val c = animation.charAt(i++ % animation.length());
+          val state = " " + ansi().fg(GREEN).a(c).reset().toString();
           print(state);
         } else {
           Thread.sleep(2000L);

@@ -17,29 +17,14 @@
  */
 package org.icgc.dcc.storage.client.cli;
 
-import static com.google.common.collect.Iterables.get;
-
-import java.util.List;
 import java.util.Map;
+
+import org.icgc.dcc.storage.client.mount.MountOptions;
 
 import com.beust.jcommander.ParameterException;
 import com.beust.jcommander.converters.BaseConverter;
-import com.google.common.base.Splitter;
-import com.google.common.collect.Maps;
-
-import lombok.val;
 
 public class MountOptionsConverter extends BaseConverter<Map<String, String>> {
-
-  /**
-   * Constants.
-   */
-  private static final Splitter OPTIONS_SPLITTER = Splitter.on(",")
-      .omitEmptyStrings()
-      .trimResults();
-  private static final Splitter OPTION_SPLITTER = Splitter.on("=")
-      .omitEmptyStrings()
-      .trimResults();
 
   public MountOptionsConverter(String optionName) {
     super(optionName);
@@ -48,28 +33,10 @@ public class MountOptionsConverter extends BaseConverter<Map<String, String>> {
   @Override
   public Map<String, String> convert(String value) {
     try {
-      val options = Maps.<String, String> newHashMap();
-      val list = splitOptions(value);
-      for (val element : list) {
-        val option = splitOption(element);
-
-        val k = get(option, 0);
-        val v = get(option, 1, null);
-        options.put(k, v);
-      }
-
-      return options;
+      return MountOptions.parseOptions(value);
     } catch (Exception ex) {
       throw new ParameterException(getErrorString(value, "mount options"));
     }
-  }
-
-  private static List<String> splitOptions(String value) {
-    return OPTIONS_SPLITTER.splitToList(value);
-  }
-
-  private static List<String> splitOption(final java.lang.String element) {
-    return OPTION_SPLITTER.splitToList(element);
   }
 
 }

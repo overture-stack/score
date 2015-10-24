@@ -17,6 +17,7 @@
  */
 package org.icgc.dcc.storage.client.util;
 
+import java.io.Serializable;
 import java.util.Comparator;
 
 import org.icgc.dcc.storage.client.slicing.Slice;
@@ -30,7 +31,7 @@ import org.icgc.dcc.storage.client.slicing.Slice;
  * java implementation of the algorithm and was downloaded from 
  * http://www.davekoelle.com/alphanum.html
  */
-public class AlphanumComparator implements Comparator<Slice> {
+public class AlphanumComparator implements Comparator<Slice>, Serializable {
 
   private final boolean isDigit(char ch) {
     return ch >= 48 && ch <= 57;
@@ -51,8 +52,7 @@ public class AlphanumComparator implements Comparator<Slice> {
         chunk.append(c);
         marker++;
       }
-    }
-    else {
+    } else {
       while (marker < slength) {
         c = s.charAt(marker);
         if (isDigit(c)) {
@@ -96,8 +96,7 @@ public class AlphanumComparator implements Comparator<Slice> {
             }
           }
         }
-      }
-      else {
+      } else {
         result = thisChunk.compareTo(thatChunk);
       }
 

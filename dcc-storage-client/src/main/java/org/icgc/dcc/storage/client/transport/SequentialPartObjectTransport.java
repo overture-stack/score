@@ -17,6 +17,8 @@
  */
 package org.icgc.dcc.storage.client.transport;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.io.File;
 import java.util.List;
 
@@ -24,8 +26,6 @@ import org.icgc.dcc.storage.client.progress.Progress;
 import org.icgc.dcc.storage.client.progress.ProgressDataChannel;
 import org.icgc.dcc.storage.core.model.DataChannel;
 import org.icgc.dcc.storage.core.model.Part;
-
-import com.google.common.base.Preconditions;
 
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -99,11 +99,11 @@ public class SequentialPartObjectTransport implements Transport {
 
     @Override
     public Transport build() {
-      Preconditions.checkNotNull(parts);
-      Preconditions.checkNotNull(proxy);
-      Preconditions.checkNotNull(objectId);
-      Preconditions.checkNotNull(uploadId);
-      Preconditions.checkNotNull(progressBar);
+      checkNotNull(parts);
+      checkNotNull(proxy);
+      checkNotNull(objectId);
+      checkNotNull(uploadId);
+      checkNotNull(progressBar);
       return new SequentialPartObjectTransport(this);
     }
 
