@@ -17,24 +17,59 @@
  */
 package org.icgc.dcc.storage.client.cli;
 
-import org.icgc.dcc.storage.client.manifest.ManifestResource;
+import static com.google.common.collect.Iterables.get;
+
+import java.util.List;
+import java.util.Map;
 
 import com.beust.jcommander.ParameterException;
 import com.beust.jcommander.converters.BaseConverter;
+import com.google.common.base.Splitter;
+import com.google.common.collect.Maps;
 
-public class ManifestResourceConverter extends BaseConverter<ManifestResource> {
+import lombok.val;
 
-  public ManifestResourceConverter(String optionName) {
+public class MountOptionsConverter extends BaseConverter<Map<String, String>> {
+
+  /**
+   * Constants.
+   */
+  private static final Splitter OPTIONS_SPLITTER = Splitter.on(",")
+      .omitEmptyStrings()
+      .trimResults();
+  private static final Splitter OPTION_SPLITTER = Splitter.on("=")
+      .omitEmptyStrings()
+      .trimResults();
+
+  public MountOptionsConverter(String optionName) {
     super(optionName);
   }
 
   @Override
-  public ManifestResource convert(String value) {
+  public Map<String, String> convert(String value) {
     try {
-      return new ManifestResource(value);
+      val options = Maps.<String, String> newHashMap();
+      val list = splitOptions(value);
+      for (val element : list) {
+        val option = splitOption(element);
+
+        val k = get(option, 0);
+        val v = get(option, 1, null);
+        options.put(k, v);
+      }
+
+      return options;
     } catch (Exception ex) {
-      throw new ParameterException(getErrorString(value, "a manifest resource by id, url or file"));
+      throw new ParameterException(getErrorString(value, "mount options"));
     }
+  }
+
+  private static List<String> splitOptions(String value) {
+    return OPTIONS_SPLITTER.splitToList(value);
+  }
+
+  private static List<String> splitOption(final java.lang.String element) {
+    return OPTION_SPLITTER.splitToList(element);
   }
 
 }

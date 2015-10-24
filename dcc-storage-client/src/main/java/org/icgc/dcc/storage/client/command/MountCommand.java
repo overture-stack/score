@@ -17,6 +17,7 @@
  */
 package org.icgc.dcc.storage.client.command;
 
+import static com.google.common.collect.Maps.newHashMap;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.icgc.dcc.storage.client.cli.Parameters.checkParameter;
@@ -26,9 +27,11 @@ import static org.icgc.dcc.storage.fs.util.Formats.formatBytesUnits;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 
 import org.icgc.dcc.storage.client.cli.DirectoryValidator;
+import org.icgc.dcc.storage.client.cli.MountOptionsConverter;
 import org.icgc.dcc.storage.client.download.DownloadService;
 import org.icgc.dcc.storage.client.manifest.ManfiestService;
 import org.icgc.dcc.storage.client.manifest.ManifestResource;
@@ -55,18 +58,20 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
-@Parameters(separators = "=", commandDescription = "Mounts a read-only file system view of the remote repository")
+@Parameters(separators = "=", commandDescription = "Mounts a read-only FUSE file system view of the remote repository")
 public class MountCommand extends AbstractClientCommand {
 
   /**
    * Options
    */
-  @Parameter(names = "--mount-point", description = "the mount point of the file system", required = true, validateValueWith = DirectoryValidator.class)
+  @Parameter(names = "--mount-point", description = "the mount point of the  FUSE file system", required = true, validateValueWith = DirectoryValidator.class)
   private File mountPoint;
   @Parameter(names = "--manifest", description = "manifest id (from the Data Portal), url or file path")
   private ManifestResource manifestResource;
   @Parameter(names = "--cache-metadata", description = "to speedup load times, cache metadata on disk locally and use if available")
   private boolean cacheMetadata;
+  @Parameter(names = "--options", description = "the mount options of the file system (e.g. --options user_allow_other,allow_other,fsname=icgc,debug)", converter = MountOptionsConverter.class)
+  private Map<String, String> options = newHashMap();
 
   /**
    * Dependencies.
@@ -89,6 +94,10 @@ public class MountCommand extends AbstractClientCommand {
     try {
       int i = 1;
 
+      //
+      // Index
+      //
+
       terminal.printStatus(i++, "Indexing remote entities. Please wait");
       val entities = terminal.printWaiting(this::resolveEntities);
 
@@ -99,6 +108,10 @@ public class MountCommand extends AbstractClientCommand {
         objects = filterManifestObjects(objects);
       }
 
+      //
+      // Authorization
+      //
+
       terminal.printStatus(i++, "Checking access. Please wait");
       val context = new MountStorageContext(downloadService, entities, objects);
       if (!terminal.printWaiting(context::isAuthorized)) {
@@ -106,19 +119,18 @@ public class MountCommand extends AbstractClientCommand {
         return FAILURE_STATUS;
       }
 
+      //
+      // Report
+      //
+
       if (hasManifest()) {
         terminal.printStatus(i++, "Applying manifest view:\n");
-
-        terminal.printLine();
-        long totalSize = 0;
-        for (val file : context.getFiles()) {
-          terminal.println(" - " + file.toString());
-
-          totalSize += file.getSize();
-        }
-        terminal.printLine();
-        terminal.println(" Total size: " + formatBytes(totalSize) + " " + formatBytesUnits(totalSize) + "\n");
+        reportManifest(context);
       }
+
+      //
+      // Mount
+      //
 
       terminal.printStatus(i++, "Mounting file system to '" + mountPoint.getAbsolutePath() + "'");
       terminal.printWaiting(() -> mount(context));
@@ -127,6 +139,10 @@ public class MountCommand extends AbstractClientCommand {
           terminal.label(
               "Successfully mounted file system at " + terminal.value(mountPoint.getAbsolutePath())
                   + " and is now ready for use!"));
+
+      //
+      // Wait
+      //
 
       // Let the user know we are done when the JVM exits
       val watch = Stopwatch.createStarted();
@@ -149,7 +165,19 @@ public class MountCommand extends AbstractClientCommand {
   @SneakyThrows
   private void mount(MountStorageContext context) {
     val fileSystem = StorageFileSystems.newFileSystem(context);
-    mountService.mount(fileSystem, mountPoint.toPath());
+    mountService.mount(fileSystem, mountPoint.toPath(), options);
+  }
+
+  private void reportManifest(MountStorageContext context) {
+    terminal.printLine();
+    long totalSize = 0;
+    for (val file : context.getFiles()) {
+      terminal.println(" - " + file.toString());
+
+      totalSize += file.getSize();
+    }
+    terminal.printLine();
+    terminal.println(" Total size: " + formatBytes(totalSize) + " " + formatBytesUnits(totalSize) + "\n");
   }
 
   private List<ObjectInfo> resolveObjects() throws IOException {

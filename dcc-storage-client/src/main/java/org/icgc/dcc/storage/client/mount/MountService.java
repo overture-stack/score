@@ -28,6 +28,8 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import com.google.common.collect.Maps;
+
 import co.paralleluniverse.javafs.JavaFS;
 import jnr.ffi.provider.ClosureManager;
 import jnr.ffi.provider.jffi.NativeRuntime;
@@ -72,11 +74,12 @@ public class MountService {
 
   };
 
-  public void mount(@NonNull FileSystem fileSystem, @NonNull Path mountPoint) throws IOException, InterruptedException {
+  public void mount(@NonNull FileSystem fileSystem, @NonNull Path mountPoint, Map<String, String> options)
+      throws IOException, InterruptedException {
     patchFfi();
 
     val readOnly = true;
-    JavaFS.mount(fileSystem, mountPoint, readOnly, logging, options);
+    JavaFS.mount(fileSystem, mountPoint, readOnly, logging, resolveOptions(options));
   }
 
   /**
@@ -84,6 +87,14 @@ public class MountService {
    */
   public void unmount(@NonNull Path mountPoint) throws IOException {
     JavaFS.unmount(mountPoint);
+  }
+
+  private Map<String, String> resolveOptions(Map<String, String> additionalOptions) {
+    val combined = Maps.<String, String> newHashMap();
+    combined.putAll(additionalOptions);
+    combined.putAll(options);
+
+    return combined;
   }
 
   /**
