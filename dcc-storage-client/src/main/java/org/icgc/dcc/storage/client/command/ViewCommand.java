@@ -26,9 +26,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import org.icgc.dcc.storage.client.cli.ConverterFactory.OutputTypeConverter;
 import org.icgc.dcc.storage.client.cli.FileValidator;
 import org.icgc.dcc.storage.client.cli.ObjectIdValidator;
-import org.icgc.dcc.storage.client.cli.OutputTypeConverter;
 import org.icgc.dcc.storage.client.download.DownloadService;
 import org.icgc.dcc.storage.client.metadata.Entity;
 import org.icgc.dcc.storage.client.metadata.MetadataService;
@@ -61,7 +61,7 @@ import lombok.extern.slf4j.Slf4j;
 public class ViewCommand extends AbstractClientCommand {
 
   public enum OutputType {
-    bam, sam
+    BAM, SAM
   }
 
   /**
@@ -74,8 +74,8 @@ public class ViewCommand extends AbstractClientCommand {
   private boolean headerOnly = false;
   @Parameter(names = "--output-file", description = "filename to write output to. Uses filename from metadata, or original input filename if not specified")
   private String fileName;
-  @Parameter(names = "--output-type", description = "output format of query.", converter = OutputTypeConverter.class)
-  private OutputType outputType = OutputType.sam;
+  @Parameter(names = "--output-type", description = "output format of query", converter = OutputTypeConverter.class)
+  private OutputType outputType = OutputType.SAM;
   @Parameter(names = "--object-id", description = "object id of BAM file to download slice from", validateValueWith = ObjectIdValidator.class)
   private String objectId;
   @Parameter(names = "--input-file", description = "local path to BAM file. Overrides specification of --object-id", validateValueWith = FileValidator.class)
@@ -169,12 +169,12 @@ public class ViewCommand extends AbstractClientCommand {
     val stdout = (fileName == null) || fileName.trim().isEmpty();
     val outputStream = stdout ? System.out : new FileOutputStream(new File(fileName));
 
-    return outputType == OutputType.bam ? factory.makeBAMWriter(header, true, outputStream) : factory
+    return outputType == OutputType.BAM ? factory.makeBAMWriter(header, true, outputStream) : factory
         .makeSAMWriter(header, true, outputStream);
   }
 
   private SamInputResource getFileResource(File bamFile, File baiFile) {
-    if (outputType == OutputType.bam) {
+    if (outputType == OutputType.BAM) {
       return SamInputResource.of(bamFile).index(baiFile);
     } else {
       return SamInputResource.of(bamFile);

@@ -24,6 +24,8 @@ public interface StorageContext {
 
   boolean isAuthorized();
 
+  StorageFileLayout getLayout();
+
   Collection<StorageFile> getFiles();
 
   StorageFile getFileById(String id);

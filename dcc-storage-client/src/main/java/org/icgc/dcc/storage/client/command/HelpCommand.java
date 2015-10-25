@@ -85,10 +85,15 @@ public class HelpCommand extends AbstractClientCommand {
     val mainParam = firstNonNull(command.getMainParameterDescription(), "");
     val description = cli.getCommandDescription(commandName);
     terminal.clearLine();
-    printUsage(commandName + " [options] " + mainParam);
+
+    val hasOptions = !command.getParameters().isEmpty();
+
+    printUsage(commandName + (hasOptions ? " [options] " : " ") + mainParam);
     printHeading("Command");
     terminal.println("    " + terminal.ansi("@|blue " + commandName + "|@") + "   " + description);
-    printParams(command);
+    if (hasOptions) {
+      printParams(command);
+    }
   }
 
   private void printParams(JCommander command) {
@@ -104,7 +109,8 @@ public class HelpCommand extends AbstractClientCommand {
     terminal.println(" " + required + " " + name);
     terminal.println("      " + wrap(param.getDescription(), 6));
     if (param.getDefault() != null) {
-      terminal.println("       Default: " + param.getDefault());
+      val defaultValue = formatDefault(param.getDefault());
+      terminal.println("       Default: " + defaultValue);
     }
   }
 
@@ -137,6 +143,17 @@ public class HelpCommand extends AbstractClientCommand {
     }
 
     return wrapped.toString();
+  }
+
+  private static String formatDefault(Object defaultValue) {
+    if (defaultValue == null) {
+      return null;
+    }
+    if (Enum.class.isAssignableFrom(defaultValue.getClass())) {
+      defaultValue = defaultValue.toString().toLowerCase().replaceAll("_", "-");
+    }
+
+    return defaultValue.toString();
   }
 
 }

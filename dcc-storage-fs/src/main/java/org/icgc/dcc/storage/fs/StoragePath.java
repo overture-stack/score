@@ -17,232 +17,165 @@
  */
 package org.icgc.dcc.storage.fs;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.nio.file.InvalidPathException;
-import java.nio.file.LinkOption;
 import java.nio.file.Path;
-import java.nio.file.WatchEvent;
-import java.nio.file.WatchKey;
-import java.nio.file.WatchService;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.RequiredArgsConstructor;
+import org.icgc.dcc.storage.fs.util.GenericPath;
+
 import lombok.val;
 
 /**
  * @see https://github.com/semiosis/glusterfs-java-filesystem/blob/f6fbaa27f15d8226f06ca34c51dadc91486e49af/glusterfs-
  * java-filesystem/src/main/java/com/peircean/glusterfs/GlusterPath.java
  */
-@Data
-@RequiredArgsConstructor
-@EqualsAndHashCode(exclude = "pathString")
-public class StoragePath implements Path {
+public class StoragePath extends GenericPath<StorageFileSystem> {
 
-  /**
-   * Dependencies.
-   */
-  private final StorageFileSystem fileSystem;
-
-  /**
-   * Metadata.
-   */
-  private final String[] parts;
-  private final boolean absolute;
-
-  /**
-   * State.
-   */
-  private String pathString;
+  private final StorageFileLayout layout;
+  private final StorageContext context;
 
   public StoragePath(StorageFileSystem fileSystem, String path) {
-    if (null == fileSystem) {
-      throw new IllegalArgumentException("fileSystem can not be empty");
-    }
-    if (null == path) {
-      throw new InvalidPathException("", "path can not be null");
-    }
-    this.fileSystem = fileSystem;
-    this.pathString = path;
+    super(fileSystem, path);
+    this.context = fileSystem.getProvider().getContext();
+    this.layout = context.getLayout();
+  }
 
-    String stripped = path;
-    if (path.startsWith(fileSystem.getSeparator())) {
-      absolute = true;
-      stripped = stripped.substring(1);
-    } else {
-      absolute = false;
-    }
-
-    if (stripped.endsWith(fileSystem.getSeparator())) {
-      stripped = stripped.substring(0, stripped.length() - 1);
-    }
-    parts = stripped.split(fileSystem.getSeparator());
+  public StoragePath(StorageFileSystem fileSystem, String[] parts, boolean absolute) {
+    super(fileSystem, parts, absolute);
+    this.context = fileSystem.getProvider().getContext();
+    this.layout = context.getLayout();
   }
 
   public Optional<StorageFile> getFile() {
-    val context = fileSystem.getProvider().getContext();
-    if (parts.length < 2) {
-      return Optional.empty();
+    if (layout == StorageFileLayout.BUNDLE) {
+      if (parts.length < 2) {
+        return Optional.empty();
+      }
+
+      val gnosId = getGnosId();
+      val fileName = getFilename();
+
+      return context.getFilesByGnosId(gnosId).stream()
+          .filter(file -> file.getFileName().equals(fileName))
+          .findFirst();
+    } else if (layout == StorageFileLayout.OBJECT_ID) {
+      if (parts.length == 0) {
+        return Optional.empty();
+      }
+      val fileName = getFilename();
+      return Optional.ofNullable(context.getFileById(fileName));
     }
 
-    val gnosId = getGnosId();
-    val fileName = getFilename();
-
-    return context.getFilesByGnosId(gnosId).stream()
-        .filter(file -> file.getFileName().equals(fileName))
-        .findFirst();
-  }
-
-  public String getFilename() {
-    if (parts.length < 2) {
-      return null;
-    }
-
-    return parts[1];
+    return null;
   }
 
   public String getGnosId() {
-    if (parts.length < 1) {
-      return null;
+    if (layout == StorageFileLayout.BUNDLE) {
+      if (parts.length < 1) {
+        return null;
+      }
+
+      return parts[0];
     }
 
-    return parts[0];
-  }
-
-  @Override
-  public boolean isAbsolute() {
-    return absolute;
-  }
-
-  @Override
-  public Path getRoot() {
-    if (absolute) {
-      return fileSystem.getRootDirectories().iterator().next();
-    } else {
-      return null;
-    }
+    return null;
   }
 
   @Override
   public Path getFileName() {
-    if (parts.length == 0 || getGnosId().isEmpty()) {
-      return null;
-    } else {
-      return new StoragePath(fileSystem, parts[parts.length - 1]);
+    if (layout == StorageFileLayout.BUNDLE) {
+      if (parts.length == 0 || getGnosId().isEmpty()) {
+        return null;
+      } else {
+        return new StoragePath(fileSystem, parts[parts.length - 1]);
+      }
+    } else if (layout == StorageFileLayout.OBJECT_ID) {
+      if (parts.length == 0) {
+        return null;
+      } else {
+        return new StoragePath(fileSystem, parts[parts.length - 1]);
+      }
     }
+
+    return null;
   }
 
   @Override
   public Path getParent() {
-    if (parts.length <= 1 || getGnosId().isEmpty()) {
-      if (absolute) {
-        return getRoot();
+    if (layout == StorageFileLayout.BUNDLE) {
+      if (parts.length <= 1 || getGnosId().isEmpty()) {
+        if (absolute) {
+          return getRoot();
+        } else {
+          return null;
+        }
       } else {
-        return null;
+        return new StoragePath(fileSystem, Arrays.copyOfRange(parts, 0, parts.length - 1), absolute);
       }
-    } else {
-      return new StoragePath(fileSystem, Arrays.copyOfRange(parts, 0, parts.length - 1), absolute);
+    } else if (layout == StorageFileLayout.OBJECT_ID) {
+      if (parts.length <= 1) {
+        if (absolute) {
+          return getRoot();
+        } else {
+          return null;
+        }
+      } else {
+        return new StoragePath(fileSystem, Arrays.copyOfRange(parts, 0, parts.length - 1), absolute);
+      }
     }
+
+    return null;
   }
 
   @Override
   public int getNameCount() {
-    if (parts.length <= 1 && getGnosId().isEmpty()) {
-      if (absolute) {
-        return 0;
+    if (layout == StorageFileLayout.BUNDLE) {
+      if (parts.length <= 1 && getGnosId().isEmpty()) {
+        if (absolute) {
+          return 0;
+        } else {
+          throw new IllegalStateException("Only the root path should have one empty part");
+        }
       } else {
-        throw new IllegalStateException("Only the root path should have one empty part");
+        return parts.length;
       }
-    } else {
-      return parts.length;
+    } else if (layout == StorageFileLayout.OBJECT_ID) {
+      if (parts.length < 1) {
+        if (absolute) {
+          return 0;
+        } else {
+          throw new IllegalStateException("Only the root path should have one empty part");
+        }
+      } else {
+        return parts.length;
+      }
     }
+
+    return 0;
   }
 
   @Override
   public Path getName(int i) {
-    if (i < 0 || i >= parts.length || (0 == i && parts.length <= 1 && getGnosId().isEmpty())) {
+    if (i < 0 || i >= parts.length
+        || (0 == i && parts.length <= 1 && layout == StorageFileLayout.BUNDLE && getGnosId().isEmpty())) {
       throw new IllegalArgumentException("Invalid name index");
     }
-    return new StoragePath(fileSystem, Arrays.copyOfRange(parts, 0, i + 1), absolute);
+    return createPath(fileSystem, Arrays.copyOfRange(parts, 0, i + 1), absolute);
   }
 
   @Override
   public Path subpath(int i, int i2) {
-    if ((0 == i && parts.length <= 1 && getGnosId().isEmpty())
+    if ((0 == i && parts.length <= 1 && layout == StorageFileLayout.BUNDLE && getGnosId().isEmpty())
         || i < 0 || i2 < 0
         || i >= parts.length || i2 > parts.length
         || i > i2) {
       throw new IllegalArgumentException("invalid indices");
     }
-    return new StoragePath(fileSystem, Arrays.copyOfRange(parts, i, i2), absolute);
-  }
-
-  @Override
-  public boolean startsWith(Path path) {
-    StoragePath otherPath = (StoragePath) path;
-    if (this.equals(otherPath)) {
-      return true;
-    }
-    if (otherPath.getParts().length > parts.length) {
-      return false;
-    }
-    if (absolute && otherPath.isAbsolute() && otherPath.getParts()[0].isEmpty()) {
-      return true;
-    }
-    String[] thisPrefix = Arrays.copyOfRange(parts, 0, otherPath.getParts().length);
-    return ((absolute == otherPath.isAbsolute())
-        && (Arrays.equals(thisPrefix, otherPath.getParts())));
-  }
-
-  @Override
-  public boolean startsWith(String s) {
-    return startsWith(new StoragePath(fileSystem, s));
-  }
-
-  @Override
-  public boolean endsWith(Path path) {
-    StoragePath otherPath = (StoragePath) path;
-    if (this.equals(otherPath)) {
-      return true;
-    }
-    if (otherPath.getParts().length > parts.length) {
-      return false;
-    }
-    if (absolute && otherPath.isAbsolute() && otherPath.getParts()[0].isEmpty()) {
-      return true;
-    }
-    String[] thisSuffix = Arrays.copyOfRange(parts, parts.length - otherPath.getParts().length, parts.length);
-    return ((!otherPath.isAbsolute())
-        && (Arrays.equals(thisSuffix, otherPath.getParts())));
-  }
-
-  @Override
-  public boolean endsWith(String s) {
-    return toString().endsWith(s);
-  }
-
-  @Override
-  public Path normalize() {
-    val newParts = new LinkedList<String>();
-    for (val part : parts) {
-      if (part.equals("..")) {
-        newParts.remove(newParts.size() - 1);
-      } else if (!part.equals(".") && !part.isEmpty()) {
-        newParts.add(part);
-      }
-    }
-
-    return new StoragePath(fileSystem, newParts.toArray(new String[] {}), absolute);
+    return createPath(fileSystem, Arrays.copyOfRange(parts, i, i2), absolute);
   }
 
   @Override
@@ -262,146 +195,46 @@ public class StoragePath implements Path {
 
     String[] newParts = Arrays.copyOf(parts, parts.length + otherPath.getParts().length);
     System.arraycopy(otherPath.getParts(), 0, newParts, parts.length, otherPath.getParts().length);
-    return new StoragePath(fileSystem, newParts, absolute);
-  }
-
-  @Override
-  public Path resolve(String s) {
-    return resolve(new StoragePath(fileSystem, s));
-  }
-
-  @Override
-  public Path resolveSibling(Path path) {
-    return getParent().resolve(path);
-  }
-
-  @Override
-  public Path resolveSibling(String s) {
-    return getParent().resolve(s);
-  }
-
-  @Override
-  public Path relativize(Path path) {
-    if (!fileSystem.equals(path.getFileSystem())) {
-      throw new IllegalArgumentException("Can not relativize other path because it's on a different filesystem");
-    }
-
-    if (!this.isAbsolute() || !path.isAbsolute()) {
-      throw new IllegalArgumentException("Can only relativize when both paths are absolute");
-    }
-
-    val other = (StoragePath) path;
-    val relativeParts = new LinkedList<String>();
-    boolean stillCommon = true;
-    int lastCommonName = -1;
-    for (int i = 0; i < parts.length; i++) {
-      if (i >= other.getParts().length) {
-        for (int r = 0; r < other.getParts().length; r++) {
-          relativeParts.add("..");
-        }
-        break;
-      }
-      if (stillCommon && parts[i].equals(other.getParts()[i])) {
-        lastCommonName = i;
-      } else {
-        stillCommon = false;
-        relativeParts.add("..");
-      }
-    }
-
-    for (int i = lastCommonName + 1; i < other.getParts().length; i++) {
-      relativeParts.add(other.getParts()[i]);
-    }
-
-    return new StoragePath(fileSystem, relativeParts.toArray(new String[] {}), false);
-  }
-
-  @Override
-  public URI toUri() {
-    try {
-      val fs = getFileSystem();
-      return new URI(fs.provider().getScheme(), null, toString(), null, null);
-    } catch (URISyntaxException e) {
-      throw new IllegalStateException(e);
-    }
-  }
-
-  @Override
-  public Path toAbsolutePath() {
-    if (!absolute) {
-      throw new UnsupportedOperationException();
-    } else {
-      return this;
-    }
-  }
-
-  @Override
-  public Path toRealPath(LinkOption... linkOptions) throws IOException {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public File toFile() {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public WatchKey register(WatchService watchService, WatchEvent.Kind<?>[] kinds, WatchEvent.Modifier... modifiers)
-      throws IOException {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public WatchKey register(WatchService watchService, WatchEvent.Kind<?>... kinds) throws IOException {
-    throw new UnsupportedOperationException();
+    return createPath(fileSystem, newParts, absolute);
   }
 
   @Override
   public Iterator<Path> iterator() {
-    List<Path> list = new ArrayList<Path>(parts.length);
-    if (parts.length >= 1 && !getGnosId().isEmpty()) {
+    List<Path> list = new ArrayList<>(parts.length);
+    if (parts.length >= 1 && layout == StorageFileLayout.BUNDLE && !getGnosId().isEmpty()) {
       for (String p : parts) {
-        list.add(new StoragePath(fileSystem, p));
+        list.add(createPath(fileSystem, p));
       }
     }
     return Collections.unmodifiableList(list).iterator();
   }
 
-  @Override
-  public int compareTo(Path path) {
-    if (!getClass().equals(path.getClass())) {
-      throw new ClassCastException();
-    }
-    if (!fileSystem.equals(path.getFileSystem())) {
-      throw new IllegalArgumentException("Can not compare other path because it's on a different filesystem");
-    }
-    StoragePath other = (StoragePath) path;
-    String[] otherParts = other.getParts();
-    for (int i = 0; i < Math.min(parts.length, otherParts.length); i++) {
-      int c = parts[i].compareTo(otherParts[i]);
-      if (c != 0) {
-        return c;
+  public String getFilename() {
+    if (layout == StorageFileLayout.BUNDLE) {
+      if (parts.length < 2) {
+        return null;
       }
+
+      return parts[1];
+    } else if (layout == StorageFileLayout.OBJECT_ID) {
+      if (parts.length < 1) {
+        return null;
+      }
+
+      return parts[0];
     }
-    return parts.length - otherParts.length;
+
+    return null;
   }
 
   @Override
-  public String toString() {
-    return getString();
+  protected GenericPath<?> createPath(StorageFileSystem fileSystem, String[] parts, boolean absolute) {
+    return new StoragePath(fileSystem, parts, absolute);
   }
 
-  public String getString() {
-    if (null != pathString) {
-      return pathString;
-    } else {
-      StringBuilder sb = new StringBuilder((absolute ? fileSystem.getSeparator() : ""));
-      for (String p : parts) {
-        sb.append(p).append(fileSystem.getSeparator());
-      }
-      sb.deleteCharAt(sb.length() - 1);
-      return sb.toString();
-    }
+  @Override
+  protected GenericPath<?> createPath(StorageFileSystem fileSystem, String path) {
+    return new StoragePath(fileSystem, path);
   }
 
 }

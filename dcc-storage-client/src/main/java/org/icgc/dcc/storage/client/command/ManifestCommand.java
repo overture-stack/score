@@ -17,7 +17,6 @@
  */
 package org.icgc.dcc.storage.client.command;
 
-import org.icgc.dcc.storage.client.cli.ManifestResourceConverter;
 import org.icgc.dcc.storage.client.manifest.ManfiestService;
 import org.icgc.dcc.storage.client.manifest.ManifestResource;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,7 +34,7 @@ public class ManifestCommand extends AbstractClientCommand {
   /**
    * Options.
    */
-  @Parameter(names = "--manifest", description = "path to manifest id, url or file", required = true, converter = ManifestResourceConverter.class)
+  @Parameter(names = "--manifest", description = "path to manifest id, url or file", required = true)
   private ManifestResource manifestResource;
 
   /**

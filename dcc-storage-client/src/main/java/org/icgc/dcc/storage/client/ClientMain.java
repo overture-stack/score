@@ -9,6 +9,7 @@ import static org.icgc.dcc.storage.client.util.SingletonBeansInitializer.singlet
 import java.util.Map;
 import java.util.function.Consumer;
 
+import org.icgc.dcc.storage.client.cli.ConverterFactory;
 import org.icgc.dcc.storage.client.cli.Terminal;
 import org.icgc.dcc.storage.client.command.ClientCommand;
 import org.icgc.dcc.storage.client.metadata.EntityNotFoundException;
@@ -65,6 +66,7 @@ public class ClientMain implements CommandLineRunner {
       // Setup
       val cli = new JCommander();
       cli.setProgramName(APPLICATION_NAME);
+      cli.addConverterFactory(new ConverterFactory());
 
       // Run
       new SpringApplicationBuilder(ClientMain.class)

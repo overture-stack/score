@@ -32,9 +32,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
+import org.icgc.dcc.storage.client.cli.ConverterFactory.MountOptionsConverter;
+import org.icgc.dcc.storage.client.cli.ConverterFactory.StorageFileLayoutConverter;
 import org.icgc.dcc.storage.client.cli.DirectoryValidator;
-import org.icgc.dcc.storage.client.cli.ManifestResourceConverter;
-import org.icgc.dcc.storage.client.cli.MountOptionsConverter;
 import org.icgc.dcc.storage.client.download.DownloadService;
 import org.icgc.dcc.storage.client.manifest.ManfiestService;
 import org.icgc.dcc.storage.client.manifest.ManifestResource;
@@ -44,6 +44,7 @@ import org.icgc.dcc.storage.client.mount.MountService;
 import org.icgc.dcc.storage.client.mount.MountStorageContext;
 import org.icgc.dcc.storage.client.transport.StorageService;
 import org.icgc.dcc.storage.core.model.ObjectInfo;
+import org.icgc.dcc.storage.fs.StorageFileLayout;
 import org.icgc.dcc.storage.fs.StorageFileSystems;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -65,17 +66,24 @@ import lombok.extern.slf4j.Slf4j;
 public class MountCommand extends AbstractClientCommand {
 
   /**
+   * Constants.
+   */
+  private static final String FUSE_README_URL = "http://sourceforge.net/p/fuse/fuse/ci/master/tree/README?format=raw";
+
+  /**
    * Options
    */
-  @Parameter(names = "--mount-point", description = "the mount point of the  FUSE file system", required = true, validateValueWith = DirectoryValidator.class)
+  @Parameter(names = "--mount-point", description = "the mount point of the FUSE file system. This must exist, be empty and be executable by the current user.", required = true, validateValueWith = DirectoryValidator.class)
   private File mountPoint;
-  @Parameter(names = "--manifest", description = "manifest id (from the Data Portal), url or file path", converter = ManifestResourceConverter.class)
+  @Parameter(names = "--manifest", description = "manifest id (from the Data Portal), url or file path")
   private ManifestResource manifestResource;
+  @Parameter(names = "--layout", description = "layout of the mount point. One of 'bundle' (nest files in bundle directory) or 'object-id' (flat list of files named by their associated object id)", converter = StorageFileLayoutConverter.class)
+  private StorageFileLayout layout = StorageFileLayout.BUNDLE;
   @Parameter(names = "--cache-metadata", description = "to speedup load times, cache metadata on disk locally and use if available")
   private boolean cacheMetadata;
   @Parameter(names = "--options", description = "the mount options of the file system (e.g. --options user_allow_other,allow_other,fsname=icgc,debug) "
-      + "in addition to those specified internally: " + INTERNAL_OPTIONS
-      + ". See http://sourceforge.net/p/fuse/fuse/ci/master/tree/README?format=raw for details", converter = MountOptionsConverter.class)
+      + "in addition to those specified internally: " + INTERNAL_OPTIONS + ". See " + FUSE_README_URL
+      + " for details", converter = MountOptionsConverter.class)
   private Map<String, String> options = newHashMap();
 
   /**
@@ -94,7 +102,10 @@ public class MountCommand extends AbstractClientCommand {
 
   @Override
   public int execute() throws Exception {
-    checkParameter(mountPoint.canExecute(), "Cannot mount to '%s'. Please check permissions and try again", mountPoint);
+    checkParameter(mountPoint.canExecute(), "Cannot mount to '%s'. Please check directory permissions and try again",
+        mountPoint);
+    checkParameter(mountPoint.list().length == 0, "Cannot mount to '%s'. Please ensure the directory is empty",
+        mountPoint);
 
     try {
       int i = 1;
@@ -118,7 +129,8 @@ public class MountCommand extends AbstractClientCommand {
       //
 
       terminal.printStatus(i++, "Checking access. Please wait");
-      val context = new MountStorageContext(downloadService, entities, objects);
+      val context =
+          new MountStorageContext(layout, downloadService, entities, objects);
       if (!terminal.printWaiting(context::isAuthorized)) {
         terminal.printError("Access denied");
         return FAILURE_STATUS;
@@ -200,11 +212,11 @@ public class MountCommand extends AbstractClientCommand {
   }
 
   private List<ObjectInfo> resolveObjects() throws IOException {
-    return resolveList("objects", () -> storageService.listObjects(), new TypeReference<List<ObjectInfo>>() {});
+    return resolveList("objects", storageService::listObjects, new TypeReference<List<ObjectInfo>>() {});
   }
 
   private List<Entity> resolveEntities() throws IOException {
-    return resolveList("entities", () -> metadataServices.getEntities(), new TypeReference<List<Entity>>() {});
+    return resolveList("entities", metadataServices::getEntities, new TypeReference<List<Entity>>() {});
   }
 
   @SneakyThrows

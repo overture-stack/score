@@ -25,10 +25,9 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 
+import org.icgc.dcc.storage.client.cli.ConverterFactory.OutputLayoutConverter;
 import org.icgc.dcc.storage.client.cli.DirectoryValidator;
-import org.icgc.dcc.storage.client.cli.ManifestResourceConverter;
 import org.icgc.dcc.storage.client.cli.ObjectIdValidator;
-import org.icgc.dcc.storage.client.cli.OutputLayoutConverter;
 import org.icgc.dcc.storage.client.download.DownloadService;
 import org.icgc.dcc.storage.client.manifest.ManfiestService;
 import org.icgc.dcc.storage.client.manifest.ManifestResource;
@@ -51,7 +50,7 @@ import lombok.val;
 public class DownloadCommand extends AbstractClientCommand {
 
   public enum OutputLayout {
-    bundle, filename, id
+    BUNDLE, FILENAME, ID
   }
 
   /**
@@ -59,11 +58,11 @@ public class DownloadCommand extends AbstractClientCommand {
    */
   @Parameter(names = "--output-dir", description = "path to output directory", required = true, validateValueWith = DirectoryValidator.class)
   private File outputDir;
-  @Parameter(names = "--output-layout", description = "layout of the output-dir. One of 'bundle' (nest files in bundle directory), 'filename' (nest files in filename directory), or 'id' (flat list of files named with object-id)", converter = OutputLayoutConverter.class)
-  private OutputLayout layout = OutputLayout.filename;
+  @Parameter(names = "--output-layout", description = "layout of the output-dir. One of 'bundle' (nest files in bundle directory), 'filename' (nest files in filename directory), or 'object-id' (flat list of files named by their associated object id)", converter = OutputLayoutConverter.class)
+  private OutputLayout layout = OutputLayout.FILENAME;
   @Parameter(names = "--force", description = "force re-download (override local file)")
   private boolean force = false;
-  @Parameter(names = "--manifest", description = "path to manifest id, url or file", converter = ManifestResourceConverter.class)
+  @Parameter(names = "--manifest", description = "path to manifest id, url or file")
   private ManifestResource manifestResource;
   @Parameter(names = "--object-id", description = "object id to download", validateValueWith = ObjectIdValidator.class)
   private String objectId;
@@ -177,19 +176,19 @@ public class DownloadCommand extends AbstractClientCommand {
    * Get the destination file for the supplied {@code entity}.
    */
   private File getLayoutTarget(Entity entity) {
-    if (layout == OutputLayout.bundle) {
+    if (layout == OutputLayout.BUNDLE) {
       // "bundle/filename"
       val bundleDir = new File(outputDir, entity.getGnosId());
       val target = new File(bundleDir, entity.getFileName());
 
       return target;
-    } else if (layout == OutputLayout.filename) {
+    } else if (layout == OutputLayout.FILENAME) {
       // "filename/id"
       val fileDir = new File(outputDir, entity.getFileName());
       val target = new File(fileDir, entity.getId());
 
       return target;
-    } else if (layout == OutputLayout.id) {
+    } else if (layout == OutputLayout.ID) {
       // "id"
       val target = new File(outputDir, entity.getId());
 

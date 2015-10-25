@@ -47,7 +47,7 @@ public class StorageSeekableByteChannel extends SeekableURLByteChannel {
   @SneakyThrows
   private static URL getUrl(StoragePath path, StorageContext context) {
     if (path.getFile().isPresent()) {
-      val objectId = path.getFile().get().getId();
+      val objectId = path.getFile().get().getObjectId();
       val url = context.getUrl(objectId);
       return url;
     }

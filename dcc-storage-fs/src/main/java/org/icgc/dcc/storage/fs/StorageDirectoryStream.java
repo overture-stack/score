@@ -38,6 +38,8 @@ public class StorageDirectoryStream implements DirectoryStream<Path> {
   @NonNull
   private final StoragePath path;
   @NonNull
+  private final StorageFileLayout layout;
+  @NonNull
   private final Filter<? super Path> filter;
 
   /**
@@ -48,12 +50,18 @@ public class StorageDirectoryStream implements DirectoryStream<Path> {
 
   @Override
   public Iterator<Path> iterator() {
-    if (isRoot()) {
-      return listGnosDirs();
-    } else {
-      val gnosId = getGnosId();
-      return listGnosDir(gnosId);
+    if (layout == StorageFileLayout.BUNDLE) {
+      if (isRoot()) {
+        return listGnosDirs();
+      } else {
+        val gnosId = getGnosId();
+        return listGnosDir(gnosId);
+      }
+    } else if (layout == StorageFileLayout.OBJECT_ID) {
+      return listRoot();
     }
+
+    return null;
   }
 
   @Override
@@ -91,12 +99,23 @@ public class StorageDirectoryStream implements DirectoryStream<Path> {
         .filter(this::filterPath).iterator();
   }
 
+  private Iterator<Path> listRoot() {
+    return files.stream()
+        .map(this::filePath)
+        .filter(this::filterPath).iterator();
+  }
+
   private Path gnosIdPath(String gnosId) {
     return absolutePath(gnosId);
   }
 
   private Path filePath(StorageFile file) {
-    return absolutePath(file.getGnosId(), file.getFileName());
+    if (layout == StorageFileLayout.BUNDLE) {
+      return absolutePath(file.getGnosId(), file.getFileName());
+    } else if (layout == StorageFileLayout.OBJECT_ID) {
+      return absolutePath(file.getObjectId());
+    }
+    return null;
   }
 
   private Path absolutePath(String... parts) {

@@ -27,7 +27,7 @@ import lombok.Value;
 @Builder
 public class StorageFile {
 
-  String id;
+  String objectId;
   String fileName;
   String gnosId;
 
@@ -40,7 +40,7 @@ public class StorageFile {
 
   @Override
   public String toString() {
-    return String.format("%s: %s/%s @ %s %s", id, gnosId, fileName, formatBytes(size), formatBytesUnits(size));
+    return String.format("%s: %s/%s @ %s %s", objectId, gnosId, fileName, formatBytes(size), formatBytesUnits(size));
   }
 
 }

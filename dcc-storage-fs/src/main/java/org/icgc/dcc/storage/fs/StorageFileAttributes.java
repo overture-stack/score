@@ -72,7 +72,11 @@ public class StorageFileAttributes implements PosixFileAttributes {
 
   @Override
   public boolean isRegularFile() {
-    return matches(path, REGULAR_FILE_PATTERN);
+    if (context.getLayout() == StorageFileLayout.BUNDLE) {
+      return matches(path, REGULAR_FILE_PATTERN);
+    } else {
+      return !path.toString().equals("/");
+    }
   }
 
   @Override

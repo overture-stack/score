@@ -116,7 +116,7 @@ public class StorageFileSystemProvider extends ReadOnlyFileSystemProvider {
   public DirectoryStream<Path> newDirectoryStream(Path path, Filter<? super Path> filter) throws IOException {
     log.debug("newDirectoryStream(path={}, filter={})", path, filter);
     val files = getFiles();
-    return new StorageDirectoryStream((StoragePath) path, filter, files);
+    return new StorageDirectoryStream((StoragePath) path, context.getLayout(), filter, files);
   }
 
   @Override
@@ -176,8 +176,14 @@ public class StorageFileSystemProvider extends ReadOnlyFileSystemProvider {
   private List<StorageFile> getFiles() {
     val files = context.getFiles();
 
-    Comparator<StorageFile> comparison = comparing(file -> file.getGnosId());
-    comparison = comparison.thenComparing(file -> file.getFileName());
+    Comparator<StorageFile> comparison = null;
+    if (context.getLayout() == StorageFileLayout.BUNDLE) {
+      comparison = comparing(file -> file.getGnosId());
+      comparison = comparison.thenComparing(file -> file.getFileName());
+    } else if (context.getLayout() == StorageFileLayout.OBJECT_ID) {
+      comparison = comparing(file -> file.getObjectId());
+    }
+
     return files.stream().sorted(comparison).collect(toList());
   }
 

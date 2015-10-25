@@ -35,6 +35,7 @@ import org.icgc.dcc.storage.client.metadata.Entity;
 import org.icgc.dcc.storage.core.model.ObjectInfo;
 import org.icgc.dcc.storage.fs.StorageContext;
 import org.icgc.dcc.storage.fs.StorageFile;
+import org.icgc.dcc.storage.fs.StorageFileLayout;
 
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -50,6 +51,12 @@ import lombok.val;
 
 @RequiredArgsConstructor
 public class MountStorageContext implements StorageContext {
+
+  /**
+   * Configuration.
+   */
+  @Getter
+  private final StorageFileLayout layout;
 
   /**
    * Dependencies
@@ -125,8 +132,8 @@ public class MountStorageContext implements StorageContext {
 
     val files = ImmutableList.<StorageFile> builder();
     for (val object : objects) {
-      val id = object.getId();
-      val entity = entityIndex.get(id);
+      val objectId = object.getId();
+      val entity = entityIndex.get(objectId);
       if (entity == null) {
         continue;
       }
@@ -134,7 +141,7 @@ public class MountStorageContext implements StorageContext {
       // Join entity to object
       files.add(
           storageFile()
-              .id(id)
+              .objectId(objectId)
               .fileName(entity.getFileName())
               .gnosId(entity.getGnosId())
               .lastModified(object.getLastModified())
@@ -146,7 +153,7 @@ public class MountStorageContext implements StorageContext {
   }
 
   private Map<String, StorageFile> resolveFileIndex() {
-    return uniqueIndex(getFiles(), StorageFile::getId);
+    return uniqueIndex(getFiles(), StorageFile::getObjectId);
   }
 
   private Multimap<String, StorageFile> resolveFileGnosIdIndex() {
