@@ -66,8 +66,16 @@ public class StoragePath extends GenericPath<StorageFileSystem> {
       if (parts.length == 0) {
         return Optional.empty();
       }
+
       val fileName = getFilename();
-      return Optional.ofNullable(context.getFileById(fileName));
+
+      // Support samtools convention
+      if (fileName.endsWith(".bai")) {
+        val bamObjectId = fileName.replace(".bai", "");
+        return context.getBaiFile(bamObjectId);
+      }
+
+      return Optional.ofNullable(context.getFile(fileName));
     }
 
     return null;

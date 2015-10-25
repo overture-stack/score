@@ -104,10 +104,6 @@ public class StorageFileSystemProvider extends ReadOnlyFileSystemProvider {
   public SeekableByteChannel newByteChannel(Path path, Set<? extends OpenOption> options, FileAttribute<?>... attrs)
       throws IOException {
     log.debug("newByteChannel(path={}, options={}, attrs={})", path, options, Arrays.toString(attrs));
-    if (path.getFileName().equals(".info")) {
-      // TODO: Implement
-      ;
-    }
 
     return new StorageSeekableByteChannel((StoragePath) path, context);
   }
@@ -126,6 +122,10 @@ public class StorageFileSystemProvider extends ReadOnlyFileSystemProvider {
 
   @Override
   public boolean isHidden(Path path) throws IOException {
+    if (context.getLayout() == StorageFileLayout.OBJECT_ID) {
+      return path.getFileName().endsWith(".bai");
+    }
+
     return false;
   }
 

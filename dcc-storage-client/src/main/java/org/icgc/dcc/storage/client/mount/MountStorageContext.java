@@ -28,6 +28,7 @@ import java.net.URL;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.icgc.dcc.storage.client.download.DownloadService;
@@ -73,7 +74,7 @@ public class MountStorageContext implements StorageContext {
   @Getter(lazy = true)
   private final List<StorageFile> files = resolveFiles();
   @Getter(lazy = true, value = PRIVATE)
-  private final Map<String, StorageFile> fileIdIndex = resolveFileIndex();
+  private final Map<String, StorageFile> fileObjectIdIndex = resolveFileObjectIdIndex();
   @Getter(lazy = true, value = PRIVATE)
   private final Multimap<String, StorageFile> fileGnosIdIndex = resolveFileGnosIdIndex();
   @Getter(lazy = true, value = PRIVATE)
@@ -110,8 +111,21 @@ public class MountStorageContext implements StorageContext {
   }
 
   @Override
-  public StorageFile getFileById(String id) {
-    return getFileIdIndex().get(id);
+  public StorageFile getFile(String objectId) {
+    return resolveFileObjectIdIndex().get(objectId);
+  }
+
+  @Override
+  public Optional<StorageFile> getBaiFile(String bamObjectId) {
+    val bamFile = getFile(bamObjectId);
+    if (bamFile == null) {
+      return Optional.empty();
+    }
+
+    val gnosId = bamFile.getGnosId();
+    return getFilesByGnosId(gnosId).stream()
+        .filter(file -> file.getFileName().endsWith(".bai"))
+        .findFirst();
   }
 
   @Override
@@ -152,7 +166,7 @@ public class MountStorageContext implements StorageContext {
     return files.build();
   }
 
-  private Map<String, StorageFile> resolveFileIndex() {
+  private Map<String, StorageFile> resolveFileObjectIdIndex() {
     return uniqueIndex(getFiles(), StorageFile::getObjectId);
   }
 

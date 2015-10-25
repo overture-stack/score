@@ -86,8 +86,11 @@ public class StorageFileAttributes implements PosixFileAttributes {
 
   @Override
   public boolean isSymbolicLink() {
-    // TODO: Add content
-    return path.getFileName().equals(".info.txt");
+    if (context.getLayout() == StorageFileLayout.OBJECT_ID) {
+      return path.getFileName().endsWith(".bai");
+    }
+
+    return false;
   }
 
   @Override
