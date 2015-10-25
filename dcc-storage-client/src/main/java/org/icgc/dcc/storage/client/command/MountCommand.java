@@ -22,9 +22,10 @@ import static com.google.common.collect.Maps.newHashMap;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.icgc.dcc.storage.client.cli.Parameters.checkParameter;
-import static org.icgc.dcc.storage.client.mount.MountService.INTERNAL_OPTIONS;
+import static org.icgc.dcc.storage.client.mount.MountService.INTERNAL_MOUNT_OPTIONS;
 import static org.icgc.dcc.storage.client.util.Formats.formatBytes;
 import static org.icgc.dcc.storage.client.util.Formats.formatBytesUnits;
+import static org.icgc.dcc.storage.fs.util.Formats.formatCount;
 
 import java.io.File;
 import java.io.IOException;
@@ -82,7 +83,7 @@ public class MountCommand extends AbstractClientCommand {
   @Parameter(names = "--cache-metadata", description = "to speedup load times, cache metadata on disk locally and use if available")
   private boolean cacheMetadata;
   @Parameter(names = "--options", description = "the mount options of the file system (e.g. --options user_allow_other,allow_other,fsname=icgc,debug) "
-      + "in addition to those specified internally: " + INTERNAL_OPTIONS + ". See " + FUSE_README_URL
+      + "in addition to those specified internally: " + INTERNAL_MOUNT_OPTIONS + ". See " + FUSE_README_URL
       + " for details", converter = MountOptionsConverter.class)
   private Map<String, String> options = newHashMap();
 
@@ -181,16 +182,32 @@ public class MountCommand extends AbstractClientCommand {
     mountService.mount(fileSystem, mountPoint.toPath(), options);
   }
 
+  //
+  // Reporting
+  //
+
   private void reportManifest(MountStorageContext context) {
     terminal.printLine();
+    terminal.println(terminal.ansi("@|bold <object id>: <gnos id>/<file name> @ <file size>|@"));
+    terminal.printLine();
+
     long totalSize = 0;
-    for (val file : context.getFiles()) {
-      terminal.println(" - " + file.toString());
+    val files = context.getFiles();
+    for (val file : files) {
+      terminal.printf(" - %s: %s/%s %s %s %s%n",
+          terminal.ansi("@|blue " + file.getObjectId() + "|@"),
+          terminal.ansi("@|green " + file.getGnosId() + "|@"),
+          terminal.ansi("@|green " + file.getFileName() + "|@"),
+          terminal.ansi("@|bold @|@"),
+          formatBytes(file.getSize()),
+          terminal.ansi("@|bold " + formatBytesUnits(file.getSize()) + "|@"));
 
       totalSize += file.getSize();
     }
+
     terminal.printLine();
-    terminal.println(" Total size: " + formatBytes(totalSize) + " " + formatBytesUnits(totalSize) + "\n");
+    terminal.println(" Total count: " + formatCount(files.size()) +
+        ", Total size: " + formatBytes(totalSize) + " " + formatBytesUnits(totalSize) + "\n");
   }
 
   private void reportMount() {
@@ -200,16 +217,20 @@ public class MountCommand extends AbstractClientCommand {
   }
 
   private void reportSummary(MountStorageContext context, Stopwatch watch) {
-    val time = terminal.value(watch.toString());
-    val connects = terminal.value(firstNonNull(context.getMetrics().get("connectCount"), 0) + " connects");
+    val c = firstNonNull(context.getMetrics().get("connectCount"), 0L);
     val n = firstNonNull(context.getMetrics().get("byteCount"), 0L);
+
+    val time = terminal.value(watch.toString());
+    val connects = terminal.value(c + " connects");
     val bytes = terminal.value(formatBytes(n) + " " + formatBytesUnits(n));
-    terminal.printStatus(
-        terminal.label(
-            "Shut down mount after " + time +
-                " with a total of " + connects +
-                " and " + bytes + " bytes read. Good bye!\n"));
+    val status = "Shut down mount after " + time + " with a total of " + connects + " and " + bytes + " bytes read.\n";
+
+    terminal.printStatus(terminal.label(status));
   }
+
+  //
+  // Resolving
+  //
 
   private List<ObjectInfo> resolveObjects() throws IOException {
     return resolveList("objects", storageService::listObjects, new TypeReference<List<ObjectInfo>>() {});
@@ -233,6 +254,10 @@ public class MountCommand extends AbstractClientCommand {
 
     return values;
   }
+
+  //
+  // Utilities
+  //
 
   private boolean hasManifest() {
     return manifestResource != null;

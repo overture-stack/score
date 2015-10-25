@@ -105,10 +105,10 @@ public class DownloadService {
   }
 
   /**
-   * the only public method for client to call to download data to collaboratory
+   * The only public method for client to call to download data from remote storage.
    * 
    * @param file The file to be uploaded
-   * @param objectId The object id that is used to associate the file in the collaboratory
+   * @param objectId The object id that is used to associate the file in the remote storage
    * @param redo If redo the upload is required
    * @throws IOException
    */

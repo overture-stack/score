@@ -19,6 +19,7 @@ package org.icgc.dcc.storage.fs;
 
 import java.net.URL;
 import java.util.Collection;
+import java.util.Optional;
 
 public interface StorageContext {
 
@@ -28,7 +29,9 @@ public interface StorageContext {
 
   Collection<StorageFile> getFiles();
 
-  StorageFile getFileById(String id);
+  StorageFile getFile(String objectId);
+
+  Optional<StorageFile> getBaiFile(String bamObjectId);
 
   Collection<StorageFile> getFilesByGnosId(String gnosId);
 

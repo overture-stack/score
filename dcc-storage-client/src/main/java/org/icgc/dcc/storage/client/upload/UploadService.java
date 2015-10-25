@@ -71,10 +71,10 @@ public class UploadService {
   }
 
   /**
-   * the only public method for client to call to upload data to collaboratory
+   * The only public method for client to call to upload data to remote storage
    * 
    * @param file The file to be uploaded
-   * @param objectId The object id that is used to associate the file in the collaboratory
+   * @param objectId The object id that is used to associate the file in the remote storage
    * @param redo If redo the upload is required
    * @throws IOException
    */
@@ -184,7 +184,7 @@ public class UploadService {
     transportBuilder.build().send(file);
   }
 
-  public boolean isObjectExist(String oid) throws IOException {
-    return storageService.isObjectExist(oid);
+  public boolean isObjectExist(String objectId) throws IOException {
+    return storageService.isObjectExist(objectId);
   }
 }

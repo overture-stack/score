@@ -124,30 +124,6 @@ public class ClientMain implements CommandLineRunner {
     }
   }
 
-  protected void help() {
-    terminal.println("params: ");
-    for (val param : cli.getParameters()) {
-      terminal.println("  " + param.getNames() + ": " + param);
-    }
-
-    for (val entry : cli.getCommands().entrySet()) {
-      val commandName = entry.getKey();
-
-      terminal.println(commandName + ": " + cli.getCommandDescription(commandName));
-    }
-
-    for (val entry : cli.getCommands().entrySet()) {
-      val commandName = entry.getKey();
-      val command = entry.getValue();
-
-      terminal.println("name: " + commandName);
-      terminal.println("params: ");
-      for (val param : command.getParameters()) {
-        terminal.println("  " + param.getNames() + ": " + param);
-      }
-    }
-  }
-
   private void parseParams(String... params) {
     cli.addObject(this);
 

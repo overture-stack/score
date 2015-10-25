@@ -51,21 +51,21 @@ public class MountService {
    * 
    * @see http://sourceforge.net/p/fuse/fuse/ci/master/tree/README
    */
-  public static final String INTERNAL_OPTIONS =
+  public static final String INTERNAL_MOUNT_OPTIONS =
       // @formatter:off
-      // Prevent async_read read-ahead which will cause multiple reconnects with HTTP backend
+      // Important: prevent async_read read-ahead which will cause multiple reconnects with HTTP backend
       "sync_read," + 
 
       // This option disables flushing the cache of the file contents on every open(2). This
       // should only be enabled on filesystems, where the file data is never changed
-      // externally (not through the mounted FUSE filesystem).
+      // externally (i.e. not through the mounted FUSE filesystem).
       "kernel_cache," + 
 
       // Set the maximum number of bytes to read-ahead. he default is determined by the kernel. On linux-2.6.22 or
       // earlier it's 131072
       "max_readahead=1048576," + // 1 MB
 
-      // File metadata caching
+      // Extend file metadata caching since the remote file system changes infrequently
       "entry_timeout=3600,"    + // 1 hr
       "negative_timeout=3600," + // 1 hr
       "attr_timeout=3600";       // 1 hr
@@ -89,7 +89,7 @@ public class MountService {
   private Map<String, String> resolveOptions(Map<String, String> additionalOptions) {
     val combined = Maps.<String, String> newLinkedHashMap();
     combined.putAll(additionalOptions);
-    combined.putAll(parseOptions(INTERNAL_OPTIONS));
+    combined.putAll(parseOptions(INTERNAL_MOUNT_OPTIONS));
 
     return combined;
   }

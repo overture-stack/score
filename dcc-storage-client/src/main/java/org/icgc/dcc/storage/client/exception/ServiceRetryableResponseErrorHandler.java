@@ -38,19 +38,19 @@ public class ServiceRetryableResponseErrorHandler extends DefaultResponseErrorHa
     case NOT_FOUND:
     case BAD_REQUEST:
       log.warn("Bad request. Stop processing: {}", response.getStatusText());
-      throw new NotRetryableException(new IOException("Object store client error: "
+      throw new NotRetryableException(new IOException("Storage client error: "
           + IOUtils.toString(response.getBody())));
     case INTERNAL_SERVER_ERROR:
       log.warn("Server error. Stop processing: {}", response.getStatusText());
-      throw new NotResumableException(new IOException("Object store client error: "
+      throw new NotResumableException(new IOException("Storage client error: "
           + IOUtils.toString(response.getBody())));
     case UNAUTHORIZED:
       log.warn("Unauthorized. Stop processing: {}", response.getStatusText());
-      throw new NotResumableException(new IOException("Object store client error: "
+      throw new NotResumableException(new IOException("Storage client error: "
           + IOUtils.toString(response.getBody())));
     default:
       log.warn("Retryable exception: {}", response.getStatusText());
-      throw new RetryableException(new IOException("Object store service error: "
+      throw new RetryableException(new IOException("Storage server error: "
           + IOUtils.toString(response.getBody())));
     }
   }
