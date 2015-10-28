@@ -9,7 +9,7 @@ BASE_DIR=`dirname $0`/..; export BASE_DIR
 CLIENT_DIR="$(cd ${BASE_DIR} && pwd -P)"
 
 exec java -Xmx3G \
-	-Dspring.profiles.active=amazon \
+	-Dspring.profiles.active=${STORAGE_PROFILE:-amazon} \
 	-Dlogging.file=${BASE_DIR}/logs/client.log \
 	-Dspring.config.location=${CLIENT_DIR}/conf/ \
 	-Dclient.directory=${CLIENT_DIR} \

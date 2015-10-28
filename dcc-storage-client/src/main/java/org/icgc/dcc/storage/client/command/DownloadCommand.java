@@ -77,7 +77,7 @@ public class DownloadCommand extends AbstractClientCommand {
    * Dependencies
    */
   @Autowired
-  private ManfiestService manfiestService;
+  private ManfiestService manifestService;
   @Autowired
   private MetadataService metadataService;
   @Autowired
@@ -97,7 +97,7 @@ public class DownloadCommand extends AbstractClientCommand {
       return downloadObjects(ImmutableList.of(objectId));
     } else {
       // Manifest based
-      val manifest = manfiestService.getManifest(manifestResource);
+      val manifest = manifestService.getManifest(manifestResource);
       val entries = manifest.getEntries();
       if (entries.isEmpty()) {
         terminal.printError("Manifest '%s' is empty", manifestResource);

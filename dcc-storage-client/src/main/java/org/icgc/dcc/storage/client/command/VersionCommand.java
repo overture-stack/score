@@ -20,6 +20,8 @@ package org.icgc.dcc.storage.client.command;
 import static com.google.common.base.Objects.firstNonNull;
 import static org.icgc.dcc.common.core.util.VersionUtils.getScmInfo;
 
+import org.icgc.dcc.storage.client.config.ClientProperties;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.beust.jcommander.Parameters;
@@ -27,6 +29,9 @@ import com.beust.jcommander.Parameters;
 @Component
 @Parameters(separators = "=", commandDescription = "Display application version information")
 public class VersionCommand extends AbstractClientCommand {
+
+  @Autowired
+  private ClientProperties properties;
 
   @Override
   public int execute() throws Exception {
@@ -40,6 +45,9 @@ public class VersionCommand extends AbstractClientCommand {
     terminal.println(terminal.label("  Built:   ") + getScmInfo().get("git.build.time"));
     terminal.println(terminal.label("  Contact: ") + terminal.email("dcc-support@icgc.org"));
     terminal.println("");
+    terminal.println(terminal.label("  Active Configuration: "));
+    terminal.println("    Storage Endpoint: " + properties.getUpload().getServiceHostname() + ":"
+        + properties.getUpload().getServicePort());
   }
 
   private String getVersion() {
