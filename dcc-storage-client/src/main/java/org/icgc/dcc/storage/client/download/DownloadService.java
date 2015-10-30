@@ -54,6 +54,17 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 public class DownloadService {
 
+  /**
+   * Configuration.
+   */
+  @Value("${client.quiet}")
+  private boolean quiet;
+  @Value("${client.upload.retryNumber}")
+  private int retryNumber;
+
+  /**
+   * Dependencies.
+   */
   @Autowired
   private StorageService storageService;
   @Autowired
@@ -62,9 +73,6 @@ public class DownloadService {
   private Transport.Builder transportBuilder;
   @Autowired
   private Terminal terminal;
-
-  @Value("${client.upload.retryNumber}")
-  private int retryNumber;
 
   @PostConstruct
   public void setup() {
@@ -168,7 +176,7 @@ public class DownloadService {
     int remainingParts = totalParts - competedParts;
 
     log.info("Total parts: {}, completed parts: {}, remaining parts: {}", totalParts, competedParts, remainingParts);
-    val progress = new Progress(terminal, totalParts, competedParts);
+    val progress = new Progress(terminal, quiet, totalParts, competedParts);
     downloadParts(parts, outputDirectory, objectId, objectId, progress, checksum);
 
   }
@@ -205,7 +213,7 @@ public class DownloadService {
     downloadStateStore.init(dir, spec);
 
     // TODO: Assign session id
-    val progress = new Progress(terminal, spec.getParts().size(), 0);
+    val progress = new Progress(terminal, quiet, spec.getParts().size(), 0);
     downloadParts(spec.getParts(), dir, objectId, objectId, progress, false);
   }
 

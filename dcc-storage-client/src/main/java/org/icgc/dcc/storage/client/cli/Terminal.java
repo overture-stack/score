@@ -120,7 +120,8 @@ public class Terminal {
   }
 
   public Terminal printWarn(String text, Object... args) {
-    return print("\n" + warn(text, args) + "\n");
+    clearLine();
+    return print(warn(text, args) + "\n");
   }
 
   public Terminal println(String text) {
@@ -161,14 +162,14 @@ public class Terminal {
     if (args.length == 0) {
       text = text.replace("%", "%%");
     }
-    return ansi().render("@|red,bold ERROR:|@ @|red " + text + "|@", args).toString();
+    return ansi().render("@|bold,red ERROR: |@").render("@|red " + text + "|@", args).toString();
   }
 
   public String warn(String text, Object... args) {
     if (args.length == 0) {
       text = text.replace("%", "%%");
     }
-    return ansi().render("@|yellow,bold WARN:|@ @|yellow " + text + "|@", args).toString();
+    return ansi().render("@|bold,yellow WARN: |@").render("@|yellow " + text + "|@", args).toString();
   }
 
   public String value(String text) {

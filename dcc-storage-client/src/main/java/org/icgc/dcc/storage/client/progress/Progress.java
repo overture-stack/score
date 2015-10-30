@@ -32,6 +32,7 @@ public class Progress {
   /**
    * Configuration.
    */
+  private final boolean quiet;
   private final int totalParts;
   private final int totalChecksumParts;
 
@@ -62,8 +63,9 @@ public class Progress {
    */
   private final Terminal terminal;
 
-  public Progress(Terminal terminal, int totalParts, int completedParts) {
+  public Progress(Terminal terminal, boolean quiet, int totalParts, int completedParts) {
     this.terminal = terminal;
+    this.quiet = quiet;
     this.totalParts = totalParts;
     this.totalChecksumParts = completedParts;
 
@@ -135,6 +137,10 @@ public class Progress {
   }
 
   private synchronized void display() {
+    if (quiet) {
+      return;
+    }
+
     val bar = new StringBuilder("\r")
         .append(terminal.value(String.format("%3s", partsPercent)))
         .append("% [");

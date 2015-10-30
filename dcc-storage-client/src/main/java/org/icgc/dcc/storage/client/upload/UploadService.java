@@ -50,6 +50,14 @@ import lombok.extern.slf4j.Slf4j;
 public class UploadService {
 
   /**
+   * Configuration.
+   */
+  @Value("${client.quiet}")
+  private boolean quiet;
+  @Value("${client.upload.retryNumber}")
+  private int retryNumber;
+
+  /**
    * Dependencies.
    */
   @Autowired
@@ -58,12 +66,6 @@ public class UploadService {
   private Transport.Builder transportBuilder;
   @Autowired
   private Terminal terminal;
-
-  /**
-   * Configuration.
-   */
-  @Value("${client.upload.retryNumber}")
-  private int retryNumber;
 
   @PostConstruct
   public void setup() {
@@ -110,7 +112,7 @@ public class UploadService {
       throw new NotResumableException(e);
     }
 
-    val progress = new Progress(terminal, spec.getParts().size(), 0);
+    val progress = new Progress(terminal, quiet, spec.getParts().size(), 0);
     uploadParts(spec.getParts(), file, objectId, spec.getUploadId(), progress);
   }
 
@@ -154,7 +156,7 @@ public class UploadService {
       });
     }
 
-    val progress = new Progress(terminal, totalParts, completedParts);
+    val progress = new Progress(terminal, quiet, totalParts, completedParts);
     uploadParts(parts, file, uploadProgress.getObjectId(), uploadProgress.getUploadId(), progress);
   }
 

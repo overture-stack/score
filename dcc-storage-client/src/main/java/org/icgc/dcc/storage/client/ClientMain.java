@@ -45,6 +45,10 @@ public class ClientMain implements CommandLineRunner {
   /**
    * Options.
    */
+  @Parameter(names = "--quiet", description = "reduce output for non-interactive usage", required = false, help = true)
+  private boolean quiet = false;
+  @Parameter(names = "--silent", description = "do not produce any informational messages", required = false, help = true)
+  private boolean silent = false;
   @Parameter(names = "--help", description = "shows help information", required = false, help = true)
   private boolean help = false;
   @Parameter(names = "--version", description = "shows version information", required = false, help = true)
@@ -64,6 +68,7 @@ public class ClientMain implements CommandLineRunner {
     err.print("Starting...");
     try {
       // Setup
+      bootstrap(args);
       val cli = new JCommander();
       cli.setProgramName(APPLICATION_NAME);
       cli.addConverterFactory(new ConverterFactory());
@@ -161,6 +166,21 @@ public class ClientMain implements CommandLineRunner {
 
   private static String getCommandName(String beanName) {
     return beanName.replace("Command", "");
+  }
+
+  /**
+   * This is required to bootstrap arguments for Spring Boot consumption very early in the app lifecycle.
+   */
+  private static void bootstrap(String[] args) {
+    for (val arg : args) {
+      // Set options for Spring Boot property binding
+      if (arg.equals("--silent") || arg.equals("--silent=true")) {
+        System.setProperty("client.silent", "true");
+      }
+      if (arg.equals("--quiet") || arg.equals("--quiet=true")) {
+        System.setProperty("client.quiet", "true");
+      }
+    }
   }
 
   private static void exit(int status) {
