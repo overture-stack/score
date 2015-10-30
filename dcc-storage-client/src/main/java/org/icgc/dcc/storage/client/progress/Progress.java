@@ -78,6 +78,7 @@ public class Progress {
   public synchronized void startTransfer() {
     if (!isTransferStarted) {
       stopwatch.start();
+      isTransferStarted = true;
     }
   }
 
