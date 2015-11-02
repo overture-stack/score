@@ -1,5 +1,5 @@
 #
-# Object Store Client - Configuration
+# Storage Client - Configuration
 #
 
 ###############################################################################
@@ -63,6 +63,28 @@ client:
     trustStoreType: JKS
     trustStorePassword: CLIENT_SECRET
     trustName: icgc.cancercollaboratory.org
+    
+---
+
+###############################################################################
+# Profile - "collab"
+###############################################################################
+
+spring.profiles: collab
+
+client:
+  upload:
+    serviceHostname: storage.cancercollaboratory.org
+    
+  # SSL
+  ssl:
+    enabled: true
+    custom: true
+    
+    trustStore: classpath:client.jks
+    trustStoreType: JKS
+    trustStorePassword: CLIENT_SECRET
+    trustName: icgc.cancercollaboratory.org    
 
 ---
 
