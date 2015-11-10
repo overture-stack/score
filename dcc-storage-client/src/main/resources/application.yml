@@ -59,11 +59,6 @@ client:
     enabled: true
     custom: false
     
-    trustStore: classpath:client.jks
-    trustStoreType: JKS
-    trustStorePassword: CLIENT_SECRET
-    trustName: icgc.cancercollaboratory.org
-    
 ---
 
 ###############################################################################
