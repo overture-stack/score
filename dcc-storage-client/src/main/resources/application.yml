@@ -70,6 +70,7 @@ spring.profiles: collab
 client:
   upload:
     serviceHostname: storage.cancercollaboratory.org
+    servicePort: 5431
     
   # SSL
   ssl:
