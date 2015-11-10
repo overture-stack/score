@@ -19,7 +19,7 @@ client:
 
   upload:
     serviceHostname: localhost
-    servicePort: 5431
+    servicePort: 443
     retryNumber: 10
     retryTimeout: 1
     
@@ -52,17 +52,12 @@ spring.profiles: amazon
 
 client:
   upload:
-    serviceHostname: objectstore.cancercollaboratory.org
+    serviceHostname: virginia.cloud.icgc.org
 
   # SSL
   ssl:
     enabled: true
-    custom: true
-    
-    trustStore: classpath:client.jks
-    trustStoreType: JKS
-    trustStorePassword: CLIENT_SECRET
-    trustName: icgc.cancercollaboratory.org
+    custom: false
     
 ---
 
