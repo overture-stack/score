@@ -142,6 +142,8 @@ public class StorageFileSystemProvider extends ReadOnlyFileSystemProvider {
     }
 
     // TODO: lookup path and verify existence instead
+    // FIXME: Tempfix for samtools
+    // https://github.com/samtools/samtools/blob/834bf7e9c9d4bbf7d60160138f728e7968373e3a/sam_view.c#L450
     if (path.endsWith(".csi")) {
       throw new NoSuchFileException("");
     }

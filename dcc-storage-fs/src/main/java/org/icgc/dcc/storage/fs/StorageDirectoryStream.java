@@ -22,7 +22,6 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Path;
 import java.util.Iterator;
 import java.util.List;
-import java.util.stream.Stream;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -87,16 +86,12 @@ public class StorageDirectoryStream implements DirectoryStream<Path> {
   }
 
   private Iterator<Path> listGnosDir(String gnosId) {
-    // Artificial
-    val infoFile = Stream.of(absolutePath(".info.txt"));
-
-    // Real
     val objectFiles = files.stream()
         .filter(entity -> entity.getGnosId().equals(gnosId))
-        .map(this::filePath);
-
-    return Stream.concat(infoFile, objectFiles)
+        .map(this::filePath)
         .filter(this::filterPath).iterator();
+
+    return objectFiles;
   }
 
   private Iterator<Path> listRoot() {

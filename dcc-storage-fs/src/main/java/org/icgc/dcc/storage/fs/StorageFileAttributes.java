@@ -72,6 +72,12 @@ public class StorageFileAttributes implements PosixFileAttributes {
 
   @Override
   public boolean isRegularFile() {
+    // FIXME: Tempfix for samtools
+    // https://github.com/samtools/samtools/blob/834bf7e9c9d4bbf7d60160138f728e7968373e3a/sam_view.c#L450
+    if (path.endsWith(".csi")) {
+      return false;
+    }
+
     if (context.getLayout() == StorageFileLayout.BUNDLE) {
       return matches(path, REGULAR_FILE_PATTERN);
     } else {
@@ -81,6 +87,12 @@ public class StorageFileAttributes implements PosixFileAttributes {
 
   @Override
   public boolean isDirectory() {
+    // FIXME: Tempfix for samtools
+    // https://github.com/samtools/samtools/blob/834bf7e9c9d4bbf7d60160138f728e7968373e3a/sam_view.c#L450
+    if (path.endsWith(".csi")) {
+      return false;
+    }
+
     return !isRegularFile();
   }
 
