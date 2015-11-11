@@ -36,7 +36,9 @@ import com.beust.jcommander.Parameters;
 
 import lombok.Cleanup;
 import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Component
 @Parameters(separators = "=", commandDescription = "Upload file object(s) to the remote storage repository")
 public class UploadCommand extends AbstractClientCommand {
@@ -81,6 +83,10 @@ public class UploadCommand extends AbstractClientCommand {
   }
 
   private void uploadFile(String objectId, File file) throws IOException {
+    log.info("Uploading file '{}'...", file);
+    checkParameter(file.length() > 0,
+        "File '%s' is empty. Uploads of empty files are not permitted. Aborting...", file.getCanonicalPath());
+
     val exists = uploader.isObjectExist(objectId);
     checkParameter(isForce || !exists,
         "Object id %s already exists remotely and --force was not specified. Aborting...%n", objectId);
