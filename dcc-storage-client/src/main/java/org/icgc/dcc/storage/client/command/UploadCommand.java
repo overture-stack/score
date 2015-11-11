@@ -36,9 +36,7 @@ import com.beust.jcommander.Parameters;
 
 import lombok.Cleanup;
 import lombok.val;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 @Component
 @Parameters(separators = "=", commandDescription = "Upload file object(s) to the remote storage repository")
 public class UploadCommand extends AbstractClientCommand {
@@ -65,37 +63,40 @@ public class UploadCommand extends AbstractClientCommand {
   public int execute() throws Exception {
     checkParameter(objectId != null || manifestFile != null, "One of --object-id or --manifest must be specified");
 
+    terminal.print("\r");
     if (manifestFile != null) {
       val manifest = readManifest();
       for (val entry : manifest.entrySet()) {
         val objectId = (String) entry.getKey();
-        val obj = new File((String) entry.getValue());
+        val file = new File((String) entry.getValue());
 
-        terminal.print("\r");
-        if ((isForce) || (!uploader.isObjectExist(objectId))) {
-          terminal.printf("Uploading object: '%s' using the object id %s%n", obj, objectId);
-          uploader.upload(obj, objectId, isForce);
-        } else {
-          terminal.printf("Object id: %s has been uploaded. Skipping...%n", objectId);
-        }
+        uploadFile(objectId, file);
       }
     } else {
       checkParameter(file != null, "--file must be specified if --object-id is specified");
-
-      terminal.printf("\rUploading file: '%s'%n", file);
-      log.info("file: {}", file);
-      checkParameter(file.length() > 0,
-          "Upload file '%s' is empty. Uploads of empty files are not permitted. Aborting...", file.getCanonicalPath());
-
-      uploader.upload(file, objectId, isForce);
+      uploadFile(objectId, file);
     }
 
     return SUCCESS_STATUS;
   }
 
+  private void uploadFile(String objectId, File file) throws IOException {
+    val exists = uploader.isObjectExist(objectId);
+    checkParameter(isForce || !exists,
+        "Object id %s already exists remotely and --force was not specified. Aborting...%n", objectId);
+
+    val warn = isForce && exists;
+    if (warn) {
+      terminal.printWarn("Object %s exists and --force specified. Overwritting...", objectId);
+    }
+
+    terminal.printf("Uploading object: '%s' using the object id %s%n", file, objectId);
+    uploader.upload(file, objectId, isForce);
+  }
+
   private Properties readManifest() throws IOException, FileNotFoundException {
     @Cleanup
-    FileInputStream inputStream = new FileInputStream(manifestFile);
+    val inputStream = new FileInputStream(manifestFile);
 
     val manifest = new Properties();
     manifest.load(inputStream);

@@ -99,11 +99,13 @@ public class StorageIntegrationTest {
     //
 
     banner("Uploading...");
-    val upload = storageClient(accessToken,
-        "upload",
-        "--manifest", fs.getRootDir() + "/manifest.txt");
-    upload.waitFor(1, MINUTES);
-    assertThat(upload.exitValue()).isEqualTo(0);
+    for (int status = 0; status < 2; status++) {
+      val upload = storageClient(accessToken,
+          "upload",
+          "--manifest", fs.getRootDir() + "/manifest.txt");
+      upload.waitFor(1, MINUTES);
+      assertThat(upload.exitValue()).isEqualTo(status); // First time 0, second time 1 since no --force
+    }
 
     //
     // Find
