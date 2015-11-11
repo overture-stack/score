@@ -219,6 +219,7 @@ public class StorageIntegrationTest {
         "-Dlogging.file=" + fs.getLogsDir() + "/dcc-storage-client.log",
         "-Dmetadata.url=https://localhost:" + metadataPort,
         "-Dmetadata.ssl.enabled=false",
+        "-Dclient.upload.servicePort=" + storagePort,
         "-DaccessToken=" + accessToken);
   }
 
