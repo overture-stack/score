@@ -48,6 +48,7 @@ public class VersionCommand extends AbstractClientCommand {
     terminal.println(terminal.label("  Active Configuration: "));
     terminal.println("    Storage Endpoint: " + properties.getUpload().getServiceHostname() + ":"
         + properties.getUpload().getServicePort());
+    terminal.println("    Access Token: " + properties.getAccessToken());
   }
 
   private String getVersion() {
