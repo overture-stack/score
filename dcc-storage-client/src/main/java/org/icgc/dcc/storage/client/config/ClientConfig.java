@@ -37,6 +37,7 @@ import org.icgc.dcc.storage.client.exception.NotRetryableException;
 import org.icgc.dcc.storage.client.exception.RetryableException;
 import org.icgc.dcc.storage.client.exception.ServiceRetryableResponseErrorHandler;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.PropertyPlaceholderAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -132,11 +133,9 @@ public class ClientConfig {
   }
 
   @Bean
-  public RetryTemplate retryTemplate() {
-    RetryTemplate retry = new RetryTemplate();
-
-    int maxAttempts =
-        properties.getUpload().getRetryNumber() < 0 ? Integer.MAX_VALUE : properties.getUpload().getRetryNumber();
+  public RetryTemplate retryTemplate(@Value("${storage.retryNumber}") int retryNumber,
+      @Value("${storage.retryTimeout}") int retryTimeout) {
+    val maxAttempts = retryNumber < 0 ? Integer.MAX_VALUE : retryNumber;
 
     val exceptions = ImmutableMap.<Class<? extends Throwable>, Boolean> builder();
     exceptions.put(Error.class, Boolean.FALSE);
@@ -146,22 +145,13 @@ public class ClientConfig {
     exceptions.put(IOException.class, Boolean.TRUE);
 
     val retryPolicy = new SimpleRetryPolicy(maxAttempts, exceptions.build(), true);
+    val backOffPolicy = new ExponentialBackOffPolicy();
 
-    // TODO: prevent DOS attack yourself
-    ExponentialBackOffPolicy backOffPolicy = new ExponentialBackOffPolicy();
-    // long timeout = retryTimeout * 60 * 1000;
-    // backOffPolicy.setBackOffPeriod(interval < MIN_TERNVAL ? MIN_TERNVAL : interval);
+    val retry = new RetryTemplate();
     retry.setBackOffPolicy(backOffPolicy);
-
     retry.setRetryPolicy(retryPolicy);
     return retry;
 
-  }
-
-  @Bean(name = "endpoint")
-  public String endpoint() {
-    val scheme = properties.getSsl().isEnabled() ? "https" : "http";
-    return scheme + "://" + properties.getUpload().getServiceHostname() + ":" + properties.getUpload().getServicePort();
   }
 
   private void configureOAuth(HttpClientBuilder client) {

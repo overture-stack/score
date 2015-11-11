@@ -59,7 +59,7 @@ public class DownloadService {
    */
   @Value("${client.quiet}")
   private boolean quiet;
-  @Value("${client.upload.retryNumber}")
+  @Value("${storage.retryNumber}")
   private int retryNumber;
 
   /**

@@ -38,6 +38,7 @@ import org.icgc.dcc.storage.core.model.UploadProgress;
 import org.icgc.dcc.storage.core.util.ObjectStoreUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -71,8 +72,7 @@ public class StorageService {
   /**
    * Configuration.
    */
-  @Autowired
-  @Qualifier("endpoint")
+  @Value("${storage.url}")
   private String endpoint;
   @Autowired
   private ClientProperties properties;

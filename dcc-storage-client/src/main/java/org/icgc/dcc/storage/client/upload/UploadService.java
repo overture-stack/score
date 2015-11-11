@@ -54,7 +54,7 @@ public class UploadService {
    */
   @Value("${client.quiet}")
   private boolean quiet;
-  @Value("${client.upload.retryNumber}")
+  @Value("${storage.retryNumber}")
   private int retryNumber;
 
   /**

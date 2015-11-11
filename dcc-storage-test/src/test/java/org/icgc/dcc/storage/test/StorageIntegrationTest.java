@@ -207,7 +207,6 @@ public class StorageIntegrationTest {
         args,
         "-Dspring.profiles.active=development",
         "-Dlogging.file=" + fs.getLogsDir() + "/dcc-metadata-client.log",
-        "-Dclient.upload.servicePort=" + storagePort,
         "-Dserver.baseUrl=https://localhost:" + metadataPort,
         "-DaccessToken=" + accessToken);
   }
@@ -219,7 +218,7 @@ public class StorageIntegrationTest {
         "-Dlogging.file=" + fs.getLogsDir() + "/dcc-storage-client.log",
         "-Dmetadata.url=https://localhost:" + metadataPort,
         "-Dmetadata.ssl.enabled=false",
-        "-Dclient.upload.servicePort=" + storagePort,
+        "-Dstorage.url=http://localhost:" + storagePort,
         "-DaccessToken=" + accessToken);
   }
 
