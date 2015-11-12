@@ -65,11 +65,6 @@ import lombok.extern.slf4j.Slf4j;
 public class ClientConfig {
 
   /**
-   * Constants.
-   */
-  private static final int MAX_TIMEOUT = 20 * 1000;
-
-  /**
    * Configuration.
    */
   @Autowired
@@ -103,11 +98,10 @@ public class ClientConfig {
   }
 
   private HttpComponentsClientHttpRequestFactory clientHttpRequestFactory() {
-    HttpComponentsClientHttpRequestFactory factory = new HttpComponentsClientHttpRequestFactory();
+    val factory = new HttpComponentsClientHttpRequestFactory();
 
-    System.setProperty("sun.net.client.defaultConnectTimeout",
-        Long.toString(properties.getConnectTimeoutSeconds() * 1000));
-    System.setProperty("sun.net.client.defaultReadTimeout", Long.toString(properties.getReadTimeoutSeconds() * 1000));
+    factory.setReadTimeout(properties.getReadTimeoutSeconds() * 1000);
+    factory.setConnectTimeout(properties.getConnectTimeoutSeconds() * 1000);
     factory.setHttpClient(sslClient());
 
     return factory;
@@ -126,25 +120,20 @@ public class ClientConfig {
   private SimpleClientHttpRequestFactory streamingClientHttpRequestFactory() {
     val factory = new SimpleClientHttpRequestFactory();
 
+    // See http://stackoverflow.com/questions/9934970/can-i-globally-set-the-timeout-of-http-connections#answer-10705424
     System.setProperty("sun.net.client.defaultConnectTimeout",
         Long.toString(properties.getConnectTimeoutSeconds() * 1000));
     System.setProperty("sun.net.client.defaultReadTimeout", Long.toString(properties.getReadTimeoutSeconds() * 1000));
     factory.setOutputStreaming(true);
     factory.setBufferRequestBody(false);
     return factory;
-
   }
 
   @Bean
   public RetryTemplate retryTemplate() {
     RetryTemplate retry = new RetryTemplate();
 
-    // hedge against HttpClient implementation ignoring factory.setRead|ConnectTimeout
-    System.setProperty("sun.net.client.defaultConnectTimeout",
-        Long.toString(properties.getConnectTimeoutSeconds() * 1000));
-    System.setProperty("sun.net.client.defaultReadTimeout", Long.toString(properties.getReadTimeoutSeconds() * 1000));
-
-    int maxAttempts =
+    val maxAttempts =
         properties.getUpload().getRetryNumber() < 0 ? Integer.MAX_VALUE : properties.getUpload().getRetryNumber();
 
     val exceptions = ImmutableMap.<Class<? extends Throwable>, Boolean> builder();

@@ -48,9 +48,7 @@ public class UrlCommand extends AbstractClientCommand {
   @Override
   public int execute() throws Exception {
     terminal.printStatus("Resolving URL for object: " + terminal.value(objectId) + "\n");
-    val offset = 0L;
-    val length = -1L;
-    val url = downloader.getUrl(objectId, offset, length);
+    val url = downloader.getUrl(objectId);
 
     display(url);
 
@@ -58,7 +56,8 @@ public class UrlCommand extends AbstractClientCommand {
   }
 
   private void display(URL url) {
-    System.out.printf("%s", url);
+    System.out.println(url);
+    System.out.flush();
   }
 
 }
