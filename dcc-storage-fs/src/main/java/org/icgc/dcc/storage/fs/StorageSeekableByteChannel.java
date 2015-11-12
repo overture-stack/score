@@ -44,6 +44,17 @@ public class StorageSeekableByteChannel extends SeekableURLByteChannel {
     this.context = context;
   }
 
+  @Override
+  protected void onResolveInputStream() throws IOException {
+    val currentUrl = getUrl(path, context);
+    val timeout = url != currentUrl;
+    if (timeout) {
+      // Close the connection and assign new URL with extended timeout
+      close();
+      this.url = currentUrl;
+    }
+  }
+
   @SneakyThrows
   private static URL getUrl(StoragePath path, StorageContext context) {
     if (path.getFile().isPresent()) {

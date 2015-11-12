@@ -20,6 +20,7 @@ package org.icgc.dcc.storage.client.mount;
 import static com.google.common.collect.Iterables.getLast;
 import static com.google.common.collect.Maps.uniqueIndex;
 import static com.google.common.collect.Multimaps.index;
+import static java.util.concurrent.TimeUnit.HOURS;
 import static lombok.AccessLevel.PRIVATE;
 import static org.icgc.dcc.storage.fs.StorageFile.storageFile;
 
@@ -175,7 +176,13 @@ public class MountStorageContext implements StorageContext {
   }
 
   private LoadingCache<String, URL> createURLCache() {
-    return CacheBuilder.newBuilder().build(CacheLoader.from(objectId -> downloadService.getUrl(objectId)));
+    val loader = CacheLoader.<String, URL> from(objectId -> downloadService.getUrl(objectId));
+    val cache = CacheBuilder.newBuilder();
+
+    // See https://jira.oicr.on.ca/browse/COL-131
+    // See https://jira.oicr.on.ca/browse/COL-313
+    val serverExpiration = 24;
+    return cache.expireAfterWrite(serverExpiration - 1, HOURS).build(loader);
   }
 
 }
