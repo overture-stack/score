@@ -104,8 +104,10 @@ public class ClientConfig {
 
   private HttpComponentsClientHttpRequestFactory clientHttpRequestFactory() {
     HttpComponentsClientHttpRequestFactory factory = new HttpComponentsClientHttpRequestFactory();
-    factory.setReadTimeout(MAX_TIMEOUT);
-    factory.setConnectTimeout(MAX_TIMEOUT);
+
+    System.setProperty("sun.net.client.defaultConnectTimeout",
+        Long.toString(properties.getConnectTimeoutSeconds() * 1000));
+    System.setProperty("sun.net.client.defaultReadTimeout", Long.toString(properties.getReadTimeoutSeconds() * 1000));
     factory.setHttpClient(sslClient());
 
     return factory;
@@ -123,8 +125,10 @@ public class ClientConfig {
 
   private SimpleClientHttpRequestFactory streamingClientHttpRequestFactory() {
     val factory = new SimpleClientHttpRequestFactory();
-    factory.setReadTimeout(MAX_TIMEOUT);
-    factory.setConnectTimeout(MAX_TIMEOUT);
+
+    System.setProperty("sun.net.client.defaultConnectTimeout",
+        Long.toString(properties.getConnectTimeoutSeconds() * 1000));
+    System.setProperty("sun.net.client.defaultReadTimeout", Long.toString(properties.getReadTimeoutSeconds() * 1000));
     factory.setOutputStreaming(true);
     factory.setBufferRequestBody(false);
     return factory;
@@ -134,6 +138,11 @@ public class ClientConfig {
   @Bean
   public RetryTemplate retryTemplate() {
     RetryTemplate retry = new RetryTemplate();
+
+    // hedge against HttpClient implementation ignoring factory.setRead|ConnectTimeout
+    System.setProperty("sun.net.client.defaultConnectTimeout",
+        Long.toString(properties.getConnectTimeoutSeconds() * 1000));
+    System.setProperty("sun.net.client.defaultReadTimeout", Long.toString(properties.getReadTimeoutSeconds() * 1000));
 
     int maxAttempts =
         properties.getUpload().getRetryNumber() < 0 ? Integer.MAX_VALUE : properties.getUpload().getRetryNumber();

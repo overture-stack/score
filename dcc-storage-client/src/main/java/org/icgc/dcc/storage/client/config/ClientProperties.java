@@ -37,6 +37,10 @@ public class ClientProperties {
 
   private String baiCacheDir;
   private String uploadTmpDir;
+
+  private int connectTimeoutSeconds;
+  private int readTimeoutSeconds;
+
   private int parallelism = Runtime.getRuntime().availableProcessors();
 
   private TokenProperties token = new TokenProperties();
