@@ -104,8 +104,10 @@ public class ClientConfig {
 
   private HttpComponentsClientHttpRequestFactory clientHttpRequestFactory() {
     HttpComponentsClientHttpRequestFactory factory = new HttpComponentsClientHttpRequestFactory();
-    factory.setReadTimeout(properties.getReadTimeoutSeconds() * 1000);
-    factory.setConnectTimeout(properties.getConnectTimeoutSeconds() * 1000);
+
+    System.setProperty("sun.net.client.defaultConnectTimeout",
+        Long.toString(properties.getConnectTimeoutSeconds() * 1000));
+    System.setProperty("sun.net.client.defaultReadTimeout", Long.toString(properties.getReadTimeoutSeconds() * 1000));
     factory.setHttpClient(sslClient());
 
     return factory;
@@ -123,8 +125,10 @@ public class ClientConfig {
 
   private SimpleClientHttpRequestFactory streamingClientHttpRequestFactory() {
     val factory = new SimpleClientHttpRequestFactory();
-    factory.setReadTimeout(properties.getReadTimeoutSeconds() * 1000);
-    factory.setConnectTimeout(properties.getConnectTimeoutSeconds() * 1000);
+
+    System.setProperty("sun.net.client.defaultConnectTimeout",
+        Long.toString(properties.getConnectTimeoutSeconds() * 1000));
+    System.setProperty("sun.net.client.defaultReadTimeout", Long.toString(properties.getReadTimeoutSeconds() * 1000));
     factory.setOutputStreaming(true);
     factory.setBufferRequestBody(false);
     return factory;
