@@ -35,7 +35,7 @@ public abstract class AbstractClientCommand implements ClientCommand {
   protected Terminal terminal;
 
   protected void printTitle() {
-    terminal.printStatus("\n" + terminal.label("> ") + terminal.value("ICGC DCC ") + "Storage Client\n\n");
+    terminal.printStatus("\n" + terminal.label("> ") + terminal.value("ICGC ") + "Storage Client\n\n");
   }
 
 }

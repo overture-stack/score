@@ -1,5 +1,7 @@
 #
-# Storage Client - Configuration
+# Copyright 2015(c) The Ontario Institute for Cancer Research. All rights reserved.
+#
+# ICGC Storage Client - Default Configuration
 #
 
 ###############################################################################
@@ -66,16 +68,11 @@ spring.profiles: collab
 
 # Storage server
 storage:
-  url: https://storage.cancercollaboratory.org:5431
+  url: https://storage.cancercollaboratory.org
 
 client:    
   ssl:
-    custom: true
-    
-    trustStore: classpath:client.jks
-    trustStoreType: JKS
-    trustStorePassword: CLIENT_SECRET
-    trustName: icgc.cancercollaboratory.org    
+    custom: false  
 
 ---
 

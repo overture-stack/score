@@ -24,7 +24,7 @@ Run
 ---
 
 ```
-bin/dcc-storage-client upload —manifest manifest.txt
+bin/icgc-storage-client upload —manifest manifest.txt
 ```
 
 Develop
