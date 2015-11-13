@@ -25,7 +25,6 @@ import java.io.OutputStream;
 import java.net.URI;
 import java.util.List;
 
-import org.icgc.dcc.storage.client.config.ClientProperties;
 import org.icgc.dcc.storage.client.download.DownloadStateStore;
 import org.icgc.dcc.storage.client.exception.NotResumableException;
 import org.icgc.dcc.storage.client.exception.NotRetryableException;
@@ -74,8 +73,6 @@ public class StorageService {
    */
   @Value("${storage.url}")
   private String endpoint;
-  @Autowired
-  private ClientProperties properties;
 
   /**
    * Dependencies.
@@ -403,13 +400,7 @@ public class StorageService {
 
   private HttpHeaders defaultHeaders() {
     val requestHeaders = new HttpHeaders();
-    requestHeaders.set("access-token", getToken());
     return requestHeaders;
-  }
-
-  // TODO: integrate AuthorizationService
-  private String getToken() {
-    return properties.getKeyToken();
   }
 
 }

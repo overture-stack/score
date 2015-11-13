@@ -29,15 +29,6 @@ public class ClientProperties {
   private String awsAccessKey;
   private String awsSecretKey;
 
-  private String osEndpoint;
-  private String keyStoneEndPoint;
-
-  private String keyToken;
-  private String keyResourceUri;
-
-  private String baiCacheDir;
-  private String uploadTmpDir;
-
   private int connectTimeoutSeconds;
   private int readTimeoutSeconds;
 
