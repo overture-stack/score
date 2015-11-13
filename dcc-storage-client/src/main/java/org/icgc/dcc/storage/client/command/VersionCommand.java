@@ -20,9 +20,6 @@ package org.icgc.dcc.storage.client.command;
 import static com.google.common.base.Objects.firstNonNull;
 import static org.icgc.dcc.common.core.util.VersionUtils.getScmInfo;
 
-import org.icgc.dcc.storage.client.config.ClientProperties;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import com.beust.jcommander.Parameters;
@@ -31,10 +28,10 @@ import com.beust.jcommander.Parameters;
 @Parameters(separators = "=", commandDescription = "Display application version information")
 public class VersionCommand extends AbstractClientCommand {
 
-  @Value("${storage.url}")
-  private String storageUrl;
-  @Autowired
-  private ClientProperties properties;
+  /**
+   * Constants.
+   */
+  private static final String SUPPORT_EMAIL = "dcc-support@icgc.org";
 
   @Override
   public int execute() throws Exception {
@@ -46,11 +43,7 @@ public class VersionCommand extends AbstractClientCommand {
   private void version() {
     terminal.println(terminal.label("  Version: ") + getVersion());
     terminal.println(terminal.label("  Built:   ") + getScmInfo().get("git.build.time"));
-    terminal.println(terminal.label("  Contact: ") + terminal.email("dcc-support@icgc.org"));
-    terminal.println("");
-    terminal.println(terminal.label("  Active Configuration: "));
-    terminal.println("    Storage Endpoint: " + storageUrl);
-    terminal.println("    Access Token: " + properties.getAccessToken());
+    terminal.println(terminal.label("  Contact: ") + terminal.email(SUPPORT_EMAIL));
   }
 
   private String getVersion() {

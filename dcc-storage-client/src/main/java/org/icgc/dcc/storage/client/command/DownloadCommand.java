@@ -56,21 +56,21 @@ public class DownloadCommand extends AbstractClientCommand {
   /**
    * Options
    */
-  @Parameter(names = "--output-dir", description = "path to output directory", required = true, validateValueWith = DirectoryValidator.class)
+  @Parameter(names = "--output-dir", description = "Path to output directory", required = true, validateValueWith = DirectoryValidator.class)
   private File outputDir;
-  @Parameter(names = "--output-layout", description = "layout of the output-dir. One of 'bundle' (nest files in bundle directory), 'filename' (nest files in filename directory), or 'object-id' (flat list of files named by their associated object id)", converter = OutputLayoutConverter.class)
+  @Parameter(names = "--output-layout", description = "Layout of the output-dir. One of 'bundle' (nest files in bundle directory), 'filename' (nest files in filename directory), or 'object-id' (flat list of files named by their associated object id)", converter = OutputLayoutConverter.class)
   private OutputLayout layout = OutputLayout.FILENAME;
-  @Parameter(names = "--force", description = "force re-download (override local file)")
+  @Parameter(names = "--force", description = "Force re-download (override local file)")
   private boolean force = false;
-  @Parameter(names = "--manifest", description = "path to manifest id, url or file")
+  @Parameter(names = "--manifest", description = "Path to manifest id, url or file")
   private ManifestResource manifestResource;
-  @Parameter(names = "--object-id", description = "object id to download", validateValueWith = ObjectIdValidator.class)
+  @Parameter(names = "--object-id", description = "Object id to download", validateValueWith = ObjectIdValidator.class)
   private String objectId;
-  @Parameter(names = "--offset", description = "the byte position in source file to begin download from")
+  @Parameter(names = "--offset", description = "The byte position in source file to begin download from")
   private long offset = 0;
-  @Parameter(names = "--length", description = "the number of bytes to download")
+  @Parameter(names = "--length", description = "The number of bytes to download")
   private long length = -1;
-  @Parameter(names = "--index", description = "download file index if available?")
+  @Parameter(names = "--index", description = "Download file index if available?")
   private boolean index = true;
 
   /**

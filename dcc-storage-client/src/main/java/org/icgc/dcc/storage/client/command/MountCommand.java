@@ -74,15 +74,15 @@ public class MountCommand extends AbstractClientCommand {
   /**
    * Options
    */
-  @Parameter(names = "--mount-point", description = "the mount point of the FUSE file system. This must exist, be empty and be executable by the current user.", required = true, validateValueWith = DirectoryValidator.class)
+  @Parameter(names = "--mount-point", description = "The mount point of the FUSE file system. This must exist, be empty and be executable by the current user.", required = true, validateValueWith = DirectoryValidator.class)
   private File mountPoint;
-  @Parameter(names = "--manifest", description = "manifest id (from the Data Portal), url or file path")
+  @Parameter(names = "--manifest", description = "Manifest id (from the Data Portal), url or file path")
   private ManifestResource manifestResource;
-  @Parameter(names = "--layout", description = "layout of the mount point. One of 'bundle' (nest files in bundle directory) or 'object-id' (flat list of files named by their associated object id)", converter = StorageFileLayoutConverter.class)
+  @Parameter(names = "--layout", description = "Layout of the mount point. One of 'bundle' (nest files in bundle directory) or 'object-id' (flat list of files named by their associated object id)", converter = StorageFileLayoutConverter.class)
   private StorageFileLayout layout = StorageFileLayout.BUNDLE;
-  @Parameter(names = "--cache-metadata", description = "to speedup load times, cache metadata on disk locally and use if available")
+  @Parameter(names = "--cache-metadata", description = "To speedup load times, cache metadata on disk locally and use if available")
   private boolean cacheMetadata;
-  @Parameter(names = "--options", description = "the mount options of the file system (e.g. --options user_allow_other,allow_other,fsname=icgc,debug) "
+  @Parameter(names = "--options", description = "The mount options of the file system (e.g. --options user_allow_other,allow_other,fsname=icgc,debug) "
       + "in addition to those specified internally: " + INTERNAL_MOUNT_OPTIONS + ". See " + FUSE_README_URL
       + " for details", converter = MountOptionsConverter.class)
   private Map<String, String> options = newHashMap();

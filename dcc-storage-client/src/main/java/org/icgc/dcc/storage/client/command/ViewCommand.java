@@ -67,22 +67,22 @@ public class ViewCommand extends AbstractClientCommand {
   /**
    * Options.
    */
-  @Parameter(names = "--contained", description = "output only alignments completely contained in specified region. By default, any alignment"
+  @Parameter(names = "--contained", description = "Output only alignments completely contained in specified region. By default, any alignment"
       + " that intersects with a specified region will be returned")
   private boolean containedOnly = false;
-  @Parameter(names = "--header-only", description = "output header of SAM/BAM file only")
+  @Parameter(names = "--header-only", description = "Output header of SAM/BAM file only")
   private boolean headerOnly = false;
-  @Parameter(names = "--output-file", description = "filename to write output to. Uses filename from metadata, or original input filename if not specified")
+  @Parameter(names = "--output-file", description = "Filename to write output to. Uses filename from metadata, or original input filename if not specified")
   private String fileName;
-  @Parameter(names = "--output-type", description = "output format of query", converter = OutputTypeConverter.class)
+  @Parameter(names = "--output-type", description = "Output format of query", converter = OutputTypeConverter.class)
   private OutputType outputType = OutputType.SAM;
-  @Parameter(names = "--object-id", description = "object id of BAM file to download slice from", validateValueWith = ObjectIdValidator.class)
+  @Parameter(names = "--object-id", description = "Object id of BAM file to download slice from", validateValueWith = ObjectIdValidator.class)
   private String objectId;
-  @Parameter(names = "--input-file", description = "local path to BAM file. Overrides specification of --object-id", validateValueWith = FileValidator.class)
+  @Parameter(names = "--input-file", description = "Local path to BAM file. Overrides specification of --object-id", validateValueWith = FileValidator.class)
   private File bamFile;
-  @Parameter(names = "--input-file-index", description = "explicit local path to index file (requires --input-file)", validateValueWith = FileValidator.class)
+  @Parameter(names = "--input-file-index", description = "Explicit local path to index file (requires --input-file)", validateValueWith = FileValidator.class)
   private File baiFile;
-  @Parameter(names = "--query", description = "query to define extract from BAM file (coordinate format 'sequence:start-end'). Multiple"
+  @Parameter(names = "--query", description = "Query to define extract from BAM file (coordinate format 'sequence:start-end'). Multiple"
       + " ranges separated by space", variableArity = true)
   private List<String> query = new ArrayList<>();
 

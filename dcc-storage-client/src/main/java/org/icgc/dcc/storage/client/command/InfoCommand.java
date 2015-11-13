@@ -17,39 +17,80 @@
  */
 package org.icgc.dcc.storage.client.command;
 
-import org.icgc.dcc.storage.client.manifest.ManfiestService;
-import org.icgc.dcc.storage.client.manifest.ManifestResource;
+import org.icgc.dcc.storage.client.config.ClientProperties;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.config.RandomValuePropertySource;
+import org.springframework.core.env.EnumerablePropertySource;
+import org.springframework.core.env.StandardEnvironment;
+import org.springframework.core.env.SystemEnvironmentPropertySource;
 import org.springframework.stereotype.Component;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 
 import lombok.val;
 
 @Component
-@Parameters(separators = "=", commandDescription = "Resolve a file object manifest and display it")
-public class ManifestCommand extends AbstractClientCommand {
+@Parameters(separators = "=", commandDescription = "Display application configuration information")
+public class InfoCommand extends AbstractClientCommand {
 
   /**
    * Options.
    */
-  @Parameter(names = "--manifest", description = "Path to manifest id, url or file", required = true)
-  private ManifestResource manifestResource;
+  @Parameter(names = "--verbose", description = "Show all configuration property sources")
+  private boolean verbose = false;
 
   /**
    * Dependencies.
    */
+  @Value("${storage.url}")
+  private String storageUrl;
   @Autowired
-  private ManfiestService manfiestService;
+  private ClientProperties properties;
+  @Autowired
+  private StandardEnvironment env;
 
   @Override
   public int execute() throws Exception {
-    terminal.printStatus("Resolving manfiest for '" + manifestResource + "'");
-    val manifestContent = manfiestService.getManifestContent(manifestResource);
-    System.out.printf("%s", manifestContent);
-
+    printTitle();
+    version();
     return SUCCESS_STATUS;
+  }
+
+  private void version() {
+    active();
+
+    if (verbose) {
+      terminal.println("");
+      sources();
+    }
+  }
+
+  private void active() {
+    terminal.println(terminal.label("  Active Configuration: "));
+    terminal.println("    Storage Endpoint: " + storageUrl);
+    terminal.println("    Access Token: " + properties.getAccessToken());
+  }
+
+  private void sources() {
+    terminal.println(terminal.label("  Configuration Sources: "));
+    for (val source : env.getPropertySources()) {
+      if (source instanceof SystemEnvironmentPropertySource || source instanceof RandomValuePropertySource) {
+        // Skip because this will cause issues with terminal display or is useless
+        continue;
+      }
+
+      terminal.println("    " + terminal.value(source.getName()));
+      if (source instanceof EnumerablePropertySource) {
+        val enumerable = (EnumerablePropertySource<?>) source;
+        for (val propertyName : Sets.newTreeSet(ImmutableSet.copyOf(enumerable.getPropertyNames()))) {
+          terminal.println("      - " + propertyName + ": " + enumerable.getProperty(propertyName));
+        }
+      }
+    }
   }
 
 }

@@ -1,11 +1,13 @@
 package org.icgc.dcc.storage.client;
 
+import static com.google.common.base.Objects.firstNonNull;
 import static java.lang.System.err;
 import static org.icgc.dcc.storage.client.cli.Parameters.checkCommand;
 import static org.icgc.dcc.storage.client.command.ClientCommand.APPLICATION_NAME;
 import static org.icgc.dcc.storage.client.command.ClientCommand.FAILURE_STATUS;
 import static org.icgc.dcc.storage.client.util.SingletonBeansInitializer.singletonBeans;
 
+import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
@@ -23,6 +25,7 @@ import com.beust.jcommander.JCommander;
 import com.beust.jcommander.MissingCommandException;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
+import com.beust.jcommander.Parameters;
 
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
@@ -33,6 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Configuration
 @ComponentScan
+@Parameters(separators = "=")
 public class ClientMain implements CommandLineRunner {
 
   /**
@@ -45,14 +49,16 @@ public class ClientMain implements CommandLineRunner {
   /**
    * Options.
    */
-  @Parameter(names = "--quiet", description = "reduce output for non-interactive usage", required = false, help = true)
+  @Parameter(names = "--profile", description = "Define environment profile used to resolve configuration properties", required = false, help = true)
+  private String profile = getDefaultProfile();
+  @Parameter(names = "--quiet", description = "Reduce output for non-interactive usage", required = false, help = true)
   private boolean quiet = false;
-  @Parameter(names = "--silent", description = "do not produce any informational messages", required = false, help = true)
+  @Parameter(names = "--silent", description = "Do not produce any informational messages", required = false, help = true)
   private boolean silent = false;
-  @Parameter(names = "--help", description = "shows help information", required = false, help = true)
-  private boolean help = false;
-  @Parameter(names = "--version", description = "shows version information", required = false, help = true)
+  @Parameter(names = "--version", description = "Show version information", required = false, help = true)
   private boolean version = false;
+  @Parameter(names = "--help", description = "Show help information", required = false, help = true)
+  private boolean help = false;
 
   /**
    * Dependencies.
@@ -67,8 +73,10 @@ public class ClientMain implements CommandLineRunner {
   public static void main(String[] args) {
     err.print("Starting...");
     try {
+      // Bootstrap
+      val profiles = bootstrap(args);
+
       // Setup
-      bootstrap(args);
       val cli = new JCommander();
       cli.setProgramName(APPLICATION_NAME);
       cli.addConverterFactory(new ConverterFactory());
@@ -78,16 +86,17 @@ public class ClientMain implements CommandLineRunner {
           .showBanner(false) // Not appropriate for tool
           .initializers(singletonBeans(cli)) // Add cli to context
           .addCommandLineProperties(false) // Only use formal parameters defined in cli
+          .profiles(profiles)
           .run(args);
-    } catch (Throwable t) {
-      err.println("\nUnknown error starting application. Please see log for details");
-      log.error("Exception running: ", t);
 
       log.info("Exiting...");
+    } catch (Throwable t) {
+      // Can't use log here because Spring Boot may not have defined its location yet
+      err.println("\nUnknown error starting application: ");
+      t.printStackTrace();
+
       exit(FAILURE_STATUS);
     }
-
-    log.info("Exiting...");
   }
 
   /**
@@ -110,8 +119,7 @@ public class ClientMain implements CommandLineRunner {
       log.error("Missing command: ", e);
       terminal.printError("Missing command: " + e.getMessage());
 
-      val help = getCommand("help");
-      help.execute();
+      displayHelp();
 
       exit(FAILURE_STATUS);
     } catch (ParameterException e) {
@@ -162,6 +170,37 @@ public class ClientMain implements CommandLineRunner {
     }
   }
 
+  private void displayHelp() throws Exception {
+    val help = getCommand("help");
+    help.execute();
+  }
+
+  /**
+   * This is required to bootstrap arguments for Spring Boot consumption very early in the app lifecycle. The method
+   * returns the active profiles.
+   */
+  private static String[] bootstrap(String[] args) {
+    val options = new ClientMain() {
+
+      // Required to ignore the part of args that deals with commands and their options
+      @Parameter
+      private List<String> values;
+
+    };
+
+    // Digest parse of the command line args
+    val cli = new JCommander();
+    cli.setAcceptUnknownOptions(true);
+    cli.addObject(options);
+    cli.parse(args);
+
+    // Pass to spring
+    System.setProperty("client.silent", Boolean.toString(options.silent));
+    System.setProperty("client.quiet", Boolean.toString(options.quiet));
+
+    return options.profile == null ? new String[] {} : new String[] { options.profile };
+  }
+
   private ClientCommand getCommand(String commandName) {
     val beanName = commandName + "Command";
     return commands.get(beanName);
@@ -171,19 +210,9 @@ public class ClientMain implements CommandLineRunner {
     return beanName.replace("Command", "");
   }
 
-  /**
-   * This is required to bootstrap arguments for Spring Boot consumption very early in the app lifecycle.
-   */
-  private static void bootstrap(String[] args) {
-    for (val arg : args) {
-      // Set options for Spring Boot property binding
-      if (arg.equals("--silent") || arg.equals("--silent=true")) {
-        System.setProperty("client.silent", "true");
-      }
-      if (arg.equals("--quiet") || arg.equals("--quiet=true")) {
-        System.setProperty("client.quiet", "true");
-      }
-    }
+  private static String getDefaultProfile() {
+    // First try system properties, then environment variables, then default value
+    return System.getProperty("storage.profile", firstNonNull(System.getenv("STORAGE_PROFILE"), "amazon"));
   }
 
   private static void exit(int status) {
