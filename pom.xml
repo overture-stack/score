@@ -21,6 +21,7 @@
     <module>dcc-storage-fs</module>
     <module>dcc-storage-server</module>
     <module>dcc-storage-test</module>
+    <module>icgc-storage-client</module>
   </modules>
 
   <repositories>
@@ -96,9 +97,6 @@
 
     <!-- Versions - Amazon -->
     <aws-java-sdk.version>1.10.27</aws-java-sdk.version>
-<!--     <aws-java-sdk.version>1.10.11</aws-java-sdk.version>  -->    
-
-    <!-- For collaboratory (ceph) <aws-java-sdk.version>1.8.11</aws-java-sdk.version> -->
 
     <!-- Versions - Utilities -->
     <jcommander.version>1.48</jcommander.version>

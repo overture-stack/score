@@ -17,11 +17,14 @@
       <outputDirectory>conf</outputDirectory>
     </fileSet>
   </fileSets>
-  <files>
-    <file>
-      <source>${project.build.directory}/${artifactId}-${version}.jar</source>
+  <dependencySets>
+    <dependencySet>
       <outputDirectory>lib</outputDirectory>
-      <destName>icgc-storage-client.jar</destName>
-    </file>
-  </files>
+      <outputFileNameMapping>icgc-storage-client.jar</outputFileNameMapping>
+      <unpack>false</unpack>
+      <includes>
+        <include>${project.groupId}:dcc-storage-client</include>
+      </includes>
+    </dependencySet>
+  </dependencySets>
 </assembly>
