@@ -3,16 +3,10 @@
 <!-- ICGC ObjectStore Service - Logging configuration -->
 <!--                                           -->
 <configuration debug="false">
-<!-- 
-  <include resource="org/springframework/boot/logging/logback/base.xml" />
-  <logger name="org.springframework.boot" level="INFO" />
-  <logger name="org.springframework.security" level="ERROR" />
-  
-  <property name="log.dir" value="${LOG_DIR:-/tmp}"/>
--->
-  <property name="log.dir" value="${log.path:-/tmp/objectstore/logs}"/>
-  <property name="log.name" value="objectstore" />
-  <property name="log.audit.name" value="objectstore.audit" />
+
+  <property name="log.dir" value="${log.path:-/tmp/dcc-storage/logs}"/>
+  <property name="log.name" value="dcc-storage" />
+  <property name="log.audit.name" value="dcc-storage.audit" />
   <property name="pattern" value="%date{ISO8601} [%thread] %-5level %logger{20} - %msg%n" />
 
   <contextListener class="ch.qos.logback.classic.jul.LevelChangePropagator">
