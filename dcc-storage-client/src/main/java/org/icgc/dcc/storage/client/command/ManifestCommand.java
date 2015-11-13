@@ -34,7 +34,7 @@ public class ManifestCommand extends AbstractClientCommand {
   /**
    * Options.
    */
-  @Parameter(names = "--manifest", description = "path to manifest id, url or file", required = true)
+  @Parameter(names = "--manifest", description = "Path to manifest id, url or file", required = true)
   private ManifestResource manifestResource;
 
   /**

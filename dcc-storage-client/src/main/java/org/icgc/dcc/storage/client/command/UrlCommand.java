@@ -36,7 +36,7 @@ public class UrlCommand extends AbstractClientCommand {
   /**
    * Options.
    */
-  @Parameter(names = "--object-id", description = "object id to resolve URL for", required = true, validateValueWith = ObjectIdValidator.class)
+  @Parameter(names = "--object-id", description = "Object id to resolve URL for", required = true, validateValueWith = ObjectIdValidator.class)
   private String objectId;
 
   /**

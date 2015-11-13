@@ -1,35 +1,34 @@
 #
-# Storage Client - Configuration
+# Copyright 2015(c) The Ontario Institute for Cancer Research. All rights reserved.
+#
+# ICGC Storage Client - Default Configuration
 #
 
 ###############################################################################
 # Profile - common
 ###############################################################################
 
+client:
+  ansi: ${ansi:true}
+  silent: ${silent:false}
+  quiet: ${quiet:false}
+  accessToken: "${accessToken}" # Alias for backwards compatibility
+  connectTimeoutSeconds: 60
+  readTimeoutSeconds: 60
+    
+  ssl:
+    custom: false
+
 transport:
   fileFrom: memory
   memory: 1
   parallel: 6
 
-client:
-  ansi: ${ansi:true}
-  silent: ${silent:false}
-  quiet: ${quiet:false}
-  accessToken: "${accessToken}" #Alias for backwards compatibility
-  connectTimeoutSeconds: 60
-  readTimeoutSeconds: 60
+storage:
+  url: http://localhost:5431
+  retryNumber: 10
+  retryTimeout: 1	
 
-  upload:
-    serviceHostname: localhost
-    servicePort: 443
-    retryNumber: 10
-    retryTimeout: 1
-    
-  ssl:
-    enabled: false
-    custom: false
-
-# Metadata server
 metadata:
   url: https://meta.icgc.org
   ssl:
@@ -47,18 +46,16 @@ mount:
 ---
 
 ###############################################################################
-# Profile - "amazon"
+# Profile - "aws"
 ###############################################################################
 
-spring.profiles: amazon
+spring.profiles: aws
+
+storage:
+  url: https://virginia.cloud.icgc.org
 
 client:
-  upload:
-    serviceHostname: virginia.cloud.icgc.org
-
-  # SSL
   ssl:
-    enabled: true
     custom: false
     
 ---
@@ -69,20 +66,13 @@ client:
 
 spring.profiles: collab
 
-client:
-  upload:
-    serviceHostname: storage.cancercollaboratory.org
-    servicePort: 5431
-    
-  # SSL
+# Storage server
+storage:
+  url: https://storage.cancercollaboratory.org
+
+client:    
   ssl:
-    enabled: true
-    custom: true
-    
-    trustStore: classpath:client.jks
-    trustStoreType: JKS
-    trustStorePassword: CLIENT_SECRET
-    trustName: icgc.cancercollaboratory.org    
+    custom: false  
 
 ---
 
@@ -92,13 +82,11 @@ client:
 
 spring.profiles: oicr
 
-client:
-  upload:
-    serviceHostname: objectstore.icgc.org
-    servicePort: 443
-    
+storage:
+  url: https://objectstore.icgc.org
+
+client:    
   ssl:
-    enabled: true
     custom: false
 
 ---

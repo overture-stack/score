@@ -25,7 +25,6 @@ import java.io.OutputStream;
 import java.net.URI;
 import java.util.List;
 
-import org.icgc.dcc.storage.client.config.ClientProperties;
 import org.icgc.dcc.storage.client.download.DownloadStateStore;
 import org.icgc.dcc.storage.client.exception.NotResumableException;
 import org.icgc.dcc.storage.client.exception.NotRetryableException;
@@ -38,6 +37,7 @@ import org.icgc.dcc.storage.core.model.UploadProgress;
 import org.icgc.dcc.storage.core.util.ObjectStoreUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -71,11 +71,8 @@ public class StorageService {
   /**
    * Configuration.
    */
-  @Autowired
-  @Qualifier("endpoint")
+  @Value("${storage.url}")
   private String endpoint;
-  @Autowired
-  private ClientProperties properties;
 
   /**
    * Dependencies.
@@ -403,13 +400,7 @@ public class StorageService {
 
   private HttpHeaders defaultHeaders() {
     val requestHeaders = new HttpHeaders();
-    requestHeaders.set("access-token", getToken());
     return requestHeaders;
-  }
-
-  // TODO: integrate AuthorizationService
-  private String getToken() {
-    return properties.getKeyToken();
   }
 
 }

@@ -21,7 +21,7 @@
     <file>
       <source>${project.build.directory}/${artifactId}-${version}.jar</source>
       <outputDirectory>lib</outputDirectory>
-      <destName>${artifactId}.jar</destName>
+      <destName>icgc-storage-client.jar</destName>
     </file>
   </files>
 </assembly>
