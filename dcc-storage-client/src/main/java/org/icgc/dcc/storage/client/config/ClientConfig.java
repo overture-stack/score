@@ -66,11 +66,6 @@ import lombok.extern.slf4j.Slf4j;
 public class ClientConfig {
 
   /**
-   * Constants.
-   */
-  private static final int MAX_TIMEOUT = 20 * 1000;
-
-  /**
    * Configuration.
    */
   @Autowired
@@ -91,22 +86,25 @@ public class ClientConfig {
 
   @Bean
   public RestTemplate serviceTemplate() {
-    RestTemplate req = new RestTemplate(clientHttpRequestFactory());
-    req.setErrorHandler(new ServiceRetryableResponseErrorHandler());
-    return req;
+    val serviceTemplate = new RestTemplate(clientHttpRequestFactory());
+    serviceTemplate.setErrorHandler(new ServiceRetryableResponseErrorHandler());
+
+    return serviceTemplate;
   }
 
   @Bean
   public RestTemplate dataTemplate() {
-    RestTemplate req = new RestTemplate(streamingClientHttpRequestFactory());
-    req.setErrorHandler(new AmazonS3RetryableResponseErrorHandler());
-    return req;
+    val dataTemplate = new RestTemplate(streamingClientHttpRequestFactory());
+    dataTemplate.setErrorHandler(new AmazonS3RetryableResponseErrorHandler());
+
+    return dataTemplate;
   }
 
   private HttpComponentsClientHttpRequestFactory clientHttpRequestFactory() {
-    HttpComponentsClientHttpRequestFactory factory = new HttpComponentsClientHttpRequestFactory();
-    factory.setReadTimeout(MAX_TIMEOUT);
-    factory.setConnectTimeout(MAX_TIMEOUT);
+    val factory = new HttpComponentsClientHttpRequestFactory();
+
+    factory.setReadTimeout(properties.getReadTimeoutSeconds() * 1000);
+    factory.setConnectTimeout(properties.getConnectTimeoutSeconds() * 1000);
     factory.setHttpClient(sslClient());
 
     return factory;
@@ -124,16 +122,19 @@ public class ClientConfig {
 
   private SimpleClientHttpRequestFactory streamingClientHttpRequestFactory() {
     val factory = new SimpleClientHttpRequestFactory();
-    factory.setReadTimeout(MAX_TIMEOUT);
-    factory.setConnectTimeout(MAX_TIMEOUT);
+
+    // See http://stackoverflow.com/questions/9934970/can-i-globally-set-the-timeout-of-http-connections#answer-10705424
+    System.setProperty("sun.net.client.defaultConnectTimeout",
+        Long.toString(properties.getConnectTimeoutSeconds() * 1000));
+    System.setProperty("sun.net.client.defaultReadTimeout", Long.toString(properties.getReadTimeoutSeconds() * 1000));
     factory.setOutputStreaming(true);
     factory.setBufferRequestBody(false);
     return factory;
-
   }
 
   @Bean
-  public RetryTemplate retryTemplate(@Value("${storage.retryNumber}") int retryNumber,
+  public RetryTemplate retryTemplate(
+      @Value("${storage.retryNumber}") int retryNumber,
       @Value("${storage.retryTimeout}") int retryTimeout) {
     val maxAttempts = retryNumber < 0 ? Integer.MAX_VALUE : retryNumber;
 

@@ -103,10 +103,10 @@ public class MountCommand extends AbstractClientCommand {
 
   @Override
   public int execute() throws Exception {
-    checkParameter(mountPoint.canExecute(), "Cannot mount to '%s'. Please check directory permissions and try again",
-        mountPoint);
-    checkParameter(mountPoint.list().length == 0, "Cannot mount to '%s'. Please ensure the directory is empty",
-        mountPoint);
+    checkParameter(mountPoint.canExecute(),
+        "Cannot mount to '%s'. Please check directory permissions and try again", mountPoint);
+    checkParameter(mountPoint.list() != null && mountPoint.list().length == 0,
+        "Cannot mount to '%s'. Please ensure the directory is empty and is not already mounted", mountPoint);
 
     try {
       int i = 1;

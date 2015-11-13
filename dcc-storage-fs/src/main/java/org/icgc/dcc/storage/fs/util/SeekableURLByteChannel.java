@@ -31,7 +31,7 @@ import java.nio.channels.SeekableByteChannel;
 import javax.naming.OperationNotSupportedException;
 
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
@@ -43,7 +43,6 @@ import lombok.extern.slf4j.Slf4j;
  * resource at the specified {@link #url}.
  */
 @Slf4j
-@RequiredArgsConstructor
 public class SeekableURLByteChannel implements SeekableByteChannel {
 
   /**
@@ -54,7 +53,7 @@ public class SeekableURLByteChannel implements SeekableByteChannel {
   /**
    * Configuration.
    */
-  protected final URL url;
+  protected URL url;
 
   @Getter(lazy = true)
   private final long size = resolveSize();
@@ -73,6 +72,10 @@ public class SeekableURLByteChannel implements SeekableByteChannel {
   protected InputStream inputStream;
   protected HttpURLConnection connection;
 
+  public SeekableURLByteChannel(@NonNull URL url) {
+    this.url = url;
+  }
+
   @Override
   public boolean isOpen() {
     return inputStream != null;
@@ -82,7 +85,11 @@ public class SeekableURLByteChannel implements SeekableByteChannel {
   synchronized public void close() throws IOException {
     inputStream = null;
     if (connection != null) {
-      connection.disconnect();
+      try {
+        connection.disconnect();
+      } catch (Exception e) {
+        log.error("Exception closing connection: ", e);
+      }
       connection = null;
     }
   }
@@ -153,6 +160,13 @@ public class SeekableURLByteChannel implements SeekableByteChannel {
     return position;
   }
 
+  /**
+   * Template method.
+   */
+  protected void onResolveInputStream() throws IOException {
+    // No-op
+  }
+
   private int read(ByteBuffer buffer, int length) throws IOException, EOFException {
     val inputStream = resolveInputStream();
 
@@ -177,6 +191,8 @@ public class SeekableURLByteChannel implements SeekableByteChannel {
   }
 
   private InputStream resolveInputStream() throws IOException {
+    onResolveInputStream();
+
     // Is new or non-serial read relative to the last read request
     val reconnect = connection == null || position != lastPosition;
     if (reconnect) {

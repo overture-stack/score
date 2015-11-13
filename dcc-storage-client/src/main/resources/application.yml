@@ -11,6 +11,8 @@ client:
   silent: ${silent:false}
   quiet: ${quiet:false}
   accessToken: "${accessToken}" # Alias for backwards compatibility
+  connectTimeoutSeconds: 60
+  readTimeoutSeconds: 60
     
   ssl:
     custom: false

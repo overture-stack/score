@@ -1,7 +1,7 @@
 package org.icgc.dcc.storage.client;
 
 import static java.lang.System.err;
-import static org.icgc.dcc.storage.client.cli.Parameters.checkParameter;
+import static org.icgc.dcc.storage.client.cli.Parameters.checkCommand;
 import static org.icgc.dcc.storage.client.command.ClientCommand.APPLICATION_NAME;
 import static org.icgc.dcc.storage.client.command.ClientCommand.FAILURE_STATUS;
 import static org.icgc.dcc.storage.client.util.SingletonBeansInitializer.singletonBeans;
@@ -110,6 +110,9 @@ public class ClientMain implements CommandLineRunner {
       log.error("Missing command: ", e);
       terminal.printError("Missing command: " + e.getMessage());
 
+      val help = getCommand("help");
+      help.execute();
+
       exit(FAILURE_STATUS);
     } catch (ParameterException e) {
       log.error("Bad parameter(s): ", e);
@@ -150,10 +153,10 @@ public class ClientMain implements CommandLineRunner {
       return getCommand("help");
     } else {
       val commandName = cli.getParsedCommand();
-      checkParameter(commandName != null, "Command name is empty. Please specify a command to execute");
+      checkCommand(commandName != null, "Command name is empty. Please specify a command to execute");
 
       val command = getCommand(commandName);
-      checkParameter(command != null, "Unknown command: %s", commandName);
+      checkCommand(command != null, "Unknown command: %s", commandName);
 
       return command;
     }

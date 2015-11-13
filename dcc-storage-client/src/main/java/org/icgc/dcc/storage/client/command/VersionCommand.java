@@ -20,6 +20,8 @@ package org.icgc.dcc.storage.client.command;
 import static com.google.common.base.Objects.firstNonNull;
 import static org.icgc.dcc.common.core.util.VersionUtils.getScmInfo;
 
+import org.icgc.dcc.storage.client.config.ClientProperties;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -31,6 +33,8 @@ public class VersionCommand extends AbstractClientCommand {
 
   @Value("${storage.url}")
   private String storageUrl;
+  @Autowired
+  private ClientProperties properties;
 
   @Override
   public int execute() throws Exception {
@@ -46,6 +50,7 @@ public class VersionCommand extends AbstractClientCommand {
     terminal.println("");
     terminal.println(terminal.label("  Active Configuration: "));
     terminal.println("    Storage Endpoint: " + storageUrl);
+    terminal.println("    Access Token: " + properties.getAccessToken());
   }
 
   private String getVersion() {
