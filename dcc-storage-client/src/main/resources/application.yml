@@ -44,10 +44,10 @@ mount:
 ---
 
 ###############################################################################
-# Profile - "amazon"
+# Profile - "aws"
 ###############################################################################
 
-spring.profiles: amazon
+spring.profiles: aws
 
 storage:
   url: https://virginia.cloud.icgc.org

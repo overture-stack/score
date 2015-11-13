@@ -154,6 +154,10 @@ public class Terminal {
     return ansi().render("@|blue,underline " + text + "|@").toString();
   }
 
+  public String url(String text) {
+    return ansi().render("@|blue,underline " + text + "|@").toString();
+  }
+
   public String value(long text) {
     return value(Long.toString(text));
   }

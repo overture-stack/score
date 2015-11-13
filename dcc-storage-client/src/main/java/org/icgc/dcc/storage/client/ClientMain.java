@@ -197,6 +197,7 @@ public class ClientMain implements CommandLineRunner {
     // Pass to spring
     System.setProperty("client.silent", Boolean.toString(options.silent));
     System.setProperty("client.quiet", Boolean.toString(options.quiet));
+    System.setProperty("storage.profile", options.profile);
 
     return options.profile == null ? new String[] {} : new String[] { options.profile };
   }
@@ -212,7 +213,7 @@ public class ClientMain implements CommandLineRunner {
 
   private static String getDefaultProfile() {
     // First try system properties, then environment variables, then default value
-    return System.getProperty("storage.profile", firstNonNull(System.getenv("STORAGE_PROFILE"), "amazon"));
+    return System.getProperty("storage.profile", firstNonNull(System.getenv("STORAGE_PROFILE"), "aws"));
   }
 
   private static void exit(int status) {

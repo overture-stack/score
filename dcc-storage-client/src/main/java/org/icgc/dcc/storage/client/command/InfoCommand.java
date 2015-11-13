@@ -48,6 +48,8 @@ public class InfoCommand extends AbstractClientCommand {
    */
   @Value("${storage.url}")
   private String storageUrl;
+  @Value("${storage.profile}")
+  private String storageProfile;
   @Autowired
   private ClientProperties properties;
   @Autowired
@@ -71,8 +73,9 @@ public class InfoCommand extends AbstractClientCommand {
 
   private void active() {
     terminal.println(terminal.label("  Active Configuration: "));
-    terminal.println("    Storage Endpoint: " + storageUrl);
-    terminal.println("    Access Token: " + properties.getAccessToken());
+    terminal.println("    Profile:          " + storageProfile);
+    terminal.println("    Storage Endpoint: " + terminal.url(storageUrl));
+    terminal.println("    Access Token:     " + properties.getAccessToken());
   }
 
   private void sources() {

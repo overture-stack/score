@@ -11,8 +11,8 @@ BASE_DIR=`dirname $0`/..; export BASE_DIR
 # Installation directory
 CLIENT_DIR="$(cd ${BASE_DIR} && pwd -P)"
 
-# Profile (e.g. amazon,collab)
-STORAGE_PROFILE=${STORAGE_PROFILE:-amazon}
+# Profile (e.g. aws, collab, etc.)
+STORAGE_PROFILE=${STORAGE_PROFILE:-aws}
 
 exec java -Xmx3G \
 	-Dlogging.file=${BASE_DIR}/logs/client.log \
