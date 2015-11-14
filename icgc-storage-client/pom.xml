@@ -6,7 +6,7 @@
     <groupId>org.icgc.dcc</groupId>
     <artifactId>dcc-storage</artifactId>
     <version>1.0.2-SNAPSHOT</version>
-    <relativePath>../../../../pom.xml</relativePath>
+    <relativePath>../pom.xml</relativePath>
   </parent>
 
   <artifactId>icgc-storage-client</artifactId>
