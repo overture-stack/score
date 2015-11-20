@@ -24,17 +24,19 @@ collaboratory:
   #bucket.name: oicr.collaboratory
   bucket.name: oicr.icgc.collaboratory
   upload.directory: upload
-  data.directory: data
   upload.expiration: 7
+  data.directory: data
   
   # COL-131: Change pre-signed URLs TTL to 1 day max
   download.expiration: 1
-
 
 upload:
   retry.limit: 5
   partsize: 20000000
   connection.timeout: 15000
+  
+  # Every day at midnight
+  clean.cron: "0 0 0 * * ?" 
 
 ---
 

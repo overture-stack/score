@@ -43,11 +43,6 @@ import lombok.extern.slf4j.Slf4j;
 public class UploadCleanupService {
 
   /**
-   * Constants.
-   */
-  private static final String SCHEDULE = "0 0 0 * * ?";
-
-  /**
    * Configuration.
    */
   @Value("${collaboratory.data.directory}")
@@ -61,7 +56,7 @@ public class UploadCleanupService {
   @Autowired
   private ObjectUploadService uploadService;
 
-  @Scheduled(cron = SCHEDULE)
+  @Scheduled(cron = "${upload.clean.cron}")
   public void clean() {
     log.info(repeat("-", 100));
     log.info("Cleaning stale uploads");
