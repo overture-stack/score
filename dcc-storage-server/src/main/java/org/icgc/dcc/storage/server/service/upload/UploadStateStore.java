@@ -17,14 +17,17 @@
  */
 package org.icgc.dcc.storage.server.service.upload;
 
+import static org.apache.commons.lang.StringUtils.removeEnd;
+import static org.apache.commons.lang.StringUtils.removeStart;
+import static org.apache.commons.lang.StringUtils.substringAfter;
+import static org.apache.commons.lang.StringUtils.substringBetween;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.Collections;
-import java.util.Comparator;
-import java.util.Iterator;
 import java.util.List;
+import java.util.function.Consumer;
 
-import org.apache.commons.lang.StringUtils;
 import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -47,67 +50,78 @@ import com.amazonaws.services.s3.model.ListObjectsRequest;
 import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PartETag;
-import com.amazonaws.services.s3.model.S3Object;
-import com.amazonaws.services.s3.model.S3ObjectInputStream;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.google.common.collect.Lists;
 
+import lombok.NonNull;
+import lombok.Setter;
 import lombok.SneakyThrows;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * It records the state of a upload in progress
+ * Stores and retrieves the state of a upload's progress.
  */
 @Slf4j
+@Setter
 public class UploadStateStore {
 
+  /**
+   * Constants.
+   */
   private static final String UPLOAD_SEPARATOR = "_";
   private static final String DIRECTORY_SEPARATOR = "/";
   private static final String META = ".meta";
   private static final String PART = "part";
   private static final Integer MAX_KEYS = 5000;
+  private static final ObjectMapper MAPPER = new ObjectMapper();
 
+  /**
+   * Configuration.
+   */
+  @Value("${collaboratory.bucket.name}")
+  private String bucketName;
+  @Value("${collaboratory.upload.directory}")
+  private String uploadDir;
+
+  /**
+   * Dependencies.
+   */
   @Autowired
   private AmazonS3 s3Client;
 
-  @Value("${collaboratory.bucket.name}")
-  private String bucketName;
-
-  @Value("${collaboratory.upload.directory}")
-  private String upload;
-
   /**
-   * To store the upload specification
-   * @param spec
+   * Store the upload specification.
    */
-  public void create(ObjectSpecification spec) {
-    ObjectMapper mapper = new ObjectMapper();
+  public void create(@NonNull ObjectSpecification spec) {
+    val uploadStateKey = getUploadStateKey(spec.getObjectId(), spec.getUploadId(), META);
+
     try {
-      byte[] content = mapper.writeValueAsBytes(spec);
-      ObjectMetadata meta = new ObjectMetadata();
+      byte[] content = MAPPER.writeValueAsBytes(spec);
+      val data = new ByteArrayInputStream(content);
+      val meta = new ObjectMetadata();
       meta.setContentLength(content.length);
-      s3Client.putObject(bucketName, getUploadStateKey(spec.getObjectId(), spec.getUploadId(), META),
-          new ByteArrayInputStream(content), meta);
+
+      s3Client.putObject(bucketName, uploadStateKey, data, meta);
     } catch (AmazonServiceException e) {
+      log.error("Failed to create meta file for spec: {}: {}", spec, e);
       throw new RetryableException(e);
-    } catch (JsonParseException | JsonMappingException e) {
-      throw new NotRetryableException(e);
     } catch (IOException e) {
-      log.error("Fail to create meta file", e);
+      log.error("Failed to create meta file for spec: {}: {}", spec, e);
       throw new NotRetryableException(e);
     }
   }
 
   @SneakyThrows
-  public ObjectSpecification loadUploadSpecification(String objectId, String uploadId) {
-    try {
-      GetObjectRequest req = new GetObjectRequest(bucketName, getUploadStateKey(objectId, uploadId, META));
-      S3Object obj = s3Client.getObject(req);
-      ObjectMapper mapper = new ObjectMapper();
+  public ObjectSpecification read(String objectId, String uploadId) {
+    val uploadStateKey = getUploadStateKey(objectId, uploadId, META);
 
-      try (S3ObjectInputStream inputStream = obj.getObjectContent()) {
-        return mapper.readValue(inputStream, ObjectSpecification.class);
+    try {
+      val request = new GetObjectRequest(bucketName, uploadStateKey);
+      val obj = s3Client.getObject(request);
+
+      try (val inputStream = obj.getObjectContent()) {
+        return MAPPER.readValue(inputStream, ObjectSpecification.class);
       }
     } catch (AmazonServiceException e) {
       if (e.isRetryable()) {
@@ -116,88 +130,97 @@ public class UploadStateStore {
         throw new IdNotFoundException(uploadId);
       }
     } catch (JsonParseException | JsonMappingException e) {
+      log.error("Error reading specification for objectId {} and uploadId {}", objectId, uploadId);
       throw new NotRetryableException(e);
     }
-
   }
 
-  private boolean isMetaAvailable(String objectId, String uploadId) {
+  public void delete(String objectId, String uploadId) {
+    val uploadStateKey = getUploadStateKey(objectId, uploadId, META);
     try {
-      s3Client.getObjectMetadata(bucketName, getUploadStateKey(objectId, uploadId, META));
-    } catch (AmazonS3Exception ex) {
-      if (ex.getStatusCode() == HttpStatus.NOT_FOUND.value()) {
-        return false;
+      // Delete the meta file
+      val spec = read(objectId, uploadId);
+      s3Client.deleteObject(bucketName, uploadStateKey);
+
+      // Delete the part files
+      for (val part : spec.getParts()) {
+        try {
+          deletePart(objectId, uploadId, part.getPartNumber());
+        } catch (Exception e) {
+          log.warn("Error deleting objectId: {}, uploadId: {} part: {} : {}", objectId, uploadId, part, e);
+        }
       }
-      throw new RetryableException(ex);
+    } catch (Exception e) {
+      log.error("Error deleting objectId: {}, uploadId: {}: {}", objectId, uploadId, e);
+
+      throw e;
     }
-    return true;
+  }
+
+  public void deletePart(String objectId, String uploadId, int partNumber) {
+    val partName = formatUploadPartName(partNumber, "");
+    val uploadStateKey = getUploadStateKey(objectId, uploadId, partName);
+
+    eachObjectSummary(uploadStateKey, objectSummary -> s3Client.deleteObject(bucketName, objectSummary.getKey()));
   }
 
   @SneakyThrows
   public void markCompletedParts(String objectId, String uploadId, List<Part> parts) {
-    if (parts == null || parts.size() == 0) return;
+    if (parts == null || parts.size() == 0) {
+      return;
+    }
+
     try {
-      ListObjectsRequest listObjectsRequest = new ListObjectsRequest()
+      sortPartsByNumber(parts);
+      val partIterator = parts.iterator();
+
+      val request = new ListObjectsRequest()
           .withBucketName(bucketName)
           .withMaxKeys(MAX_KEYS)
           .withPrefix(getUploadStateKey(objectId, uploadId, PART));
-      ObjectMapper mapper = new ObjectMapper();
+
       ObjectListing objectListing = null;
-      Collections.sort(parts, new Comparator<Part>() {
-
-        @Override
-        public int compare(Part p1, Part p2) {
-          return p1.getPartNumber() - p2.getPartNumber();
-        }
-      });
-
-      Iterator<Part> partItr = parts.iterator();
       do {
-        objectListing = s3Client.listObjects(listObjectsRequest);
+        objectListing = s3Client.listObjects(request);
         Part part = null;
-        for (S3ObjectSummary objectSummary : objectListing.getObjectSummaries()) {
-          String json = extractJson(objectSummary.getKey(), objectId, uploadId);
-          CompletedPart completedPart = mapper.readValue(json, CompletedPart.class);
+        for (val objectSummary : objectListing.getObjectSummaries()) {
+          CompletedPart completedPart = readCompletedPart(objectId, uploadId, objectSummary);
           do {
-            if (partItr.hasNext()) {
-              part = partItr.next();
+            if (partIterator.hasNext()) {
+              part = partIterator.next();
             } else {
               return;
             }
           } while (completedPart.getPartNumber() != part.getPartNumber());
           part.setMd5(completedPart.getMd5());
         }
-        listObjectsRequest.setMarker(objectListing.getNextMarker());
+        request.setMarker(objectListing.getNextMarker());
       } while (objectListing.isTruncated());
     } catch (AmazonServiceException e) {
+      log.error("Failed to mark completed parts for object metadata for objectId: {}, uploadId: {}, parts: {}",
+          objectId, uploadId, parts, e);
       throw new RetryableException(e);
-    } catch (JsonParseException | JsonMappingException e) {
-      throw new NotRetryableException(e);
     }
   }
 
   public boolean isCompleted(String objectId, String uploadId) {
-    ObjectSpecification spec = loadUploadSpecification(objectId, uploadId);
-    Collections.sort(spec.getParts(), new Comparator<Part>() {
+    val spec = read(objectId, uploadId);
 
-      @Override
-      public int compare(Part p1, Part p2) {
-        return p1.getPartNumber() - p2.getPartNumber();
-      }
-    });
+    sortPartsByNumber(spec.getParts());
+    val partIterator = spec.getParts().iterator();
 
-    ListObjectsRequest listObjectsRequest = new ListObjectsRequest()
+    val request = new ListObjectsRequest()
         .withBucketName(bucketName)
         .withMaxKeys(MAX_KEYS)
         .withPrefix(getUploadStateKey(objectId, uploadId, PART));
-    ObjectListing objectListing;
-    Iterator<Part> partIterator = spec.getParts().iterator();
 
     if (partIterator.hasNext()) {
       Part part = partIterator.next();
+
+      ObjectListing objectListing;
       do {
-        objectListing = s3Client.listObjects(listObjectsRequest);
-        for (S3ObjectSummary objectSummary : objectListing.getObjectSummaries()) {
+        objectListing = s3Client.listObjects(request);
+        for (val objectSummary : objectListing.getObjectSummaries()) {
           int partNumber = extractPartNumber(objectId, uploadId, objectSummary.getKey());
           if (part.getPartNumber() != partNumber) {
             return false;
@@ -208,103 +231,144 @@ public class UploadStateStore {
             return true;
           }
         }
-        listObjectsRequest.setMarker(objectListing.getNextMarker());
+        request.setMarker(objectListing.getNextMarker());
       } while (objectListing.isTruncated());
       return false;
     }
+
     return true;
   }
 
   public void finalizeUploadPart(String objectId, String uploadId, int partNumber, String md5, String eTag) {
-    ObjectMapper mapper = new ObjectMapper();
     try {
-      log.debug("Finalize part for object id: {}, upload id: {}, md5: {}, eTag: {}", objectId, uploadId, md5, eTag);
-      String json = mapper.writeValueAsString(new CompletedPart(partNumber, md5, eTag));
-      ObjectMetadata meta = new ObjectMetadata();
+      log.debug("Finalizing part for object id: {}, upload id: {}, md5: {}, eTag: {}", objectId, uploadId, md5, eTag);
+      val json = MAPPER.writeValueAsString(new CompletedPart(partNumber, md5, eTag));
+      val partName = formatUploadPartName(partNumber, json);
+
+      val meta = new ObjectMetadata();
       meta.setContentLength(0);
-      s3Client.putObject(bucketName,
-          getUploadStateKey(objectId, uploadId, getLexicographicalOrderUploadPartName(partNumber, json)),
-          new ByteArrayInputStream(new byte[0]), meta);
+      val data = new ByteArrayInputStream(new byte[0]);
+      val uploadStateKey = getUploadStateKey(objectId, uploadId, partName);
+
+      s3Client.putObject(bucketName, uploadStateKey, data, meta);
     } catch (AmazonServiceException e) {
+      // TODO: Log args
       log.error("Storage failed", e);
       throw new RetryableException(e);
     } catch (JsonParseException | JsonMappingException e) {
+      // TODO: Log
       throw new NotRetryableException(e);
     } catch (IOException e) {
-      log.error("Fail to finalize part", e);
+      log.error("Failed to finalize upload part: {}, uploadId: {}, partNumber: {}",
+          objectId, uploadId, partNumber, e);
       throw new InternalUnrecoverableError();
     }
-
   }
 
   @SneakyThrows
   public List<PartETag> getUploadStatePartEtags(String objectId, String uploadId) {
-    ListObjectsRequest listObjectsRequest = new ListObjectsRequest()
-        .withBucketName(bucketName)
-        .withMaxKeys(MAX_KEYS)
-        .withPrefix(getUploadStateKey(objectId, uploadId, PART));
-    ObjectMapper mapper = new ObjectMapper();
-    ObjectListing objectListing;
-    List<PartETag> etags = Lists.newArrayList();
-    try {
-      do {
-        objectListing = s3Client.listObjects(listObjectsRequest);
-        for (S3ObjectSummary objectSummary : objectListing.getObjectSummaries()) {
-          String json = extractJson(objectSummary.getKey(), objectId, uploadId);
-          CompletedPart part = mapper.readValue(json, CompletedPart.class);
-          etags.add(new PartETag(part.getPartNumber(), part.getEtag()));
-        }
-        listObjectsRequest.setMarker(objectListing.getNextMarker());
-      } while (objectListing.isTruncated());
-      return etags;
-    } catch (AmazonServiceException e) {
-      throw new RetryableException(e);
-    } catch (JsonParseException | JsonMappingException e) {
-      throw new NotRetryableException(e);
-    }
-  }
+    val uploadStateKey = getUploadStateKey(objectId, uploadId, PART);
+    val etags = Lists.<PartETag> newArrayList();
 
-  public void delete(String objectId, String uploadId) {
-    // TODO: we need a cronjob type of processs to take care of the cleanup
-    s3Client.deleteObject(bucketName, getUploadStateKey(objectId, uploadId, META));
+    eachObjectSummary(uploadStateKey, (objectSummary) -> {
+      CompletedPart part = readCompletedPart(objectId, uploadId, objectSummary);
+      PartETag etag = new PartETag(part.getPartNumber(), part.getEtag());
 
+      etags.add(etag);
+    });
+
+    return etags;
   }
 
   public String getUploadId(String objectId) {
-    ListObjectsRequest req = new ListObjectsRequest()
+    val uploadStateKey = getUploadStateKey(objectId, "" /* uploadId */ );
+
+    val request = new ListObjectsRequest()
         .withBucketName(bucketName)
         .withMaxKeys(MAX_KEYS)
         .withDelimiter(getDirectorySeparator())
-        .withPrefix(getUploadStateKey(objectId, ""));
+        .withPrefix(uploadStateKey);
+
     try {
       ObjectListing objectListing;
       do {
-        objectListing = s3Client.listObjects(req);
-        for (String prefix : objectListing.getCommonPrefixes()) {
+        objectListing = s3Client.listObjects(request);
+        for (val prefix : objectListing.getCommonPrefixes()) {
           log.debug("Found object upload key: {}", prefix);
-          String uploadId = getUploadIdFromMeta(objectId, prefix);
+          val uploadId = getUploadIdFromMeta(objectId, prefix);
+
           if (isMetaAvailable(objectId, uploadId)) {
             return uploadId;
           }
         }
-        req.setMarker(objectListing.getNextMarker());
+
+        request.setMarker(objectListing.getNextMarker());
       } while (objectListing.isTruncated());
     } catch (AmazonServiceException e) {
+      log.error("Error getting uploadId for objectId {}", objectId);
       throw new RetryableException(e);
     }
+
     log.warn("Upload Id not found for object ID: {}", objectId);
     throw new IdNotFoundException("Upload ID not found for object ID: " + objectId);
   }
 
-  private String getUploadIdFromMeta(String objectId, String objectUploadKey) {
-    return StringUtils.removeEnd(StringUtils.removeStart(objectUploadKey, getUploadStateKey(objectId, "")),
-        getDirectorySeparator());
+  @SneakyThrows
+  private CompletedPart readCompletedPart(String objectId, String uploadId, S3ObjectSummary objectSummary) {
+    try {
+      val json = extractJson(objectSummary.getKey(), objectId, uploadId);
+      return MAPPER.readValue(json, CompletedPart.class);
+    } catch (JsonParseException | JsonMappingException e) {
+      log.error("Failed to read completed parts for objectId: {}, uploadId: {}, objectSummary: {}: {}",
+          objectId, uploadId, objectSummary.getKey(), e);
+      throw new NotRetryableException(e);
+    }
+  }
+
+  private void eachObjectSummary(String prefix, Consumer<S3ObjectSummary> callback) {
+    val request = new ListObjectsRequest()
+        .withBucketName(bucketName)
+        .withMaxKeys(MAX_KEYS)
+        .withPrefix(prefix);
+
+    try {
+      ObjectListing objectListing;
+      do {
+        objectListing = s3Client.listObjects(request);
+        for (val objectSummary : objectListing.getObjectSummaries()) {
+          callback.accept(objectSummary);
+        }
+
+        request.setMarker(objectListing.getNextMarker());
+      } while (objectListing.isTruncated());
+    } catch (AmazonServiceException e) {
+      log.error("Failed to list objects with prefix: {}: {}", prefix, e);
+      throw new RetryableException(e);
+    }
+  }
+
+  boolean isMetaAvailable(String objectId, String uploadId) {
+    val uploadStateKey = getUploadStateKey(objectId, uploadId, META);
+
+    try {
+      // This is actually how you are supposed to test
+      s3Client.getObjectMetadata(bucketName, uploadStateKey);
+    } catch (AmazonS3Exception e) {
+      if (e.getStatusCode() == HttpStatus.NOT_FOUND.value()) {
+        return false;
+      }
+
+      log.error("Error checking meta existence for objectId {} and uploadId {}", objectId, uploadId);
+      throw new RetryableException(e);
+    }
+
+    return true;
   }
 
   private String getUploadStateKey(String objectId, String uploadId) {
     val directorySeparator = getDirectorySeparator();
 
-    return new StringBuilder(upload)
+    return new StringBuilder(uploadDir)
         .append(directorySeparator)
         .append(objectId)
         .append(UPLOAD_SEPARATOR)
@@ -312,15 +376,27 @@ public class UploadStateStore {
         .toString();
   }
 
-  public String getDirectorySeparator() {
-    // https://github.com/scireum/s3ninja/issues/34
-    return Boolean.getBoolean("s3ninja") ? "_" : DIRECTORY_SEPARATOR;
+  private String getUploadIdFromMeta(String objectId, String objectUploadKey) {
+    val uploadId = "";
+    val uploadStateKey = getUploadStateKey(objectId, uploadId);
+    return removeEnd(removeStart(objectUploadKey, uploadStateKey), getDirectorySeparator());
+  }
+
+  private int extractPartNumber(String objectId, String uploadId, String partKey) {
+    val uploadStateKey = getUploadStateKey(objectId, uploadId);
+    val hexNumber = substringBetween(removeStart(partKey, uploadStateKey), PART + "-", "|");
+    return Integer.parseInt(hexNumber, 16);
+  }
+
+  private String extractJson(String key, String objectId, String uploadId) {
+    val uploadStateKey = getUploadStateKey(objectId, uploadId);
+    return substringAfter(removeStart(key, uploadStateKey), "|");
   }
 
   private String getUploadStateKey(String objectId, String uploadId, String filename) {
     val directorySeparator = getDirectorySeparator();
 
-    return new StringBuilder(upload)
+    return new StringBuilder(uploadDir)
         .append(directorySeparator)
         .append(objectId)
         .append(UPLOAD_SEPARATOR)
@@ -330,36 +406,20 @@ public class UploadStateStore {
         .toString();
   }
 
-  private String getLexicographicalOrderUploadPartName(int partNumber, String json) {
+  static void sortPartsByNumber(List<Part> parts) {
+    Collections.sort(parts, (p1, p2) -> p1.getPartNumber() - p2.getPartNumber());
+  }
+
+  static String getDirectorySeparator() {
+    // https://github.com/scireum/s3ninja/issues/34
+    return Boolean.getBoolean("s3ninja") ? "_" : DIRECTORY_SEPARATOR;
+  }
+
+  /**
+   * Formats a part name in lexicographical order.
+   */
+  static String formatUploadPartName(int partNumber, String json) {
     return String.format("%s-%08x|%s", PART, (0xFFFFFFFF & partNumber), json);
   }
 
-  private int extractPartNumber(String objectId, String uploadId, String partKey) {
-    String hexNumber =
-        StringUtils.substringBetween(StringUtils.removeStart(partKey, getUploadStateKey(objectId, uploadId)), PART
-            + "-", "|");
-    return Integer.parseInt(hexNumber, 16);
-  }
-
-  private String extractJson(String key, String objectId, String uploadId) {
-    return StringUtils.substringAfter(StringUtils.removeStart(key, getUploadStateKey(objectId, uploadId)), "|");
-  }
-
-  public void deletePart(String objectId, String uploadId, int partNumber) {
-    ListObjectsRequest listObjectsRequest = new ListObjectsRequest()
-        .withBucketName(bucketName)
-        .withPrefix(getUploadStateKey(objectId, uploadId, getLexicographicalOrderUploadPartName(partNumber, "")));
-    try {
-      ObjectListing objectListing;
-      do {
-        objectListing = s3Client.listObjects(listObjectsRequest);
-        for (S3ObjectSummary objectSummary : objectListing.getObjectSummaries()) {
-          s3Client.deleteObject(bucketName, objectSummary.getKey());
-        }
-        listObjectsRequest.setMarker(objectListing.getNextMarker());
-      } while (objectListing.isTruncated());
-    } catch (AmazonServiceException e) {
-      throw new RetryableException(e);
-    }
-  }
 }

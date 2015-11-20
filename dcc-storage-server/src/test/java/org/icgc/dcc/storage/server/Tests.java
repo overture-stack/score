@@ -15,23 +15,43 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.core.model;
+package org.icgc.dcc.storage.server;
 
-import java.util.List;
+import static lombok.AccessLevel.PRIVATE;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
+import org.icgc.dcc.storage.server.config.S3Config;
+import org.icgc.dcc.storage.server.service.upload.ObjectUploadService;
+import org.icgc.dcc.storage.server.service.upload.UploadStateStore;
+
 import lombok.NoArgsConstructor;
+import lombok.val;
 
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
-public class ObjectSpecification {
+@NoArgsConstructor(access = PRIVATE)
+public class Tests {
 
-  private String objectKey;
-  private String objectId;
-  private String uploadId;
-  private List<Part> parts;
-  private long objectSize;
+  public static final String DATA_DIR = "data";
+  public static final String UPLOAD_DIR = "upload";
+  public static final String BUCKET_NAME = "oicr.icgc";
+
+  public static ObjectUploadService createUploadService() {
+    val endpoint = "https://www.cancercollaboratory.org:9080";
+    val s3Config = new S3Config();
+    s3Config.setEndpoint(endpoint);
+    val s3Client = s3Config.s3();
+
+    val stateStore = new UploadStateStore();
+    stateStore.setBucketName(BUCKET_NAME);
+    stateStore.setUploadDir(UPLOAD_DIR);
+    stateStore.setS3Client(s3Client);
+
+    val uploadService = new ObjectUploadService();
+    uploadService.setBucketName(BUCKET_NAME);
+    uploadService.setDataDir(DATA_DIR);
+    uploadService.setS3Conf(s3Config);
+    uploadService.setS3Client(s3Client);
+    uploadService.setStateStore(stateStore);
+
+    return uploadService;
+  }
 
 }

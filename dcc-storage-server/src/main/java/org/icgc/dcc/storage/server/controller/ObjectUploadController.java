@@ -132,6 +132,6 @@ public class ObjectUploadController {
   @ResponseStatus(value = HttpStatus.OK)
   public void cancelAll()
       throws IOException {
-    uploadService.cancelAllUpload();
+    uploadService.cancelUploads();
   }
 }
