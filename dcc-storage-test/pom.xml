@@ -77,7 +77,7 @@
 
   <properties>
     <!-- Versions - S3 -->
-    <s3ninja.version>2.6</s3ninja.version>
+    <s3ninja.version>2.7</s3ninja.version>
   </properties>
   
 </project>
