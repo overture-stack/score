@@ -137,8 +137,24 @@ public class UploadStateStore {
 
   public void delete(String objectId, String uploadId) {
     val uploadStateKey = getUploadStateKey(objectId, uploadId, META);
+    try {
+      // Delete the meta file
+      val spec = read(objectId, uploadId);
+      s3Client.deleteObject(bucketName, uploadStateKey);
 
-    s3Client.deleteObject(bucketName, uploadStateKey);
+      // Delete the part files
+      for (val part : spec.getParts()) {
+        try {
+          deletePart(objectId, uploadId, part.getPartNumber());
+        } catch (Exception e) {
+          log.warn("Error deleting objectId: {}, uploadId: {} part: {} : {}", objectId, uploadId, part, e);
+        }
+      }
+    } catch (Exception e) {
+      log.error("Error deleting objectId: {}, uploadId: {}: {}", objectId, uploadId, e);
+
+      throw e;
+    }
   }
 
   public void deletePart(String objectId, String uploadId, int partNumber) {

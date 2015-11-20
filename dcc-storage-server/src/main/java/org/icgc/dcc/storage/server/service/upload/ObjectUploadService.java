@@ -307,10 +307,9 @@ public class ObjectUploadService {
     val spec = stateStore.read(objectId, uploadId);
     val objectSize = spec.getObjectSize();
 
-    // TODO: Why???
-    val incomplete = fileSize != objectSize;
-    if (incomplete) {
-      log.error("Failed to recover objectId: {}, fileSize: {}", objectId, fileSize);
+    val changed = fileSize != objectSize;
+    if (changed) {
+      log.error("Failed to recover objectId: {}, fileSize: {} because its size has changed", objectId, fileSize);
       throw new NotRetryableException();
     }
   }
