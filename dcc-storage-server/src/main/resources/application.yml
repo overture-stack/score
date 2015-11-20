@@ -11,17 +11,11 @@ server:
   
 s3:
   secured: true
-  #OICR
-  #endpoint: http://10.5.73.101
   
   #amazon
   endpoint: s3-external-1.amazonaws.com
   
-  #Sinai Center
-  #endpoint: https://www.cancercollaboratory.org:9080
-  
 collaboratory:
-  #bucket.name: oicr.collaboratory
   bucket.name: oicr.icgc.collaboratory
   upload.directory: upload
   upload.expiration: 7
@@ -37,6 +31,7 @@ upload:
   
   # Every day at midnight
   clean.cron: "0 0 0 * * ?" 
+  clean.enabled: true
 
 ---
 
@@ -68,7 +63,6 @@ spring:
 s3:
   endpoint: https://www.cancercollaboratory.org:9080
   masterEncryptionKeyId: 
-
 
 ---
 
@@ -135,6 +129,9 @@ server:
 
 collaboratory:
   bucket.name: test.icgc
+  
+upload:
+  clean.enabled: false
 
 ---
 
@@ -151,5 +148,5 @@ server:
 
 s3:
   secured: false
-  #Sinai Center
+  # Sinai Center
   endpoint: http://www.cancercollaboratory.org:9081
