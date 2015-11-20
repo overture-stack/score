@@ -30,7 +30,7 @@ import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.icgc.dcc.storage.core.model.ObjectSpecification;
 import org.icgc.dcc.storage.core.model.Part;
-import org.icgc.dcc.storage.core.util.ObjectStoreUtil;
+import org.icgc.dcc.storage.core.util.ObjectKeys;
 import org.icgc.dcc.storage.server.exception.IdNotFoundException;
 import org.icgc.dcc.storage.server.exception.InternalUnrecoverableError;
 import org.icgc.dcc.storage.server.exception.NotRetryableException;
@@ -103,7 +103,7 @@ public class ObjectDownloadService {
     }
 
     // construct ObjectSpecification for actual object in /data logical folder
-    String objectKey = ObjectStoreUtil.getObjectKey(dataDir, objectId);
+    String objectKey = ObjectKeys.getObjectKey(dataDir, objectId);
 
     List<Part> parts;
     if (forExternalUse) {
@@ -121,8 +121,8 @@ public class ObjectDownloadService {
   // This really is a misleading method name - should be retrieveMetaFile() or something
   public ObjectSpecification download(String objectId) {
     log.debug("Download object id: {}", objectId);
-    String objectMetaKey = ObjectStoreUtil.getObjectMetaKey(dataDir, objectId);
-    String objectKey = ObjectStoreUtil.getObjectKey(dataDir, objectId);
+    String objectMetaKey = ObjectKeys.getObjectMetaKey(dataDir, objectId);
+    String objectKey = ObjectKeys.getObjectKey(dataDir, objectId);
     log.debug("Download meta key: {}", objectMetaKey);
 
     try {

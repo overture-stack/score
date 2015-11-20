@@ -20,7 +20,7 @@ package org.icgc.dcc.storage.server.service.upload;
 import java.util.Date;
 
 import org.icgc.dcc.storage.core.model.Part;
-import org.icgc.dcc.storage.core.util.ObjectStoreUtil;
+import org.icgc.dcc.storage.core.util.Parts;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 
@@ -52,7 +52,7 @@ public class AmazonURLGenerator implements ObjectURLGenerator {
     GeneratePresignedUrlRequest req = new GeneratePresignedUrlRequest(bucketName, objectKey, HttpMethod.GET);
     req.setExpiration(expiration);
 
-    req.putCustomRequestHeader(HttpHeaders.RANGE, ObjectStoreUtil.getHttpRangeValue(part));
+    req.putCustomRequestHeader(HttpHeaders.RANGE, Parts.getHttpRangeValue(part));
     return s3Client.generatePresignedUrl(req).toString();
   }
 

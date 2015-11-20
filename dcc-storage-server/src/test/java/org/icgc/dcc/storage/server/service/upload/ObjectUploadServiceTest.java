@@ -15,43 +15,27 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.core.util;
+package org.icgc.dcc.storage.server.service.upload;
 
-import org.icgc.dcc.storage.core.model.Part;
+import org.icgc.dcc.storage.core.util.ObjectKeys;
+import org.icgc.dcc.storage.server.Tests;
+import org.junit.Ignore;
+import org.junit.Test;
 
-/**
- * Helpers functions for the object store
- */
-public class ObjectStoreUtil {
+import lombok.val;
 
-  /**
-   * Returns S3 key for actual object blob
-   * @param dataDir
-   * @param objectId
-   * @return
-   */
-  public static String getObjectKey(String dataDir, String objectId) {
-    return dataDir + "/" + objectId;
-  }
+@Ignore("For development only")
+public class ObjectUploadServiceTest {
 
-  /**
-   * Returns S3 key for metadata file for blob (contains upload id's, MD5 checksums, pre-signed URL's for each part of
-   * file)
-   * @param dataDir
-   * @param objectId
-   * @return
-   */
-  public static String getObjectMetaKey(String dataDir, String objectId) {
-    return dataDir + "/" + objectId + ".meta";
-  }
+  @Test
+    public void testListUploads() {
+      val uploadService = Tests.createUploadService();
+  
+      for (val upload : uploadService.listUploads()) {
+        val objectId = ObjectKeys.getObjectId(Tests.DATA_DIR, upload.getKey());
+        System.out.println("key:" + upload.getKey() + ", uploadId: " + upload.getUploadId()
+            + ", initiated: " + upload.getInitiated() + ", objectId: " + objectId);
+      }
+    }
 
-  /**
-   * Generates Range header for URL
-   * @param part
-   * @return
-   */
-  public static String getHttpRangeValue(Part part) {
-    return String.valueOf("bytes=" + part.getOffset()) + "-"
-        + String.valueOf(part.getOffset() + part.getPartSize() - 1L);
-  }
 }

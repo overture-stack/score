@@ -15,23 +15,32 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.core.model;
+package org.icgc.dcc.storage.server.service.upload;
 
-import java.util.List;
+import org.icgc.dcc.storage.server.Tests;
+import org.junit.Ignore;
+import org.junit.Test;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.val;
 
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
-public class ObjectSpecification {
+@Ignore("For development only")
+public class UploadCleanupServiceTest {
 
-  private String objectKey;
-  private String objectId;
-  private String uploadId;
-  private List<Part> parts;
-  private long objectSize;
+  @Test
+  public void testClean() {
+    val cleanupService = createCleanupService();
+
+    cleanupService.clean();
+  }
+
+  private UploadCleanupService createCleanupService() {
+    val uploadService = Tests.createUploadService();
+
+    val cleanupService = new UploadCleanupService();
+    cleanupService.setDataDir(Tests.DATA_DIR);
+    cleanupService.setExpiration(7);
+    cleanupService.setUploadService(uploadService);
+    return cleanupService;
+  }
 
 }

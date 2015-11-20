@@ -17,11 +17,11 @@
  */
 package org.icgc.dcc.storage.core.model;
 
+import org.codehaus.jackson.annotate.JsonIgnore;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import org.codehaus.jackson.annotate.JsonIgnore;
 
 /**
  * An entity to represent a part that the client will be uploaded
@@ -47,4 +47,5 @@ final public class Part implements Comparable<Part> {
   public int compareTo(Part otherPart) {
     return this.partNumber - otherPart.partNumber;
   }
+
 }

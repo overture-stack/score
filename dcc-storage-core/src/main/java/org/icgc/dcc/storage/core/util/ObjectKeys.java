@@ -15,23 +15,36 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.core.model;
+package org.icgc.dcc.storage.core.util;
 
-import java.util.List;
+import static lombok.AccessLevel.PRIVATE;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.NonNull;
 
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
-public class ObjectSpecification {
+/**
+ * Object key related utilities.
+ */
+@NoArgsConstructor(access = PRIVATE)
+public final class ObjectKeys {
 
-  private String objectKey;
-  private String objectId;
-  private String uploadId;
-  private List<Part> parts;
-  private long objectSize;
+  /**
+   * Returns S3 key for actual object blob
+   */
+  public static String getObjectKey(@NonNull String dataDir, @NonNull String objectId) {
+    return dataDir + "/" + objectId;
+  }
+
+  public static String getObjectId(@NonNull String dataDir, @NonNull String objectKey) {
+    return objectKey.replaceAll(dataDir + "/", "");
+  }
+
+  /**
+   * Returns S3 key for metadata file for blob (contains upload id's, MD5 checksums, pre-signed URL's for each part of
+   * file)
+   */
+  public static String getObjectMetaKey(@NonNull String dataDir, @NonNull String objectId) {
+    return dataDir + "/" + objectId + ".meta";
+  }
 
 }

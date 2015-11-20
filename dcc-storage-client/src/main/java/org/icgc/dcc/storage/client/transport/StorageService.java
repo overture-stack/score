@@ -34,7 +34,7 @@ import org.icgc.dcc.storage.core.model.ObjectInfo;
 import org.icgc.dcc.storage.core.model.ObjectSpecification;
 import org.icgc.dcc.storage.core.model.Part;
 import org.icgc.dcc.storage.core.model.UploadProgress;
-import org.icgc.dcc.storage.core.util.ObjectStoreUtil;
+import org.icgc.dcc.storage.core.util.Parts;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -129,7 +129,7 @@ public class StorageService {
           @Override
           public void doWithRequest(final ClientHttpRequest request) throws IOException {
             // request.getHeaders().setContentLength(channel.getlength());
-            request.getHeaders().set(HttpHeaders.RANGE, ObjectStoreUtil.getHttpRangeValue(part));
+            request.getHeaders().set(HttpHeaders.RANGE, Parts.getHttpRangeValue(part));
           }
         };
 

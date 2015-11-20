@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 The Ontario Institute for Cancer Research. All rights reserved.                             
+ * Copyright (c) 2015 The Ontario Institute for Cancer Research. All rights reserved.                             
  *                                                                                                               
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
  * You should have received a copy of the GNU General Public License along with                                  
@@ -15,41 +15,27 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.server.config;
+package org.icgc.dcc.storage.core.util;
 
-import org.icgc.dcc.storage.server.service.upload.AmazonURLGenerator;
-import org.icgc.dcc.storage.server.service.upload.ObjectPartCalculator;
-import org.icgc.dcc.storage.server.service.upload.ObjectURLGenerator;
-import org.icgc.dcc.storage.server.service.upload.SimplePartCalculator;
-import org.icgc.dcc.storage.server.service.upload.UploadStateStore;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
+import static lombok.AccessLevel.PRIVATE;
+
+import org.icgc.dcc.storage.core.model.Part;
+
+import lombok.NoArgsConstructor;
+import lombok.NonNull;
 
 /**
- * Object Store Service Configuration
+ * Part related utilities.
  */
-@Configuration
-@Profile({ "prod", "default", "debug" })
-public class ObjectStoreConfig {
+@NoArgsConstructor(access = PRIVATE)
+public final class Parts {
 
-  @Value("${upload.partsize}")
-  private int partSize;
-
-  @Bean
-  public UploadStateStore stateStore() {
-    return new UploadStateStore();
+  /**
+   * Generates Range header for part URL.
+   */
+  public static String getHttpRangeValue(@NonNull Part part) {
+    return String.valueOf("bytes=" + part.getOffset()) + "-"
+        + String.valueOf(part.getOffset() + part.getPartSize() - 1L);
   }
 
-  @Bean
-  public ObjectPartCalculator calculator() {
-    return new SimplePartCalculator(partSize);
-
-  }
-
-  @Bean
-  public ObjectURLGenerator url() {
-    return new AmazonURLGenerator();
-  }
 }
