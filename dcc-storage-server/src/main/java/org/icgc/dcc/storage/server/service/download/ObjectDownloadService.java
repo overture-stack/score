@@ -25,6 +25,11 @@ import java.time.ZoneId;
 import java.util.Date;
 import java.util.List;
 
+import lombok.Cleanup;
+import lombok.Setter;
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
+
 import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -47,11 +52,6 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.GetObjectRequest;
 import com.amazonaws.services.s3.model.S3Object;
 
-import lombok.Cleanup;
-import lombok.Setter;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
-
 /**
  * service responsible for object download (full or partial)
  */
@@ -69,7 +69,9 @@ public class ObjectDownloadService {
    * Configuration.
    */
   @Value("${collaboratory.bucket.name}")
-  private String bucketName;
+  private String dataBucketName;
+  @Value("${collaboratory.state.bucket.name}")
+  private String stateBucketName;
   @Value("${collaboratory.data.directory}")
   private String dataDir;
   @Value("${collaboratory.download.expiration}")
@@ -136,12 +138,13 @@ public class ObjectDownloadService {
   // This really is a misleading method name - should be retrieveMetaFile() or something
   private ObjectSpecification getSpecification(String objectId) {
     val objectKey = ObjectKeys.getObjectKey(dataDir, objectId);
+    // val objectMetaKey = ObjectKeys.getObjectMetaKey(dataDir, objectId);
     val objectMetaKey = ObjectKeys.getObjectMetaKey(dataDir, objectId);
-    log.debug("Getting specification for objectId: {}, objectKey: {}, objectMetaKey: {}",
-        objectId, objectKey, objectMetaKey);
+    log.debug("Getting specification for objectId: {}, objectKey: {}, objectMetaKey: {}", objectId, objectKey,
+        objectMetaKey);
 
     try {
-      // Retrieve .meta file to get list of presigned URL's
+      // Retrieve .meta file to get list of pre-signed URL's
       val obj = getObject(objectId, objectMetaKey);
 
       val spec = readSpecification(obj);
@@ -168,7 +171,7 @@ public class ObjectDownloadService {
 
   private S3Object getObject(String objectId, String objectKey) {
     try {
-      val request = new GetObjectRequest(bucketName, objectKey);
+      val request = new GetObjectRequest(stateBucketName, objectKey);
       return s3Client.getObject(request);
     } catch (AmazonServiceException e) {
       log.error("Failed to get object with objectId: {}, objectKey: {}: {}", objectId, objectKey, e);
@@ -186,9 +189,9 @@ public class ObjectDownloadService {
     for (val part : parts) {
       if (forExternalUse) {
         // There should only be one part - don't include RANGE header in pre-signed URL
-        part.setUrl(urlGenerator.getDownloadUrl(bucketName, objectKey, expirationDate));
+        part.setUrl(urlGenerator.getDownloadUrl(dataBucketName, objectKey, expirationDate));
       } else {
-        part.setUrl(urlGenerator.getDownloadPartUrl(bucketName, objectKey, part, expirationDate));
+        part.setUrl(urlGenerator.getDownloadPartUrl(dataBucketName, objectKey, part, expirationDate));
       }
     }
   }

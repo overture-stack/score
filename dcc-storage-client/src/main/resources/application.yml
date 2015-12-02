@@ -82,12 +82,8 @@ client:
 
 spring.profiles: oicr
 
-storage:
-  url: https://objectstore.icgc.org
+# uses storage.url and client.ssl.custom define in common 
 
-client:    
-  ssl:
-    custom: false
 
 ---
 

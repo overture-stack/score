@@ -79,7 +79,7 @@ public class UploadStateStore {
   /**
    * Configuration.
    */
-  @Value("${collaboratory.bucket.name}")
+  @Value("${collaboratory.state.bucket.name}")
   private String bucketName;
   @Value("${collaboratory.upload.directory}")
   private String uploadDir;
@@ -91,7 +91,7 @@ public class UploadStateStore {
   private AmazonS3 s3Client;
 
   /**
-   * Store the upload specification.
+   * Store the upload specification. Writes out entire .meta file in the /upload folder
    */
   public void create(@NonNull ObjectSpecification spec) {
     val uploadStateKey = getUploadStateKey(spec.getObjectId(), spec.getUploadId(), META);
@@ -305,8 +305,9 @@ public class UploadStateStore {
         request.setMarker(objectListing.getNextMarker());
       } while (objectListing.isTruncated());
     } catch (AmazonServiceException e) {
-      log.error("Error getting uploadId for objectId {}", objectId);
-      throw new RetryableException(e);
+      log.error("Amazon returned error during listObjects() call");
+      log.error("List Objects failed on bucket: {} with prefix: {}. Does bucket exist?", bucketName, uploadStateKey);
+      throw new NotRetryableException(e);
     }
 
     log.warn("Upload Id not found for object ID: {}", objectId);

@@ -63,6 +63,8 @@ public class ObjectUploadService {
    */
   @Value("${collaboratory.bucket.name}")
   private String bucketName;
+  @Value("${collaboratory.state.bucket.name}")
+  private String stateBucketName;
   @Value("${collaboratory.data.directory}")
   private String dataDir;
   @Value("${collaboratory.upload.expiration}")
@@ -207,8 +209,9 @@ public class ObjectUploadService {
         throw new NotRetryableException(new IOException(message));
       }
     } else {
-      val message = String.format("Invalid etag for part with number %s does not exist for objectId %s and uploadId %s",
-          partNumber, objectId, uploadId);
+      val message =
+          String.format("Invalid etag for part with number %s does not exist for objectId %s and uploadId %s",
+              partNumber, objectId, uploadId);
 
       throw new NotRetryableException(new IOException(message));
     }
@@ -230,8 +233,8 @@ public class ObjectUploadService {
         val meta = new ObjectMetadata();
         meta.setContentLength(content.length);
         val objectMetaKey = ObjectKeys.getObjectMetaKey(dataDir, objectId);
-
-        s3Client.putObject(bucketName, objectMetaKey, data, meta);
+        log.trace("About to s3.putObject into " + stateBucketName + ": " + objectMetaKey.toString());
+        s3Client.putObject(stateBucketName, objectMetaKey, data, meta);
         stateStore.delete(objectId, uploadId);
       } catch (AmazonServiceException e) {
         log.error("Service problem with objectId: {}, uploadId: {}", objectId, uploadId, e);
