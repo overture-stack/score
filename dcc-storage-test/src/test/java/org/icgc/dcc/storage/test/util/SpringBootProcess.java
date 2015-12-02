@@ -19,34 +19,42 @@ package org.icgc.dcc.storage.test.util;
 
 import java.io.File;
 
-import com.google.common.collect.ImmutableList;
-
 import lombok.SneakyThrows;
 import lombok.val;
+
+import com.google.common.collect.ImmutableList;
 
 /**
  * Spring boot process wrapper.
  */
 public class SpringBootProcess {
 
-  public static Process bootRun(Class<?> mainClass, String... systemProperties) {
-    return bootRun(mainClass, new String[] {}, systemProperties);
+  public static Process bootRun(Class<?> mainClass, int debugPort, String... systemProperties) {
+    return bootRun(mainClass, debugPort, new String[] {}, systemProperties);
   }
 
-  public static Process bootRun(Class<?> mainClass, String[] args, String... systemProperties) {
+  public static Process bootRun(Class<?> mainClass, int debugPort, String[] args, String... systemProperties) {
     val jarFile = new File(mainClass.getProtectionDomain().getCodeSource().getLocation().getPath());
-    return bootRun(jarFile, args, systemProperties);
+    return bootRun(jarFile, debugPort, args, systemProperties);
   }
 
-  public static Process bootRun(File jarFile, String... systemProperties) {
-    return bootRun(jarFile, new String[] {}, systemProperties);
+  public static Process bootRun(File jarFile, int debugPort, String... systemProperties) {
+    return bootRun(jarFile, debugPort, new String[] {}, systemProperties);
   }
 
+  /**
+   * 
+   * @param debugPort - specifying a debug port will cause the process to suspend until you attach a remote debugging
+   * session to that port. Typically this is set as a java system property: -Dstorage.server.debugPort=8000
+   */
   @SneakyThrows
-  public static Process bootRun(File jarFile, String[] args, String... systemProperties) {
-    args = ImmutableList.<String> builder()
-        .add("java")
-        .add(systemProperties)
+  public static Process bootRun(File jarFile, int debugPort, String[] args, String... systemProperties) {
+    ImmutableList.Builder<String> bob = ImmutableList.<String> builder().add("java");
+
+    if (debugPort > 0) {
+      bob.add("-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=" + debugPort);
+    }
+    args = bob.add(systemProperties)
         .add("-Ds3ninja=true", "-jar", jarFile.getCanonicalPath())
         .add(args).build()
         .toArray(new String[args.length + 1]);

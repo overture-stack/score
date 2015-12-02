@@ -17,24 +17,33 @@
  */
 package org.icgc.dcc.storage.test.s3;
 
-import java.io.File;
-
 import sirius.kernel.Setup;
-import sirius.kernel.Setup.Mode;
-import sirius.kernel.Sirius;
 
-public class S3 {
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
+import com.typesafe.config.ConfigValueFactory;
 
-  public void start(File s3Root) {
-    // note: Mode.TEST will use a hard-coded working directory, ignoring the baseDir config parameter
-    // altogether.
-    Setup setup =
-        new DefinedLocationSetup(Mode.PROD, ClassLoader.getSystemClassLoader(), s3Root.getAbsolutePath())
-            .withLogToFile(false);
-    Sirius.start(setup);
+public class DefinedLocationSetup extends Setup {
+
+  protected String _baseDir;
+
+  public DefinedLocationSetup(Mode mode, ClassLoader loader, String baseDir) {
+    super(mode, loader);
+    _baseDir = baseDir;
   }
 
-  public void stop() {
-    Sirius.stop();
+  @Override
+  public Config loadInstanceConfig() {
+    Config config = ConfigFactory.empty();
+    Config newStorageConfig = config.withValue("storage.baseDir", ConfigValueFactory.fromAnyRef(getBaseDir()));
+    return newStorageConfig;
+  }
+
+  public String getBaseDir() {
+    return _baseDir;
+  }
+
+  public void setBaseDir(String baseDir) {
+    _baseDir = baseDir;
   }
 }
