@@ -16,7 +16,8 @@ s3:
   endpoint: s3-external-1.amazonaws.com
   
 collaboratory:
-  bucket.name: oicr.icgc.collaboratory
+  bucket.name: oicr.icgc
+  state.bucket.name: oicr.icgc
   upload.directory: upload
   upload.expiration: 7
   data.directory: data
@@ -32,6 +33,21 @@ upload:
   # Every day at midnight
   clean.cron: "0 0 0 * * ?" 
   clean.enabled: true
+
+---
+
+###############################################################################
+# Profile - "ssl"
+###############################################################################
+
+spring.profiles: ssl
+  
+# Server
+server:
+  ssl:
+    key-store-type: JKS
+    key-store: src/main/cert/service.jks
+    key-alias: object-store-service
 
 ---
 
@@ -61,7 +77,7 @@ spring:
   profiles.include: prod
 
 s3:
-  endpoint: https://www.cancercollaboratory.org:9080
+  endpoint: https://object.cancercollaboratory.org:9080
   masterEncryptionKeyId: 
 
 ---
@@ -71,13 +87,6 @@ s3:
 ###############################################################################
 
 spring.profiles: prod
-  
-# Server
-server:
-  ssl:
-    key-store-type: JKS
-    key-store: src/main/cert/service.jks
-    key-alias: object-store-service
 
 s3:
   secured: true
