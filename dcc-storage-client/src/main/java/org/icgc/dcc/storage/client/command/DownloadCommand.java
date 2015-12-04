@@ -58,7 +58,7 @@ public class DownloadCommand extends AbstractClientCommand {
    */
   @Parameter(names = "--output-dir", description = "Path to output directory", required = true, validateValueWith = DirectoryValidator.class)
   private File outputDir;
-  @Parameter(names = "--output-layout", description = "Layout of the output-dir. One of 'bundle' (nest files in bundle directory), 'filename' (nest files in filename directory), or 'object-id' (flat list of files named by their associated object id)", converter = OutputLayoutConverter.class)
+  @Parameter(names = "--output-layout", description = "Layout of the output-dir. One of 'bundle' (nest files in bundle directory), 'filename' (nest files in filename directory), or 'id' (flat list of files named by their associated object id)", converter = OutputLayoutConverter.class)
   private OutputLayout layout = OutputLayout.FILENAME;
   @Parameter(names = "--force", description = "Force re-download (override local file)")
   private boolean force = false;
@@ -70,7 +70,7 @@ public class DownloadCommand extends AbstractClientCommand {
   private long offset = 0;
   @Parameter(names = "--length", description = "The number of bytes to download")
   private long length = -1;
-  @Parameter(names = "--index", description = "Download file index if available?")
+  @Parameter(names = "--index", description = "Download file index if available?", arity = 1)
   private boolean index = true;
 
   /**
