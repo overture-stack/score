@@ -34,7 +34,13 @@
   </dependencyManagement>
 
   <dependencies>
-
+    <!-- DCC - Common -->
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>dcc-common-core</artifactId>
+      <version>${dcc-common.version}</version>
+    </dependency>
+    
     <!-- DCC - Storage -->
     <dependency>
       <groupId>${project.groupId}</groupId>
@@ -96,7 +102,12 @@
     </dependency>
 
   </dependencies>
-
+  
+  <properties>
+    <!-- Versions - DCC -->
+    <dcc-common.version>3.8.17.2</dcc-common.version>
+  </properties>
+    
   <build>
     <plugins>
       <plugin>
