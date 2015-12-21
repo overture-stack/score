@@ -11,12 +11,12 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
+
 import org.icgc.dcc.storage.client.cli.Terminal;
 
 import com.google.common.base.Stopwatch;
-
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * Progress bar for keeping track of the upload/download progress.
@@ -105,8 +105,8 @@ public class Progress {
     terminal.println("Finalizing...");
   }
 
-  public void end(boolean incompleted) {
-    if (incompleted) {
+  public void end(boolean incomplete) {
+    if (incomplete) {
       terminal
           .println(terminal.error("Data transfer has been interrupted. Some parts are missing. Waiting to retry..."));
     }

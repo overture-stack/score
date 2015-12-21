@@ -35,6 +35,13 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.SneakyThrows;
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
+
 import org.icgc.dcc.storage.client.download.Downloads;
 import org.icgc.dcc.storage.client.progress.Progress;
 import org.icgc.dcc.storage.client.progress.ProgressDataChannel;
@@ -44,13 +51,6 @@ import org.icgc.dcc.storage.core.model.Part;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Ordering;
-
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.SneakyThrows;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * The default transport for parallel upload
@@ -71,7 +71,7 @@ public class ParallelPartObjectTransport implements Transport {
   final protected String uploadId;
   final protected Mode mode;
   final protected AtomicLong memory;
-  final protected int maxUploadDuration;
+  final protected int maxTransferDuration;
   final protected boolean checksum;
 
   protected ParallelPartObjectTransport(RemoteParallelBuilder builder) {
@@ -84,7 +84,7 @@ public class ParallelPartObjectTransport implements Transport {
     this.nThreads = builder.nThreads;
     this.queueSize = nThreads * 2;
     this.memory = new AtomicLong(builder.memory);
-    this.maxUploadDuration = builder.maxUploadDuration;
+    this.maxTransferDuration = builder.maxTransferDuration;
     this.mode = builder.mode;
     this.checksum = builder.checksum;
   }
@@ -122,7 +122,7 @@ public class ParallelPartObjectTransport implements Transport {
     }
 
     executor.shutdown();
-    executor.awaitTermination(maxUploadDuration, TimeUnit.DAYS);
+    executor.awaitTermination(maxTransferDuration, TimeUnit.MINUTES);
     progress.stop();
     try {
       takeCareOfException(results.build());
@@ -177,7 +177,7 @@ public class ParallelPartObjectTransport implements Transport {
     }
 
     executor.shutdown();
-    executor.awaitTermination(maxUploadDuration, TimeUnit.DAYS);
+    executor.awaitTermination(maxTransferDuration, TimeUnit.DAYS);
 
     try {
       mergeToFile(parts, outputDir);
@@ -255,7 +255,7 @@ public class ParallelPartObjectTransport implements Transport {
 
     private int nThreads;
     private long memory;
-    private int maxUploadDuration;
+    private int maxTransferDuration;
 
     public RemoteParallelBuilder withNumberOfWorkerThreads(int threads) {
       this.nThreads = threads;
@@ -267,8 +267,8 @@ public class ParallelPartObjectTransport implements Transport {
       return this;
     }
 
-    public RemoteParallelBuilder withMaximumUploadDuration(int duration) {
-      this.maxUploadDuration = duration;
+    public RemoteParallelBuilder withMaximumTransferDuration(int duration) {
+      this.maxTransferDuration = duration;
       return this;
     }
 
@@ -288,7 +288,7 @@ public class ParallelPartObjectTransport implements Transport {
 
       nThreads = nThreads < MIN_WORKER ? MIN_WORKER : nThreads;
       memory = memory < MIN_MEMORY ? MIN_MEMORY : memory;
-      maxUploadDuration = maxUploadDuration < 1 ? Integer.MAX_VALUE : maxUploadDuration;
+      maxTransferDuration = maxTransferDuration < 1 ? Integer.MAX_VALUE : maxTransferDuration;
 
     }
   }
