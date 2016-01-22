@@ -28,12 +28,19 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 
+import lombok.NonNull;
+import lombok.Setter;
+import lombok.SneakyThrows;
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
+
 import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.icgc.dcc.storage.core.model.CompletedPart;
 import org.icgc.dcc.storage.core.model.ObjectSpecification;
 import org.icgc.dcc.storage.core.model.Part;
+import org.icgc.dcc.storage.core.util.BucketResolver;
 import org.icgc.dcc.storage.server.exception.IdNotFoundException;
 import org.icgc.dcc.storage.server.exception.InternalUnrecoverableError;
 import org.icgc.dcc.storage.server.exception.NotRetryableException;
@@ -52,12 +59,6 @@ import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PartETag;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.google.common.collect.Lists;
-
-import lombok.NonNull;
-import lombok.Setter;
-import lombok.SneakyThrows;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * Stores and retrieves the state of a upload's progress.
@@ -79,8 +80,18 @@ public class UploadStateStore {
   /**
    * Configuration.
    */
+  // @Value("${collaboratory.state.bucket.name}")
+  // private String bucketName;
+  @Value("${collaboratory.bucket.name}")
+  private String dataBucketName;
   @Value("${collaboratory.state.bucket.name}")
-  private String bucketName;
+  private String stateBucketName;
+  @Value("${collaboratory.data.directory}")
+  private String dataDir;
+  @Value("${collaboratory.bucket.poolsize}")
+  private int bucketPoolSize;
+  @Value("${collaboratory.bucket.keysize}")
+  private int bucketKeySize;
   @Value("${collaboratory.upload.directory}")
   private String uploadDir;
 
@@ -102,7 +113,9 @@ public class UploadStateStore {
       val meta = new ObjectMetadata();
       meta.setContentLength(content.length);
 
-      s3Client.putObject(bucketName, uploadStateKey, data, meta);
+      s3Client.putObject(
+          BucketResolver.getBucketName(spec.getObjectId(), stateBucketName, bucketPoolSize, bucketKeySize),
+          uploadStateKey, data, meta);
     } catch (AmazonServiceException e) {
       log.error("Failed to create meta file for spec: {}: {}", spec, e);
       throw new RetryableException(e);
@@ -117,7 +130,9 @@ public class UploadStateStore {
     val uploadStateKey = getUploadStateKey(objectId, uploadId, META);
 
     try {
-      val request = new GetObjectRequest(bucketName, uploadStateKey);
+      val request =
+          new GetObjectRequest(BucketResolver.getBucketName(objectId, stateBucketName, bucketPoolSize, bucketKeySize),
+              uploadStateKey);
       val obj = s3Client.getObject(request);
 
       try (val inputStream = obj.getObjectContent()) {
@@ -140,7 +155,8 @@ public class UploadStateStore {
     try {
       // Delete the meta file
       val spec = read(objectId, uploadId);
-      s3Client.deleteObject(bucketName, uploadStateKey);
+      s3Client.deleteObject(BucketResolver.getBucketName(objectId, stateBucketName, bucketPoolSize, bucketKeySize),
+          uploadStateKey);
 
       // Delete the part files
       for (val part : spec.getParts()) {
@@ -161,7 +177,12 @@ public class UploadStateStore {
     val partName = formatUploadPartName(partNumber, "");
     val uploadStateKey = getUploadStateKey(objectId, uploadId, partName);
 
-    eachObjectSummary(uploadStateKey, objectSummary -> s3Client.deleteObject(bucketName, objectSummary.getKey()));
+    eachObjectSummary(
+        objectId,
+        uploadStateKey,
+        objectSummary -> s3Client.deleteObject(
+            BucketResolver.getBucketName(objectId, stateBucketName, bucketPoolSize, bucketKeySize),
+            objectSummary.getKey()));
   }
 
   @SneakyThrows
@@ -171,6 +192,7 @@ public class UploadStateStore {
     }
 
     try {
+      String bucketName = BucketResolver.getBucketName(objectId, stateBucketName, bucketPoolSize, bucketKeySize);
       sortPartsByNumber(parts);
       val partIterator = parts.iterator();
 
@@ -210,7 +232,7 @@ public class UploadStateStore {
     val partIterator = spec.getParts().iterator();
 
     val request = new ListObjectsRequest()
-        .withBucketName(bucketName)
+        .withBucketName(BucketResolver.getBucketName(objectId, stateBucketName, bucketPoolSize, bucketKeySize))
         .withMaxKeys(MAX_KEYS)
         .withPrefix(getUploadStateKey(objectId, uploadId, PART));
 
@@ -250,7 +272,8 @@ public class UploadStateStore {
       val data = new ByteArrayInputStream(new byte[0]);
       val uploadStateKey = getUploadStateKey(objectId, uploadId, partName);
 
-      s3Client.putObject(bucketName, uploadStateKey, data, meta);
+      s3Client.putObject(BucketResolver.getBucketName(objectId, stateBucketName, bucketPoolSize, bucketKeySize),
+          uploadStateKey, data, meta);
     } catch (AmazonServiceException e) {
       // TODO: Log args
       log.error("Storage failed", e);
@@ -270,7 +293,7 @@ public class UploadStateStore {
     val uploadStateKey = getUploadStateKey(objectId, uploadId, PART);
     val etags = Lists.<PartETag> newArrayList();
 
-    eachObjectSummary(uploadStateKey, (objectSummary) -> {
+    eachObjectSummary(objectId, uploadStateKey, (objectSummary) -> {
       CompletedPart part = readCompletedPart(objectId, uploadId, objectSummary);
       PartETag etag = new PartETag(part.getPartNumber(), part.getEtag());
 
@@ -281,8 +304,9 @@ public class UploadStateStore {
   }
 
   public String getUploadId(String objectId) {
-    val uploadStateKey = getUploadStateKey(objectId, "" /* uploadId */ );
+    val uploadStateKey = getUploadStateKey(objectId, "" /* uploadId */);
 
+    val bucketName = BucketResolver.getBucketName(objectId, stateBucketName, bucketPoolSize, bucketKeySize);
     val request = new ListObjectsRequest()
         .withBucketName(bucketName)
         .withMaxKeys(MAX_KEYS)
@@ -326,9 +350,9 @@ public class UploadStateStore {
     }
   }
 
-  private void eachObjectSummary(String prefix, Consumer<S3ObjectSummary> callback) {
+  private void eachObjectSummary(String objectId, String prefix, Consumer<S3ObjectSummary> callback) {
     val request = new ListObjectsRequest()
-        .withBucketName(bucketName)
+        .withBucketName(BucketResolver.getBucketName(objectId, stateBucketName, bucketPoolSize, bucketKeySize))
         .withMaxKeys(MAX_KEYS)
         .withPrefix(prefix);
 
@@ -353,7 +377,8 @@ public class UploadStateStore {
 
     try {
       // This is actually how you are supposed to test
-      s3Client.getObjectMetadata(bucketName, uploadStateKey);
+      s3Client.getObjectMetadata(
+          BucketResolver.getBucketName(objectId, stateBucketName, bucketPoolSize, bucketKeySize), uploadStateKey);
     } catch (AmazonS3Exception e) {
       if (e.getStatusCode() == HttpStatus.NOT_FOUND.value()) {
         return false;

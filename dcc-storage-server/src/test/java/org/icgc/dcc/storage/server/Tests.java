@@ -18,13 +18,12 @@
 package org.icgc.dcc.storage.server;
 
 import static lombok.AccessLevel.PRIVATE;
+import lombok.NoArgsConstructor;
+import lombok.val;
 
 import org.icgc.dcc.storage.server.config.S3Config;
 import org.icgc.dcc.storage.server.service.upload.ObjectUploadService;
 import org.icgc.dcc.storage.server.service.upload.UploadStateStore;
-
-import lombok.NoArgsConstructor;
-import lombok.val;
 
 @NoArgsConstructor(access = PRIVATE)
 public class Tests {
@@ -40,7 +39,7 @@ public class Tests {
     val s3Client = s3Config.s3();
 
     val stateStore = new UploadStateStore();
-    stateStore.setBucketName(BUCKET_NAME);
+    stateStore.setStateBucketName(BUCKET_NAME);
     stateStore.setUploadDir(UPLOAD_DIR);
     stateStore.setS3Client(s3Client);
 

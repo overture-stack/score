@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 The Ontario Institute for Cancer Research. All rights reserved.                             
+ * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.                             
  *                                                                                                               
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
  * You should have received a copy of the GNU General Public License along with                                  
@@ -15,24 +15,32 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.core.model;
+package org.icgc.dcc.storage.server.service.download;
 
-import java.util.List;
+import com.amazonaws.services.s3.model.S3Object;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+/**
+ * Wrapper for an S3Object to carry additional info about the payload
+ * 
+ */
+public class FetchedS3Object {
 
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
-public class ObjectSpecification {
+  private S3Object s3Object;
+  private boolean relocated = false;
 
-  private String objectKey;
-  private String objectId;
-  private String uploadId;
-  private List<Part> parts;
-  private long objectSize;
-  private boolean isRelocated = false;
+  public FetchedS3Object(S3Object s3obj) {
+    s3Object = s3obj;
+  }
 
+  public S3Object getS3Object() {
+    return s3Object;
+  }
+
+  public boolean isRelocated() {
+    return relocated;
+  }
+
+  public void setRelocated(boolean rel) {
+    relocated = rel;
+  }
 }

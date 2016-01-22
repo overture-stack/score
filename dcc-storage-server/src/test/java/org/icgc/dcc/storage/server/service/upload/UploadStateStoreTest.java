@@ -28,6 +28,8 @@ import static org.mockito.Mockito.when;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 
+import lombok.val;
+
 import org.icgc.dcc.storage.core.model.ObjectSpecification;
 import org.junit.Before;
 import org.junit.Test;
@@ -40,8 +42,6 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectInputStream;
-
-import lombok.val;
 
 @RunWith(MockitoJUnitRunner.class)
 public class UploadStateStoreTest {
@@ -66,7 +66,7 @@ public class UploadStateStoreTest {
   @Before
   public void setUp() {
     // Configure
-    store.setBucketName(BUCKET_NAME);
+    store.setStateBucketName(BUCKET_NAME);
     store.setUploadDir("upload");
   }
 
@@ -108,11 +108,11 @@ public class UploadStateStoreTest {
   }
 
   @Test
-    public void testFormatUploadPartName() throws Exception {
-      val partNumber = 17;
-      val json = "{\"x\":1}";
-      val partName = UploadStateStore.formatUploadPartName(partNumber, json);
-      assertThat(partName).isEqualTo("part-00000011|{\"x\":1}");
-    }
+  public void testFormatUploadPartName() throws Exception {
+    val partNumber = 17;
+    val json = "{\"x\":1}";
+    val partName = UploadStateStore.formatUploadPartName(partNumber, json);
+    assertThat(partName).isEqualTo("part-00000011|{\"x\":1}");
+  }
 
 }

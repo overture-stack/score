@@ -25,6 +25,8 @@ import java.time.ZoneId;
 import java.util.Date;
 import java.util.List;
 
+import javax.annotation.PostConstruct;
+
 import lombok.Cleanup;
 import lombok.Setter;
 import lombok.val;
@@ -35,6 +37,7 @@ import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.icgc.dcc.storage.core.model.ObjectSpecification;
 import org.icgc.dcc.storage.core.model.Part;
+import org.icgc.dcc.storage.core.util.BucketResolver;
 import org.icgc.dcc.storage.core.util.ObjectKeys;
 import org.icgc.dcc.storage.server.exception.IdNotFoundException;
 import org.icgc.dcc.storage.server.exception.InternalUnrecoverableError;
@@ -74,6 +77,10 @@ public class ObjectDownloadService {
   private String stateBucketName;
   @Value("${collaboratory.data.directory}")
   private String dataDir;
+  @Value("${collaboratory.bucket.poolsize}")
+  private int bucketPoolSize;
+  @Value("${collaboratory.bucket.keysize}")
+  private int bucketKeySize;
   @Value("${collaboratory.download.expiration}")
   private int expiration;
 
@@ -86,6 +93,14 @@ public class ObjectDownloadService {
   private ObjectURLGenerator urlGenerator;
   @Autowired
   private ObjectPartCalculator partCalculator;
+
+  @PostConstruct
+  public void validateConfig() {
+    if (bucketKeySize > BucketResolver.MAX_KEY_LENGTH) {
+      throw new IllegalArgumentException(String.format("bucket.keysize configuration exceeds maximum allowable (%d)",
+          bucketKeySize, BucketResolver.MAX_KEY_LENGTH));
+    }
+  }
 
   public ObjectSpecification download(String objectId, long offset, long length, boolean forExternalUse) {
     try {
@@ -124,9 +139,9 @@ public class ObjectDownloadService {
         parts = partCalculator.divide(offset, length);
       }
 
-      fillPartUrls(objectKey, parts, forExternalUse);
+      fillPartUrls(objectKey, parts, objectSpec.isRelocated(), forExternalUse);
 
-      return new ObjectSpecification(objectKey, objectId, objectId, parts, length);
+      return new ObjectSpecification(objectKey, objectId, objectId, parts, length, objectSpec.isRelocated());
     } catch (Exception e) {
       log.error("Failed to download objectId: {}, offset: {}, length: {}, forExternalUse: {}: {} ",
           objectId, offset, length, forExternalUse, e);
@@ -136,19 +151,22 @@ public class ObjectDownloadService {
   }
 
   // This really is a misleading method name - should be retrieveMetaFile() or something
-  private ObjectSpecification getSpecification(String objectId) {
+  ObjectSpecification getSpecification(String objectId) {
     val objectKey = ObjectKeys.getObjectKey(dataDir, objectId);
-    // val objectMetaKey = ObjectKeys.getObjectMetaKey(dataDir, objectId);
     val objectMetaKey = ObjectKeys.getObjectMetaKey(dataDir, objectId);
     log.debug("Getting specification for objectId: {}, objectKey: {}, objectMetaKey: {}", objectId, objectKey,
         objectMetaKey);
 
     try {
       // Retrieve .meta file to get list of pre-signed URL's
+      // also returns flag indicating whether the object was not in the expected partitioned bucket
       val obj = getObject(objectId, objectMetaKey);
 
-      val spec = readSpecification(obj);
-      fillPartUrls(objectKey, spec.getParts(), false);
+      val spec = readSpecification(obj.getS3Object());
+      spec.setRelocated(obj.isRelocated());
+
+      // we do this now in case we are returning it immediately in download() call
+      fillPartUrls(objectKey, spec.getParts(), obj.isRelocated(), false);
 
       return spec;
     } catch (JsonParseException | JsonMappingException e) {
@@ -169,13 +187,37 @@ public class ObjectDownloadService {
     return MAPPER.readValue(inputStream, ObjectSpecification.class);
   }
 
-  private S3Object getObject(String objectId, String objectKey) {
+  /*
+   * Retrieve meta file object
+   */
+  private FetchedS3Object getObject(String objectId, String objectMetaKey) {
+    String bucketName = BucketResolver.getBucketName(objectId, stateBucketName, bucketPoolSize, bucketKeySize);
     try {
-      val request = new GetObjectRequest(stateBucketName, objectKey);
-      return s3Client.getObject(request);
+      return fetchObject(bucketName, objectMetaKey);
     } catch (AmazonServiceException e) {
-      log.error("Failed to get object with objectId: {}, objectKey: {}: {}", objectId, objectKey, e);
-      if (e.getStatusCode() == HttpStatus.NOT_FOUND.value() || !e.isRetryable()) {
+
+      if ((e.getStatusCode() == HttpStatus.NOT_FOUND.value()) && (bucketPoolSize > 0)) {
+
+        // try again with master bucket
+        log.warn("Object with objectId: {} not found in {}, objectKey: {}: {}. Trying master bucket {}",
+            objectId, bucketName, objectMetaKey, e, stateBucketName);
+        try {
+          val obj = fetchObject(stateBucketName, objectMetaKey);
+          obj.setRelocated(true);
+          return obj;
+
+        } catch (AmazonServiceException e2) {
+          log.error("Failed to get object with objectId: {} from {}, objectKey: {}: {}", objectId, stateBucketName,
+              objectMetaKey, e);
+          if ((e.getStatusCode() == HttpStatus.NOT_FOUND.value()) || (!e.isRetryable())) {
+            throw new IdNotFoundException(objectId);
+          } else {
+            throw new RetryableException(e);
+          }
+        }
+
+      } else if (!e.isRetryable()) {
+        // not partitioned bucket - not found is not found
         throw new IdNotFoundException(objectId);
       } else {
         throw new RetryableException(e);
@@ -183,15 +225,40 @@ public class ObjectDownloadService {
     }
   }
 
-  private void fillPartUrls(String objectKey, List<Part> parts, boolean forExternalUse) {
+  /**
+   * Perform actual retrieval of object from S3/ObjectStore
+   * 
+   */
+  private FetchedS3Object fetchObject(String bucketName, String objectMetaKey) {
+    try {
+      val request = new GetObjectRequest(bucketName, objectMetaKey);
+      return new FetchedS3Object(s3Client.getObject(request));
+    } catch (AmazonServiceException e) {
+      throw e;
+    }
+  }
+
+  /**
+   * Construct pre-signed URL's for data objects (the /data bucket)
+   * 
+   */
+  private void fillPartUrls(String objectKey, List<Part> parts, boolean isRelocated, boolean forExternalUse) {
     val expirationDate = getExpirationDate();
 
     for (val part : parts) {
       if (forExternalUse) {
         // There should only be one part - don't include RANGE header in pre-signed URL
-        part.setUrl(urlGenerator.getDownloadUrl(dataBucketName, objectKey, expirationDate));
+        part.setUrl(urlGenerator.getDownloadUrl(
+            isRelocated ? dataBucketName : BucketResolver.getBucketName(objectKey, dataBucketName, bucketPoolSize,
+                bucketKeySize),
+            objectKey,
+            expirationDate));
       } else {
-        part.setUrl(urlGenerator.getDownloadPartUrl(dataBucketName, objectKey, part, expirationDate));
+        part.setUrl(urlGenerator.getDownloadPartUrl(
+            isRelocated ? dataBucketName : BucketResolver.getBucketName(objectKey, dataBucketName, bucketPoolSize,
+                bucketKeySize),
+            objectKey, part,
+            expirationDate));
       }
     }
   }

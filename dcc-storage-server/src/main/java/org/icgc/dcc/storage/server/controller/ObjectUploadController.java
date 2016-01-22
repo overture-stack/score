@@ -70,6 +70,8 @@ public class ObjectUploadController {
       @PathVariable(value = "object-id") String objectId,
       @RequestParam(value = "partNumber", required = true) int partNumber,
       @RequestParam(value = "uploadId", required = true) String uploadId) {
+    log.info("Initiating delete of object id {} part# {} (upload id {}); with access token {}", objectId, partNumber,
+        uploadId, TokenHasher.hashToken(accessToken));
     uploadService.deletePart(objectId, uploadId, partNumber);
   }
 
