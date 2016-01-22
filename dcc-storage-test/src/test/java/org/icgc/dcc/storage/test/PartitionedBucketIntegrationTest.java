@@ -1,3 +1,20 @@
+/*
+ * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.                             
+ *                                                                                                               
+ * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
+ * You should have received a copy of the GNU General Public License along with                                  
+ * this program. If not, see <http://www.gnu.org/licenses/>.                                                     
+ *                                                                                                               
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY                           
+ * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES                          
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT                           
+ * SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,                                
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED                          
+ * TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;                               
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER                              
+ * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 package org.icgc.dcc.storage.test;
 
 import static com.google.common.base.Objects.firstNonNull;
@@ -27,7 +44,7 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 @Slf4j
-public class StorageIntegrationTest {
+public class PartitionedBucketIntegrationTest {
 
   /**
    * Configuration.
@@ -36,6 +53,11 @@ public class StorageIntegrationTest {
   protected final int metadataPort = 8444;
   protected final int storagePort = 5431;
   final String gnosId = "70b07570-0571-11e5-a6c0-1697f925ec7b";
+
+  final String objectBucketBase = "oicr.icgc.dev";
+  final String stateBucketBase = "oicr.icgc.dev.state";
+  final int numBucketPartitions = 5;
+  final int bucketKeyLength = 2;
 
   /**
    * State.
@@ -50,6 +72,10 @@ public class StorageIntegrationTest {
 
   @Rule
   public TemporaryFolder s3Root = new TemporaryFolder();
+
+  public PartitionedBucketIntegrationTest() {
+    super();
+  }
 
   @Before
   public void setUp() throws Exception {
@@ -66,7 +92,7 @@ public class StorageIntegrationTest {
     // they ever need to run in parallel in the same environment.
     String s3ninjaPath = s3Root.getRoot().getAbsolutePath();
     banner("setting up S3 buckets in: " + s3ninjaPath + "...");
-    setupBuckets(s3Root.getRoot());
+    setupBuckets(s3Root.getRoot(), numBucketPartitions);
 
     banner("Starting S3 under " + s3ninjaPath + " ...");
     s3.start(s3Root.getRoot());
@@ -115,15 +141,18 @@ public class StorageIntegrationTest {
         "-Dspring.profiles.active=dev,secure,default", // Secure
         "-Dlogging.file=" + fs.getLogsDir() + "/dcc-storage-server.log",
         "-Dserver.port=" + storagePort,
-        "-Dcollaboratory.bucket.name=oicr.icgc.dev",
-        "-Dcollaboratory.state.bucket.name=oicr.icgc.dev.state",
+        "-Dcollaboratory.bucket.name=" + objectBucketBase,
+        "-Dcollaboratory.bucket.poolsize=" + numBucketPartitions,
+        "-Dcollaboratory.bucket.keysize=" + bucketKeyLength,
+        "-Dcollaboratory.state.bucket.name=" + stateBucketBase,
         "-Dauth.server.url=https://localhost:" + authPort + "/oauth/check_token",
         "-Dauth.server.clientId=storage",
         "-Dauth.server.clientsecret=pass",
         "-Dmetadata.url=https://localhost:" + metadataPort,
         "-Dendpoints.jmx.domain=storage");
   }
-  private Process storageClient(String accessToken, String... args) {
+
+  Process storageClient(String accessToken, String... args) {
     int debugPort = Integer.parseInt(firstNonNull(System.getProperty("storage.client.debugPort"), "-1"));
 
     return bootRun(
@@ -136,19 +165,36 @@ public class StorageIntegrationTest {
         "-Dstorage.url=http://localhost:" + storagePort,
         "-DaccessToken=" + accessToken);
   }
-  public void setupBuckets(File s3Root) {
-    // create expected S3 buckets
-    File data = new File(s3Root, "oicr.icgc.dev");
-    data.mkdir();
 
-    if (!data.exists()) {
-      throw new RuntimeException("Unable to create working directory " + s3Root.getAbsolutePath() + "/oicr.icgc.dev");
+  public void setupBuckets(File s3Root) {
+    setupBuckets(s3Root, 0);
+  }
+
+  public void setupBuckets(File s3Root, int count) {
+
+    String objectBucket = "";
+    String stateBucket = "";
+    if (count > 0) {
+      for (int i = 0; i < count; i++) {
+        objectBucket = String.format("%s.%d", objectBucketBase, i);
+        stateBucket = String.format("%s.%d", stateBucketBase, i);
+        createBucket(s3Root, objectBucket);
+        createBucket(s3Root, stateBucket);
+      }
     }
-    File state = new File(s3Root, "oicr.icgc.dev.state");
-    state.mkdir();
-    if (!state.exists()) {
-      throw new RuntimeException("Unable to create working directory " + s3Root.getAbsolutePath()
-          + "/oicr.icgc.dev.state");
+    else {
+      createBucket(s3Root, objectBucketBase);
+      createBucket(s3Root, stateBucketBase);
+    }
+  }
+
+  void createBucket(File s3Root, String name) {
+    // create expected S3 buckets
+    File bucket = new File(s3Root, name);
+    bucket.mkdir();
+
+    if (!bucket.exists()) {
+      throw new RuntimeException("Unable to create working directory " + s3Root.getAbsolutePath() + name);
     }
   }
 
@@ -184,7 +230,7 @@ public class StorageIntegrationTest {
       val upload = storageClient(accessToken,
           "upload",
           "--manifest", fs.getRootDir() + "/manifest.txt");
-      upload.waitFor(1, MINUTES);
+      upload.waitFor(10, MINUTES);
       assertThat(upload.exitValue()).isEqualTo(status); // First time 0, second time 1 since no --force
     }
 
@@ -245,9 +291,6 @@ public class StorageIntegrationTest {
     assertThat(view.exitValue()).isEqualTo(0);
   }
 
-  /*
-   * see comments in SpringBootProcess.bootRun()
-   */
   Process authServer() {
     int debugPort = Integer.parseInt(firstNonNull(System.getProperty("auth.server.debugPort"), "-1"));
 
@@ -320,5 +363,4 @@ public class StorageIntegrationTest {
     log.info(repeat("#", 100));
     log.info("");
   }
-
 }
