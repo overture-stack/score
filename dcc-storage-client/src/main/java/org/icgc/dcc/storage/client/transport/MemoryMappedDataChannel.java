@@ -26,14 +26,14 @@ import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
+
 import org.icgc.dcc.storage.client.exception.NotRetryableException;
 
 import com.google.common.hash.Hashing;
 import com.google.common.hash.HashingOutputStream;
-
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * Channel based on {@link java.nio.MappedByteBuffer memory mapped buffer}
@@ -84,23 +84,26 @@ public class MemoryMappedDataChannel extends AbstractDataChannel {
    */
   @Override
   public void commitToDisk() {
-    if (!buffer.isDirect()) {
-      return;
-    }
+    long start = System.currentTimeMillis();
+    log.info("Begin buffer release");
+    // if (buffer.isDirect()) {
+    // return;
+    // }
+
     // Don't call this because it will slow down
     buffer.force();
     try {
-      Method cleanerMethod = buffer.getClass().getMethod("cleaner");
-      cleanerMethod.setAccessible(true);
-      Object cleaner = cleanerMethod.invoke(buffer);
-      Method cleanMethod = cleaner.getClass().getMethod("clean");
-      cleanMethod.setAccessible(true);
-      cleanMethod.invoke(cleaner);
-    } catch (Throwable e) {
-      log.error("fail to unmap memory", e);
-      throw new NotRetryableException(e);
+      Method cleaner = buffer.getClass().getMethod("cleaner");
+      cleaner.setAccessible(true);
+      Method clean = Class.forName("sun.misc.Cleaner").getMethod("clean");
+      clean.setAccessible(true);
+      clean.invoke(cleaner.invoke(buffer));
+    } catch (Exception ex) {
+      log.error("failed to unmap memory", ex);
+      throw new NotRetryableException(ex);
     } finally {
       buffer = null;
     }
+    log.info("End buffer release - elapsed time {}", System.currentTimeMillis() - start);
   }
 }

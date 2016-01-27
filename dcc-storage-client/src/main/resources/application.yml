@@ -23,6 +23,7 @@ transport:
   fileFrom: memory
   memory: 1
   parallel: 6
+  maxTransferDuration: 120
 
 storage:
   url: http://localhost:5431
@@ -77,10 +78,10 @@ client:
 ---
 
 ###############################################################################
-# Profile - "oicr"
+# Profile - "dev"
 ###############################################################################
 
-spring.profiles: oicr
+spring.profiles: dev
 
 # uses storage.url and client.ssl.custom define in common 
 

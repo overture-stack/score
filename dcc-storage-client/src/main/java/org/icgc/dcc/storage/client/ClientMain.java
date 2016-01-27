@@ -11,6 +11,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
+
 import org.icgc.dcc.storage.client.cli.ConverterFactory;
 import org.icgc.dcc.storage.client.cli.Terminal;
 import org.icgc.dcc.storage.client.command.ClientCommand;
@@ -26,9 +29,6 @@ import com.beust.jcommander.MissingCommandException;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
 import com.beust.jcommander.Parameters;
-
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * Application entry-point.
@@ -138,6 +138,7 @@ public class ClientMain implements CommandLineRunner {
 
       exit(FAILURE_STATUS);
     }
+    System.out.println("");
   }
 
   private void parseParams(String... params) {
@@ -152,6 +153,7 @@ public class ClientMain implements CommandLineRunner {
     }
 
     cli.parse(params);
+    terminal.printStatus("done parsing params");
   }
 
   private ClientCommand resolveCommand() {
