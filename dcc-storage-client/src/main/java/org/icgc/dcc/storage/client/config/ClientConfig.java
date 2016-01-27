@@ -25,6 +25,10 @@ import java.io.IOException;
 
 import javax.net.ssl.SSLContext;
 
+import lombok.SneakyThrows;
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
+
 import org.apache.http.client.HttpClient;
 import org.apache.http.conn.ssl.X509HostnameVerifier;
 import org.apache.http.impl.client.HttpClientBuilder;
@@ -51,10 +55,6 @@ import org.springframework.retry.support.RetryTemplate;
 import org.springframework.web.client.RestTemplate;
 
 import com.google.common.collect.ImmutableMap;
-
-import lombok.SneakyThrows;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * Configurations for connections for uploads
