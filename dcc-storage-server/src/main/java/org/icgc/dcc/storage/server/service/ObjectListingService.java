@@ -23,7 +23,11 @@ import java.io.File;
 import java.util.List;
 import java.util.function.Consumer;
 
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
+
 import org.icgc.dcc.storage.core.model.ObjectInfo;
+import org.icgc.dcc.storage.core.util.BucketResolver;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
@@ -34,9 +38,6 @@ import com.amazonaws.services.s3.model.ListObjectsRequest;
 import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.google.common.collect.Lists;
-
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
@@ -49,6 +50,10 @@ public class ObjectListingService {
   private String bucketName;
   @Value("${collaboratory.data.directory}")
   private String dataDir;
+  @Value("${collaboratory.bucket.poolsize}")
+  private int bucketPoolSize;
+  @Value("${collaboratory.bucket.keysize}")
+  private int bucketKeySize;
 
   /**
    * Dependencies.
@@ -60,12 +65,15 @@ public class ObjectListingService {
   public List<ObjectInfo> getListing() {
     val listing = Lists.<ObjectInfo> newArrayList();
 
-    readBucket(bucketName, dataDir, (objectSummary) -> {
-      ObjectInfo info = createInfo(objectSummary);
-      if (info.getId() != null) {
-        listing.add(info);
-      }
-    });
+    for (int i = 0; i < bucketPoolSize; i++) {
+      readBucket(BucketResolver.constructBucketName(bucketName, i), dataDir, (objectSummary) -> {
+        ObjectInfo info = createInfo(objectSummary);
+        if (info.getId() != null) {
+          listing.add(info);
+        }
+      });
+
+    }
 
     return listing;
   }

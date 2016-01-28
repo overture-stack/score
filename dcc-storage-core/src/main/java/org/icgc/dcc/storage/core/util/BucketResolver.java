@@ -19,9 +19,9 @@ package org.icgc.dcc.storage.core.util;
 
 import java.util.regex.Pattern;
 
-/**
- * 
- */
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class BucketResolver {
 
   public static int MAX_KEY_LENGTH = 7;
@@ -48,6 +48,8 @@ public class BucketResolver {
     if ((keyLength > 0) && (bucketPoolSize > 0)) {
       int bucketIndex = calculateIndex(objectId, bucketPoolSize, keyLength);
       result = constructBucketName(baseName, bucketIndex);
+    } else {
+      log.trace("Bucket partitioning disabled: keyLength = {} and bucketPoolSize = {}", keyLength, bucketPoolSize);
     }
     return result;
   }
