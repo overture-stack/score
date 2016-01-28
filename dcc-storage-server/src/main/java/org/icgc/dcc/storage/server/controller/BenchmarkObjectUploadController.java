@@ -20,6 +20,8 @@ package org.icgc.dcc.storage.server.controller;
 import java.io.IOException;
 import java.io.InputStream;
 
+import javax.servlet.http.HttpServletRequest;
+
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -64,7 +66,8 @@ public class BenchmarkObjectUploadController extends ObjectUploadController {
       @RequestHeader(value = "access-token", required = true) final String accessToken,
       @PathVariable(value = "object-id") String objectId,
       @RequestParam(value = "overwrite", required = false, defaultValue = "false") boolean overwrite,
-      @RequestParam(value = "fileSize", required = true) long fileSize) {
+      @RequestParam(value = "fileSize", required = true) long fileSize,
+      HttpServletRequest request) {
     return uploadService.initiateUpload(objectId, fileSize, overwrite);
   }
 
@@ -75,7 +78,8 @@ public class BenchmarkObjectUploadController extends ObjectUploadController {
       @RequestHeader(value = "access-token", required = true) final String accessToken,
       @PathVariable(value = "object-id") String objectId,
       @RequestParam(value = "partNumber", required = true) int partNumber,
-      @RequestParam(value = "uploadId", required = true) String uploadId) {
+      @RequestParam(value = "uploadId", required = true) String uploadId,
+      HttpServletRequest request) {
     // NO-OP
   }
 

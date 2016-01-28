@@ -19,6 +19,8 @@ package org.icgc.dcc.storage.server.controller;
 
 import java.io.IOException;
 
+import javax.servlet.http.HttpServletRequest;
+
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -56,10 +58,18 @@ public class ObjectUploadController {
       @RequestHeader(value = "Authorization", required = true) final String accessToken,
       @PathVariable(value = "object-id") String objectId,
       @RequestParam(value = "overwrite", required = false, defaultValue = "false") boolean overwrite,
-      @RequestParam(value = "fileSize", required = true) long fileSize) {
-    log.info("Initiating upload of object id {} with access token {} (MD5) having size of {}", objectId,
+      @RequestParam(value = "fileSize", required = true) long fileSize,
+      HttpServletRequest request) {
+
+    String ipAddress = request.getHeader("X-FORWARDED-FOR");
+    if (ipAddress == null) {
+      ipAddress = request.getRemoteAddr();
+    }
+
+    log.info("Initiating upload of object id {} with access token {} (MD5) having size of {} from {}", objectId,
         TokenHasher.hashToken(accessToken),
-        Long.toString(fileSize));
+        Long.toString(fileSize),
+        ipAddress);
     return uploadService.initiateUpload(objectId, fileSize, overwrite);
   }
 
@@ -69,9 +79,17 @@ public class ObjectUploadController {
       @RequestHeader(value = "Authorization", required = true) final String accessToken,
       @PathVariable(value = "object-id") String objectId,
       @RequestParam(value = "partNumber", required = true) int partNumber,
-      @RequestParam(value = "uploadId", required = true) String uploadId) {
-    log.info("Initiating delete of object id {} part# {} (upload id {}); with access token {}", objectId, partNumber,
-        uploadId, TokenHasher.hashToken(accessToken));
+      @RequestParam(value = "uploadId", required = true) String uploadId,
+      HttpServletRequest request) {
+
+    String ipAddress = request.getHeader("X-FORWARDED-FOR");
+    if (ipAddress == null) {
+      ipAddress = request.getRemoteAddr();
+    }
+
+    log.info("Initiating delete of object id {} part# {} (upload id {}); with access token {} from {}", objectId,
+        partNumber,
+        uploadId, TokenHasher.hashToken(accessToken), ipAddress);
     uploadService.deletePart(objectId, uploadId, partNumber);
   }
 

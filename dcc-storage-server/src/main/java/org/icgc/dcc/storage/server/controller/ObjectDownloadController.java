@@ -17,6 +17,8 @@
  */
 package org.icgc.dcc.storage.server.controller;
 
+import javax.servlet.http.HttpServletRequest;
+
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -52,9 +54,16 @@ public class ObjectDownloadController {
       @PathVariable(value = "object-id") String objectId,
       @RequestParam(value = "offset", required = true) long offset,
       @RequestParam(value = "length", required = true) long length,
-      @RequestParam(value = "external", defaultValue = "false") boolean external) {
-    log.info("Requesting download of object id {} with access token {} (MD5)", objectId,
-        TokenHasher.hashToken(accessToken));
+      @RequestParam(value = "external", defaultValue = "false") boolean external,
+      HttpServletRequest request) {
+
+    String ipAddress = request.getHeader("X-FORWARDED-FOR");
+    if (ipAddress == null) {
+      ipAddress = request.getRemoteAddr();
+    }
+
+    log.info("Requesting download of object id {} with access token {} (MD5) from {}", objectId,
+        TokenHasher.hashToken(accessToken), ipAddress);
     return downloadService.download(objectId, offset, length, external);
   }
 }
