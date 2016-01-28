@@ -41,7 +41,6 @@ public class JmxUtilities {
   public static String getDirectBufferUsage() {
     List<BufferPoolMXBean> pools = ManagementFactory.getPlatformMXBeans(BufferPoolMXBean.class);
     for (BufferPoolMXBean pool : pools) {
-      log.debug(pool.getName());
       if (pool.getName().equals("direct")) {
         return String.format(">>>Direct buffers count=" + pool.getCount() + " capacity=" + pool.getTotalCapacity()
             + " used=" + pool.getMemoryUsed());
@@ -53,7 +52,6 @@ public class JmxUtilities {
   public static String getMappedBufferUsage() {
     List<BufferPoolMXBean> pools = ManagementFactory.getPlatformMXBeans(BufferPoolMXBean.class);
     for (BufferPoolMXBean pool : pools) {
-      log.debug("buffer pool: {}", pool.getName());
       if (pool.getName().equals("mapped")) {
         return String.format(">>>Mapped buffers count=" + pool.getCount() + " capacity=" + pool.getTotalCapacity()
             + " used=" + pool.getMemoryUsed());

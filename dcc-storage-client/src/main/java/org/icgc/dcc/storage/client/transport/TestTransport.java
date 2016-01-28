@@ -147,7 +147,7 @@ public class TestTransport extends ParallelPartObjectTransport {
       }
     }
 
-    log.info("all tasks are submitted, waiting for completion...");
+    log.info("All tasks are submitted, waiting for completion...");
     try {
       for (int i = 0; i < parts.size(); ++i) {
         try {
@@ -165,18 +165,18 @@ public class TestTransport extends ParallelPartObjectTransport {
         }
       }
     } finally {
-      uploadThreadPool.shutdown();
+      uploadThreadPool.shutdownNow();
       uploadThreadPool.awaitTermination(super.maxTransferDuration, TimeUnit.MINUTES);
-      log.debug("finally block: cancelling remaining {} futures", futures.size());
+      log.debug("Finally block: cancelling remaining {} futures", futures.size());
       for (Future<Part> f : futures) {
         f.cancel(true);
       }
     }
 
-    log.debug("thread pool shut down request ...");
+    log.debug("Thread pool shut down request ...");
     executor.shutdown();
-    executor.awaitTermination(super.maxTransferDuration, TimeUnit.DAYS);
-    log.debug("thread pool shut down request completed.");
+    executor.awaitTermination(super.maxTransferDuration, TimeUnit.MINUTES);
+    log.debug("Thread pool shut down request completed.");
 
     progress.stop();
     try {
@@ -226,7 +226,7 @@ public class TestTransport extends ParallelPartObjectTransport {
     long offset = 0;
 
     // launch threads - hang on to their futures
-    for (final Part part : parts) {
+    for (val part : parts) {
       log.debug("Starting part {} download.", part);
       offset += prevLength;
       prevLength = part.getPartSize();
@@ -260,7 +260,7 @@ public class TestTransport extends ParallelPartObjectTransport {
                     if (Thread.interrupted()) {
                       throw new InterruptedException();
                     }
-                    log.info("*** after proxy.downloadPart part# " + part.getPartNumber());
+                    log.info("*** After proxy.downloadPart part# " + part.getPartNumber());
                     logMemoryUsage();
                   } else {
                     log.info("MD5 for part #{} validated. Part already downloaded", part.getPartNumber());
@@ -268,13 +268,13 @@ public class TestTransport extends ParallelPartObjectTransport {
                   progress.incrementChecksumParts();
                 } else {
                   log.debug("Part #{} is not downloaded. Downloading...", part.getPartNumber());
-                  log.info("*** before GET part#{} ", part.getPartNumber());
+                  log.info("*** Before GET part#{} ", part.getPartNumber());
                   logMemoryUsage();
                   progress.startTransfer();
                   proxy.downloadPart(progressChannel, part, objectId, outputDir);
                   progress.incrementBytesWritten(part.getPartSize());
                   progress.incrementParts(1);
-                  log.info("*** after proxy.downloadPart part#{} ", part.getPartNumber());
+                  log.info("*** After proxy.downloadPart part#{} ", part.getPartNumber());
                   logMemoryUsage();
                 }
                 return memoryChannel;
@@ -294,7 +294,7 @@ public class TestTransport extends ParallelPartObjectTransport {
       })); // results.push(submit(new Callable()))
     } // for (part)
 
-    log.info("all tasks are submitted, waiting for completion...");
+    log.info("All tasks are submitted, waiting for completion...");
     try {
       for (int i = 0; i < parts.size(); ++i) {
         try {
@@ -316,11 +316,11 @@ public class TestTransport extends ParallelPartObjectTransport {
         }
       }
     } finally {
-      downloadThreadPool.shutdown();
+      downloadThreadPool.shutdownNow();
       downloadThreadPool.awaitTermination(super.maxTransferDuration, TimeUnit.MINUTES);
       // memoryCollectorService.shutdown();
       // memoryCollectorService.awaitTermination(super.maxTransferDuration, TimeUnit.MINUTES);
-      log.debug("finally block: cancelling remaining {} futures", futures.size());
+      log.debug("Finally block: cancelling remaining {} futures", futures.size());
       for (Future<MemoryMappedDataChannel> f : futures) {
         f.cancel(true);
       }
@@ -330,7 +330,7 @@ public class TestTransport extends ParallelPartObjectTransport {
 
     progress.stop();
     try {
-      log.info("finalizing download...");
+      log.info("Finalizing download...");
       proxy.finalizeDownload(outputDir, objectId);
       log.info("Download is finalized");
     } catch (Throwable e) {
@@ -339,7 +339,7 @@ public class TestTransport extends ParallelPartObjectTransport {
       throw e;
     }
     progress.end(false);
-    log.info("*** end of receive() ");
+    log.info("*** End of receive() ");
     logMemoryUsage();
   }
 

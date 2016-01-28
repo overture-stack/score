@@ -22,8 +22,6 @@ import static org.icgc.dcc.storage.client.cli.Parameters.checkParameter;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.FileStore;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Set;
@@ -183,7 +181,7 @@ public class DownloadCommand extends AbstractClientCommand {
   }
 
   /**
-   * Get the sourcd file for the supplied {@code entity}.
+   * Get the source file for the supplied {@code entity}.
    */
   private File getLayoutSource(Entity entity) {
     return new File(outputDir, entity.getId());
@@ -257,8 +255,8 @@ public class DownloadCommand extends AbstractClientCommand {
 
   @SneakyThrows
   private long getLocalAvailableSpace() {
-    Path path = Paths.get(outputDir.getAbsolutePath());
-    FileStore fs = java.nio.file.Files.getFileStore(path);
+    val path = Paths.get(outputDir.getAbsolutePath());
+    val fs = java.nio.file.Files.getFileStore(path);
     return fs.getUsableSpace();
   }
 

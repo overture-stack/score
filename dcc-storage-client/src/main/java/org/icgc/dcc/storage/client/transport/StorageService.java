@@ -155,10 +155,10 @@ public class StorageService {
           downloadStateStore.commit(outputDir, objectId, part);
           log.debug("committed {} part# {} to download state store", objectId, part.getPartNumber());
         } catch (NotResumableException | NotRetryableException e) {
-          log.error("Cannot proceed. Failed to receive part for part number: {}", part.getPartNumber(), e);
+          log.error("Cannot proceed. Failed to receive part for part# {} : {}", part.getPartNumber(), e);
           throw e;
         } catch (Throwable e) {
-          log.warn("Failed to receive part for part number: {}. Retrying.", part.getPartNumber(), e);
+          log.warn("Failed to receive part for part number: {}. Retrying. {}", part.getPartNumber(), e);
           channel.reset();
           throw new RetryableException(e);
         }
@@ -207,14 +207,14 @@ public class StorageService {
             finalizeUploadPart(objectId, uploadId, part.getPartNumber(), channel.getMd5(),
                 cleanUpETag(headers.getETag()), disableChecksum(headers));
           } catch (NotRetryableException e) {
-            log.warn("Checksum failed for part: {}, MD5: {}, ETAG: {}", part, channel.getMd5(), headers.getETag(), e);
+            log.warn("Checksum failed for part #{}, MD5={}, ETAG={} : {}", part, channel.getMd5(), headers.getETag(), e);
             throw new RetryableException(e);
           }
         } catch (NotResumableException | NotRetryableException e) {
           log.error("Could not proceed. Failed to send part for part number: {}", part.getPartNumber(), e);
           throw e;
         } catch (Throwable e) {
-          log.warn("Failed to send part for part number: {}", part.getPartNumber(), e);
+          log.warn("Failed to send part for part #{} : {}", part.getPartNumber(), e);
           channel.reset();
           throw new RetryableException(e);
         }
@@ -273,7 +273,7 @@ public class StorageService {
   public void finalizeUploadPart(String objectId, String uploadId, int partNumber, String md5, String etag,
       boolean disableChecksum)
       throws IOException {
-    log.debug("finalizing upload part, object-id: {}, upload-id: {}, part-number: {}", objectId, uploadId, partNumber);
+    log.debug("Finalizing upload part, object-id: {}, upload-id: {}, part-number: {}", objectId, uploadId, partNumber);
     retry.execute(new RetryCallback<Void, IOException>() {
 
       @Override
@@ -308,6 +308,10 @@ public class StorageService {
       }
     });
 
+  }
+
+  public ObjectSpecification getDownloadSpecification(String objectId) throws IOException {
+    return getDownloadSpecification(objectId, 0, -1L);
   }
 
   public ObjectSpecification getDownloadSpecification(String objectId, long offset, long length) throws IOException {
@@ -372,7 +376,7 @@ public class StorageService {
     try {
       return (fileSize == downloadStateStore.getObjectSize(stateDir, objectId));
     } catch (Throwable e) {
-      log.warn("Download is not recoverable due to: ", e);
+      log.warn("Download is not recoverable: {}", e);
     }
     return false;
 

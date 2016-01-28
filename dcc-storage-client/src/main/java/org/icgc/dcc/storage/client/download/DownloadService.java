@@ -217,7 +217,7 @@ public class DownloadService {
     long total = 0L;
 
     for (val entity : entities) {
-      ObjectSpecification spec = storageService.getDownloadSpecification(entity.getId(), 0, -1L);
+      ObjectSpecification spec = storageService.getDownloadSpecification(entity.getId());
       total += spec.getObjectSize();
     }
 
