@@ -17,12 +17,14 @@
  */
 package org.icgc.dcc.storage.server.service.download;
 
+import lombok.Data;
+
 import com.amazonaws.services.s3.model.S3Object;
 
 /**
  * Wrapper for an S3Object to carry additional info about the payload
- * 
  */
+@Data
 public class FetchedS3Object {
 
   private S3Object s3Object;
@@ -30,17 +32,5 @@ public class FetchedS3Object {
 
   public FetchedS3Object(S3Object s3obj) {
     s3Object = s3obj;
-  }
-
-  public S3Object getS3Object() {
-    return s3Object;
-  }
-
-  public boolean isRelocated() {
-    return relocated;
-  }
-
-  public void setRelocated(boolean rel) {
-    relocated = rel;
   }
 }

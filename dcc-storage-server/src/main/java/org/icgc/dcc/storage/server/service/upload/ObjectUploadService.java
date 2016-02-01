@@ -64,16 +64,6 @@ public class ObjectUploadService {
   /**
    * Configuration.
    */
-
-  // @Value("${bucket.name.object}")
-  // private String bucketName;
-  // @Value("${bucket.name.state}")
-  // private String stateBucketName;
-  // @Value("${bucket.size.pool}")
-  // private int bucketPoolSize;
-  // @Value("${bucket.size.key}")
-  // private int bucketKeySize;
-
   @Value("${collaboratory.data.directory}")
   private String dataDir;
   @Value("${collaboratory.upload.expiration}")

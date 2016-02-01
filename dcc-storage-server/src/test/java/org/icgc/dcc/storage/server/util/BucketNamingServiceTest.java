@@ -206,4 +206,15 @@ public class BucketNamingServiceTest {
     String objectId = sut.scrubObjectKey(key);
     assertEquals(objectId, "56f3cb04-38b4-574c-bffb-af1426113194");
   }
+
+  public static void main(String[] arg) {
+    BucketNamingService sut = new BucketNamingService();
+    sut.setObjectBucketName(OBJECT_BASE_BUCKET);
+    sut.setStateBucketName(STATE_BASE_BUCKET);
+    sut.setBucketKeySize(3);
+    sut.setBucketPoolSize(32);
+
+    System.out.println(sut.getObjectBucketName("a82efa12-9aac-558b-9f51-beb21b7a2298"));
+
+  }
 }

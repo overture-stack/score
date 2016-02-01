@@ -45,12 +45,10 @@ public class ServerConfig {
   @Bean
   public ObjectPartCalculator calculator() {
     return new SimplePartCalculator(partSize);
-
   }
 
   @Bean
   public ObjectURLGenerator url() {
     return new AmazonURLGenerator();
   }
-
 }

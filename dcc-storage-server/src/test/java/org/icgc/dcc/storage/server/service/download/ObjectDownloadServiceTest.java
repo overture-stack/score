@@ -24,18 +24,14 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
 import java.net.URL;
-import java.util.List;
 import java.util.regex.Pattern;
 
 import lombok.val;
 
-import org.icgc.dcc.storage.core.model.ObjectSpecification;
-import org.icgc.dcc.storage.core.model.Part;
 import org.icgc.dcc.storage.core.util.ObjectKeys;
 import org.icgc.dcc.storage.server.config.ServerConfig;
 import org.icgc.dcc.storage.server.exception.IdNotFoundException;
 import org.icgc.dcc.storage.server.service.upload.AmazonURLGenerator;
-import org.icgc.dcc.storage.server.service.upload.ObjectURLGenerator;
 import org.icgc.dcc.storage.server.service.upload.SimplePartCalculator;
 import org.icgc.dcc.storage.server.util.BucketNamingService;
 import org.junit.Before;
@@ -99,7 +95,7 @@ public class ObjectDownloadServiceTest extends ObjectDownloadService {
   @Test(expected = IdNotFoundException.class)
   public void it_takes_two_to_fail_with_not_found() {
     // stubbing appears before the actual execution
-    AmazonServiceException firstException = new AmazonServiceException("Didn't find Object Id in bucket");
+    val firstException = new AmazonServiceException("Didn't find Object Id in bucket");
     firstException.setStatusCode(HttpStatus.NOT_FOUND.value());
     when(s3Client.getObject(Mockito.any())).thenThrow(firstException, firstException); // stubs first two calls to
                                                                                        // s3Client.getObject()
@@ -110,7 +106,7 @@ public class ObjectDownloadServiceTest extends ObjectDownloadService {
   @Test
   public void verify_fallback_in_download_presigned_urls() throws Exception {
     // stubbing appears before the actual execution
-    AmazonServiceException firstException = new AmazonServiceException("Didn't find Object Id in bucket");
+    val firstException = new AmazonServiceException("Didn't find Object Id in bucket");
     firstException.setStatusCode(HttpStatus.NOT_FOUND.value());
 
     int bucketPoolSize = 32;
@@ -120,35 +116,34 @@ public class ObjectDownloadServiceTest extends ObjectDownloadService {
     namingService.setBucketKeySize(bucketKeySize);
 
     // Have to stub out half the universe:
-    ObjectURLGenerator urlGen = new AmazonURLGenerator();
+    val urlGen = new AmazonURLGenerator();
     ReflectionTestUtils.setField(urlGen, "s3Client",
         ObjectDownloadServiceStubFactory.createS3ClientForRadosGW(endpointUrl));
     ReflectionTestUtils.setField(service, "urlGenerator", urlGen);
 
     when(s3Client.getObject(Mockito.any())).thenThrow(firstException);
 
-    List<Part> parts = ObjectDownloadServiceStubFactory.createParts(5); // based on 104857600 size / 20971520 part size
-    ObjectSpecification os =
-        ObjectDownloadServiceStubFactory.createObjectSpecification(objectId,
-            ObjectKeys.getObjectKey(dataDir, objectId), 104857600);
+    val parts = ObjectDownloadServiceStubFactory.createParts(5); // based on 104857600 size / 20971520 part size
+    val os = ObjectDownloadServiceStubFactory.createObjectSpecification(objectId,
+        ObjectKeys.getObjectKey(dataDir, objectId), 104857600);
     os.setParts(parts);
 
     os.setRelocated(true); // this is the main test input
 
     // need to stub out one of the methods on the System Under Test itself
-    ObjectDownloadService sut = spy(service);
+    val sut = spy(service);
     doReturn(os).when(sut).getSpecification(objectId);
 
     val objSpec = sut.download(objectId, 0, 104857600, false);
 
-    Part p = objSpec.getParts().get(0);
+    val p = objSpec.getParts().get(0);
 
-    URL url = new URL(p.getUrl());
+    val url = new URL(p.getUrl());
     String path = url.getPath();
     if (path.startsWith("/")) {
       path = path.substring(1, path.length() - 1);
     }
-    String bucket = Splitter.on('/').trimResults().omitEmptyStrings().split(path).iterator().next();
+    val bucket = Splitter.on('/').trimResults().omitEmptyStrings().split(path).iterator().next();
     assertEquals(objectBucketName, bucket);
 
     System.out.println();
@@ -157,7 +152,7 @@ public class ObjectDownloadServiceTest extends ObjectDownloadService {
   @Test
   public void verify_partitioned_buckets_in_download_presigned_urls() throws Exception {
     // stubbing appears before the actual execution
-    AmazonServiceException firstException = new AmazonServiceException("Didn't find Object Id in bucket");
+    val firstException = new AmazonServiceException("Didn't find Object Id in bucket");
     firstException.setStatusCode(HttpStatus.NOT_FOUND.value());
 
     int bucketPoolSize = 32;
@@ -167,39 +162,38 @@ public class ObjectDownloadServiceTest extends ObjectDownloadService {
     namingService.setBucketKeySize(bucketKeySize);
 
     // Have to stub out half the universe:
-    ObjectURLGenerator urlGen = new AmazonURLGenerator();
+    val urlGen = new AmazonURLGenerator();
     ReflectionTestUtils.setField(urlGen, "s3Client",
         ObjectDownloadServiceStubFactory.createS3ClientForRadosGW(endpointUrl));
     ReflectionTestUtils.setField(service, "urlGenerator", urlGen);
 
     when(s3Client.getObject(Mockito.any())).thenThrow(firstException);
 
-    List<Part> parts = ObjectDownloadServiceStubFactory.createParts(5); // based on 104857600 size / 20971520 part size
-    ObjectSpecification os =
-        ObjectDownloadServiceStubFactory.createObjectSpecification(objectId,
-            ObjectKeys.getObjectKey(dataDir, objectId), 104857600);
+    val parts = ObjectDownloadServiceStubFactory.createParts(5); // based on 104857600 size / 20971520 part size
+    val os = ObjectDownloadServiceStubFactory.createObjectSpecification(objectId,
+        ObjectKeys.getObjectKey(dataDir, objectId), 104857600);
     os.setParts(parts);
 
     os.setRelocated(false); // this is the main test input
 
     // need to stub out one of the methods on the System Under Test itself
-    ObjectDownloadService sut = spy(service);
+    val sut = spy(service);
     doReturn(os).when(sut).getSpecification(objectId);
 
     val objSpec = sut.download(objectId, 0, 104857600, false);
 
-    Part p = objSpec.getParts().get(0);
+    val p = objSpec.getParts().get(0);
 
-    URL url = new URL(p.getUrl());
+    val url = new URL(p.getUrl());
     String path = url.getPath();
     if (path.startsWith("/")) {
       path = path.substring(1, path.length() - 1);
     }
-    String bucket = Splitter.on('/').trimResults().omitEmptyStrings().split(path).iterator().next();
+    val bucket = Splitter.on('/').trimResults().omitEmptyStrings().split(path).iterator().next();
     assertTrue((objectBucketName.length() < bucket.length()) && (bucket.startsWith(objectBucketName)));
 
     // assert that bucket name ends in a .number
-    Pattern pattern = Pattern.compile(".+\\.\\d+$");
+    val pattern = Pattern.compile(".+\\.\\d+$");
     assertTrue(pattern.matcher(bucket).matches());
 
     System.out.println();

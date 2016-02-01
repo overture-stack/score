@@ -17,8 +17,9 @@
  */
 package org.icgc.dcc.storage.server.service.download;
 
-import java.util.ArrayList;
 import java.util.List;
+
+import lombok.val;
 
 import org.icgc.dcc.storage.core.model.ObjectKey;
 import org.icgc.dcc.storage.core.model.ObjectSpecification;
@@ -32,26 +33,24 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.S3ClientOptions;
 import com.amazonaws.services.s3.internal.S3Signer;
+import com.google.common.collect.ImmutableList;
 
-/**
- * 
- */
 public class ObjectDownloadServiceStubFactory {
 
   public static List<Part> createParts(int numParts) {
-    List<Part> result = new ArrayList<Part>();
+    ImmutableList.Builder<Part> builder = ImmutableList.builder();
     for (int i = 0; i < numParts; i++) {
-      Part p = new Part();
+      val p = new Part();
       p.setMd5("md5");
       p.setPartNumber(i + 1);
       p.setPartSize(1000);
-      result.add(p);
+      builder.add(p);
     }
-    return result;
+    return builder.build();
   }
 
   public static ObjectSpecification createObjectSpecification(String objectId, ObjectKey objectKey, int objectSize) {
-    ObjectSpecification result = new ObjectSpecification();
+    val result = new ObjectSpecification();
     result.setObjectId(objectId);
     result.setObjectKey(objectKey.getKey());
     result.setObjectSize(objectSize);
@@ -59,17 +58,19 @@ public class ObjectDownloadServiceStubFactory {
   }
 
   public static FetchedS3Object createS3Object() {
-    FetchedS3Object result = new FetchedS3Object(null);
+    val result = new FetchedS3Object(null);
     result.setRelocated(true);
     return result;
   }
 
   public static AmazonS3 createS3ClientForRadosGW(String endpoint) {
-    ClientConfiguration clientConfiguration = new ClientConfiguration();
+    // Configs copied from S3Config
+    // RadosGW doesn't support latest AWS API version: AWSS3V4SignerType
+    val clientConfiguration = new ClientConfiguration();
     SignerFactory.registerSigner("S3Signer", S3Signer.class);
     clientConfiguration.setSignerOverride("S3SignerType");
     clientConfiguration.setProtocol(Protocol.HTTPS);
-    AmazonS3 s3Client = new AmazonS3Client(new BasicAWSCredentials("accesskey", "secret"), clientConfiguration);
+    val s3Client = new AmazonS3Client(new BasicAWSCredentials("accesskey", "secret"), clientConfiguration);
     s3Client.setEndpoint(endpoint);
     s3Client.setS3ClientOptions(new S3ClientOptions().withPathStyleAccess(true));
     return s3Client;

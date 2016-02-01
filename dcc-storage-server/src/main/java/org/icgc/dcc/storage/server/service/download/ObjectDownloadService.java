@@ -70,15 +70,6 @@ public class ObjectDownloadService {
   /**
    * Configuration.
    */
-  // @Value("${bucket.name.object}")
-  // private String dataBucketName;
-  // @Value("${bucket.name.state}")
-  // private String stateBucketName;
-  /*
-   * @Value("${bucket.size.pool}") private int bucketPoolSize;
-   * 
-   * @Value("${bucket.size.key}") private int bucketKeySize;
-   */
   @Value("${collaboratory.data.directory}")
   private String dataDir;
   @Value("${collaboratory.download.expiration}")
@@ -100,34 +91,34 @@ public class ObjectDownloadService {
     try {
       checkArgument(offset > -1L);
 
-      // retrieve our meta file for object id
+      // Retrieve our meta file for object id
       val objectSpec = getSpecification(objectId);
 
-      // short-circuit in default case
+      // Short-circuit in default case
       if (!forExternalUse && (offset == 0L && length < 0L)) {
         return objectSpec;
       }
 
-      // calculate Range values
-      // to retrieve to the end of the file
+      // Calculate range values
+      // To retrieve to the end of the file
       if (!forExternalUse && (length < 0L)) {
         length = objectSpec.getObjectSize() - offset;
       }
 
-      // validate offset and length parameters:
-      // check if the offset + length > length - that would be too big
+      // Validate offset and length parameters:
+      // Check if the offset + length > length - that would be too big
       if ((offset + length) > objectSpec.getObjectSize()) {
-        throw new InternalUnrecoverableError("specified parameters exceed object size (object id: " + objectId
+        throw new InternalUnrecoverableError("Specified parameters exceed object size (object id: " + objectId
             + ", offset: " + offset
             + ", length: " + length + ")");
       }
 
-      // construct ObjectSpecification for actual object in /data logical folder
+      // Construct ObjectSpecification for actual object in /data logical folder
       val objectKey = ObjectKeys.getObjectKey(dataDir, objectId);
 
       List<Part> parts;
       if (forExternalUse) {
-        // return as a single part - no matter how large
+        // Return as a single part - no matter how large
         parts = partCalculator.specify(0L, -1L);
       } else {
         parts = partCalculator.divide(offset, length);
@@ -159,7 +150,7 @@ public class ObjectDownloadService {
       val spec = readSpecification(obj.getS3Object());
       spec.setRelocated(obj.isRelocated());
 
-      // we do this now in case we are returning it immediately in download() call
+      // We do this now in case we are returning it immediately in download() call
       fillPartUrls(objectKey, spec.getParts(), obj.isRelocated(), false);
 
       return spec;
@@ -192,7 +183,7 @@ public class ObjectDownloadService {
 
       if ((e.getStatusCode() == HttpStatus.NOT_FOUND.value()) && (bucketNamingService.isPartitioned())) {
 
-        // try again with master bucket
+        // Try again with master bucket
         log.warn("Object with objectId: {} not found in {}, objectKey: {}: {}. Trying master bucket {}",
             objectId, stateBucketName, objectMetaKey, e, stateBucketName);
         try {
@@ -211,7 +202,7 @@ public class ObjectDownloadService {
         }
 
       } else if (!e.isRetryable()) {
-        // not partitioned bucket - not found is not found
+        // Not a partitioned bucket - not found is not found
         throw new IdNotFoundException(objectId);
       } else {
         throw new RetryableException(e);
@@ -250,5 +241,4 @@ public class ObjectDownloadService {
     val now = LocalDateTime.now();
     return Date.from(now.plusDays(expiration).atZone(ZoneId.systemDefault()).toInstant());
   }
-
 }
