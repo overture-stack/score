@@ -27,7 +27,7 @@ import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 import org.icgc.dcc.storage.core.model.ObjectInfo;
-import org.icgc.dcc.storage.core.util.BucketResolver;
+import org.icgc.dcc.storage.server.util.BucketNamingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
@@ -46,33 +46,34 @@ public class ObjectListingService {
   /**
    * Configuration.
    */
-  @Value("${collaboratory.bucket.name}")
+  @Value("${bucket.name.object}")
   private String bucketName;
   @Value("${collaboratory.data.directory}")
   private String dataDir;
-  @Value("${collaboratory.bucket.poolsize}")
-  private int bucketPoolSize;
-  @Value("${collaboratory.bucket.keysize}")
-  private int bucketKeySize;
+  // @Value("${collaboratory.bucket.poolsize}")
+  // private int bucketPoolSize;
+  // @Value("${collaboratory.bucket.keysize}")
+  // private int bucketKeySize;
 
   /**
    * Dependencies.
    */
   @Autowired
   private AmazonS3 s3;
+  @Autowired
+  private BucketNamingService bucketNamingService;
 
   @Cacheable("listing")
   public List<ObjectInfo> getListing() {
     val listing = Lists.<ObjectInfo> newArrayList();
 
-    for (int i = 0; i < bucketPoolSize; i++) {
-      readBucket(BucketResolver.constructBucketName(bucketName, i), dataDir, (objectSummary) -> {
+    for (int i = 0; i < bucketNamingService.getBucketPoolSize(); i++) {
+      readBucket(bucketNamingService.constructBucketName(bucketName, i), dataDir, (objectSummary) -> {
         ObjectInfo info = createInfo(objectSummary);
         if (info.getId() != null) {
           listing.add(info);
         }
       });
-
     }
 
     return listing;
@@ -88,7 +89,6 @@ public class ObjectListingService {
       for (val objectSummary : listing.getObjectSummaries()) {
         callback.accept(objectSummary);
       }
-
       request.setMarker(listing.getNextMarker());
     } while (listing.isTruncated());
   }

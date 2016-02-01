@@ -31,6 +31,7 @@ import java.io.InputStream;
 import lombok.val;
 
 import org.icgc.dcc.storage.core.model.ObjectSpecification;
+import org.icgc.dcc.storage.server.util.BucketNamingService;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -49,7 +50,8 @@ public class UploadStateStoreTest {
   /**
    * Constants.
    */
-  private static final String BUCKET_NAME = "oicr.icgc";
+  private static final String OBJECT_BUCKET_NAME = "oicr.icgc";
+  private static final String STATE_BUCKET_NAME = "oicr.icgc";
 
   /**
    * Dependencies.
@@ -66,7 +68,13 @@ public class UploadStateStoreTest {
   @Before
   public void setUp() {
     // Configure
-    store.setStateBucketName(BUCKET_NAME);
+    BucketNamingService namingService = new BucketNamingService();
+    namingService.setObjectBucketName(OBJECT_BUCKET_NAME);
+    namingService.setStateBucketName(STATE_BUCKET_NAME);
+    namingService.setBucketPoolSize(0);
+    store.setBucketNamingService(namingService);
+
+    // store.setStateBucketName(BUCKET_NAME);
     store.setUploadDir("upload");
   }
 
@@ -84,7 +92,7 @@ public class UploadStateStoreTest {
     store.create(spec);
 
     verify(s3Client).putObject(
-        eq(BUCKET_NAME),
+        eq(OBJECT_BUCKET_NAME),
         eq("upload/" + objectId + "_" + uploadId + "/.meta"),
         any(InputStream.class),
         any(ObjectMetadata.class));

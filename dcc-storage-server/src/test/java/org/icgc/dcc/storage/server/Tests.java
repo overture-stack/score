@@ -24,13 +24,15 @@ import lombok.val;
 import org.icgc.dcc.storage.server.config.S3Config;
 import org.icgc.dcc.storage.server.service.upload.ObjectUploadService;
 import org.icgc.dcc.storage.server.service.upload.UploadStateStore;
+import org.icgc.dcc.storage.server.util.BucketNamingService;
 
 @NoArgsConstructor(access = PRIVATE)
 public class Tests {
 
   public static final String DATA_DIR = "data";
   public static final String UPLOAD_DIR = "upload";
-  public static final String BUCKET_NAME = "oicr.icgc";
+  public static final String OBJECT_BUCKET_NAME = "oicr.icgc";
+  public static final String STATE_BUCKET_NAME = "oicr.icgc.state";
 
   public static ObjectUploadService createUploadService() {
     val endpoint = "https://www.cancercollaboratory.org:9080";
@@ -38,13 +40,16 @@ public class Tests {
     s3Config.setEndpoint(endpoint);
     val s3Client = s3Config.s3();
 
+    val namingService = new BucketNamingService();
+    namingService.setObjectBucketName(OBJECT_BUCKET_NAME);
+    namingService.setStateBucketName(STATE_BUCKET_NAME);
     val stateStore = new UploadStateStore();
-    stateStore.setStateBucketName(BUCKET_NAME);
+    stateStore.setBucketNamingService(namingService);
     stateStore.setUploadDir(UPLOAD_DIR);
     stateStore.setS3Client(s3Client);
 
     val uploadService = new ObjectUploadService();
-    uploadService.setBucketName(BUCKET_NAME);
+    stateStore.setBucketNamingService(namingService);
     uploadService.setDataDir(DATA_DIR);
     uploadService.setS3Conf(s3Config);
     uploadService.setS3Client(s3Client);

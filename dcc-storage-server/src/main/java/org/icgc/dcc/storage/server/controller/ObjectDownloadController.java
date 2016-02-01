@@ -35,6 +35,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.google.common.net.HttpHeaders;
+
 /**
  * A controller to expose RESTful API for download
  */
@@ -50,14 +52,14 @@ public class ObjectDownloadController {
 
   @RequestMapping(method = RequestMethod.GET, value = "/{object-id}")
   public @ResponseBody ObjectSpecification downloadPartialObject(
-      @RequestHeader(value = "Authorization", required = true) final String accessToken,
+      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "object-id") String objectId,
       @RequestParam(value = "offset", required = true) long offset,
       @RequestParam(value = "length", required = true) long length,
       @RequestParam(value = "external", defaultValue = "false") boolean external,
       HttpServletRequest request) {
 
-    String ipAddress = request.getHeader("X-FORWARDED-FOR");
+    String ipAddress = request.getHeader(HttpHeaders.X_FORWARDED_FOR);
     if (ipAddress == null) {
       ipAddress = request.getRemoteAddr();
     }

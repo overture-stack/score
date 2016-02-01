@@ -37,14 +37,14 @@ import org.icgc.dcc.storage.test.fs.FileSystem;
 import org.icgc.dcc.storage.test.mongo.Mongo;
 import org.icgc.dcc.storage.test.s3.S3;
 import org.icgc.dcc.storage.test.util.Port;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Rule;
-import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
+/**
+ * 
+ */
 @Slf4j
-public class PartitionedBucketIntegrationTest {
+public abstract class AbstractStorageIntegrationTest {
 
   /**
    * Configuration.
@@ -53,12 +53,6 @@ public class PartitionedBucketIntegrationTest {
   protected final int metadataPort = 8444;
   protected final int storagePort = 5431;
   final String gnosId = "70b07570-0571-11e5-a6c0-1697f925ec7b";
-
-  final String objectBucketBase = "oicr.icgc.dev";
-  final String stateBucketBase = "oicr.icgc.dev.state";
-  final int numBucketPartitions = 5;
-  final int bucketKeyLength = 2;
-
   /**
    * State.
    */
@@ -73,11 +67,15 @@ public class PartitionedBucketIntegrationTest {
   @Rule
   public TemporaryFolder s3Root = new TemporaryFolder();
 
-  public PartitionedBucketIntegrationTest() {
+  public AbstractStorageIntegrationTest() {
     super();
   }
 
-  @Before
+  abstract Process storageServer();
+
+  abstract Process storageClient(String accessToken, String... args);
+
+  // @Before
   public void setUp() throws Exception {
     log.info("starting up");
     banner("Starting file system...");
@@ -92,7 +90,7 @@ public class PartitionedBucketIntegrationTest {
     // they ever need to run in parallel in the same environment.
     String s3ninjaPath = s3Root.getRoot().getAbsolutePath();
     banner("setting up S3 buckets in: " + s3ninjaPath + "...");
-    setupBuckets(s3Root.getRoot(), numBucketPartitions);
+    setupBuckets(s3Root.getRoot());
 
     banner("Starting S3 under " + s3ninjaPath + " ...");
     s3.start(s3Root.getRoot());
@@ -101,10 +99,10 @@ public class PartitionedBucketIntegrationTest {
     authServer = authServer();
 
     banner("Starting dcc-metadata-server...");
-    metaServer = metadataServer();
+    metadataServer();
 
     banner("Starting dcc-storage-server...");
-    storageServer = storageServer();
+    storageServer();
 
     banner("Waiting for service ports...");
     waitForPort(authPort);
@@ -112,58 +110,16 @@ public class PartitionedBucketIntegrationTest {
     waitForPort(storagePort);
   }
 
-  @After
+  // @After
   public void tearDown() {
     log.info("Shutting down");
-
-    log.info("Stopping Auth server");
+    s3.stop();
+    mongo.stop();
     if (authServer != null) authServer.destroy();
 
-    log.info("Stopping Meta server");
     if (metaServer != null) metaServer.destroy();
 
-    log.info("Stopping Storage server");
     if (storageServer != null) storageServer.destroy();
-
-    log.info("Stopping Mongo");
-    mongo.stop();
-
-    log.info("Stopping S3Ninja");
-    s3.stop();
-  }
-
-  Process storageServer() {
-    int debugPort = Integer.parseInt(firstNonNull(System.getProperty("storage.server.debugPort"), "-1"));
-
-    return bootRun(
-        resolveJarFile("dcc-storage-server"),
-        debugPort,
-        "-Dspring.profiles.active=dev,secure,default", // Secure
-        "-Dlogging.file=" + fs.getLogsDir() + "/dcc-storage-server.log",
-        "-Dserver.port=" + storagePort,
-        "-Dbucket.name.object=" + objectBucketBase,
-        "-Dbucket.size.pool=" + numBucketPartitions,
-        "-Dbucket.size.key=" + bucketKeyLength,
-        "-Dbucket.name.state=" + stateBucketBase,
-        "-Dauth.server.url=https://localhost:" + authPort + "/oauth/check_token",
-        "-Dauth.server.clientId=storage",
-        "-Dauth.server.clientsecret=pass",
-        "-Dmetadata.url=https://localhost:" + metadataPort,
-        "-Dendpoints.jmx.domain=storage");
-  }
-
-  Process storageClient(String accessToken, String... args) {
-    int debugPort = Integer.parseInt(firstNonNull(System.getProperty("storage.client.debugPort"), "-1"));
-
-    return bootRun(
-        resolveJarFile("dcc-storage-client"),
-        debugPort,
-        args,
-        "-Dlogging.file=" + fs.getLogsDir() + "/dcc-storage-client.log",
-        "-Dmetadata.url=https://localhost:" + metadataPort,
-        "-Dmetadata.ssl.enabled=false",
-        "-Dstorage.url=http://localhost:" + storagePort,
-        "-DaccessToken=" + accessToken);
   }
 
   public void setupBuckets(File s3Root) {
@@ -171,6 +127,9 @@ public class PartitionedBucketIntegrationTest {
   }
 
   public void setupBuckets(File s3Root, int count) {
+
+    String objectBucketBase = "oicr.icgc.dev";
+    String stateBucketBase = "oicr.icgc.dev.state";
 
     String objectBucket = "";
     String stateBucket = "";
@@ -198,7 +157,6 @@ public class PartitionedBucketIntegrationTest {
     }
   }
 
-  @Test
   public void test() throws InterruptedException {
 
     //
@@ -230,7 +188,7 @@ public class PartitionedBucketIntegrationTest {
       val upload = storageClient(accessToken,
           "upload",
           "--manifest", fs.getRootDir() + "/manifest.txt");
-      upload.waitFor(10, MINUTES);
+      upload.waitFor(1, MINUTES);
       assertThat(upload.exitValue()).isEqualTo(status); // First time 0, second time 1 since no --force
     }
 

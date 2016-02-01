@@ -37,6 +37,7 @@ import org.icgc.dcc.storage.server.exception.IdNotFoundException;
 import org.icgc.dcc.storage.server.service.upload.AmazonURLGenerator;
 import org.icgc.dcc.storage.server.service.upload.ObjectURLGenerator;
 import org.icgc.dcc.storage.server.service.upload.SimplePartCalculator;
+import org.icgc.dcc.storage.server.util.BucketNamingService;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -57,7 +58,7 @@ import com.google.common.base.Splitter;
 public class ObjectDownloadServiceTest extends ObjectDownloadService {
 
   private String endpointUrl = "https://storage.icgctest.org";
-  private String dataBucketName = "oicr.icgc";
+  private String objectBucketName = "oicr.icgc";
   private String stateBucketName = "oicr.icgc.state";
   private String dataDir = "data";
   private String objectId = "a82efa12-9aac-558b-9f51-beb21b7a2298"; // length 1 : 10; length2 : 168; length 3 : 2690
@@ -74,13 +75,21 @@ public class ObjectDownloadServiceTest extends ObjectDownloadService {
   @InjectMocks
   ObjectDownloadService service;
 
+  BucketNamingService namingService = new BucketNamingService();
+
   @Before
   public void setUp() {
-    ReflectionTestUtils.setField(service, "dataBucketName", dataBucketName);
-    ReflectionTestUtils.setField(service, "stateBucketName", stateBucketName);
+    namingService.setObjectBucketName(objectBucketName);
+    namingService.setStateBucketName(stateBucketName);
+    namingService.setBucketPoolSize(16);
+    namingService.setBucketKeySize(3);
+    service.setBucketNamingService(namingService);
+
+    // ReflectionTestUtils.setField(service, "dataBucketName", dataBucketName);
+    // ReflectionTestUtils.setField(service, "stateBucketName", stateBucketName);
     ReflectionTestUtils.setField(service, "dataDir", dataDir);
-    ReflectionTestUtils.setField(service, "bucketPoolSize", 5);
-    ReflectionTestUtils.setField(service, "bucketKeySize", 2);
+    // ReflectionTestUtils.setField(service, "bucketPoolSize", 5);
+    // ReflectionTestUtils.setField(service, "bucketKeySize", 2);
     ReflectionTestUtils.setField(service, "expiration", 7);
 
     ReflectionTestUtils.setField(service, "urlGenerator", new AmazonURLGenerator());
@@ -107,8 +116,8 @@ public class ObjectDownloadServiceTest extends ObjectDownloadService {
     int bucketPoolSize = 32;
     int bucketKeySize = 2;
 
-    ReflectionTestUtils.setField(service, "bucketPoolSize", bucketPoolSize);
-    ReflectionTestUtils.setField(service, "bucketKeySize", bucketKeySize);
+    namingService.setBucketPoolSize(bucketPoolSize);
+    namingService.setBucketKeySize(bucketKeySize);
 
     // Have to stub out half the universe:
     ObjectURLGenerator urlGen = new AmazonURLGenerator();
@@ -140,7 +149,7 @@ public class ObjectDownloadServiceTest extends ObjectDownloadService {
       path = path.substring(1, path.length() - 1);
     }
     String bucket = Splitter.on('/').trimResults().omitEmptyStrings().split(path).iterator().next();
-    assertEquals(dataBucketName, bucket);
+    assertEquals(objectBucketName, bucket);
 
     System.out.println();
   }
@@ -154,8 +163,8 @@ public class ObjectDownloadServiceTest extends ObjectDownloadService {
     int bucketPoolSize = 32;
     int bucketKeySize = 2;
 
-    ReflectionTestUtils.setField(service, "bucketPoolSize", bucketPoolSize);
-    ReflectionTestUtils.setField(service, "bucketKeySize", bucketKeySize);
+    namingService.setBucketPoolSize(bucketPoolSize);
+    namingService.setBucketKeySize(bucketKeySize);
 
     // Have to stub out half the universe:
     ObjectURLGenerator urlGen = new AmazonURLGenerator();
@@ -187,7 +196,7 @@ public class ObjectDownloadServiceTest extends ObjectDownloadService {
       path = path.substring(1, path.length() - 1);
     }
     String bucket = Splitter.on('/').trimResults().omitEmptyStrings().split(path).iterator().next();
-    assertTrue((dataBucketName.length() < bucket.length()) && (bucket.startsWith(dataBucketName)));
+    assertTrue((objectBucketName.length() < bucket.length()) && (bucket.startsWith(objectBucketName)));
 
     // assert that bucket name ends in a .number
     Pattern pattern = Pattern.compile(".+\\.\\d+$");

@@ -20,6 +20,7 @@ package org.icgc.dcc.storage.server.service.download;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.icgc.dcc.storage.core.model.ObjectKey;
 import org.icgc.dcc.storage.core.model.ObjectSpecification;
 import org.icgc.dcc.storage.core.model.Part;
 
@@ -49,10 +50,10 @@ public class ObjectDownloadServiceStubFactory {
     return result;
   }
 
-  public static ObjectSpecification createObjectSpecification(String objectId, String objectKey, int objectSize) {
+  public static ObjectSpecification createObjectSpecification(String objectId, ObjectKey objectKey, int objectSize) {
     ObjectSpecification result = new ObjectSpecification();
     result.setObjectId(objectId);
-    result.setObjectKey(objectKey);
+    result.setObjectKey(objectKey.getKey());
     result.setObjectSize(objectSize);
     return result;
   }

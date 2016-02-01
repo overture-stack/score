@@ -18,9 +18,10 @@
 package org.icgc.dcc.storage.core.util;
 
 import static lombok.AccessLevel.PRIVATE;
-
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
+
+import org.icgc.dcc.storage.core.model.ObjectKey;
 
 /**
  * Object key related utilities.
@@ -31,8 +32,8 @@ public final class ObjectKeys {
   /**
    * Returns S3 key for actual object blob
    */
-  public static String getObjectKey(@NonNull String dataDir, @NonNull String objectId) {
-    return dataDir + "/" + objectId;
+  public static ObjectKey getObjectKey(@NonNull String dataDir, @NonNull String objectId) {
+    return new ObjectKey(dataDir, objectId);
   }
 
   public static String getObjectId(@NonNull String dataDir, @NonNull String objectKey) {

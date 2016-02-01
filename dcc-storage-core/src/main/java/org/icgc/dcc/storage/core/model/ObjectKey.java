@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 The Ontario Institute for Cancer Research. All rights reserved.                             
+ * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.                             
  *                                                                                                               
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
  * You should have received a copy of the GNU General Public License along with                                  
@@ -15,39 +15,39 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.server.service.upload;
+package org.icgc.dcc.storage.core.model;
 
-import java.util.Date;
+import lombok.Data;
+import lombok.NonNull;
+import lombok.val;
 
-import lombok.extern.slf4j.Slf4j;
+import com.google.common.base.Preconditions;
 
-import org.icgc.dcc.storage.core.model.ObjectKey;
-import org.icgc.dcc.storage.core.model.Part;
-import org.springframework.beans.factory.annotation.Value;
+@Data
+public class ObjectKey {
 
-/**
- * To generate url for benchmarking
- */
-@Slf4j
-public class BenchmarkURLGenerator implements ObjectURLGenerator {
+  private String dir;
+  private String objectId;
 
-  @Value("${benchmark.endpoint}")
-  private String endpoint;
-
-  @Override
-  public String getUploadPartUrl(String bucketName, ObjectKey objectKey, String uploadId, Part part, Date expiration) {
-    log.info("Benchmark mode is on");
-    return endpoint + "/upload/" + objectKey + "?partNumber=" + String.valueOf(part.getPartNumber()) + "&uploadId="
-        + uploadId;
+  public ObjectKey(@NonNull String subDir, @NonNull String objectId) {
+    this.dir = subDir;
+    this.objectId = objectId;
   }
 
-  @Override
-  public String getDownloadPartUrl(String bucketName, ObjectKey objectKey, Part part, Date expiration) {
-    return null;
+  public ObjectKey(@NonNull String objectKey) {
+    Preconditions.checkArgument(objectKey.contains("/"));
+    Preconditions.checkArgument(objectKey.split("/").length == 2);
+
+    val pieces = objectKey.split("/");
+    dir = pieces[0];
+    objectId = pieces[1];
   }
 
-  @Override
-  public String getDownloadUrl(String bucketName, ObjectKey objectKey, Date expiration) {
-    return null;
+  public String getKey() {
+    return dir + "/" + objectId;
+  }
+
+  public String getMetaKey() {
+    return dir + "/" + objectId + ".meta";
   }
 }

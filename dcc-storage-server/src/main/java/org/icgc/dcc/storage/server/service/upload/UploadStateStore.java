@@ -40,11 +40,11 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.icgc.dcc.storage.core.model.CompletedPart;
 import org.icgc.dcc.storage.core.model.ObjectSpecification;
 import org.icgc.dcc.storage.core.model.Part;
-import org.icgc.dcc.storage.core.util.BucketResolver;
 import org.icgc.dcc.storage.server.exception.IdNotFoundException;
 import org.icgc.dcc.storage.server.exception.InternalUnrecoverableError;
 import org.icgc.dcc.storage.server.exception.NotRetryableException;
 import org.icgc.dcc.storage.server.exception.RetryableException;
+import org.icgc.dcc.storage.server.util.BucketNamingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -82,16 +82,16 @@ public class UploadStateStore {
    */
   // @Value("${collaboratory.state.bucket.name}")
   // private String bucketName;
-  @Value("${collaboratory.bucket.name}")
-  private String dataBucketName;
-  @Value("${collaboratory.state.bucket.name}")
-  private String stateBucketName;
+  // @Value("${bucket.name.object}")
+  // private String dataBucketName;
+  // @Value("${bucket.name.state}")
+  // private String stateBucketName;
+  // @Value("${bucket.size.pool}")
+  // private int bucketPoolSize;
+  // @Value("${bucket.size.key}")
+  // private int bucketKeySize;
   @Value("${collaboratory.data.directory}")
   private String dataDir;
-  @Value("${collaboratory.bucket.poolsize}")
-  private int bucketPoolSize;
-  @Value("${collaboratory.bucket.keysize}")
-  private int bucketKeySize;
   @Value("${collaboratory.upload.directory}")
   private String uploadDir;
 
@@ -100,6 +100,8 @@ public class UploadStateStore {
    */
   @Autowired
   private AmazonS3 s3Client;
+  @Autowired
+  private BucketNamingService bucketNamingService;
 
   /**
    * Store the upload specification. Writes out entire .meta file in the /upload folder
@@ -114,8 +116,7 @@ public class UploadStateStore {
       meta.setContentLength(content.length);
 
       s3Client.putObject(
-          BucketResolver.getBucketName(spec.getObjectId(), stateBucketName, bucketPoolSize, bucketKeySize),
-          uploadStateKey, data, meta);
+          bucketNamingService.getStateBucketName(spec.getObjectId()), uploadStateKey, data, meta);
     } catch (AmazonServiceException e) {
       log.error("Failed to create meta file for spec: {}: {}", spec, e);
       throw new RetryableException(e);
@@ -130,9 +131,7 @@ public class UploadStateStore {
     val uploadStateKey = getUploadStateKey(objectId, uploadId, META);
 
     try {
-      val request =
-          new GetObjectRequest(BucketResolver.getBucketName(objectId, stateBucketName, bucketPoolSize, bucketKeySize),
-              uploadStateKey);
+      val request = new GetObjectRequest(bucketNamingService.getStateBucketName(objectId), uploadStateKey);
       val obj = s3Client.getObject(request);
 
       try (val inputStream = obj.getObjectContent()) {
@@ -155,8 +154,7 @@ public class UploadStateStore {
     try {
       // Delete the meta file
       val spec = read(objectId, uploadId);
-      s3Client.deleteObject(BucketResolver.getBucketName(objectId, stateBucketName, bucketPoolSize, bucketKeySize),
-          uploadStateKey);
+      s3Client.deleteObject(bucketNamingService.getStateBucketName(objectId), uploadStateKey);
 
       // Delete the part files
       for (val part : spec.getParts()) {
@@ -180,8 +178,7 @@ public class UploadStateStore {
     eachObjectSummary(
         objectId,
         uploadStateKey,
-        objectSummary -> s3Client.deleteObject(
-            BucketResolver.getBucketName(objectId, stateBucketName, bucketPoolSize, bucketKeySize),
+        objectSummary -> s3Client.deleteObject(bucketNamingService.getObjectBucketName(objectId),
             objectSummary.getKey()));
   }
 
@@ -192,7 +189,7 @@ public class UploadStateStore {
     }
 
     try {
-      String bucketName = BucketResolver.getBucketName(objectId, stateBucketName, bucketPoolSize, bucketKeySize);
+      String bucketName = bucketNamingService.getStateBucketName(objectId);
       sortPartsByNumber(parts);
       val partIterator = parts.iterator();
 
@@ -232,7 +229,7 @@ public class UploadStateStore {
     val partIterator = spec.getParts().iterator();
 
     val request = new ListObjectsRequest()
-        .withBucketName(BucketResolver.getBucketName(objectId, stateBucketName, bucketPoolSize, bucketKeySize))
+        .withBucketName(bucketNamingService.getStateBucketName(objectId))
         .withMaxKeys(MAX_KEYS)
         .withPrefix(getUploadStateKey(objectId, uploadId, PART));
 
@@ -272,8 +269,7 @@ public class UploadStateStore {
       val data = new ByteArrayInputStream(new byte[0]);
       val uploadStateKey = getUploadStateKey(objectId, uploadId, partName);
 
-      s3Client.putObject(BucketResolver.getBucketName(objectId, stateBucketName, bucketPoolSize, bucketKeySize),
-          uploadStateKey, data, meta);
+      s3Client.putObject(bucketNamingService.getStateBucketName(objectId), uploadStateKey, data, meta);
     } catch (AmazonServiceException e) {
       // TODO: Log args
       log.error("Storage failed", e);
@@ -306,7 +302,7 @@ public class UploadStateStore {
   public String getUploadId(String objectId) {
     val uploadStateKey = getUploadStateKey(objectId, "" /* uploadId */);
 
-    val bucketName = BucketResolver.getBucketName(objectId, stateBucketName, bucketPoolSize, bucketKeySize);
+    val bucketName = bucketNamingService.getStateBucketName(objectId);
     val request = new ListObjectsRequest()
         .withBucketName(bucketName)
         .withMaxKeys(MAX_KEYS)
@@ -352,7 +348,7 @@ public class UploadStateStore {
 
   private void eachObjectSummary(String objectId, String prefix, Consumer<S3ObjectSummary> callback) {
     val request = new ListObjectsRequest()
-        .withBucketName(BucketResolver.getBucketName(objectId, stateBucketName, bucketPoolSize, bucketKeySize))
+        .withBucketName(bucketNamingService.getStateBucketName(objectId))
         .withMaxKeys(MAX_KEYS)
         .withPrefix(prefix);
 
@@ -377,8 +373,7 @@ public class UploadStateStore {
 
     try {
       // This is actually how you are supposed to test
-      s3Client.getObjectMetadata(
-          BucketResolver.getBucketName(objectId, stateBucketName, bucketPoolSize, bucketKeySize), uploadStateKey);
+      s3Client.getObjectMetadata(bucketNamingService.getStateBucketName(objectId), uploadStateKey);
     } catch (AmazonS3Exception e) {
       if (e.getStatusCode() == HttpStatus.NOT_FOUND.value()) {
         return false;

@@ -34,9 +34,9 @@ public class ObjectUploadServiceHealth implements HealthIndicator {
   @Autowired
   AmazonS3 s3;
 
-  @Value("${collaboratory.bucket.name}")
+  @Value("${bucket.name.object}")
   String bucketName;
-  @Value("${collaboratory.bucket.poolsize}")
+  @Value("${bucket.size.pool}")
   private int bucketPoolSize;
 
   @Override

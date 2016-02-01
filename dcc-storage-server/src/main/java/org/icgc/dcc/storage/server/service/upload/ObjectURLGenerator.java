@@ -19,6 +19,7 @@ package org.icgc.dcc.storage.server.service.upload;
 
 import java.util.Date;
 
+import org.icgc.dcc.storage.core.model.ObjectKey;
 import org.icgc.dcc.storage.core.model.Part;
 
 /**
@@ -26,9 +27,9 @@ import org.icgc.dcc.storage.core.model.Part;
  */
 public interface ObjectURLGenerator {
 
-  public String getUploadPartUrl(String bucketName, String objectKey, String uploadId, Part part, Date expiration);
+  public String getUploadPartUrl(String bucketName, ObjectKey objectKey, String uploadId, Part part, Date expiration);
 
-  public String getDownloadPartUrl(String bucketName, String objectKey, Part part, Date expiration);
+  public String getDownloadPartUrl(String bucketName, ObjectKey objectKey, Part part, Date expiration);
 
-  public String getDownloadUrl(String bucketName, String objectKey, Date expiration);
+  public String getDownloadUrl(String bucketName, ObjectKey objectKey, Date expiration);
 }

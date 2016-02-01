@@ -40,6 +40,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.google.common.net.HttpHeaders;
+
 /**
  * A controller to expose RESTful API for upload
  */
@@ -55,13 +57,13 @@ public class ObjectUploadController {
 
   @RequestMapping(method = RequestMethod.POST, value = "/{object-id}/uploads")
   public @ResponseBody ObjectSpecification initializeMultipartUpload(
-      @RequestHeader(value = "Authorization", required = true) final String accessToken,
+      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "object-id") String objectId,
       @RequestParam(value = "overwrite", required = false, defaultValue = "false") boolean overwrite,
       @RequestParam(value = "fileSize", required = true) long fileSize,
       HttpServletRequest request) {
 
-    String ipAddress = request.getHeader("X-FORWARDED-FOR");
+    String ipAddress = request.getHeader(HttpHeaders.X_FORWARDED_FOR);
     if (ipAddress == null) {
       ipAddress = request.getRemoteAddr();
     }
@@ -76,13 +78,13 @@ public class ObjectUploadController {
   @RequestMapping(method = RequestMethod.DELETE, value = "/{object-id}/parts")
   @ResponseStatus(value = HttpStatus.OK)
   public void deletePart(
-      @RequestHeader(value = "Authorization", required = true) final String accessToken,
+      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "object-id") String objectId,
       @RequestParam(value = "partNumber", required = true) int partNumber,
       @RequestParam(value = "uploadId", required = true) String uploadId,
       HttpServletRequest request) {
 
-    String ipAddress = request.getHeader("X-FORWARDED-FOR");
+    String ipAddress = request.getHeader(HttpHeaders.X_FORWARDED_FOR);
     if (ipAddress == null) {
       ipAddress = request.getRemoteAddr();
     }
@@ -96,7 +98,7 @@ public class ObjectUploadController {
   @RequestMapping(method = RequestMethod.POST, value = "/{object-id}/parts")
   @ResponseStatus(value = HttpStatus.OK)
   public void finalizePartUpload(
-      @RequestHeader(value = "Authorization", required = true) final String accessToken,
+      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "object-id") String objectId,
       @RequestParam(value = "partNumber", required = true) int partNumber,
       @RequestParam(value = "uploadId", required = true) String uploadId,
@@ -108,7 +110,7 @@ public class ObjectUploadController {
   @RequestMapping(method = RequestMethod.POST, value = "/{object-id}")
   @ResponseStatus(value = HttpStatus.OK)
   public void finalizeUpload(
-      @RequestHeader(value = "Authorization", required = true) final String accessToken,
+      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "object-id") String objectId,
       @RequestParam(value = "uploadId", required = true) String uploadId
       ) {
@@ -118,7 +120,7 @@ public class ObjectUploadController {
   @RequestMapping(method = RequestMethod.POST, value = "/{object-id}/recovery")
   @ResponseStatus(value = HttpStatus.OK)
   public void tryRecover(
-      @RequestHeader(value = "Authorization", required = true) final String accessToken,
+      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "object-id") String objectId,
       @RequestParam(value = "fileSize", required = true) long fileSize
       ) {
@@ -127,7 +129,7 @@ public class ObjectUploadController {
 
   @RequestMapping(method = RequestMethod.GET, value = "/{object-id}/status")
   public @ResponseBody UploadProgress getUploadProgress(
-      @RequestHeader(value = "Authorization", required = true) final String accessToken,
+      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "object-id") String objectId,
       @RequestParam(value = "fileSize", required = true) long fileSize
       ) {
@@ -136,14 +138,14 @@ public class ObjectUploadController {
   }
 
   @RequestMapping(method = RequestMethod.GET, value = "/{object-id}")
-  public @ResponseBody Boolean isObjectExist(@RequestHeader("Authorization") final String accessToken,
+  public @ResponseBody Boolean isObjectExist(@RequestHeader(HttpHeaders.AUTHORIZATION) final String accessToken,
       @PathVariable("object-id") String objectId) {
     return uploadService.exists(objectId);
   }
 
   @RequestMapping(method = RequestMethod.DELETE, value = "/{object-id}")
   @ResponseStatus(value = HttpStatus.OK)
-  public void cancelUpload(@RequestHeader("Authorization") final String accessToken,
+  public void cancelUpload(@RequestHeader(HttpHeaders.AUTHORIZATION) final String accessToken,
       @PathVariable("object-id") String objectId) {
     uploadService.cancelUpload(objectId, uploadService.getUploadId(objectId));
   }
