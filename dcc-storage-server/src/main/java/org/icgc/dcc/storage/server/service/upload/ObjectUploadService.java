@@ -94,6 +94,8 @@ public class ObjectUploadService {
 
     val objectKey = ObjectKeys.getObjectKey(dataDir, objectId);
     log.debug("Initiating upload for object key: {}, overwrite: {}", objectKey, overwrite);
+
+    // If we don't want to overwrite
     if (!overwrite) {
       if (exists(objectId)) {
         val message = String.format("Attempted to overwrite object id %s", objectId);
@@ -102,12 +104,12 @@ public class ObjectUploadService {
       }
     }
 
-    // Check if object exists already
+    // But if we want to force the upload, check if the object exists already
     try {
       val uploadId = getUploadId(objectId);
       stateStore.delete(objectId, uploadId);
     } catch (IdNotFoundException e) {
-      log.info("No upload ID found. Initiate upload...");
+      log.info("Upload id not found. Initiating new upload...");
     }
 
     val actualBucketName = bucketNamingService.getObjectBucketName(objectId);
@@ -116,6 +118,10 @@ public class ObjectUploadService {
     try {
       s3Conf.encrypt(request);
 
+      // Initiates a multipart upload and returns an InitiateMultipartUploadResult which contains an upload ID.
+      // This upload ID associates all the parts in the specific upload and is used in each of your subsequent
+      // uploadPart(UploadPartRequest) requests. You also include this upload ID in the final request to either
+      // complete, or abort the multipart upload request.
       val result = s3Client.initiateMultipartUpload(request);
       val parts = partCalculator.divide(fileSize);
 
@@ -127,6 +133,8 @@ public class ObjectUploadService {
       }
 
       val spec = new ObjectSpecification(objectKey.getKey(), objectId, result.getUploadId(), parts, fileSize, false);
+
+      // write out .meta file
       stateStore.create(spec);
       return spec;
     } catch (AmazonServiceException e) {
@@ -245,9 +253,11 @@ public class ObjectUploadService {
         val meta = new ObjectMetadata();
         meta.setContentLength(content.length);
         val objectMetaKey = ObjectKeys.getObjectMetaKey(dataDir, objectId);
-        log.trace("About to s3.putObject into " + actualStateBucketName + ": " + objectMetaKey.toString());
+        log.debug("about to s3.putObject into " + actualStateBucketName + ": " + objectMetaKey.toString());
         s3Client.putObject(actualStateBucketName, objectMetaKey, data, meta);
+        // delete working files in upload directory
         stateStore.delete(objectId, uploadId);
+        log.trace("end of finalizeUpload()");
       } catch (AmazonServiceException e) {
         log.error("Service problem with objectId: {}, uploadId: {}", objectId, uploadId, e);
         throw new RetryableException(e);

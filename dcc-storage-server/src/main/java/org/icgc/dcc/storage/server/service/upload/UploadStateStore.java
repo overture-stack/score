@@ -80,16 +80,6 @@ public class UploadStateStore {
   /**
    * Configuration.
    */
-  // @Value("${collaboratory.state.bucket.name}")
-  // private String bucketName;
-  // @Value("${bucket.name.object}")
-  // private String dataBucketName;
-  // @Value("${bucket.name.state}")
-  // private String stateBucketName;
-  // @Value("${bucket.size.pool}")
-  // private int bucketPoolSize;
-  // @Value("${bucket.size.key}")
-  // private int bucketKeySize;
   @Value("${collaboratory.data.directory}")
   private String dataDir;
   @Value("${collaboratory.upload.directory}")
@@ -154,6 +144,8 @@ public class UploadStateStore {
     try {
       // Delete the meta file
       val spec = read(objectId, uploadId);
+      log.debug("About to delete (bucket) {} / (uploadStateKey) {}", bucketNamingService.getStateBucketName(objectId),
+          uploadStateKey);
       s3Client.deleteObject(bucketNamingService.getStateBucketName(objectId), uploadStateKey);
 
       // Delete the part files
@@ -175,10 +167,11 @@ public class UploadStateStore {
     val partName = formatUploadPartName(partNumber, "");
     val uploadStateKey = getUploadStateKey(objectId, uploadId, partName);
 
+    log.debug("About to deleteObject in bucket {} ", bucketNamingService.getStateBucketName(objectId));
     eachObjectSummary(
         objectId,
         uploadStateKey,
-        objectSummary -> s3Client.deleteObject(bucketNamingService.getObjectBucketName(objectId),
+        objectSummary -> s3Client.deleteObject(bucketNamingService.getStateBucketName(objectId),
             objectSummary.getKey()));
   }
 
@@ -300,23 +293,27 @@ public class UploadStateStore {
   }
 
   public String getUploadId(String objectId) {
-    val uploadStateKey = getUploadStateKey(objectId, "" /* uploadId */);
+    // this is actually just a prefix
+    val uploadStateKeyPrefix = getUploadStateKey(objectId, "" /* blank uploadId */);
 
     val bucketName = bucketNamingService.getStateBucketName(objectId);
     val request = new ListObjectsRequest()
         .withBucketName(bucketName)
         .withMaxKeys(MAX_KEYS)
         .withDelimiter(getDirectorySeparator())
-        .withPrefix(uploadStateKey);
+        .withPrefix(uploadStateKeyPrefix);
 
     try {
       ObjectListing objectListing;
       do {
+        // retrieve all folders from state bucket that have the object id as prefix
+        // (separate upload instances)
         objectListing = s3Client.listObjects(request);
         for (val prefix : objectListing.getCommonPrefixes()) {
           log.debug("Found object upload key: {}", prefix);
+          // look for match on upload id
           val uploadId = getUploadIdFromMeta(objectId, prefix);
-
+          // see if .meta file for this upload id is present
           if (isMetaAvailable(objectId, uploadId)) {
             return uploadId;
           }
@@ -326,7 +323,8 @@ public class UploadStateStore {
       } while (objectListing.isTruncated());
     } catch (AmazonServiceException e) {
       log.error("Amazon returned error during listObjects() call");
-      log.error("List Objects failed on bucket: {} with prefix: {}. Does bucket exist?", bucketName, uploadStateKey);
+      log.error("List Objects failed on bucket: {} with prefix: {}. Does bucket exist?", bucketName,
+          uploadStateKeyPrefix);
       throw new NotRetryableException(e);
     }
 
@@ -357,6 +355,7 @@ public class UploadStateStore {
       do {
         objectListing = s3Client.listObjects(request);
         for (val objectSummary : objectListing.getObjectSummaries()) {
+          log.debug("processing {}", objectSummary.getKey());
           callback.accept(objectSummary);
         }
 
@@ -368,18 +367,22 @@ public class UploadStateStore {
     }
   }
 
+  /*
+   * Is the .meta file actually there for the upload id
+   */
   boolean isMetaAvailable(String objectId, String uploadId) {
+    // key for the .meta file
     val uploadStateKey = getUploadStateKey(objectId, uploadId, META);
 
     try {
-      // This is actually how you are supposed to test
+      // This is actually how you are supposed to test for existence of a file
       s3Client.getObjectMetadata(bucketNamingService.getStateBucketName(objectId), uploadStateKey);
     } catch (AmazonS3Exception e) {
       if (e.getStatusCode() == HttpStatus.NOT_FOUND.value()) {
         return false;
       }
 
-      log.error("Error checking meta existence for objectId {} and uploadId {}", objectId, uploadId);
+      log.error("Error checking for .meta file for objectId {} and uploadId {}", objectId, uploadId);
       throw new RetryableException(e);
     }
 

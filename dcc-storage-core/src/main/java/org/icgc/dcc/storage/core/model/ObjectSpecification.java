@@ -33,6 +33,9 @@ public class ObjectSpecification {
   private String uploadId;
   private List<Part> parts;
   private long objectSize;
+
+  // Flag indicating whether the meta data was found in the expected bucket, or
+  // in the "fallback" bucket (created prior to bucket partitioning)
   private boolean isRelocated = false;
 
 }
