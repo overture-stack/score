@@ -185,8 +185,9 @@ public class ObjectDownloadService {
 
         // Try again with master bucket
         log.warn("Object with objectId: {} not found in {}, objectKey: {}: {}. Trying master bucket {}",
-            objectId, stateBucketName, objectMetaKey, e, stateBucketName);
+            objectId, stateBucketName, objectMetaKey, e, bucketNamingService.getBaseStateBucketName());
         try {
+          stateBucketName = bucketNamingService.getBaseStateBucketName(); // use base bucket name
           val obj = fetchObject(stateBucketName, objectMetaKey);
           obj.setRelocated(true);
           return obj;

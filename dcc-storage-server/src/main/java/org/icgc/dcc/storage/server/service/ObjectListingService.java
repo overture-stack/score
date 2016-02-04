@@ -31,9 +31,11 @@ import org.icgc.dcc.storage.server.util.BucketNamingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.model.AmazonS3Exception;
 import com.amazonaws.services.s3.model.ListObjectsRequest;
 import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
@@ -67,15 +69,34 @@ public class ObjectListingService {
   public List<ObjectInfo> getListing() {
     val listing = Lists.<ObjectInfo> newArrayList();
 
-    for (int i = 0; i < bucketNamingService.getBucketPoolSize(); i++) {
-      readBucket(bucketNamingService.constructBucketName(bucketName, i), dataDir, (objectSummary) -> {
-        ObjectInfo info = createInfo(objectSummary);
-        if (info.getId() != null) {
-          listing.add(info);
-        }
-      });
+    // read from fallback bucket - any files from prior to bucket partitioning
+    try {
+      listing.addAll(listBucketContents(bucketNamingService.getBaseObjectBucketName()));
+    } catch (AmazonS3Exception ase) {
+      if (ase.getStatusCode() == HttpStatus.NOT_FOUND.value()) {
+        // ok - just means bucket isn't there
+        log.info("fallback bucket doesn't exist");
+      } else {
+        throw ase;
+      }
     }
 
+    int bucketPartitions = bucketNamingService.getBucketPoolSize() <= 0 ? 0 : bucketNamingService.getBucketPoolSize();
+    for (int i = 0; i < bucketPartitions; i++) {
+      listing.addAll(listBucketContents(bucketNamingService.constructBucketName(bucketName, i)));
+    }
+
+    return listing;
+  }
+
+  private List<ObjectInfo> listBucketContents(String bucket) {
+    val listing = Lists.<ObjectInfo> newArrayList();
+    readBucket(bucket, dataDir, (objectSummary) -> {
+      ObjectInfo info = createInfo(objectSummary);
+      if (info.getId() != null) {
+        listing.add(info);
+      }
+    });
     return listing;
   }
 
