@@ -14,14 +14,18 @@ s3:
   
   #amazon
   endpoint: s3-external-1.amazonaws.com
+ 
+bucket:
+  name.object: oicr.icgc
+  name.state: oicr.icgc
+  size.pool: 0
+  size.key: 2 
   
 collaboratory:
-  bucket.name: oicr.icgc
-  state.bucket.name: oicr.icgc
   upload.directory: upload
   upload.expiration: 7
   data.directory: data
-  
+    
   # COL-131: Change pre-signed URLs TTL to 1 day max
   download.expiration: 1
 
@@ -66,8 +70,9 @@ s3:
   endpoint: s3-external-1.amazonaws.com
   masterEncryptionKeyId: af628f04-ac12-4b11-bf83-6545fd44ad18
 
-collaboratory:
-  bucket.name: oicr.icgc
+bucket:
+  name.object: oicr.icgc
+  name.state: oicr.icgc
 
 ---
 
@@ -139,8 +144,9 @@ s3:
 # Server
 server:
 
-collaboratory:
-  bucket.name: test.icgc
+bucket:
+  name.object: test.icgc
+  name.state: test.icgc
   
 upload:
   clean.enabled: false

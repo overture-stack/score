@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 The Ontario Institute for Cancer Research. All rights reserved.                             
+ * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.                             
  *                                                                                                               
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
  * You should have received a copy of the GNU General Public License along with                                  
@@ -15,40 +15,22 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.server.config;
+package org.icgc.dcc.storage.server.service.download;
 
-import org.icgc.dcc.storage.server.service.upload.AmazonURLGenerator;
-import org.icgc.dcc.storage.server.service.upload.ObjectPartCalculator;
-import org.icgc.dcc.storage.server.service.upload.ObjectURLGenerator;
-import org.icgc.dcc.storage.server.service.upload.SimplePartCalculator;
-import org.icgc.dcc.storage.server.service.upload.UploadStateStore;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
+import lombok.Data;
+
+import com.amazonaws.services.s3.model.S3Object;
 
 /**
- * Server level configuration
+ * Wrapper for an S3Object to carry additional info about the payload
  */
-@Configuration
-@Profile({ "prod", "default", "debug" })
-public class ServerConfig {
+@Data
+public class FetchedS3Object {
 
-  @Value("${upload.partsize}")
-  private int partSize;
+  private S3Object s3Object;
+  private boolean relocated = false;
 
-  @Bean
-  public UploadStateStore stateStore() {
-    return new UploadStateStore();
-  }
-
-  @Bean
-  public ObjectPartCalculator calculator() {
-    return new SimplePartCalculator(partSize);
-  }
-
-  @Bean
-  public ObjectURLGenerator url() {
-    return new AmazonURLGenerator();
+  public FetchedS3Object(S3Object s3obj) {
+    s3Object = s3obj;
   }
 }

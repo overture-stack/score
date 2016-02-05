@@ -28,7 +28,10 @@ import static org.mockito.Mockito.when;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 
+import lombok.val;
+
 import org.icgc.dcc.storage.core.model.ObjectSpecification;
+import org.icgc.dcc.storage.server.util.BucketNamingService;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -41,15 +44,14 @@ import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectInputStream;
 
-import lombok.val;
-
 @RunWith(MockitoJUnitRunner.class)
 public class UploadStateStoreTest {
 
   /**
    * Constants.
    */
-  private static final String BUCKET_NAME = "oicr.icgc";
+  private static final String OBJECT_BUCKET_NAME = "oicr.icgc";
+  private static final String STATE_BUCKET_NAME = "oicr.icgc";
 
   /**
    * Dependencies.
@@ -66,7 +68,13 @@ public class UploadStateStoreTest {
   @Before
   public void setUp() {
     // Configure
-    store.setBucketName(BUCKET_NAME);
+    BucketNamingService namingService = new BucketNamingService();
+    namingService.setObjectBucketName(OBJECT_BUCKET_NAME);
+    namingService.setStateBucketName(STATE_BUCKET_NAME);
+    namingService.setBucketPoolSize(0);
+    store.setBucketNamingService(namingService);
+
+    // store.setStateBucketName(BUCKET_NAME);
     store.setUploadDir("upload");
   }
 
@@ -84,7 +92,7 @@ public class UploadStateStoreTest {
     store.create(spec);
 
     verify(s3Client).putObject(
-        eq(BUCKET_NAME),
+        eq(OBJECT_BUCKET_NAME),
         eq("upload/" + objectId + "_" + uploadId + "/.meta"),
         any(InputStream.class),
         any(ObjectMetadata.class));
@@ -108,11 +116,11 @@ public class UploadStateStoreTest {
   }
 
   @Test
-    public void testFormatUploadPartName() throws Exception {
-      val partNumber = 17;
-      val json = "{\"x\":1}";
-      val partName = UploadStateStore.formatUploadPartName(partNumber, json);
-      assertThat(partName).isEqualTo("part-00000011|{\"x\":1}");
-    }
+  public void testFormatUploadPartName() throws Exception {
+    val partNumber = 17;
+    val json = "{\"x\":1}";
+    val partName = UploadStateStore.formatUploadPartName(partNumber, json);
+    assertThat(partName).isEqualTo("part-00000011|{\"x\":1}");
+  }
 
 }

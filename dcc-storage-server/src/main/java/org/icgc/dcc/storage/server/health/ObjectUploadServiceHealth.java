@@ -34,8 +34,10 @@ public class ObjectUploadServiceHealth implements HealthIndicator {
   @Autowired
   AmazonS3 s3;
 
-  @Value("${collaboratory.bucket.name}")
+  @Value("${bucket.name.object}")
   String bucketName;
+  @Value("${bucket.size.pool}")
+  private int bucketPoolSize;
 
   @Override
   public Health health() {
@@ -53,8 +55,19 @@ public class ObjectUploadServiceHealth implements HealthIndicator {
      */
     // check if the aws account can access the bucket
     boolean foundBucket = true;
+
+    /*
+     * with bucket pools, all bucket names might have a numeric suffix should be safe to assume that we will have a .0
+     * bucket - in the initial implementation, we explicitly did not pad the numeric suffix with leading zeroes. i.e.,
+     * <bucket>.1 not <bucket>.01
+     */
+    String checkBucketName = bucketName;
+    if (bucketPoolSize > 0) {
+      checkBucketName = String.format("%s.0", bucketName);
+    }
+
     try {
-      foundBucket = s3.doesBucketExist(bucketName);
+      foundBucket = s3.doesBucketExist(checkBucketName);
     } catch (Exception e) {
       foundBucket = false;
     }

@@ -30,7 +30,7 @@ public class S3 {
     // altogether.
     Setup setup =
         new DefinedLocationSetup(Mode.PROD, ClassLoader.getSystemClassLoader(), s3Root.getAbsolutePath())
-            .withLogToFile(false);
+            .withLogToFile(true).withLogToConsole(true);
     Sirius.start(setup);
   }
 

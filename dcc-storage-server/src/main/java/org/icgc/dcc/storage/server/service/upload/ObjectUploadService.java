@@ -5,10 +5,17 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import lombok.Setter;
+import lombok.SneakyThrows;
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
+
 import org.codehaus.jackson.map.ObjectMapper;
+import org.icgc.dcc.storage.core.model.ObjectKey;
 import org.icgc.dcc.storage.core.model.ObjectSpecification;
 import org.icgc.dcc.storage.core.model.UploadProgress;
 import org.icgc.dcc.storage.core.util.ObjectKeys;
@@ -18,6 +25,7 @@ import org.icgc.dcc.storage.server.exception.InternalUnrecoverableError;
 import org.icgc.dcc.storage.server.exception.NotRetryableException;
 import org.icgc.dcc.storage.server.exception.RetryableException;
 import org.icgc.dcc.storage.server.service.MetadataService;
+import org.icgc.dcc.storage.server.util.BucketNamingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -40,11 +48,6 @@ import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PartSummary;
 import com.amazonaws.services.s3.model.transform.Unmarshallers.ListPartsResultUnmarshaller;
 
-import lombok.Setter;
-import lombok.SneakyThrows;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
-
 /**
  * A service for object upload.
  */
@@ -61,14 +64,11 @@ public class ObjectUploadService {
   /**
    * Configuration.
    */
-  @Value("${collaboratory.bucket.name}")
-  private String bucketName;
-  @Value("${collaboratory.state.bucket.name}")
-  private String stateBucketName;
   @Value("${collaboratory.data.directory}")
   private String dataDir;
   @Value("${collaboratory.upload.expiration}")
   private int expiration;
+
   @Autowired
   private S3Config s3Conf;
 
@@ -79,6 +79,8 @@ public class ObjectUploadService {
   private AmazonS3 s3Client;
   @Autowired
   private MetadataService metadataClient;
+  @Autowired
+  private BucketNamingService bucketNamingService;
   @Autowired
   private UploadStateStore stateStore;
   @Autowired
@@ -92,6 +94,8 @@ public class ObjectUploadService {
 
     val objectKey = ObjectKeys.getObjectKey(dataDir, objectId);
     log.debug("Initiating upload for object key: {}, overwrite: {}", objectKey, overwrite);
+
+    // If we don't want to overwrite
     if (!overwrite) {
       if (exists(objectId)) {
         val message = String.format("Attempted to overwrite object id %s", objectId);
@@ -100,28 +104,37 @@ public class ObjectUploadService {
       }
     }
 
-    // Check if object exists already
+    // But if we want to force the upload, check if the object exists already
     try {
       val uploadId = getUploadId(objectId);
       stateStore.delete(objectId, uploadId);
     } catch (IdNotFoundException e) {
-      log.info("No upload ID found. Initiate upload...");
+      log.info("Upload id not found. Initiating new upload...");
     }
 
-    val request = new InitiateMultipartUploadRequest(bucketName, objectKey);
+    val actualBucketName = bucketNamingService.getObjectBucketName(objectId);
+
+    val request = new InitiateMultipartUploadRequest(actualBucketName, objectKey.getKey());
     try {
       s3Conf.encrypt(request);
 
+      // Initiates a multipart upload and returns an InitiateMultipartUploadResult which contains an upload ID.
+      // This upload ID associates all the parts in the specific upload and is used in each of your subsequent
+      // uploadPart(UploadPartRequest) requests. You also include this upload ID in the final request to either
+      // complete, or abort the multipart upload request.
       val result = s3Client.initiateMultipartUpload(request);
       val parts = partCalculator.divide(fileSize);
 
       val now = LocalDateTime.now();
       val expirationDate = Date.from(now.plusDays(expiration).atZone(ZoneId.systemDefault()).toInstant());
       for (val part : parts) {
-        part.setUrl(urlGenerator.getUploadPartUrl(bucketName, objectKey, result.getUploadId(), part, expirationDate));
+        part.setUrl(urlGenerator.getUploadPartUrl(actualBucketName, objectKey, result.getUploadId(), part,
+            expirationDate));
       }
 
-      val spec = new ObjectSpecification(objectKey, objectId, result.getUploadId(), parts, fileSize);
+      val spec = new ObjectSpecification(objectKey.getKey(), objectId, result.getUploadId(), parts, fileSize, false);
+
+      // write out .meta file
       stateStore.create(spec);
       return spec;
     } catch (AmazonServiceException e) {
@@ -136,13 +149,14 @@ public class ObjectUploadService {
 
   public boolean exists(String objectId) {
     val objectKey = ObjectKeys.getObjectKey(dataDir, objectId);
+    val actualBucketName = bucketNamingService.getStateBucketName(objectId);
     try {
-      s3Client.getObjectMetadata(bucketName, objectKey);
-
+      s3Client.getObjectMetadata(actualBucketName, objectKey.getMetaKey());
       return true;
     } catch (AmazonServiceException e) {
       if (e.getStatusCode() != HttpStatus.NOT_FOUND.value()) {
-        log.error("Failure in Amazon Client when requesting object id: {} from bucket: {}", objectId, bucketName, e);
+        log.error("Failure in Amazon Client when requesting object id: {} from bucket: {}", objectId, actualBucketName,
+            e);
         throw new RetryableException(e);
       }
 
@@ -151,18 +165,20 @@ public class ObjectUploadService {
     }
   }
 
-  private boolean isPartExists(String objectKey, String uploadId, int partNumber, String eTag) {
+  private boolean isPartExists(ObjectKey objectKey, String uploadId, int partNumber, String eTag) {
     List<PartSummary> parts = null;
+    val objectId = objectKey.getObjectId();
+    val actualBucketName = bucketNamingService.getObjectBucketName(objectId);
     try {
       if (s3Conf.getEndpoint() == null) {
-        val req = new ListPartsRequest(bucketName, objectKey, uploadId);
+        val req = new ListPartsRequest(actualBucketName, objectKey.getKey(), uploadId);
         req.setPartNumberMarker(partNumber - 1);
         req.setMaxParts(1);
         parts = s3Client.listParts(req).getParts();
       } else {
         // HACK: Incompatible API. Serialization issue at the XML
         val request = new RestTemplate();
-        val signed = new GeneratePresignedUrlRequest(bucketName, objectKey, HttpMethod.GET);
+        val signed = new GeneratePresignedUrlRequest(actualBucketName, objectKey.getKey(), HttpMethod.GET);
         signed.addRequestParameter("uploadId", uploadId);
         signed.addRequestParameter("max-parts", String.valueOf(1));
         signed.addRequestParameter("part-number-marker", String.valueOf(partNumber - 1));
@@ -219,11 +235,15 @@ public class ObjectUploadService {
 
   public void finalizeUpload(String objectId, String uploadId) {
     log.debug("finalizing upload id: {}", uploadId);
+
+    val actualBucketName = bucketNamingService.getObjectBucketName(objectId);
+    val actualStateBucketName = bucketNamingService.getStateBucketName(objectId);
+
     if (stateStore.isCompleted(objectId, uploadId)) {
       try {
         val etags = stateStore.getUploadStatePartEtags(objectId, uploadId);
         val objectKey = ObjectKeys.getObjectKey(dataDir, objectId);
-        val request = new CompleteMultipartUploadRequest(bucketName, objectKey, uploadId, etags);
+        val request = new CompleteMultipartUploadRequest(actualBucketName, objectKey.getKey(), uploadId, etags);
 
         s3Client.completeMultipartUpload(request);
 
@@ -233,9 +253,11 @@ public class ObjectUploadService {
         val meta = new ObjectMetadata();
         meta.setContentLength(content.length);
         val objectMetaKey = ObjectKeys.getObjectMetaKey(dataDir, objectId);
-        log.trace("About to s3.putObject into " + stateBucketName + ": " + objectMetaKey.toString());
-        s3Client.putObject(stateBucketName, objectMetaKey, data, meta);
+        log.debug("about to s3.putObject into " + actualStateBucketName + ": " + objectMetaKey.toString());
+        s3Client.putObject(actualStateBucketName, objectMetaKey, data, meta);
+        // delete working files in upload directory
         stateStore.delete(objectId, uploadId);
+        log.trace("end of finalizeUpload()");
       } catch (AmazonServiceException e) {
         log.error("Service problem with objectId: {}, uploadId: {}", objectId, uploadId, e);
         throw new RetryableException(e);
@@ -256,7 +278,7 @@ public class ObjectUploadService {
   public ObjectMetadata getObjectMetadata(String objectId) {
     try {
       val objectKey = ObjectKeys.getObjectKey(dataDir, objectId);
-      return s3Client.getObjectMetadata(bucketName, objectKey);
+      return s3Client.getObjectMetadata(bucketNamingService.getStateBucketName(objectId), objectKey.getMetaKey());
     } catch (AmazonServiceException e) {
       log.error("Unable to retrieve object metadata for object id: {}", objectId, e);
       throw new NotRetryableException(e);
@@ -282,7 +304,8 @@ public class ObjectUploadService {
         val uploadId = upload.getUploadId();
         val objectKey = upload.getKey();
         val objectId = ObjectKeys.getObjectId(dataDir, objectKey);
-        val request = new AbortMultipartUploadRequest(bucketName, objectKey, uploadId);
+        val request =
+            new AbortMultipartUploadRequest(bucketNamingService.getObjectBucketName(objectId), objectKey, uploadId);
 
         s3Client.abortMultipartUpload(request);
         stateStore.delete(objectId, uploadId);
@@ -295,7 +318,9 @@ public class ObjectUploadService {
   public void cancelUpload(String objectId, String uploadId) {
     try {
       val objectKey = ObjectKeys.getObjectKey(dataDir, objectId);
-      val request = new AbortMultipartUploadRequest(bucketName, objectKey, uploadId);
+      val request =
+          new AbortMultipartUploadRequest(bucketNamingService.getObjectBucketName(objectId), objectKey.getKey(),
+              uploadId);
 
       s3Client.abortMultipartUpload(request);
       stateStore.delete(objectId, uploadId);
@@ -334,13 +359,27 @@ public class ObjectUploadService {
   }
 
   List<MultipartUpload> listUploads() {
+    List<MultipartUpload> result = null;
     try {
-      val request = new ListMultipartUploadsRequest(bucketName);
-      val response = s3Client.listMultipartUploads(request);
+      if (bucketNamingService.isPartitioned()) {
+        result = new ArrayList<MultipartUpload>();
+        for (int i = 0; i < bucketNamingService.getBucketPoolSize(); i++) {
+          val actualBucketName =
+              bucketNamingService.constructBucketName(bucketNamingService.getBaseObjectBucketName(), i);
+          val request = new ListMultipartUploadsRequest(actualBucketName);
+          val response = s3Client.listMultipartUploads(request);
+          result.addAll(response.getMultipartUploads());
+        }
 
-      return response.getMultipartUploads();
+      } else {
+        val request = new ListMultipartUploadsRequest(bucketNamingService.getBaseObjectBucketName());
+        val response = s3Client.listMultipartUploads(request);
+        result = response.getMultipartUploads();
+      }
+
+      return result;
     } catch (AmazonServiceException e) {
-      log.error("Failed to list uploads: ", e);
+      log.error("Failed to list uploads on partition : ", e);
       throw new RetryableException(e);
     }
   }

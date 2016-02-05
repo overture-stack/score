@@ -19,6 +19,7 @@ package org.icgc.dcc.storage.server.service.upload;
 
 import java.util.Date;
 
+import org.icgc.dcc.storage.core.model.ObjectKey;
 import org.icgc.dcc.storage.core.model.Part;
 import org.icgc.dcc.storage.core.util.Parts;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,8 +38,8 @@ public class AmazonURLGenerator implements ObjectURLGenerator {
   private AmazonS3 s3Client;
 
   @Override
-  public String getUploadPartUrl(String bucketName, String objectKey, String uploadId, Part part, Date expiration) {
-    GeneratePresignedUrlRequest req = new GeneratePresignedUrlRequest(bucketName, objectKey, HttpMethod.PUT);
+  public String getUploadPartUrl(String bucketName, ObjectKey objectKey, String uploadId, Part part, Date expiration) {
+    GeneratePresignedUrlRequest req = new GeneratePresignedUrlRequest(bucketName, objectKey.getKey(), HttpMethod.PUT);
     req.setExpiration(expiration);
 
     req.addRequestParameter("partNumber", String.valueOf(part.getPartNumber()));
@@ -48,8 +49,8 @@ public class AmazonURLGenerator implements ObjectURLGenerator {
   }
 
   @Override
-  public String getDownloadPartUrl(String bucketName, String objectKey, Part part, Date expiration) {
-    GeneratePresignedUrlRequest req = new GeneratePresignedUrlRequest(bucketName, objectKey, HttpMethod.GET);
+  public String getDownloadPartUrl(String bucketName, ObjectKey objectKey, Part part, Date expiration) {
+    GeneratePresignedUrlRequest req = new GeneratePresignedUrlRequest(bucketName, objectKey.getKey(), HttpMethod.GET);
     req.setExpiration(expiration);
 
     req.putCustomRequestHeader(HttpHeaders.RANGE, Parts.getHttpRangeValue(part));
@@ -57,8 +58,8 @@ public class AmazonURLGenerator implements ObjectURLGenerator {
   }
 
   @Override
-  public String getDownloadUrl(String bucketName, String objectKey, Date expiration) {
-    GeneratePresignedUrlRequest req = new GeneratePresignedUrlRequest(bucketName, objectKey, HttpMethod.GET);
+  public String getDownloadUrl(String bucketName, ObjectKey objectKey, Date expiration) {
+    GeneratePresignedUrlRequest req = new GeneratePresignedUrlRequest(bucketName, objectKey.getKey(), HttpMethod.GET);
     req.setExpiration(expiration);
 
     return s3Client.generatePresignedUrl(req).toString();

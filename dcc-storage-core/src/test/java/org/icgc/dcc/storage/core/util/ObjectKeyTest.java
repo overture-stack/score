@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 The Ontario Institute for Cancer Research. All rights reserved.                             
+ * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.                             
  *                                                                                                               
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
  * You should have received a copy of the GNU General Public License along with                                  
@@ -15,40 +15,33 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.server.config;
+package org.icgc.dcc.storage.core.util;
 
-import org.icgc.dcc.storage.server.service.upload.AmazonURLGenerator;
-import org.icgc.dcc.storage.server.service.upload.ObjectPartCalculator;
-import org.icgc.dcc.storage.server.service.upload.ObjectURLGenerator;
-import org.icgc.dcc.storage.server.service.upload.SimplePartCalculator;
-import org.icgc.dcc.storage.server.service.upload.UploadStateStore;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
+import static org.assertj.core.api.Assertions.assertThat;
 
-/**
- * Server level configuration
- */
-@Configuration
-@Profile({ "prod", "default", "debug" })
-public class ServerConfig {
+import org.icgc.dcc.storage.core.model.ObjectKey;
+import org.junit.Test;
 
-  @Value("${upload.partsize}")
-  private int partSize;
+public class ObjectKeyTest {
 
-  @Bean
-  public UploadStateStore stateStore() {
-    return new UploadStateStore();
+  @Test
+  public void basic_format() {
+    ObjectKey key = new ObjectKey("data", "object_id");
+    assertThat(key.getObjectId()).isEqualTo("object_id");
   }
 
-  @Bean
-  public ObjectPartCalculator calculator() {
-    return new SimplePartCalculator(partSize);
+  @Test
+  public void parse_valid_format() {
+    ObjectKey key = new ObjectKey("data/object_id");
   }
 
-  @Bean
-  public ObjectURLGenerator url() {
-    return new AmazonURLGenerator();
+  @Test(expected = IllegalArgumentException.class)
+  public void parse_invalid_format() {
+    ObjectKey key = new ObjectKey("lorem ipsum");
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void parse_invalid_format_too_many_parts() {
+    ObjectKey key = new ObjectKey("lorem/ipsum/dolor");
   }
 }

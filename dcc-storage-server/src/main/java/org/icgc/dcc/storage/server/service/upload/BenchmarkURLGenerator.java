@@ -21,6 +21,7 @@ import java.util.Date;
 
 import lombok.extern.slf4j.Slf4j;
 
+import org.icgc.dcc.storage.core.model.ObjectKey;
 import org.icgc.dcc.storage.core.model.Part;
 import org.springframework.beans.factory.annotation.Value;
 
@@ -34,19 +35,19 @@ public class BenchmarkURLGenerator implements ObjectURLGenerator {
   private String endpoint;
 
   @Override
-  public String getUploadPartUrl(String bucketName, String objectKey, String uploadId, Part part, Date expiration) {
+  public String getUploadPartUrl(String bucketName, ObjectKey objectKey, String uploadId, Part part, Date expiration) {
     log.info("Benchmark mode is on");
     return endpoint + "/upload/" + objectKey + "?partNumber=" + String.valueOf(part.getPartNumber()) + "&uploadId="
         + uploadId;
   }
 
   @Override
-  public String getDownloadPartUrl(String bucketName, String objectKey, Part part, Date expiration) {
+  public String getDownloadPartUrl(String bucketName, ObjectKey objectKey, Part part, Date expiration) {
     return null;
   }
 
   @Override
-  public String getDownloadUrl(String bucketName, String objectKey, Date expiration) {
+  public String getDownloadUrl(String bucketName, ObjectKey objectKey, Date expiration) {
     return null;
   }
 }
