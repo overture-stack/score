@@ -25,6 +25,10 @@ import java.io.OutputStream;
 import java.net.URI;
 import java.util.List;
 
+import lombok.SneakyThrows;
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
+
 import org.icgc.dcc.storage.client.download.DownloadStateStore;
 import org.icgc.dcc.storage.client.exception.NotResumableException;
 import org.icgc.dcc.storage.client.exception.NotRetryableException;
@@ -56,10 +60,6 @@ import com.amazonaws.services.s3.Headers;
 import com.amazonaws.services.s3.model.SSEAlgorithm;
 import com.google.common.hash.Hashing;
 import com.google.common.hash.HashingInputStream;
-
-import lombok.SneakyThrows;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * Service responsible for interacting with the remote upload service.
@@ -146,16 +146,19 @@ public class StorageService {
         };
 
         try {
+          // the actual GET operation
+          log.debug("performing GET {}", part.getUrl());
           HttpHeaders headers =
               dataTemplate.execute(new URI(part.getUrl()), HttpMethod.GET, callback, headersExtractor);
           part.setMd5(cleanUpETag(headers.getETag()));
           // TODO: try catch here for commit
           downloadStateStore.commit(outputDir, objectId, part);
+          log.debug("committed {} part# {} to download state store", objectId, part.getPartNumber());
         } catch (NotResumableException | NotRetryableException e) {
-          log.error("Cannot proceed. Fail to receive part for part number: {}", part.getPartNumber(), e);
+          log.error("Cannot proceed. Failed to receive part for part# {} : {}", part.getPartNumber(), e);
           throw e;
         } catch (Throwable e) {
-          log.warn("Fail to receive part for part number: {}", part.getPartNumber(), e);
+          log.warn("Failed to receive part for part number: {}. Retrying. {}", part.getPartNumber(), e);
           channel.reset();
           throw new RetryableException(e);
         }
@@ -195,6 +198,7 @@ public class StorageService {
             return response.getHeaders();
           }
         };
+
         try {
           HttpHeaders headers =
               dataTemplate.execute(new URI(part.getUrl()), HttpMethod.PUT, callback, headersExtractor);
@@ -203,14 +207,14 @@ public class StorageService {
             finalizeUploadPart(objectId, uploadId, part.getPartNumber(), channel.getMd5(),
                 cleanUpETag(headers.getETag()), disableChecksum(headers));
           } catch (NotRetryableException e) {
-            log.warn("Checksum failed for part: {}, MD5: {}, ETAG: {}", part, channel.getMd5(), headers.getETag(), e);
+            log.warn("Checksum failed for part #{}, MD5={}, ETAG={} : {}", part, channel.getMd5(), headers.getETag(), e);
             throw new RetryableException(e);
           }
         } catch (NotResumableException | NotRetryableException e) {
-          log.error("Cannot proceed. Fail to send part for part number: {}", part.getPartNumber(), e);
+          log.error("Could not proceed. Failed to send part for part number: {}", part.getPartNumber(), e);
           throw e;
         } catch (Throwable e) {
-          log.warn("Fail to send part for part number: {}", part.getPartNumber(), e);
+          log.warn("Failed to send part for part #{} : {}", part.getPartNumber(), e);
           channel.reset();
           throw new RetryableException(e);
         }
@@ -228,7 +232,7 @@ public class StorageService {
   }
 
   public ObjectSpecification initiateUpload(String objectId, long length, boolean overwrite) throws IOException {
-    log.debug("Initiate upload, object-id: {} overwrite: {}", objectId, overwrite);
+    log.debug("Initiating upload, object-id: {} overwrite: {}", objectId, overwrite);
     return retry.execute(new RetryCallback<ObjectSpecification, IOException>() {
 
       @Override
@@ -244,7 +248,7 @@ public class StorageService {
   }
 
   public void finalizeDownload(File outDir, String objectId) throws IOException {
-    log.debug("finalize download, object-id: {}", objectId);
+    log.debug("finalizing download, object-id: {}", objectId);
     if (downloadStateStore.canFinalize(outDir, objectId)) {
       downloadStateStore.close(outDir, objectId);
     } else {
@@ -253,7 +257,7 @@ public class StorageService {
   }
 
   public void finalizeUpload(String objectId, String uploadId) throws IOException {
-    log.debug("finalize upload, object-id: {}, upload-id: {}", objectId, uploadId);
+    log.debug("finalizing upload, object-id: {}, upload-id: {}", objectId, uploadId);
     retry.execute(new RetryCallback<Void, IOException>() {
 
       @Override
@@ -268,8 +272,8 @@ public class StorageService {
 
   public void finalizeUploadPart(String objectId, String uploadId, int partNumber, String md5, String etag,
       boolean disableChecksum)
-          throws IOException {
-    log.debug("finalize upload part, object-id: {}, upload-id: {}, part-number: {}", objectId, uploadId, partNumber);
+      throws IOException {
+    log.debug("Finalizing upload part, object-id: {}, upload-id: {}, part-number: {}", objectId, uploadId, partNumber);
     retry.execute(new RetryCallback<Void, IOException>() {
 
       @Override
@@ -284,13 +288,13 @@ public class StorageService {
                   Void.class, objectId, uploadId, partNumber, md5, etag);
           return null;
         }
-        throw new NotRetryableException();
+        throw new NotRetryableException(); // using this as control mechanism?
       }
     });
   }
 
   public boolean isObjectExist(String objectId) throws IOException {
-    log.debug("Object exists object-id: {}", objectId);
+    log.debug("Checking existence on Storage server for object-id: {}", objectId);
     return retry.execute(new RetryCallback<Boolean, IOException>() {
 
       @Override
@@ -304,6 +308,10 @@ public class StorageService {
       }
     });
 
+  }
+
+  public ObjectSpecification getDownloadSpecification(String objectId) throws IOException {
+    return getDownloadSpecification(objectId, 0, -1L);
   }
 
   public ObjectSpecification getDownloadSpecification(String objectId, long offset, long length) throws IOException {
@@ -349,7 +357,7 @@ public class StorageService {
   }
 
   public void deleteUploadPart(String objectId, String uploadId, Part part) throws IOException {
-    log.debug("Delete part object-id: {}, upload-id: {}, part: {}", objectId, uploadId, part);
+    log.debug("Deleting part for object-id: {}, upload-id: {}, part: {}", objectId, uploadId, part);
     retry.execute(new RetryCallback<Void, IOException>() {
 
       @Override
@@ -368,14 +376,14 @@ public class StorageService {
     try {
       return (fileSize == downloadStateStore.getObjectSize(stateDir, objectId));
     } catch (Throwable e) {
-      log.warn("Download is not recoverable due to: ", e);
+      log.warn("Download is not recoverable: {}", e);
     }
     return false;
 
   }
 
   public boolean isUploadDataRecoverable(String objectId, long fileSize) throws IOException {
-    log.debug("Recover upload, object-id: {}", objectId);
+    log.debug("Recovering upload, object-id: {}", objectId);
     return retry.execute(new RetryCallback<Boolean, IOException>() {
 
       @Override

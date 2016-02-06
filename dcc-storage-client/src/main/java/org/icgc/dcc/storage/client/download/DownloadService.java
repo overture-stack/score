@@ -26,12 +26,19 @@ import java.net.URL;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.util.List;
+import java.util.Set;
 
 import javax.annotation.PostConstruct;
+
+import lombok.NonNull;
+import lombok.SneakyThrows;
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
 import org.icgc.dcc.storage.client.cli.Terminal;
 import org.icgc.dcc.storage.client.exception.NotResumableException;
 import org.icgc.dcc.storage.client.exception.NotRetryableException;
+import org.icgc.dcc.storage.client.metadata.Entity;
 import org.icgc.dcc.storage.client.progress.Progress;
 import org.icgc.dcc.storage.client.transport.StorageService;
 import org.icgc.dcc.storage.client.transport.Transport;
@@ -41,11 +48,6 @@ import org.icgc.dcc.storage.core.model.Part;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-
-import lombok.NonNull;
-import lombok.SneakyThrows;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * main class to handle uploading objects
@@ -185,12 +187,41 @@ public class DownloadService {
    * Calculate the number of completed parts
    */
   private int numCompletedParts(List<Part> parts) {
+
     int completedTotal = 0;
     for (Part part : parts) {
       if (part.getMd5() != null) completedTotal++;
     }
     return completedTotal;
 
+  }
+
+  /**
+   * Calculate the total size of completed parts
+   */
+  private long completedPartsUsedSpace(List<Part> parts) {
+
+    long completedSize = 0;
+    for (Part part : parts) {
+      if (part.getMd5() != null) completedSize += part.getPartSize();
+    }
+    return completedSize;
+
+  }
+
+  /**
+   * Computes space requirements for download and ensure there is sufficient space locally to store it
+   */
+  @SneakyThrows
+  public long getSpaceRequired(Set<Entity> entities) {
+    long total = 0L;
+
+    for (val entity : entities) {
+      ObjectSpecification spec = storageService.getDownloadSpecification(entity.getId());
+      total += spec.getObjectSize();
+    }
+
+    return total;
   }
 
   /**

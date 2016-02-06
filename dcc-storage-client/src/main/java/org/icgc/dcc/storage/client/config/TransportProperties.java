@@ -17,10 +17,10 @@
  */
 package org.icgc.dcc.storage.client.config;
 
+import lombok.Data;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
-
-import lombok.Data;
 
 @Data
 @Component
@@ -30,5 +30,6 @@ public class TransportProperties {
   String fileFrom;
   long memory;
   int parallel;
+  int maxTransferDuration;
 
 }

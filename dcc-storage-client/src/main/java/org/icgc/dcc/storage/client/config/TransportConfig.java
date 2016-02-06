@@ -17,17 +17,18 @@
  */
 package org.icgc.dcc.storage.client.config;
 
+import lombok.extern.slf4j.Slf4j;
+
 import org.icgc.dcc.storage.client.transport.MemoryMappedParallelPartObjectTransport;
 import org.icgc.dcc.storage.client.transport.ParallelPartObjectTransport;
 import org.icgc.dcc.storage.client.transport.PipedParallelPartObjectTransport;
 import org.icgc.dcc.storage.client.transport.SequentialPartObjectTransport;
 import org.icgc.dcc.storage.client.transport.StorageService;
+import org.icgc.dcc.storage.client.transport.TestTransport;
 import org.icgc.dcc.storage.client.transport.Transport;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * Configurations for data transport
@@ -45,26 +46,33 @@ public class TransportConfig {
   public Transport.Builder builder() {
     Transport.Builder builder;
     switch (properties.getFileFrom()) {
+    case "test":
+      log.debug("Transport: {}", "Test");
+      builder = TestTransport.builder()
+          .withMemory(properties.getMemory() * 1024 * 1024 * 1024)
+          .withNumberOfWorkerThreads(properties.getParallel())
+          .withMaximumTransferDuration(properties.getMaxTransferDuration())
+          .withProxy(proxy);
+      break;
     case "memory":
       log.debug("Transport: {}", "Memory");
       builder = MemoryMappedParallelPartObjectTransport.builder()
           .withMemory(properties.getMemory() * 1024 * 1024 * 1024)
           .withNumberOfWorkerThreads(properties.getParallel())
+          .withMaximumTransferDuration(properties.getMaxTransferDuration())
           .withProxy(proxy);
       break;
     case "remote":
       log.debug("Transport: {}", "Remote");
-      builder =
-          ParallelPartObjectTransport.builder()
-              .withMemory(properties.getMemory() * 1024 * 1024 * 1024)
-              .withNumberOfWorkerThreads(properties.getParallel())
-              .withProxy(proxy);
+      builder = ParallelPartObjectTransport.builder()
+          .withMemory(properties.getMemory() * 1024 * 1024 * 1024)
+          .withNumberOfWorkerThreads(properties.getParallel())
+          .withProxy(proxy);
       break;
     case "sequential":
       log.debug("Transport: {}", "Sequential");
-      builder =
-          SequentialPartObjectTransport.builder()
-              .withProxy(proxy);
+      builder = SequentialPartObjectTransport.builder()
+          .withProxy(proxy);
       break;
     default:
       builder = PipedParallelPartObjectTransport.builder()
@@ -72,7 +80,6 @@ public class TransportConfig {
           .withNumberOfWorkerThreads(properties.getParallel())
           .withProxy(proxy);
       log.debug("Transport: {}, Builder: {}", "local", builder);
-
     }
 
     return builder;

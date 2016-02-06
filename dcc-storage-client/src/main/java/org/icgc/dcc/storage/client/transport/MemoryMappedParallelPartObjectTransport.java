@@ -29,6 +29,7 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -144,7 +145,7 @@ public class MemoryMappedParallelPartObjectTransport extends ParallelPartObjectT
 
     log.debug("thread pool shut down request ...");
     executor.shutdown();
-    executor.awaitTermination(super.maxUploadDuration, TimeUnit.DAYS);
+    executor.awaitTermination(super.maxTransferDuration, TimeUnit.DAYS);
     log.debug("thread pool shut down request completed.");
 
     progress.stop();
@@ -165,8 +166,12 @@ public class MemoryMappedParallelPartObjectTransport extends ParallelPartObjectT
     long fileSize = Downloads.calculateTotalSize(parts);
 
     log.debug("Downloading object to file: {}, size:{}", filename.getPath(), fileSize);
-    val downloadExecutorService = Executors.newFixedThreadPool(nThreads, new ThreadFactoryBuilder()
+
+    val downloadThreadPool = Executors.newFixedThreadPool(nThreads, new ThreadFactoryBuilder()
         .setNameFormat("downloader-%s").build());
+    ExecutorCompletionService<MemoryMappedDataChannel> completionService =
+        new ExecutorCompletionService<>(downloadThreadPool);
+
     val memoryCollectorService = Executors.newScheduledThreadPool(Math.max(1, nThreads / 2), new ThreadFactoryBuilder()
         .setNameFormat("memory-cleaner-%s").build());
 
@@ -193,8 +198,8 @@ public class MemoryMappedParallelPartObjectTransport extends ParallelPartObjectT
       prevLength = part.getPartSize();
       val currOffset = offset;
 
-      log.debug("Submiting part # '{}' download.", part.getPartNumber());
-      results.push(downloadExecutorService.submit(new Callable<MemoryMappedDataChannel>() {
+      log.debug("Submitting part # '{}' download.", part.getPartNumber());
+      results.push(completionService.submit(new Callable<MemoryMappedDataChannel>() {
 
         @Override
         public MemoryMappedDataChannel call() throws Exception {
@@ -238,12 +243,13 @@ public class MemoryMappedParallelPartObjectTransport extends ParallelPartObjectT
               }
             }
           }
-        }
+        } // call()
 
-      }));
+      })); // results.push(submit(new Callable()))
       memory.addAndGet(-part.getPartSize());
       log.debug("Remaining Memory : {}", memory.get());
 
+      // if we have no free memory, can't process next Part
       while (memory.get() < 0) {
         try {
           if (!results.isEmpty()) {
@@ -258,20 +264,20 @@ public class MemoryMappedParallelPartObjectTransport extends ParallelPartObjectT
           if (e.getCause() instanceof NotResumableException) {
             log.error("Download cannot be processed", e);
             // properly shutdown executors
-            downloadExecutorService.shutdownNow();
+            downloadThreadPool.shutdownNow();
             memoryCollectorService.shutdownNow();
             // then throw immediately
             throw e.getCause();
           }
         }
       }
-    }
+    } // for (part)
 
     log.info("all tasks are submitted, waiting for completion...");
-    downloadExecutorService.shutdown();
-    downloadExecutorService.awaitTermination(super.maxUploadDuration, TimeUnit.DAYS);
+    downloadThreadPool.shutdown();
+    downloadThreadPool.awaitTermination(super.maxTransferDuration, TimeUnit.DAYS);
     memoryCollectorService.shutdown();
-    memoryCollectorService.awaitTermination(super.maxUploadDuration, TimeUnit.DAYS);
+    memoryCollectorService.awaitTermination(super.maxTransferDuration, TimeUnit.DAYS);
     log.info("all tasks are completed");
 
     progress.stop();

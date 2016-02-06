@@ -25,6 +25,10 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Properties;
 
+import lombok.Cleanup;
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
+
 import org.icgc.dcc.storage.client.cli.FileValidator;
 import org.icgc.dcc.storage.client.cli.ObjectIdValidator;
 import org.icgc.dcc.storage.client.upload.UploadService;
@@ -33,10 +37,6 @@ import org.springframework.stereotype.Component;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
-
-import lombok.Cleanup;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
@@ -93,7 +93,7 @@ public class UploadCommand extends AbstractClientCommand {
 
     val warn = isForce && exists;
     if (warn) {
-      terminal.printWarn("Object %s exists and --force specified. Overwritting...", objectId);
+      terminal.printWarn("Object %s exists and --force specified. Overwriting...", objectId);
     }
 
     terminal.printf("Uploading object: '%s' using the object id %s%n", file, objectId);

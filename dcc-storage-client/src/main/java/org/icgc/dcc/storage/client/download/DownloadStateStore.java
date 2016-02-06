@@ -131,7 +131,7 @@ public class DownloadStateStore {
       File partFile = new File(getObjectStateDir(stateDir, objectId), getPartName(part));
       Files.copy(new ByteArrayInputStream(content), partFile.toPath());
     } catch (IOException e) {
-      log.error("Fail to create meta file", e);
+      log.error("Failed to create meta file {} ", stateDir.getAbsolutePath(), e);
       throw new NotRetryableException(e);
     }
   }

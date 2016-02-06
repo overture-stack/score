@@ -86,7 +86,7 @@ public class PipedParallelPartObjectTransport extends ParallelPartObjectTranspor
       }
     }
     executor.shutdown();
-    executor.awaitTermination(super.maxUploadDuration, TimeUnit.DAYS);
+    executor.awaitTermination(super.maxTransferDuration, TimeUnit.DAYS);
     try {
       takeCareOfException(results.build());
       proxy.finalizeUpload(objectId, uploadId);
