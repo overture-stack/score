@@ -149,20 +149,33 @@ public class ObjectUploadService {
 
   public boolean exists(String objectId) {
     val objectKey = ObjectKeys.getObjectKey(dataDir, objectId);
-    val actualBucketName = bucketNamingService.getStateBucketName(objectId);
+    String actualBucketName = bucketNamingService.getStateBucketName(objectId);
     try {
       s3Client.getObjectMetadata(actualBucketName, objectKey.getMetaKey());
       return true;
     } catch (AmazonServiceException e) {
-      if (e.getStatusCode() != HttpStatus.NOT_FOUND.value()) {
-        log.error("Failure in Amazon Client when requesting object id: {} from bucket: {}", objectId, actualBucketName,
-            e);
+
+      if ((e.getStatusCode() == HttpStatus.NOT_FOUND.value()) && (bucketNamingService.isPartitioned())) {
+
+        // Try again with master bucket
+        log.info("Metafile {} not found in {}. Trying master bucket {}",
+            objectKey.getMetaKey(), actualBucketName, bucketNamingService.getBaseStateBucketName());
+        try {
+          actualBucketName = bucketNamingService.getBaseStateBucketName(); // use base bucket name
+          s3Client.getObjectMetadata(actualBucketName, objectKey.getMetaKey());
+          log.info("ObjectKey {} found in master bucket {}", objectKey, actualBucketName);
+          return true;
+        } catch (AmazonServiceException e2) {
+          log.info("ObjectKey {} also not found in master bucket {}", objectKey, actualBucketName);
+        }
+      } else if (!e.isRetryable()) {
+        // Not a partitioned bucket - not found is not found
+        throw new IdNotFoundException(objectId);
+      } else {
         throw new RetryableException(e);
       }
-
-      log.info("Object key not found: {}", objectKey);
-      return false;
     }
+    return false;
   }
 
   private boolean isPartExists(ObjectKey objectKey, String uploadId, int partNumber, String eTag) {
