@@ -166,7 +166,7 @@ public class ObjectUploadService {
           log.info("ObjectKey {} found in master bucket {}", objectKey, actualBucketName);
           return true;
         } catch (AmazonServiceException e2) {
-          log.info("ObjectKey {} also not found in {}", objectKey, actualBucketName);
+          log.info("ObjectKey {} also not found in master bucket {}", objectKey, actualBucketName);
         }
       } else if (!e.isRetryable()) {
         // Not a partitioned bucket - not found is not found
