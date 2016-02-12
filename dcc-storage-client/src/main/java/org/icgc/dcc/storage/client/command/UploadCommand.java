@@ -93,7 +93,7 @@ public class UploadCommand extends AbstractClientCommand {
 
     val warn = isForce && exists;
     if (warn) {
-      terminal.printWarn("Object %s exists and --force specified. Overwritting...", objectId);
+      terminal.printWarn("Object %s exists and --force specified. Overwriting...", objectId);
     }
 
     terminal.printf("Uploading object: '%s' using the object id %s%n", file, objectId);
