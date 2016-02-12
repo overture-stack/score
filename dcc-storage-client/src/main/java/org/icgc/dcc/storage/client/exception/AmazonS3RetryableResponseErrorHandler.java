@@ -49,6 +49,11 @@ public class AmazonS3RetryableResponseErrorHandler extends DefaultResponseErrorH
       log.warn("Server error. Stop processing: {}", response.getStatusText());
       throw new NotResumableException(new IOException("Amazon S3 error: "
           + IOUtils.toString(response.getBody())));
+    case FORBIDDEN:
+      log.warn("FORBIDDEN response code received");
+      throw new NotRetryableException(new IOException(
+          "Amazon S3 error: Access refused by object store. Confirm request host is on permitted list"
+              + IOUtils.toString(response.getBody())));
     default:
       log.warn("Retryable exception: {}", response.getStatusText());
       throw new RetryableException(new IOException("Amazon S3 error: "
