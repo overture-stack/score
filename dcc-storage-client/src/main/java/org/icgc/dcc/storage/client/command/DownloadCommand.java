@@ -113,7 +113,7 @@ public class DownloadCommand extends AbstractClientCommand {
   }
 
   private int downloadObjects(List<String> objectIds) throws IOException {
-    // entities are defined in meta service
+    // Entities are defined in Meta service
     val entities = resolveEntities(objectIds);
     prepareLayout(entities);
 
