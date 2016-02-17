@@ -30,7 +30,7 @@ import lombok.SneakyThrows;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
-import org.apache.commons.io.FileUtils;
+import org.icgc.dcc.common.core.util.FormatUtils;
 import org.icgc.dcc.storage.client.cli.ConverterFactory.OutputLayoutConverter;
 import org.icgc.dcc.storage.client.cli.DirectoryValidator;
 import org.icgc.dcc.storage.client.cli.ObjectIdValidator;
@@ -258,14 +258,14 @@ public class DownloadCommand extends AbstractClientCommand {
     val spaceRequired = downloadService.getSpaceRequired(entities);
     val spaceAvailable = getLocalAvailableSpace();
 
-    log.warn("space required: {} ({})  space available: {} ({})", FileUtils.byteCountToDisplaySize(spaceRequired),
+    log.warn("space required: {} ({})  space available: {} ({})", FormatUtils.formatBytes(spaceRequired),
         spaceRequired,
-        FileUtils.byteCountToDisplaySize(spaceAvailable), spaceAvailable);
+        FormatUtils.formatBytes(spaceAvailable), spaceAvailable);
 
     if (spaceRequired > spaceAvailable) {
       terminal.printWarn("Insufficient space to download requested files: Require %s. %s Available",
-          FileUtils.byteCountToDisplaySize(spaceRequired),
-          FileUtils.byteCountToDisplaySize(spaceAvailable));
+          FormatUtils.formatBytes(spaceRequired),
+          FormatUtils.formatBytes(spaceAvailable));
       terminal.clearLine();
       return false;
     }
