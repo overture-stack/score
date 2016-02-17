@@ -22,9 +22,15 @@ import static org.icgc.dcc.storage.client.cli.Parameters.checkParameter;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Set;
 
+import lombok.SneakyThrows;
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
+
+import org.apache.commons.io.FileUtils;
 import org.icgc.dcc.storage.client.cli.ConverterFactory.OutputLayoutConverter;
 import org.icgc.dcc.storage.client.cli.DirectoryValidator;
 import org.icgc.dcc.storage.client.cli.ObjectIdValidator;
@@ -42,9 +48,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
 
-import lombok.SneakyThrows;
-import lombok.val;
-
+@Slf4j
 @Component
 @Parameters(separators = "=", commandDescription = "Retrieve file object(s) from the remote storage repository")
 public class DownloadCommand extends AbstractClientCommand {
@@ -109,8 +113,13 @@ public class DownloadCommand extends AbstractClientCommand {
   }
 
   private int downloadObjects(List<String> objectIds) throws IOException {
+    // entities are defined in meta service
     val entities = resolveEntities(objectIds);
     prepareLayout(entities);
+
+    if (!verifyLocalAvailableSpace(entities)) {
+      return FAILURE_STATUS;
+    }
 
     int i = 1;
     terminal.println("");
@@ -166,7 +175,7 @@ public class DownloadCommand extends AbstractClientCommand {
   }
 
   /**
-   * Get the sourcd file for the supplied {@code entity}.
+   * Get the source file for the supplied {@code entity}.
    */
   private File getLayoutSource(Entity entity) {
     return new File(outputDir, entity.getId());
@@ -238,4 +247,28 @@ public class DownloadCommand extends AbstractClientCommand {
     return filtered.build();
   }
 
+  @SneakyThrows
+  private long getLocalAvailableSpace() {
+    val path = Paths.get(outputDir.getAbsolutePath());
+    val fs = java.nio.file.Files.getFileStore(path);
+    return fs.getUsableSpace();
+  }
+
+  private boolean verifyLocalAvailableSpace(Set<Entity> entities) {
+    val spaceRequired = downloadService.getSpaceRequired(entities);
+    val spaceAvailable = getLocalAvailableSpace();
+
+    log.warn("space required: {} ({})  space available: {} ({})", FileUtils.byteCountToDisplaySize(spaceRequired),
+        spaceRequired,
+        FileUtils.byteCountToDisplaySize(spaceAvailable), spaceAvailable);
+
+    if (spaceRequired > spaceAvailable) {
+      terminal.printWarn("Insufficient space to download requested files: Require %s. %s Available",
+          FileUtils.byteCountToDisplaySize(spaceRequired),
+          FileUtils.byteCountToDisplaySize(spaceAvailable));
+      terminal.clearLine();
+      return false;
+    }
+    return true;
+  }
 }
