@@ -200,19 +200,16 @@ public class ObjectDownloadService {
               throw new RetryableException(e);
             }
           }
-        } else if (!e.isRetryable()) {
+        } else {
           // Not a partitioned bucket - not found is not found
           throw new IdNotFoundException(objectId);
-        } else {
-          throw new RetryableException(e);
         }
       } else {
-        // some other kind of exception other than 404
-        if (!e.isRetryable()) {
-          // Not a partitioned bucket - not found is not found
-          throw new IdNotFoundException(objectId);
-        } else {
+        // some other exception rather than a 404
+        if (e.isRetryable()) {
           throw new RetryableException(e);
+        } else {
+          throw new IdNotFoundException(objectId);
         }
       }
     }
