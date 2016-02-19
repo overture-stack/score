@@ -84,7 +84,7 @@ public class BucketNamingService {
       int bucketIndex = calculateIndex(objectId);
       result = constructBucketName(baseName, bucketIndex);
     } else {
-      log.trace("Bucket partitioning disabled: bucketPoolSize = {}", bucketKeySize, bucketPoolSize);
+      log.trace("Bucket partitioning disabled: bucketPoolSize = {}", bucketPoolSize);
     }
     return result;
   }

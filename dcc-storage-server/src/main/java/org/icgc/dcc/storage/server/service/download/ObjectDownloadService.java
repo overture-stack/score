@@ -205,7 +205,7 @@ public class ObjectDownloadService {
           throw new IdNotFoundException(objectId);
         }
       } else {
-        // some other exception rather than a 404
+        // Some other exception rather than a 404
         if (e.isRetryable()) {
           throw new RetryableException(e);
         } else {
