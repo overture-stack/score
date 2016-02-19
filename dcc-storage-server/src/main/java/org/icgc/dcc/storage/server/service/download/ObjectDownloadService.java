@@ -179,34 +179,41 @@ public class ObjectDownloadService {
     String stateBucketName = bucketNamingService.getStateBucketName(objectId);
     try {
       return fetchObject(stateBucketName, objectMetaKey);
-    } catch (AmazonServiceException e) {
-
-      if ((e.getStatusCode() == HttpStatus.NOT_FOUND.value()) && (bucketNamingService.isPartitioned())) {
-
-        // Try again with master bucket
-        log.warn("Object with objectId: {} not found in {}, objectKey: {}: {}. Trying master bucket {}",
-            objectId, stateBucketName, objectMetaKey, e, bucketNamingService.getBaseStateBucketName());
-        try {
-          stateBucketName = bucketNamingService.getBaseStateBucketName(); // use base bucket name
-          val obj = fetchObject(stateBucketName, objectMetaKey);
-          obj.setRelocated(true);
-          return obj;
-
-        } catch (AmazonServiceException e2) {
-          log.error("Failed to get object with objectId: {} from {}, objectKey: {}: {}", objectId, stateBucketName,
-              objectMetaKey, e);
-          if ((e.getStatusCode() == HttpStatus.NOT_FOUND.value()) || (!e.isRetryable())) {
-            throw new IdNotFoundException(objectId);
-          } else {
-            throw new RetryableException(e);
+    } catch (AmazonServiceException e)
+    {
+      if (e.getStatusCode() == HttpStatus.NOT_FOUND.value()) {
+        if (bucketNamingService.isPartitioned()) {
+          // Try again with master bucket
+          log.warn("Object with objectId: {} not found in {}, objectKey: {}: {}. Trying master bucket {}",
+              objectId, stateBucketName, objectMetaKey, e, bucketNamingService.getBaseStateBucketName());
+          try {
+            stateBucketName = bucketNamingService.getBaseStateBucketName(); // use base bucket name
+            val obj = fetchObject(stateBucketName, objectMetaKey);
+            obj.setRelocated(true);
+            return obj;
+          } catch (AmazonServiceException e2) {
+            log.error("Failed to get object with objectId: {} from {}, objectKey: {}: {}", objectId, stateBucketName,
+                objectMetaKey, e);
+            if ((e.getStatusCode() == HttpStatus.NOT_FOUND.value()) || (!e.isRetryable())) {
+              throw new IdNotFoundException(objectId);
+            } else {
+              throw new RetryableException(e);
+            }
           }
+        } else if (!e.isRetryable()) {
+          // Not a partitioned bucket - not found is not found
+          throw new IdNotFoundException(objectId);
+        } else {
+          throw new RetryableException(e);
         }
-
-      } else if (!e.isRetryable()) {
-        // Not a partitioned bucket - not found is not found
-        throw new IdNotFoundException(objectId);
       } else {
-        throw new RetryableException(e);
+        // some other kind of exception other than 404
+        if (!e.isRetryable()) {
+          // Not a partitioned bucket - not found is not found
+          throw new IdNotFoundException(objectId);
+        } else {
+          throw new RetryableException(e);
+        }
       }
     }
   }
