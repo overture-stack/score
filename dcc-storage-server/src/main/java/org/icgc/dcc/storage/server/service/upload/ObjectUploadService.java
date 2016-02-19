@@ -155,24 +155,31 @@ public class ObjectUploadService {
       return true;
     } catch (AmazonServiceException e) {
 
-      if ((e.getStatusCode() == HttpStatus.NOT_FOUND.value()) && (bucketNamingService.isPartitioned())) {
+      if (e.getStatusCode() == HttpStatus.NOT_FOUND.value()) {
+        if (bucketNamingService.isPartitioned()) {
 
-        // Try again with master bucket
-        log.info("Metafile {} not found in {}. Trying master bucket {}",
-            objectKey.getMetaKey(), actualBucketName, bucketNamingService.getBaseStateBucketName());
-        try {
-          actualBucketName = bucketNamingService.getBaseStateBucketName(); // use base bucket name
-          s3Client.getObjectMetadata(actualBucketName, objectKey.getMetaKey());
-          log.info("ObjectKey {} found in master bucket {}", objectKey, actualBucketName);
-          return true;
-        } catch (AmazonServiceException e2) {
-          log.info("ObjectKey {} also not found in master bucket {}", objectKey, actualBucketName);
+          // Try again with master bucket
+          log.info("Metafile {} not found in {}. Trying master bucket {}",
+              objectKey.getMetaKey(), actualBucketName, bucketNamingService.getBaseStateBucketName());
+          try {
+            actualBucketName = bucketNamingService.getBaseStateBucketName(); // use base bucket name
+            s3Client.getObjectMetadata(actualBucketName, objectKey.getMetaKey());
+            log.info("ObjectKey {} found in master bucket {}", objectKey, actualBucketName);
+            return true;
+          } catch (AmazonServiceException e2) {
+            log.info("ObjectKey {} also not found in master bucket {}", objectKey, actualBucketName);
+            return false;
+          }
+        } else {
+          // Not a partitioned bucket - not found is not found
         }
-      } else if (!e.isRetryable()) {
-        // Not a partitioned bucket - not found is not found
-        throw new IdNotFoundException(objectId);
-      } else {
+      } else if (e.isRetryable()) {
+        // Don't depend on Amazon's isRetryable() flag...
+        // (we originally defaulted to retry everything)
         throw new RetryableException(e);
+      } else {
+        // ...but figure if they say it's not retryable, it's really not
+        throw new NotRetryableException(e);
       }
     }
     return false;
