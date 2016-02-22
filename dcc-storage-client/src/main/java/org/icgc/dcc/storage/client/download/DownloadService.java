@@ -30,11 +30,6 @@ import java.util.Set;
 
 import javax.annotation.PostConstruct;
 
-import lombok.NonNull;
-import lombok.SneakyThrows;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
-
 import org.icgc.dcc.storage.client.cli.Terminal;
 import org.icgc.dcc.storage.client.exception.NotResumableException;
 import org.icgc.dcc.storage.client.exception.NotRetryableException;
@@ -48,6 +43,11 @@ import org.icgc.dcc.storage.core.model.Part;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+
+import lombok.NonNull;
+import lombok.SneakyThrows;
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * main class to handle uploading objects
@@ -193,19 +193,6 @@ public class DownloadService {
       if (part.getMd5() != null) completedTotal++;
     }
     return completedTotal;
-
-  }
-
-  /**
-   * Calculate the total size of completed parts
-   */
-  private long completedPartsUsedSpace(List<Part> parts) {
-
-    long completedSize = 0;
-    for (Part part : parts) {
-      if (part.getMd5() != null) completedSize += part.getPartSize();
-    }
-    return completedSize;
 
   }
 

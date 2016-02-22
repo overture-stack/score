@@ -169,21 +169,21 @@ public class BucketNamingServiceTest {
   public void key_length_too_large() {
     sut.setBucketPoolSize(20);
     sut.setBucketKeySize(10);
-    String value = sut.getObjectBucketName("56f3cb04-38b4-574c-bffb-af1426113194");
+    sut.getObjectBucketName("56f3cb04-38b4-574c-bffb-af1426113194");
   }
 
   @Test(expected = IllegalArgumentException.class)
   public void key_length_negative() {
     sut.setBucketPoolSize(20);
     sut.setBucketKeySize(-3);
-    String value = sut.getObjectBucketName("56f3cb04-38b4-574c-bffb-af1426113194");
+    sut.getObjectBucketName("56f3cb04-38b4-574c-bffb-af1426113194");
   }
 
   @Test(expected = NumberFormatException.class)
   public void invalid_object_id() {
     sut.setBucketPoolSize(10);
     sut.setBucketKeySize(3);
-    String value = sut.getObjectBucketName("Lorem ipsum dolor");
+    sut.getObjectBucketName("Lorem ipsum dolor");
   }
 
   @Test

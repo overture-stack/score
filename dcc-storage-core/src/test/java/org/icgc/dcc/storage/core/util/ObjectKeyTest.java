@@ -32,16 +32,17 @@ public class ObjectKeyTest {
 
   @Test
   public void parse_valid_format() {
-    ObjectKey key = new ObjectKey("data/object_id");
+    new ObjectKey("data/object_id");
   }
 
   @Test(expected = IllegalArgumentException.class)
   public void parse_invalid_format() {
-    ObjectKey key = new ObjectKey("lorem ipsum");
+    new ObjectKey("lorem ipsum");
   }
 
   @Test(expected = IllegalArgumentException.class)
   public void parse_invalid_format_too_many_parts() {
-    ObjectKey key = new ObjectKey("lorem/ipsum/dolor");
+    new ObjectKey("lorem/ipsum/dolor");
   }
+
 }

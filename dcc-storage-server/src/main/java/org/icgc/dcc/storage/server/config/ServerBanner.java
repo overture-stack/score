@@ -32,11 +32,6 @@ import java.util.Map;
 
 import javax.annotation.PostConstruct;
 
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.config.RandomValuePropertySource;
 import org.springframework.core.env.EnumerablePropertySource;
@@ -49,9 +44,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
+
 @Slf4j
 @Component
-@RequiredArgsConstructor(onConstructor = @__(@Autowired))
+@RequiredArgsConstructor(onConstructor = @__(@Autowired) )
 public class ServerBanner {
 
   /**
@@ -71,13 +71,6 @@ public class ServerBanner {
     log.info("Profiles: {}", Arrays.toString(env.getActiveProfiles()));
     log(env);
     log.info("{}\n\n", line());
-  }
-
-  private static void log(Object values) {
-    val name = values.getClass().getName();
-
-    log.info("{}:", name);
-    log(convert(values));
   }
 
   private static void log(Map<String, ?> values) {

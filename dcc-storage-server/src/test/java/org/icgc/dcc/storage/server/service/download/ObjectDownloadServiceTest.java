@@ -26,8 +26,6 @@ import static org.mockito.Mockito.when;
 import java.net.URL;
 import java.util.regex.Pattern;
 
-import lombok.val;
-
 import org.icgc.dcc.storage.core.util.ObjectKeys;
 import org.icgc.dcc.storage.server.config.ServerConfig;
 import org.icgc.dcc.storage.server.exception.IdNotFoundException;
@@ -48,6 +46,8 @@ import org.springframework.test.util.ReflectionTestUtils;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.s3.AmazonS3;
 import com.google.common.base.Splitter;
+
+import lombok.val;
 
 @RunWith(MockitoJUnitRunner.class)
 @ContextConfiguration(classes = ServerConfig.class)
@@ -99,8 +99,7 @@ public class ObjectDownloadServiceTest extends ObjectDownloadService {
     firstException.setStatusCode(HttpStatus.NOT_FOUND.value());
     when(s3Client.getObject(Mockito.any())).thenThrow(firstException, firstException); // stubs first two calls to
                                                                                        // s3Client.getObject()
-
-    val objSpec = service.download(objectId, 0, 1000, false);
+    service.download(objectId, 0, 1000, false);
   }
 
   @Test
