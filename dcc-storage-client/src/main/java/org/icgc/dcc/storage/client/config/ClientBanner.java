@@ -73,6 +73,13 @@ public class ClientBanner {
     log.info("{}\n\n", line());
   }
 
+  private static void log(Object values) {
+    val name = values.getClass().getName();
+
+    log.info("{}:", name);
+    log(convert(values));
+  }
+
   private static void log(Map<String, ?> values) {
     for (val entry : convert(values).entrySet()) {
       val key = entry.getKey();

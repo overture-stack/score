@@ -17,15 +17,17 @@
  */
 package org.icgc.dcc.storage.client.slicing;
 
-import java.util.List;
-
-import org.icgc.dcc.storage.client.util.AlphanumComparator;
-
 import htsjdk.samtools.QueryInterval;
 import htsjdk.samtools.SAMSequenceDictionary;
+
+import java.util.List;
+import java.util.Optional;
+
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
+
+import org.icgc.dcc.storage.client.util.AlphanumComparator;
 
 @RequiredArgsConstructor
 public class SliceConverter {
@@ -36,9 +38,12 @@ public class SliceConverter {
   @NonNull
   private final SAMSequenceDictionary samDictionary;
 
-  public QueryInterval convert(@NonNull Slice slice) {
+  public Optional<QueryInterval> convert(@NonNull Slice slice) {
     val index = samDictionary.getSequenceIndex(slice.getSequence());
-    return new QueryInterval(index, slice.getStart(), slice.getEnd());
+    if (index == -1) {
+      return Optional.empty();
+    }
+    return Optional.ofNullable(new QueryInterval(index, slice.getStart(), slice.getEnd()));
   }
 
   public QueryInterval[] convert(@NonNull List<Slice> slices) {
@@ -47,7 +52,10 @@ public class SliceConverter {
     int index = 0;
     QueryInterval[] result = new QueryInterval[slices.size()];
     for (val slice : slices) {
-      result[index] = convert(slice);
+      val mapping = convert(slice);
+      if (mapping.isPresent()) {
+        result[index] = mapping.get();
+      }
       index++;
     }
 

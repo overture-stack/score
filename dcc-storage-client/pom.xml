@@ -106,9 +106,9 @@
     <dependency>
       <groupId>com.github.samtools</groupId>
       <artifactId>htsjdk</artifactId>
-      <version>1.138</version>
+      <version>${htsjdk.version}</version>
     </dependency>
-
+	
     <!-- Utilities -->
     <dependency>
       <groupId>com.google.guava</groupId>
@@ -171,7 +171,8 @@
     <dcc-common.version>3.8.15.0</dcc-common.version>
 
     <!-- Versions - Genomics -->
-    <htsjdk.version>1.138</htsjdk.version>
+    <!--  <htsjdk.version>1.138</htsjdk.version> -->
+    <htsjdk.version>2.1.0</htsjdk.version>
 
     <!-- Versions - FUSE -->
     <javafs.version>0.1.0</javafs.version>
