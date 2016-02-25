@@ -18,7 +18,6 @@
 package org.icgc.dcc.storage.client.manifest;
 
 import static org.icgc.dcc.storage.core.util.UUIDs.isUUID;
-
 import lombok.Getter;
 import lombok.NonNull;
 
@@ -37,10 +36,10 @@ public class ManifestResource {
   public ManifestResource(@NonNull String value) {
     super();
     this.value = value.trim();
-    this.type = resoveType(value);
+    this.type = resolveType(value);
   }
 
-  private static Type resoveType(String value) {
+  private static Type resolveType(String value) {
     if (isURL(value)) {
       return Type.URL;
     } else if (isUUID(value)) {
@@ -52,6 +51,16 @@ public class ManifestResource {
 
   private static boolean isURL(String manifestSpec) {
     return manifestSpec.startsWith("http:/") || manifestSpec.startsWith("https:/");
+  }
+
+  public boolean isGnosManifest() {
+    boolean result = false;
+    if (resolveType(value).equals(Type.FILE)) {
+      if (value.toLowerCase().contains(".xml")) {
+        result = true;
+      }
+    }
+    return result;
   }
 
   @Override
