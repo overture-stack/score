@@ -112,7 +112,7 @@ public class ViewCommand extends AbstractClientCommand {
   private ManifestResource manifestResource;
   @Parameter(names = "--output-type", description = "File output structure for queries. TRIMMED, MINI, AGGREGATE, CROSS. Only used with --manifest", converter = OutputTypeConverter.class)
   private OutputType outputType = OutputType.TRIMMED;
-  @Parameter(names = "--output-dir", description = "Path to output directory. Only used with --manifest", required = true, validateValueWith = DirectoryValidator.class)
+  @Parameter(names = "--output-dir", description = "Path to output directory. Only used with --manifest", validateValueWith = DirectoryValidator.class)
   private File outputDir;
 
   /**
@@ -128,8 +128,14 @@ public class ViewCommand extends AbstractClientCommand {
   @Override
   public int execute() throws Exception {
     terminal.printStatus("Viewing...");
+
     checkParameter(objectId != null || bamFile != null || manifestResource != null,
         "One of --object-id, --input-file or --manifest must be specified");
+
+    if (objectId == null && bamFile == null) {
+      checkParameter(manifestResource != null && outputDir != null,
+          "--output-dir must be specified when using --manifest");
+    }
 
     val single = objectId != null;
     if (single) {
@@ -388,7 +394,7 @@ public class ViewCommand extends AbstractClientCommand {
         .setCreateMd5File(false)
         .setUseAsyncIo(true);
 
-    // val stdout = (fileName == null) || fileName.trim().isEmpty();
+    val stdout = (fileName == null) || fileName.trim().isEmpty();
     val outFile = new File(fileName);
     terminal.println("writer: " + outFile.getCanonicalPath());
 
@@ -397,8 +403,13 @@ public class ViewCommand extends AbstractClientCommand {
       outFile.delete();
     }
 
-    return outputFormat == OutputFormat.BAM ? factory.makeBAMWriter(header, true, outFile) : factory
-        .makeSAMWriter(header, true, outFile);
+    if (stdout) {
+      return outputFormat == OutputFormat.BAM ? factory.makeBAMWriter(header, true, System.out) : factory
+          .makeSAMWriter(header, true, System.out);
+    } else {
+      return outputFormat == OutputFormat.BAM ? factory.makeBAMWriter(header, true, outFile) : factory
+          .makeSAMWriter(header, true, outFile);
+    }
   }
 
   private SamInputResource getFileResource(File bamFile, File baiFile) {
