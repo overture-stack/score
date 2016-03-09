@@ -123,7 +123,7 @@ public class StorageFileSystemProvider extends ReadOnlyFileSystemProvider {
   @Override
   public boolean isHidden(Path path) throws IOException {
     if (context.getLayout() == StorageFileLayout.OBJECT_ID) {
-      return path.getFileName().endsWith(".bai");
+      return path.getFileName().endsWith(".bai") || path.getFileName().endsWith(".tbi");
     }
 
     return false;

@@ -130,6 +130,19 @@ public class MountStorageContext implements StorageContext {
   }
 
   @Override
+  public Optional<StorageFile> getTbiFile(String vcfObjectId) {
+    val vcfFile = getFile(vcfObjectId);
+    if (vcfFile == null) {
+      return Optional.empty();
+    }
+
+    val gnosId = vcfFile.getGnosId();
+    return getFilesByGnosId(gnosId).stream()
+        .filter(file -> file.getFileName().contains(vcfFile.getFileName() + ".tbi"))
+        .findFirst();
+  }
+
+  @Override
   public Collection<StorageFile> getFilesByGnosId(String gnosId) {
     return getFileGnosIdIndex().get(gnosId);
   }

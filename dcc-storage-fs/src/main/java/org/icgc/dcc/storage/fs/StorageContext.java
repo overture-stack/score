@@ -33,6 +33,8 @@ public interface StorageContext {
 
   Optional<StorageFile> getBaiFile(String bamObjectId);
 
+  Optional<StorageFile> getTbiFile(String vcfObjectId);
+
   Collection<StorageFile> getFilesByGnosId(String gnosId);
 
   URL getUrl(String objectId);

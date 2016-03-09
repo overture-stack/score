@@ -73,6 +73,9 @@ public class StoragePath extends GenericPath<StorageFileSystem> {
       if (fileName.endsWith(".bai")) {
         val bamObjectId = fileName.replace(".bai", "");
         return context.getBaiFile(bamObjectId);
+      } else if (fileName.endsWith(".tbi")) {
+        val vcfObjectId = fileName.replace(".tbi", "");
+        return context.getTbiFile(vcfObjectId);
       }
 
       return Optional.ofNullable(context.getFile(fileName));
