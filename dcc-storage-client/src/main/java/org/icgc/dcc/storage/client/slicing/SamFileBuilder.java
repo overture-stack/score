@@ -470,7 +470,6 @@ public class SamFileBuilder {
     val reader = createSamReader();
     QueryInterval[] intervals = normalizeQueries(reader, query);
 
-    // Actually perform query - we will need alignments to determine contents of Sequence Dictionary in header
     List<SAMRecord> alignments = doQuery(reader, intervals);
     createTrimmed(reader, entity, query, alignments);
   }
@@ -482,7 +481,6 @@ public class SamFileBuilder {
     val reader = createSamReader();
     QueryInterval[] intervals = normalizeQueries(reader, query);
 
-    // Actually perform query - we will need alignments to determine contents of Sequence Dictionary in header
     for (QueryInterval q : intervals) {
       List<SAMRecord> alignments = doQuery(reader, Collections.singletonList(q).toArray(new QueryInterval[1]));
       // createTrimmed(reader, entity, Collections.singletonList(q), alignments);

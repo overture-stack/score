@@ -218,7 +218,7 @@ public class ViewCommand extends AbstractClientCommand {
     // Line up bam and index file (encapsulated in a SamInputResource)
     val resource = createInputResource(entity);
 
-    SamFileBuilder bob = new SamFileBuilder().
+    val bob = new SamFileBuilder().
         containedOnly(containedOnly).
         useOriginalHeader(useOriginalHeader).
         outputFormat(outputFormat).
