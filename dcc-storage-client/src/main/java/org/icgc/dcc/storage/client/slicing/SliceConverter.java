@@ -50,15 +50,14 @@ public class SliceConverter {
     sortSlices(slices);
 
     int index = 0;
-    QueryInterval[] result = new QueryInterval[slices.size()];
+    val result = new QueryInterval[slices.size()];
     for (val slice : slices) {
       val mapping = convert(slice);
       if (mapping.isPresent()) {
         result[index] = mapping.get();
+        index++;
       }
-      index++;
     }
-
     return result;
   }
 

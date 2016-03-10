@@ -11,6 +11,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
+
 import org.icgc.dcc.storage.client.cli.ConverterFactory;
 import org.icgc.dcc.storage.client.cli.Terminal;
 import org.icgc.dcc.storage.client.command.ClientCommand;
@@ -26,9 +29,6 @@ import com.beust.jcommander.MissingCommandException;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
 import com.beust.jcommander.Parameters;
-
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * Application entry-point.
@@ -71,7 +71,7 @@ public class ClientMain implements CommandLineRunner {
   private Map<String, ClientCommand> commands;
 
   public static void main(String[] args) {
-    err.print("Starting...");
+    err.println("Starting...");
     try {
       // Bootstrap
       val profiles = bootstrap(args);
@@ -104,7 +104,7 @@ public class ClientMain implements CommandLineRunner {
    */
   @Override
   public void run(String... params) throws Exception {
-    terminal.printStatus("Running...");
+    terminal.println("Running...");
 
     try {
       // Parse

@@ -22,6 +22,7 @@ import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMFileHeader.SortOrder;
 import htsjdk.samtools.SAMFileWriter;
 import htsjdk.samtools.SAMFileWriterFactory;
+import htsjdk.samtools.SAMReadGroupRecord;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamInputResource;
 import htsjdk.samtools.SamReader;
@@ -31,9 +32,9 @@ import htsjdk.samtools.util.RuntimeIOException;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-import java.util.SortedSet;
 
 import lombok.Cleanup;
 import lombok.NonNull;
@@ -44,7 +45,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.icgc.dcc.storage.client.command.ViewCommand.OutputFormat;
 import org.icgc.dcc.storage.client.metadata.Entity;
-import org.icgc.dcc.storage.client.util.AlphanumStringComparator;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
@@ -53,8 +54,8 @@ import com.google.common.collect.Sets;
 @Slf4j
 public class SamFileBuilder {
 
-  // arbitrary limit - accounting for pathname as well
-  public final static int MAX_FILENAME_LENGTH = 120;
+  // arbitrary limit - actual max for file name (not including path) is probably 255
+  public final static int MAX_FILENAME_LENGTH = 128;
 
   /**
    * Options
@@ -65,12 +66,17 @@ public class SamFileBuilder {
   private List<String> query = Lists.<String> newArrayList();
   private File outputDir;
   private boolean outputIndex = false;
+  private File bedFile;
+
+  private org.slf4j.Logger session = LoggerFactory.getLogger("session");
 
   /*
    * Intermediate Objects
    */
   private Entity entity;
   private SamInputResource samInputResource;
+
+  private boolean queryCompiledFlag = false;
 
   public SamFileBuilder containedOnly(boolean flag) {
     containedOnly = flag;
@@ -97,6 +103,11 @@ public class SamFileBuilder {
     return this;
   }
 
+  public SamFileBuilder bedFile(File bed) {
+    bedFile = bed;
+    return this;
+  }
+
   public SamFileBuilder outputIndex(boolean flag) {
     outputIndex = flag;
     return this;
@@ -112,6 +123,20 @@ public class SamFileBuilder {
     return this;
   }
 
+  protected void validate() {
+    if (outputDir == null) {
+      throw new IllegalStateException("Missing output directory");
+    }
+
+    if (entity == null) {
+      throw new IllegalStateException("Missing entity description");
+    }
+
+    if (samInputResource == null) {
+      throw new IllegalStateException("Missing Input Resource");
+    }
+  }
+
   @SneakyThrows
   private SamReader createSamReader() {
     try {
@@ -121,8 +146,10 @@ public class SamFileBuilder {
       log.error("Error opening SamReader: ", e);
       val rootCause = Throwables.getRootCause(e);
       if (rootCause instanceof IOException) {
+        session.info("Error opening Reader: " + rootCause.getMessage());
         throw new RuntimeException("Error opening SAM resource: " + rootCause.getMessage(), rootCause);
       }
+      session.info("Error opening Reader: " + e.getMessage());
       throw e;
     }
   }
@@ -134,28 +161,31 @@ public class SamFileBuilder {
    * @return Writer for output
    */
   @SneakyThrows
-  private SAMFileWriter prepareOutput(@NonNull String fileName, @NonNull SAMFileHeader srcHeader) {
+  private SAMFileWriter prepareHeaderOutput(@NonNull String fileName, @NonNull SAMFileHeader srcHeader) {
+    session.info(String.format("Preparing to write header only to %s ", fileName));
     return createSamFileWriter(srcHeader, fileName);
   }
 
   /**
-   * Constructs writer for output of SAM/BAM file. The Reference Sequence Dictionary in the new file will only contain
-   * the specified list of sequence ref names.
+   * Constructs writer for output of SAM/BAM file.
    * @param fileName
    * @param srcHeader
-   * @param sequenceRefNames
+   * @param readGroups
    * @return
    */
   @SneakyThrows
   private SAMFileWriter prepareOutput(@NonNull String fileName, @NonNull SAMFileHeader srcHeader,
-      @NonNull Set<String> sequenceRefNames) {
+      Set<SAMReadGroupRecord> readGroups) {
 
     if (useOriginalHeader) {
+      session.info("Preparing to write to {} using original header", fileName);
       return createSamFileWriter(srcHeader, fileName);
     }
 
+    session.info("Preparing to write to {}", fileName);
     // Create subset of header that contains only sequences referred to
-    val outputHeader = createNewHeader(srcHeader, sequenceRefNames);
+    val outputHeader = createNewHeader(srcHeader);
+    outputHeader.setReadGroups(Lists.<SAMReadGroupRecord> newArrayList(readGroups));
     outputHeader.setSortOrder(SortOrder.coordinate);
 
     // Create writer using the new header
@@ -168,6 +198,7 @@ public class SamFileBuilder {
    * @return file name with output path prepended
    */
   private String addOutputPath(String fileName) {
+    session.info("Adding {}", fileName);
     String outputFileName = fileName;
     if (outputDir != null) {
       outputFileName = String.format("%s%s%s", outputDir, File.separator, fileName);
@@ -187,7 +218,7 @@ public class SamFileBuilder {
 
     @Cleanup
     // Calls close() on writer which flushes everything to disk
-    val writer = prepareOutput(outputFileName, sourceHeader);
+    val writer = prepareHeaderOutput(outputFileName, sourceHeader);
   }
 
   /**
@@ -200,101 +231,107 @@ public class SamFileBuilder {
    */
   @SneakyThrows
   private void createTrimmed(SamReader reader, Entity entity, List<String> queries, List<SAMRecord> alignments) {
+    validate();
 
-    // Assemble list of sequence refs from both fields in alignment record
-    SortedSet<String> sequenceRefs = getSequenceReferences(alignments);
-
-    val outputFileName = generateOutputFileName(entity, queries);
+    val outputFileName = bedFile == null ? generateOutputFileName(entity, queries) : generateOutputFileName(entity);
 
     // Ok - now we can finally write things out
     val sourceHeader = reader.getFileHeader();
 
+    val readGroups = Sets.<SAMReadGroupRecord> newHashSet();
+    alignments.stream().forEach(e -> readGroups.add(e.getReadGroup()));
+
     @Cleanup
-    val writer = prepareOutput(outputFileName, sourceHeader, sequenceRefs);
-    for (SAMRecord a : alignments) {
-      writer.addAlignment(a);
-    }
+    val writer = prepareOutput(outputFileName, sourceHeader, readGroups);
+    alignments.stream().forEach(e -> writer.addAlignment(e));
   }
 
   /**
+   * Temporarily changed to public
+   * 
+   * @param reader
+   * @param queries
+   * @return
+   */
+  public QueryInterval[] normalizeQueries(SamReader reader, List<String> queries) {
+    val sourceHeader = reader.getFileHeader();
+
+    session.info("  {} regions specified in query", queries.size());
+    log.trace("Slicing: ");
+    for (val q : queries) {
+      if (!queryCompiledFlag) {
+        session.info("  {}", q);
+      }
+      log.trace("  {}", q);
+    }
+
+    val slices = QueryHandler.parseQueryStrings(queries);
+    session.info("  Parsed {} slices", slices.size());
+
+    val intervals = QueryHandler.convertSlices(sourceHeader, slices);
+    session.info("  Merged abutting and overlapping intervals into {} slices", intervals.length);
+
+    for (QueryInterval i : intervals) {
+      if (!queryCompiledFlag) {
+        session.info("  {}:{}-{}", sourceHeader.getSequence(i.referenceIndex).getSequenceName(), i.start, i.end);
+      }
+    }
+    queryCompiledFlag = true;
+    return intervals;
+  }
+
+  /**
+   * Temporarily changed to public
+   * 
    * Returns list of SAMRecord alignments that satisfy the specified list of queries. Refers to the <b>containedOnly</b>
    * member variable.
    * @param reader Instance of the SAM Reader open to source SAM/BAM file
-   * @param queries Sorted list of queries to run
-   * @param sourceHeader Instance of source header
+   * @param intervals Sorted list of queries to run
    * @return Ordered list of alignment records that satisfy the specified queries
    */
-  private List<SAMRecord> doQuery(SamReader reader, List<String> queries) {
-    val sourceHeader = reader.getFileHeader();
-    val slices = QueryHandler.parseQueryStrings(queries);
-    QueryInterval[] intervals = QueryHandler.convertSlices(sourceHeader, slices);
-
-    // Perform actual slicing
-    List<SAMRecord> alignments = Lists.<SAMRecord> newArrayList();
+  public List<SAMRecord> doQuery(SamReader reader, QueryInterval[] intervals) {
+    val alignments = Lists.<SAMRecord> newArrayList();
     val iterator = reader.query(intervals, containedOnly);
     while (iterator.hasNext()) {
       val record = iterator.next();
       alignments.add(record);
     }
+    iterator.close();
+
+    session.info("    Query returned {} alignments (entirely contained = {})", alignments.size(), containedOnly);
     return alignments;
   }
 
   /**
-   * @param alignments
-   * @return
-   */
-  private SortedSet<String> getSequenceReferences(List<SAMRecord> alignments) {
-    // Go through returned alignments and find all the Mate/Next Reads (RNEXT)
-    SortedSet<String> sequenceRefs = Sets.<String> newTreeSet(new AlphanumStringComparator());
-    for (SAMRecord a : alignments) {
-      if (!a.getReferenceName().equals(SAMRecord.NO_ALIGNMENT_REFERENCE_NAME)) {
-        sequenceRefs.add(a.getReferenceName());
-      }
-
-      if (!a.getMateReferenceName().equals(SAMRecord.NO_ALIGNMENT_REFERENCE_NAME)) {
-        sequenceRefs.add(a.getMateReferenceName());
-      }
-    }
-    return sequenceRefs;
-  }
-
-  /**
-   * Constructs a new SAM File header that copies over mandatory fields from source. Copies over only fields from
-   * Sequence Dictionary that are referenced in the new file.
+   * Constructs a new SAM File header that copies over all @SQ and @PG fields from source.
    * @param header - header of <i>source</i> SAM/BAM file
-   * @param sequenceRefs - ordered set of Reference Sequence Names required in new header
    * @return instance of a new SAM/BAM file header
    */
-  private SAMFileHeader createNewHeader(@NonNull SAMFileHeader header, @NonNull Set<String> sequenceRefs) {
-    SAMFileHeader newHeader = new SAMFileHeader();
-    for (val pr : header.getProgramRecords()) {
-      newHeader.addProgramRecord(pr);
-    }
-    for (String ref : sequenceRefs) {
-      val sq = header.getSequence(ref);
-      if (sq != null) {
-        newHeader.addSequence(sq);
-      } else {
-        log.warn("Warning: Sequence Name {} not found in source BAM file", ref);
-      }
-    }
+  private SAMFileHeader createNewHeader(@NonNull SAMFileHeader header) {
+    val newHeader = new SAMFileHeader();
+    newHeader.setProgramRecords(header.getProgramRecords());
+    newHeader.setSequenceDictionary(header.getSequenceDictionary());
     return newHeader;
   }
 
   @SneakyThrows
   private SAMFileWriter createSamFileWriter(SAMFileHeader header, String fileName) {
+    val stdout = (fileName == null) || fileName.trim().isEmpty();
+    if (stdout) {
+      outputIndex = false;
+    }
+
     val factory = new SAMFileWriterFactory()
         .setCreateIndex(outputIndex)
         .setCreateMd5File(false)
         .setUseAsyncIo(true);
-
-    val stdout = (fileName == null) || fileName.trim().isEmpty();
 
     if (stdout) {
       return outputFormat == OutputFormat.BAM ? factory.makeBAMWriter(header, true, System.out) : factory
           .makeSAMWriter(header, true, System.out);
     } else {
       val outFile = new File(fileName);
+      log.debug("writing: {}", outFile.getCanonicalPath());
 
       // Overwrite existing output
       if (outFile.exists()) {
@@ -306,6 +343,49 @@ public class SamFileBuilder {
     }
   }
 
+  String getExtension(OutputFormat fmt) {
+    return String.format(".%s", fmt.toString().toLowerCase());
+  }
+
+  /**
+   * Determine whether source file is a BAM or SAM based on file extension
+   * @param ent - Entity containing source filename
+   * @return OutputFormat enum indicating file type
+   */
+  OutputFormat getSourceType(Entity ent) {
+    if (ent.getFileName().contains(getExtension(OutputFormat.BAM))) {
+      return OutputFormat.BAM;
+    } else if (ent.getFileName().contains(getExtension(OutputFormat.SAM))) {
+      return OutputFormat.SAM;
+    } else {
+      val msg = String.format("%s could not be identified as SAM or BAM", ent.getFileName());
+      throw new IllegalArgumentException(msg);
+    }
+  }
+
+  /**
+   * Perform string manipulation to insert modifier text to end of filename, but before file extension
+   * @param entity
+   * @return
+   */
+  private String injectFileNameModifier(Entity entity, String modifier) {
+    val fname = entity.getFileName();
+    val srcExtension = getExtension(getSourceType(entity));
+    val extensionPos = fname.toLowerCase().indexOf(srcExtension);
+    val left = StringUtils.left(fname, extensionPos);
+    val newExtension = StringUtils.right(fname, fname.length() - extensionPos);
+    return String.format("%s.%s%s", left, modifier, newExtension);
+  }
+
+  /**
+   * Construct output file name when query is specified in a BED file
+   * @param entity - provides base filename to amend
+   * @return output file name
+   */
+  String generateOutputFileName(@NonNull Entity entity) {
+    return addOutputPath(injectFileNameModifier(entity, bedFile.getName()));
+  }
+
   /**
    * Construct output file name.
    * @param entity - provides base filename to amend
@@ -313,11 +393,7 @@ public class SamFileBuilder {
    * @return output file name
    */
   String generateOutputFileName(@NonNull Entity entity, String query) {
-    val fname = entity.getFileName();
-    val extensionPos = fname.toLowerCase().indexOf(".bam");
-    val left = StringUtils.left(fname, extensionPos);
-    val extension = StringUtils.right(fname, fname.length() - extensionPos);
-    return addOutputPath(String.format("%s.%s%s", left, encodeQuery(query), extension));
+    return addOutputPath(injectFileNameModifier(entity, encodeQuery(query)));
   }
 
   /**
@@ -327,12 +403,7 @@ public class SamFileBuilder {
    * @return output file name
    */
   String generateOutputFileName(@NonNull Entity entity, List<String> queries) {
-    val fname = entity.getFileName();
-    val extensionPos = fname.toLowerCase().indexOf(".bam");
-    val left = StringUtils.left(fname, extensionPos);
-    val extension = StringUtils.right(fname, fname.length() - extensionPos);
-
-    StringBuilder bob = new StringBuilder();
+    val bob = new StringBuilder();
     boolean firstValue = true;
     for (val q : queries) {
       if (!firstValue) {
@@ -341,8 +412,9 @@ public class SamFileBuilder {
       bob.append(encodeQuery(q));
       firstValue = false;
     }
-    String fullName = String.format("%s.%s%s", left, bob.toString(), extension);
-    return addOutputPath(handleMaxFilenameLength(fullName));
+    val fullName =
+        handleMaxFilenameLength(injectFileNameModifier(entity, bob.toString()), getExtension(getSourceType(entity)));
+    return addOutputPath(fullName);
   }
 
   /**
@@ -351,13 +423,7 @@ public class SamFileBuilder {
    * @return output file name
    */
   String generateHeaderOnlyOutputFileName(@NonNull Entity entity) {
-    val fname = entity.getFileName();
-    val extensionPos = fname.toLowerCase().indexOf(".bam");
-    val left = StringUtils.left(fname, extensionPos);
-    val extension = StringUtils.right(fname, fname.length() - extensionPos);
-
-    String fullName = String.format("%s.%s%s", left, "header", extension);
-    return addOutputPath(fullName);
+    return addOutputPath(injectFileNameModifier(entity, "header"));
   }
 
   /**
@@ -368,13 +434,13 @@ public class SamFileBuilder {
    * @return file name truncated at MAX_FILENAME_LENGTH but retaining extension. Includes '~' to indicate that it has
    * been truncated
    */
-  String handleMaxFilenameLength(String originalName) {
-    // Truncate everything prior to .bam or .bam.bai suffix
+  String handleMaxFilenameLength(String originalName, String srcExtension) {
+    // Truncate everything prior to supplied suffix
     if (originalName.length() <= MAX_FILENAME_LENGTH) {
       return originalName;
     }
 
-    val extensionPos = originalName.toLowerCase().indexOf(".bam");
+    val extensionPos = originalName.toLowerCase().indexOf(srcExtension);
     val left = StringUtils.left(originalName, MAX_FILENAME_LENGTH - 1);
     val extension = StringUtils.right(originalName, originalName.length() - extensionPos);
 
@@ -391,19 +457,49 @@ public class SamFileBuilder {
   }
 
   @SneakyThrows
-  public void buildTrimmed() {
-    @Cleanup
-    val reader = createSamReader();
-
-    // Actually perform query - we will need alignments to determine contents of Sequence Dictionary in header
-    List<SAMRecord> alignments = doQuery(reader, query);
-    createTrimmed(reader, entity, query, alignments);
-  }
-
-  @SneakyThrows
   public void buildHeaderOnly() {
     @Cleanup
     val reader = createSamReader();
     createHeaderOnly(reader, entity); // use original filename and no query
   }
+
+  @SneakyThrows
+  public void buildTrimmed() {
+    session.info("----- Constructing Trimmed Output for {}", entity.getFileName());
+    @Cleanup
+    val reader = createSamReader();
+    QueryInterval[] intervals = normalizeQueries(reader, query);
+
+    // Actually perform query - we will need alignments to determine contents of Sequence Dictionary in header
+    List<SAMRecord> alignments = doQuery(reader, intervals);
+    createTrimmed(reader, entity, query, alignments);
+  }
+
+  @SneakyThrows
+  public void buildMerged() {
+    session.info("----- Constructing Merged Output");
+    @Cleanup
+    val reader = createSamReader();
+    QueryInterval[] intervals = normalizeQueries(reader, query);
+
+    // Actually perform query - we will need alignments to determine contents of Sequence Dictionary in header
+    for (QueryInterval q : intervals) {
+      List<SAMRecord> alignments = doQuery(reader, Collections.singletonList(q).toArray(new QueryInterval[1]));
+      // createTrimmed(reader, entity, Collections.singletonList(q), alignments);
+    }
+  }
+
+  /*
+   * (non-Javadoc)
+   * 
+   * @see java.lang.Object#toString()
+   */
+  @Override
+  public String toString() {
+    return "SamFileBuilder [containedOnly=" + containedOnly + ", useOriginalHeader=" + useOriginalHeader
+        + ", outputFormat=" + outputFormat + ", query=" + query + ", outputDir=" + outputDir + ", bedFile=" + bedFile
+        + ", outputIndex=" + outputIndex + ", session=" + session + ", entity=" + entity + ", samInputResource="
+        + samInputResource + "]";
+  }
+
 }

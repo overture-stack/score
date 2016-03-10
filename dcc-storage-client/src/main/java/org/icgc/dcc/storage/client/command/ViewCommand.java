@@ -20,6 +20,11 @@ package org.icgc.dcc.storage.client.command;
 import static java.util.stream.Collectors.toList;
 import static org.icgc.dcc.storage.client.cli.Parameters.checkParameter;
 import htsjdk.samtools.SamInputResource;
+import htsjdk.tribble.AbstractFeatureReader;
+import htsjdk.tribble.Feature;
+import htsjdk.tribble.bed.BEDCodec;
+import htsjdk.tribble.bed.BEDFeature;
+import htsjdk.tribble.readers.LineIterator;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -37,17 +42,20 @@ import org.icgc.dcc.storage.client.cli.FileValidator;
 import org.icgc.dcc.storage.client.cli.ObjectIdValidator;
 import org.icgc.dcc.storage.client.download.DownloadService;
 import org.icgc.dcc.storage.client.manifest.ManfiestService;
+import org.icgc.dcc.storage.client.manifest.Manifest.ManifestEntry;
 import org.icgc.dcc.storage.client.manifest.ManifestResource;
 import org.icgc.dcc.storage.client.metadata.Entity;
 import org.icgc.dcc.storage.client.metadata.MetadataService;
 import org.icgc.dcc.storage.client.slicing.SamFileBuilder;
 import org.icgc.dcc.storage.client.transport.NullSourceSeekableHTTPStream;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 
 @Slf4j
 @Component
@@ -59,7 +67,7 @@ public class ViewCommand extends AbstractClientCommand {
   }
 
   public enum OutputType {
-    TRIMMED, MINI, CROSS
+    TRIMMED, MERGED, CROSS
   }
 
   // arbitrary limit - accounting for pathname as well
@@ -75,8 +83,9 @@ public class ViewCommand extends AbstractClientCommand {
   private boolean headerOnly = false;
   @Parameter(names = "--output-original-header", description = "Use original header in its entirety in output")
   private boolean useOriginalHeader = false;
-  @Parameter(names = "--output-file", description = "Filename to write output to. Uses filename from metadata, or original input filename if not specified")
-  private String fileName;
+  // @Parameter(names = "--output-file", description =
+  // "Filename to write output to. Uses filename from metadata, or original input filename if not specified")
+  // private String fileName;
   @Parameter(names = "--output-format", description = "Output file format for query. SAM or BAM", converter = OutputFormatConverter.class)
   private OutputFormat outputFormat = OutputFormat.SAM;
   @Parameter(names = "--object-id", description = "Object id of BAM file to download slice from", validateValueWith = ObjectIdValidator.class)
@@ -88,9 +97,11 @@ public class ViewCommand extends AbstractClientCommand {
   @Parameter(names = "--query", description = "Query to define extract from BAM file (coordinate format 'sequence:start-end'). Multiple"
       + " ranges separated by space", variableArity = true)
   private List<String> query = new ArrayList<>();
+  @Parameter(names = "--bed-query", description = "Specify a BED-format file containing ranges to query. Overrides --query parameter", validateValueWith = FileValidator.class)
+  private File bedFile = null;
   @Parameter(names = "--manifest", description = "Path to manifest id, url or file containing object id's and query ranges for batch")
   private ManifestResource manifestResource;
-  @Parameter(names = "--output-type", description = "File output structure for queries. TRIMMED, MINI, AGGREGATE, CROSS. Only used with --manifest", converter = OutputTypeConverter.class)
+  @Parameter(names = "--output-type", description = "File output structure for queries. TRIMMED, MERGED, CROSS. Only used with --manifest", converter = OutputTypeConverter.class)
   private OutputType outputType = OutputType.TRIMMED;
   @Parameter(names = "--output-dir", description = "Path to output directory. Only used with --manifest", validateValueWith = DirectoryValidator.class)
   private File outputDir;
@@ -107,11 +118,20 @@ public class ViewCommand extends AbstractClientCommand {
   @Autowired
   private DownloadService downloadService;
 
+  /*
+   * Session logger
+   */
+  private org.slf4j.Logger session = LoggerFactory.getLogger("session");
+
   @Override
   public int execute() throws Exception {
-    terminal.printStatus("Viewing...");
-
+    terminal.println("Viewing...");
+    session.info("***** Beginning view session");
     validateParms();
+
+    if (bedFile != null) {
+      handleBedFile();
+    }
 
     val single = objectId != null;
     if (single) {
@@ -120,16 +140,38 @@ public class ViewCommand extends AbstractClientCommand {
     } else if (manifestResource != null) {
       // Manifest based
       val manifest = manifestService.getManifest(manifestResource);
-      val entries = manifest.getEntries();
-      if (entries.isEmpty()) {
-        terminal.printError("Manifest '%s' is empty", manifestResource);
+      val allEntries = manifest.getEntries();
+      if (allEntries.isEmpty()) {
+        String msg = String.format("Manifest '%s' is empty", manifestResource);
+        terminal.printError(msg);
+        session.info(msg);
         return FAILURE_STATUS;
       }
 
-      process(manifest.getEntries().stream().map(entry -> entry.getFileUuid()).collect(toList()));
+      val entries = filterManifest(allEntries);
+      process(entries.stream().map(entry -> entry.getFileUuid()).collect(toList()));
     }
-    terminal.printStatus("Done");
+    terminal.println("Done");
     return SUCCESS_STATUS;
+  }
+
+  private List<ManifestEntry> filterManifest(List<ManifestEntry> entries) {
+    val result = Lists.<ManifestEntry> newArrayList();
+    // we're only going to process BAM/SAM files
+    for (ManifestEntry me : entries) {
+      if (me.getFileName().toLowerCase().endsWith(String.format(".%s", OutputFormat.BAM.toString().toLowerCase()))
+          || me.getFileName().toLowerCase().endsWith(String.format(".%s", OutputFormat.SAM.toString().toLowerCase()))) {
+        result.add(me);
+        val msg = String.format("Queuing %s", me.getFileName());
+        log.info(msg);
+        session.info(msg);
+      } else {
+        val msg = String.format("Skipping manifest file entry: %s", me.getFileName());
+        log.warn(String.format(msg));
+        session.info(msg);
+      }
+    }
+    return result;
   }
 
   private void validateParms() {
@@ -167,7 +209,10 @@ public class ViewCommand extends AbstractClientCommand {
 
     val entity = getEntity(oid);
     if (!entity.isPresent()) {
-      throw new RuntimeException("That ain't no thang. Literally");
+      val msg = String.format("Metadata not found for object id %s", oid);
+      log.error(msg);
+      session.info(msg);
+      throw new RuntimeException(msg);
     }
 
     // Line up bam and index file (encapsulated in a SamInputResource)
@@ -179,9 +224,12 @@ public class ViewCommand extends AbstractClientCommand {
         outputFormat(outputFormat).
         queries(query).
         outputDir(outputDir).
+        bedFile(bedFile).
         outputIndex(outputIndex).
         entity(entity.get()).
         samInput(resource);
+
+    log.info("Constructed SamFileBuilder: " + bob.toString());
 
     if (headerOnly) {
       bob.buildHeaderOnly();
@@ -190,7 +238,10 @@ public class ViewCommand extends AbstractClientCommand {
       case TRIMMED:
         bob.buildTrimmed();
         break;
-      case MINI:
+      case MERGED:
+        // bob.buildMerged();
+        terminal.printError("Output type '%s' not implemented", outputType.toString());
+        break;
       case CROSS:
         terminal.printError("Output type '%s' not implemented", outputType.toString());
         break;
@@ -241,4 +292,16 @@ public class ViewCommand extends AbstractClientCommand {
     return SamInputResource.of(bamFileHttpStream).index(indexFileHttpStream);
   }
 
+  @SneakyThrows
+  private void handleBedFile() {
+    query.clear();
+    final BEDCodec codec = new BEDCodec();
+    final AbstractFeatureReader<BEDFeature, LineIterator> bfs =
+        AbstractFeatureReader.getFeatureReader(bedFile.getAbsolutePath(), codec, false);
+    for (final Feature feat : bfs.iterator()) {
+      val region = String.format("%s:%d-%d", feat.getContig(), feat.getStart(), feat.getEnd());
+      System.out.println(region);
+      query.add(region);
+    }
+  }
 }

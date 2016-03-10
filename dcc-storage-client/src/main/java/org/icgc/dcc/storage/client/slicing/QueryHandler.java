@@ -20,7 +20,10 @@ package org.icgc.dcc.storage.client.slicing;
 import htsjdk.samtools.QueryInterval;
 import htsjdk.samtools.SAMFileHeader;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Arrays;
+import java.util.Collections;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -37,8 +40,13 @@ public final class QueryHandler {
 
   public static QueryInterval[] convertSlices(@NonNull SAMFileHeader header, @NonNull List<Slice> slices) {
     val converter = new SliceConverter(header.getSequenceDictionary());
-    QueryInterval[] intervals = converter.convert(slices);
-    return QueryInterval.optimizeIntervals(intervals); // otherwise triggers an assertion
-  }
+    val intervals = converter.convert(slices);
 
+    // remove nulls - happens when the query specifies sequences that don't exist in SQ
+    List<QueryInterval> list = new ArrayList<QueryInterval>(Arrays.asList(intervals));
+    list.removeAll(Collections.singleton(null));
+    val cleaned = list.toArray(new QueryInterval[list.size()]);
+
+    return QueryInterval.optimizeIntervals(cleaned); // otherwise triggers an assertion
+  }
 }
