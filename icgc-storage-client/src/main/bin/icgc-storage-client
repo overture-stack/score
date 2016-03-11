@@ -1,6 +1,6 @@
 #!/bin/bash -e
 #
-# Copyright 2015(c) The Ontario Institute for Cancer Research. All rights reserved.
+# Copyright 2016(c) The Ontario Institute for Cancer Research. All rights reserved.
 #
 # Description:
 # 	Runs the ICGC DCC storage client to upload/download/slice files in cloud environments
