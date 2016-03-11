@@ -101,6 +101,13 @@ public class DownloadCommand extends AbstractClientCommand {
       return downloadObjects(ImmutableList.of(objectId));
     } else {
       // Manifest based
+      if (manifestResource.isGnosManifest()) {
+        terminal
+            .printError(
+                "Manifest '%s' looks like a GNOS-format manifest file. Please ensure you are using a tab-delimited text file"
+                    + " manifest from https://dcc.icgc.org/repositories", manifestResource.getValue());
+        return FAILURE_STATUS;
+      }
       val manifest = manifestService.getManifest(manifestResource);
       val entries = manifest.getEntries();
       if (entries.isEmpty()) {
