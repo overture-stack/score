@@ -470,7 +470,7 @@ public class SamFileBuilder {
     val reader = createSamReader();
     QueryInterval[] intervals = normalizeQueries(reader, query);
 
-    List<SAMRecord> alignments = doQuery(reader, intervals);
+    val alignments = doQuery(reader, intervals);
     createTrimmed(reader, entity, query, alignments);
   }
 
@@ -487,17 +487,12 @@ public class SamFileBuilder {
     }
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see java.lang.Object#toString()
-   */
   @Override
   public String toString() {
     return "SamFileBuilder [containedOnly=" + containedOnly + ", useOriginalHeader=" + useOriginalHeader
-        + ", outputFormat=" + outputFormat + ", query=" + query + ", outputDir=" + outputDir + ", bedFile=" + bedFile
-        + ", outputIndex=" + outputIndex + ", session=" + session + ", entity=" + entity + ", samInputResource="
-        + samInputResource + "]";
+        + ", outputFormat=" + outputFormat + ", query=" + query + ", outputDir=" + outputDir + ", outputIndex="
+        + outputIndex + ", bedFile=" + bedFile + ", session=" + session + ", entity=" + entity + ", samInputResource="
+        + samInputResource + ", queryCompiledFlag=" + queryCompiledFlag + "]";
   }
 
 }
