@@ -151,6 +151,7 @@ public class ViewCommand extends AbstractClientCommand {
       val entries = filterManifest(allEntries);
       process(entries.stream().map(entry -> entry.getFileUuid()).collect(toList()));
     }
+    session.info("Done");
     terminal.println("Done");
     return SUCCESS_STATUS;
   }
