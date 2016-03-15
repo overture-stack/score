@@ -25,6 +25,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 
+import org.icgc.dcc.storage.core.model.IndexFileType;
 import org.icgc.dcc.storage.fs.util.GenericPath;
 
 import lombok.val;
@@ -69,13 +70,11 @@ public class StoragePath extends GenericPath<StorageFileSystem> {
 
       val fileName = getFilename();
 
-      // Support samtools convention
-      if (fileName.endsWith(".bai")) {
-        val bamObjectId = fileName.replace(".bai", "");
-        return context.getBaiFile(bamObjectId);
-      } else if (fileName.endsWith(".tbi")) {
-        val vcfObjectId = fileName.replace(".tbi", "");
-        return context.getTbiFile(vcfObjectId);
+      if (IndexFileType.isIndexFile(fileName)) {
+        val indexFileType = IndexFileType.fromPath(fileName);
+        // TODO: Verify if this works for other layout types other than `OBJECT_ID`!
+        val objectId = IndexFileType.getFileName(fileName);
+        return context.getIndexFile(objectId, indexFileType);
       }
 
       return Optional.ofNullable(context.getFile(fileName));

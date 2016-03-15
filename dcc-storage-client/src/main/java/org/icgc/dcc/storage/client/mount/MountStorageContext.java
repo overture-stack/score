@@ -34,6 +34,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.icgc.dcc.storage.client.download.DownloadService;
 import org.icgc.dcc.storage.client.metadata.Entity;
+import org.icgc.dcc.storage.core.model.IndexFileType;
 import org.icgc.dcc.storage.core.model.ObjectInfo;
 import org.icgc.dcc.storage.fs.StorageContext;
 import org.icgc.dcc.storage.fs.StorageFile;
@@ -117,29 +118,21 @@ public class MountStorageContext implements StorageContext {
   }
 
   @Override
-  public Optional<StorageFile> getBaiFile(String bamObjectId) {
-    val bamFile = getFile(bamObjectId);
-    if (bamFile == null) {
+  public Optional<StorageFile> getIndexFile(String objectId, IndexFileType indexFileType) {
+    val file = getFile(objectId);
+    if (file == null) {
       return Optional.empty();
     }
 
-    val gnosId = bamFile.getGnosId();
-    return getFilesByGnosId(gnosId).stream()
-        .filter(file -> file.getFileName().endsWith(".bai"))
-        .findFirst();
-  }
-
-  @Override
-  public Optional<StorageFile> getTbiFile(String vcfObjectId) {
-    val vcfFile = getFile(vcfObjectId);
-    if (vcfFile == null) {
-      return Optional.empty();
+    val gnosId = file.getGnosId();
+    val stream = getFilesByGnosId(gnosId).stream();
+    switch (indexFileType) {
+    case BAI:
+      return stream.filter(f -> f.getFileName().endsWith(".bai")).findFirst();
+    default:
+      return stream.filter(f -> f.getFileName().contains(file.getFileName() + indexFileType.getExtension()))
+          .findFirst();
     }
-
-    val gnosId = vcfFile.getGnosId();
-    return getFilesByGnosId(gnosId).stream()
-        .filter(file -> file.getFileName().contains(vcfFile.getFileName() + ".tbi"))
-        .findFirst();
   }
 
   @Override

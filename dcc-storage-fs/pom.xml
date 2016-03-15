@@ -21,6 +21,12 @@
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
     </dependency>
+    
+    <!-- DCC - Storage -->
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>dcc-storage-core</artifactId>
+    </dependency>
 
   </dependencies>
 

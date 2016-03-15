@@ -43,6 +43,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.icgc.dcc.storage.core.model.IndexFileType;
 import org.icgc.dcc.storage.fs.util.ReadOnlyFileSystemProvider;
 
 import lombok.Getter;
@@ -123,9 +124,8 @@ public class StorageFileSystemProvider extends ReadOnlyFileSystemProvider {
   @Override
   public boolean isHidden(Path path) throws IOException {
     if (context.getLayout() == StorageFileLayout.OBJECT_ID) {
-      return path.getFileName().endsWith(".bai") || path.getFileName().endsWith(".tbi");
+      return IndexFileType.isIndexFile(path.getFileName().toString());
     }
-
     return false;
   }
 

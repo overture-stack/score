@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 The Ontario Institute for Cancer Research. All rights reserved.                             
+ * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.                             
  *                                                                                                               
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
  * You should have received a copy of the GNU General Public License along with                                  
@@ -15,30 +15,42 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.fs;
+package org.icgc.dcc.storage.core.model;
 
-import java.net.URL;
-import java.util.Collection;
-import java.util.Optional;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.val;
 
-import org.icgc.dcc.storage.core.model.IndexFileType;
+@RequiredArgsConstructor
+public enum IndexFileType {
+  BAI(FileType.BAM, ".bai"),
+  TBI(FileType.VCF, ".tbi"),
+  IDX(FileType.VCF, ".idx");
 
-public interface StorageContext {
+  @Getter
+  final FileType fileType;
+  @Getter
+  final String extension;
 
-  boolean isAuthorized();
+  public static boolean isIndexFile(String path) {
+    return path.endsWith(BAI.extension) || path.endsWith(TBI.extension) || path.endsWith(IDX.extension);
+  }
 
-  StorageFileLayout getLayout();
+  public static IndexFileType fromPath(String path) {
+    val ext = path.substring(path.length() - 4);
+    if (BAI.extension.equals(ext)) {
+      return BAI;
+    } else if (TBI.extension.equals(ext)) {
+      return TBI;
+    } else if (IDX.extension.equals(ext)) {
+      return IDX;
+    } else {
+      return null;
+    }
+  }
 
-  Collection<StorageFile> getFiles();
-
-  StorageFile getFile(String objectId);
-
-  Optional<StorageFile> getIndexFile(String objectId, IndexFileType indexFileType);
-
-  Collection<StorageFile> getFilesByGnosId(String gnosId);
-
-  URL getUrl(String objectId);
-
-  void incrementCount(String name, long value);
-
+  public static String getFileName(String path) {
+    val type = fromPath(path);
+    return path.replace(type.extension, "");
+  }
 }
