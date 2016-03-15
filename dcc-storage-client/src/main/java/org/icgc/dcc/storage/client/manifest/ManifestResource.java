@@ -55,7 +55,6 @@ public class ManifestResource {
   }
 
   public boolean isGnosManifest() {
-    boolean result = false;
     val isFile = resolveType(value).equals(Type.FILE);
     val isXml = value.toLowerCase().contains(".xml");
     return isFile && isXml;
