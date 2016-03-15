@@ -17,40 +17,46 @@
  */
 package org.icgc.dcc.storage.core.model;
 
+import static com.google.common.io.Files.getFileExtension;
+import static com.google.common.io.Files.getNameWithoutExtension;
+import static lombok.AccessLevel.PRIVATE;
+
+import java.util.Optional;
+
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
 
-@RequiredArgsConstructor
+@RequiredArgsConstructor(access = PRIVATE)
 public enum IndexFileType {
-  BAI(FileType.BAM, ".bai"),
-  TBI(FileType.VCF, ".tbi"),
-  IDX(FileType.VCF, ".idx");
+  BAI(FileType.BAM, "bai"),
+  TBI(FileType.VCF, "tbi"),
+  IDX(FileType.VCF, "idx");
 
   @Getter
-  final FileType fileType;
+  private final FileType fileType;
   @Getter
-  final String extension;
+  private final String extension;
 
-  public static boolean isIndexFile(String path) {
-    return path.endsWith(BAI.extension) || path.endsWith(TBI.extension) || path.endsWith(IDX.extension);
+  public static boolean isIndexFile(@NonNull String path) {
+    return fromPath(path).isPresent();
   }
 
-  public static IndexFileType fromPath(String path) {
-    val ext = path.substring(path.length() - 4);
-    if (BAI.extension.equals(ext)) {
-      return BAI;
-    } else if (TBI.extension.equals(ext)) {
-      return TBI;
-    } else if (IDX.extension.equals(ext)) {
-      return IDX;
+  public static Optional<IndexFileType> fromPath(@NonNull String path) {
+    val ext = getFileExtension(path);
+    if (BAI.extension.equalsIgnoreCase(ext)) {
+      return Optional.of(BAI);
+    } else if (TBI.extension.equalsIgnoreCase(ext)) {
+      return Optional.of(TBI);
+    } else if (IDX.extension.equalsIgnoreCase(ext)) {
+      return Optional.of(IDX);
     } else {
-      return null;
+      return Optional.empty();
     }
   }
 
-  public static String getFileName(String path) {
-    val type = fromPath(path);
-    return path.replace(type.extension, "");
+  public static String getFileName(@NonNull String path) {
+    return getNameWithoutExtension(path);
   }
 }

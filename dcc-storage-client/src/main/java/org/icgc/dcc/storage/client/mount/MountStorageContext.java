@@ -118,7 +118,7 @@ public class MountStorageContext implements StorageContext {
   }
 
   @Override
-  public Optional<StorageFile> getIndexFile(String objectId, IndexFileType indexFileType) {
+  public Optional<StorageFile> getIndexFile(@NonNull String objectId, @NonNull IndexFileType indexFileType) {
     val file = getFile(objectId);
     if (file == null) {
       return Optional.empty();
@@ -126,13 +126,8 @@ public class MountStorageContext implements StorageContext {
 
     val gnosId = file.getGnosId();
     val stream = getFilesByGnosId(gnosId).stream();
-    switch (indexFileType) {
-    case BAI:
-      return stream.filter(f -> f.getFileName().endsWith(".bai")).findFirst();
-    default:
-      return stream.filter(f -> f.getFileName().contains(file.getFileName() + indexFileType.getExtension()))
-          .findFirst();
-    }
+    return stream.filter(f -> f.getFileName().contains(file.getFileName() + '.' + indexFileType.getExtension()))
+        .findFirst();
   }
 
   @Override

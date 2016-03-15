@@ -70,11 +70,10 @@ public class StoragePath extends GenericPath<StorageFileSystem> {
 
       val fileName = getFilename();
 
-      if (IndexFileType.isIndexFile(fileName)) {
-        val indexFileType = IndexFileType.fromPath(fileName);
-        // TODO: Verify if this works for other layout types other than `OBJECT_ID`!
+      val indexFileType = IndexFileType.fromPath(fileName);
+      if (indexFileType.isPresent()) {
         val objectId = IndexFileType.getFileName(fileName);
-        return context.getIndexFile(objectId, indexFileType);
+        return context.getIndexFile(objectId, indexFileType.get());
       }
 
       return Optional.ofNullable(context.getFile(fileName));
