@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 The Ontario Institute for Cancer Research. All rights reserved.                             
+ * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.                             
  *                                                                                                               
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
  * You should have received a copy of the GNU General Public License along with                                  
@@ -15,30 +15,48 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.fs;
+package org.icgc.dcc.storage.core.model;
 
-import java.net.URL;
-import java.util.Collection;
+import static com.google.common.io.Files.getFileExtension;
+import static com.google.common.io.Files.getNameWithoutExtension;
+import static lombok.AccessLevel.PRIVATE;
+
 import java.util.Optional;
 
-import org.icgc.dcc.storage.core.model.IndexFileType;
+import lombok.Getter;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import lombok.val;
 
-public interface StorageContext {
+@RequiredArgsConstructor(access = PRIVATE)
+public enum IndexFileType {
+  BAI(FileType.BAM, "bai"),
+  TBI(FileType.VCF, "tbi"),
+  IDX(FileType.VCF, "idx");
 
-  boolean isAuthorized();
+  @Getter
+  private final FileType fileType;
+  @Getter
+  private final String extension;
 
-  StorageFileLayout getLayout();
+  public static boolean isIndexFile(@NonNull String path) {
+    return fromPath(path).isPresent();
+  }
 
-  Collection<StorageFile> getFiles();
+  public static Optional<IndexFileType> fromPath(@NonNull String path) {
+    val ext = getFileExtension(path);
+    if (BAI.extension.equalsIgnoreCase(ext)) {
+      return Optional.of(BAI);
+    } else if (TBI.extension.equalsIgnoreCase(ext)) {
+      return Optional.of(TBI);
+    } else if (IDX.extension.equalsIgnoreCase(ext)) {
+      return Optional.of(IDX);
+    } else {
+      return Optional.empty();
+    }
+  }
 
-  StorageFile getFile(String objectId);
-
-  Optional<StorageFile> getIndexFile(String objectId, IndexFileType indexFileType);
-
-  Collection<StorageFile> getFilesByGnosId(String gnosId);
-
-  URL getUrl(String objectId);
-
-  void incrementCount(String name, long value);
-
+  public static String getFileName(@NonNull String path) {
+    return getNameWithoutExtension(path);
+  }
 }

@@ -28,6 +28,8 @@ import java.nio.file.attribute.UserPrincipal;
 import java.util.Set;
 import java.util.regex.Pattern;
 
+import org.icgc.dcc.storage.core.model.IndexFileType;
+
 import com.google.common.collect.ImmutableSet;
 
 import lombok.NonNull;
@@ -99,9 +101,8 @@ public class StorageFileAttributes implements PosixFileAttributes {
   @Override
   public boolean isSymbolicLink() {
     if (context.getLayout() == StorageFileLayout.OBJECT_ID) {
-      return path.getFileName().endsWith(".bai");
+      return IndexFileType.isIndexFile(path.getFileName().toString());
     }
-
     return false;
   }
 

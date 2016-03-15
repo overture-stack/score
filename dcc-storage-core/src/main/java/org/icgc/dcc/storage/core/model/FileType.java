@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 The Ontario Institute for Cancer Research. All rights reserved.                             
+ * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.                             
  *                                                                                                               
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
  * You should have received a copy of the GNU General Public License along with                                  
@@ -15,30 +15,9 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.fs;
+package org.icgc.dcc.storage.core.model;
 
-import java.net.URL;
-import java.util.Collection;
-import java.util.Optional;
-
-import org.icgc.dcc.storage.core.model.IndexFileType;
-
-public interface StorageContext {
-
-  boolean isAuthorized();
-
-  StorageFileLayout getLayout();
-
-  Collection<StorageFile> getFiles();
-
-  StorageFile getFile(String objectId);
-
-  Optional<StorageFile> getIndexFile(String objectId, IndexFileType indexFileType);
-
-  Collection<StorageFile> getFilesByGnosId(String gnosId);
-
-  URL getUrl(String objectId);
-
-  void incrementCount(String name, long value);
-
+public enum FileType {
+  BAM,
+  VCF
 }
