@@ -68,6 +68,7 @@ public class SamFileBuilder {
   private List<String> query = Lists.<String> newArrayList();
   private File outputDir;
   private boolean outputIndex = false;
+  private boolean stdout = false;
   private File bedFile;
 
   /**
@@ -111,6 +112,11 @@ public class SamFileBuilder {
 
   public SamFileBuilder outputDir(File dir) {
     outputDir = dir;
+    return this;
+  }
+
+  public SamFileBuilder stdout(boolean flag) {
+    stdout = flag;
     return this;
   }
 
@@ -160,7 +166,7 @@ public class SamFileBuilder {
   }
 
   protected void validate() {
-    if (outputDir == null) {
+    if (!stdout && outputDir == null) {
       throw new IllegalStateException("Missing output directory");
     }
 
@@ -198,7 +204,11 @@ public class SamFileBuilder {
    */
   @SneakyThrows
   private SAMFileWriter prepareHeaderOutput(@NonNull String fileName, @NonNull SAMFileHeader srcHeader) {
-    session.info(String.format("Preparing to write header only to %s ", fileName));
+    if (stdout) {
+      session.info("Preparing to write header only to stdout");
+    } else {
+      session.info(String.format("Preparing to write header only to %s ", fileName));
+    }
     return createSamFileWriter(srcHeader, fileName);
   }
 
@@ -214,11 +224,21 @@ public class SamFileBuilder {
       Set<SAMReadGroupRecord> readGroups) {
 
     if (useOriginalHeader) {
-      session.info("Preparing to write to {} using original header", fileName);
+      if (stdout) {
+        session.info("Preparing to write to stdout using original header");
+      } else {
+        session.info("Preparing to write to {} using original header", fileName);
+      }
+
       return createSamFileWriter(srcHeader, fileName);
     }
 
-    session.info("Preparing to write to {}", fileName);
+    if (stdout) {
+      session.info("Preparing to write to stdout");
+    } else {
+      session.info("Preparing to write to {}", fileName);
+    }
+
     // Create subset of header that contains only sequences referred to
     val outputHeader = createNewHeader(srcHeader);
     outputHeader.setReadGroups(Lists.<SAMReadGroupRecord> newArrayList(readGroups));
@@ -383,7 +403,6 @@ public class SamFileBuilder {
 
   @SneakyThrows
   private SAMFileWriter createSamFileWriter(SAMFileHeader header, String fileName) {
-    val stdout = (fileName == null) || fileName.trim().isEmpty();
     if (stdout) {
       outputIndex = false;
     }
@@ -394,8 +413,7 @@ public class SamFileBuilder {
         .setUseAsyncIo(true);
 
     if (stdout) {
-      return outputFormat == OutputFormat.BAM ? factory.makeBAMWriter(header, true, System.out) : factory
-          .makeSAMWriter(header, true, System.out);
+      return factory.makeSAMWriter(header, true, System.out);
     } else {
       val outFile = new File(fileName);
       log.debug("writing: {}", outFile.getCanonicalPath());

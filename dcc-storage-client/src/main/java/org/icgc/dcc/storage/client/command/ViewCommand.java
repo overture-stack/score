@@ -93,9 +93,9 @@ public class ViewCommand extends AbstractClientCommand {
   // private String fileName;
   @Parameter(names = "--output-format", description = "Output file format for query. SAM or BAM", converter = OutputFormatConverter.class)
   private OutputFormat outputFormat = OutputFormat.SAM;
-  @Parameter(names = "--object-id", description = "Object id of BAM file to download slice from", validateValueWith = ObjectIdValidator.class)
+  @Parameter(names = "--object-id", description = "Object id of BAM file to download slice from. Will supercede --manifest", validateValueWith = ObjectIdValidator.class)
   private String objectId;
-  @Parameter(names = "--input-file", description = "Local path to BAM file. Overrides specification of --object-id", validateValueWith = FileValidator.class)
+  @Parameter(names = "--input-file", description = "Local path to BAM file. Will supercede specification of --object-id", validateValueWith = FileValidator.class)
   private File bamFile = null;
   @Parameter(names = "--input-file-index", description = "Explicit local path to index file (requires --input-file)", validateValueWith = FileValidator.class)
   private File baiFile = null;
@@ -112,6 +112,8 @@ public class ViewCommand extends AbstractClientCommand {
   private File outputDir;
   @Parameter(names = "--output-index", description = "Switch to write index files. Only used with --manifest")
   private boolean outputIndex = false;
+  @Parameter(names = "--stdout", description = "Switch to send output to stdout. Only used with --object-id. Output will be forced to SAM format.")
+  private boolean stdout = false;
 
   /**
    * Dependencies.
@@ -142,7 +144,10 @@ public class ViewCommand extends AbstractClientCommand {
 
     val single = objectId != null;
     if (single) {
-      // Ad-hoc single
+      // Ad-hoc single - supercedes --manifest
+      if (manifestResource != null) {
+        terminal.println("Ignoring --manifest argument; --object-id supercedes");
+      }
       process(ImmutableList.of(objectId));
     } else if (manifestResource != null) {
       // Manifest based
@@ -159,7 +164,9 @@ public class ViewCommand extends AbstractClientCommand {
       process(entries.stream().map(entry -> entry.getFileUuid()).collect(toList()));
     }
     session.info("Done");
-    terminal.println("Done");
+    if (!stdout) {
+      terminal.println("Done");
+    }
     return SUCCESS_STATUS;
   }
 
@@ -183,6 +190,15 @@ public class ViewCommand extends AbstractClientCommand {
   }
 
   private void validateParms() {
+    if (stdout) {
+      checkParameter(manifestResource == null && objectId != null && !objectId.isEmpty(),
+          "Output to stdout only permitted with --object-id. Not compatible with --manifest.");
+
+      if (outputFormat.equals(OutputFormat.BAM)) {
+        terminal.println("When --stdout specified, output format forced to SAM.");
+      }
+    }
+
     checkParameter(objectId != null || bamFile != null || manifestResource != null,
         "One of --object-id, --input-file or --manifest must be specified");
 
@@ -191,8 +207,8 @@ public class ViewCommand extends AbstractClientCommand {
           "--output-dir must be specified when using --manifest");
     }
 
-    if ((manifestResource != null) && (outputIndex)) {
-      // terminal.printWarn("--output-index option being ignored");
+    if (outputDir == null) {
+      stdout = true;
     }
   }
 
@@ -239,6 +255,7 @@ public class ViewCommand extends AbstractClientCommand {
         bedFile(bedFile).
         outputIndex(outputIndex).
         entity(entity.get()).
+        stdout(stdout).
         samInput(resource);
 
     log.info("Constructed SamFileBuilder: " + bob.toString());
