@@ -440,7 +440,9 @@ public class SamFileBuilder {
     val srcExtension = getExtension(getSourceType(entity));
     val extensionPos = fname.toLowerCase().indexOf(srcExtension);
     val left = StringUtils.left(fname, extensionPos);
-    val newExtension = StringUtils.right(fname, fname.length() - extensionPos);
+
+    // get extension based on specified output format
+    val newExtension = getExtension(outputFormat);
     return String.format("%s.%s%s", left, modifier, newExtension);
   }
 

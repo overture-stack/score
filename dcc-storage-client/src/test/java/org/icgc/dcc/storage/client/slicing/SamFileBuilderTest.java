@@ -24,6 +24,7 @@ import static org.junit.Assert.assertThat;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.icgc.dcc.storage.client.command.ViewCommand.OutputFormat;
 import org.icgc.dcc.storage.client.metadata.Entity;
 import org.junit.Before;
 import org.junit.Test;
@@ -80,24 +81,43 @@ public class SamFileBuilderTest {
   }
 
   @Test
-  public void test_single_query_filename_construction() {
-    String fname = "TEST-HCC1954.NORMAL.7x.compare.10_1900000-2000000.bam";
+  public void test_output_file_extension_specified_by_output_format() {
+    sut.outputFormat(OutputFormat.SAM);
+    String fname = "TEST-HCC1954.NORMAL.7x.compare.10_1900000-2000000.sam"; // expected output
+
     Entity stub = new Entity();
     stub.setFileName("TEST-HCC1954.NORMAL.7x.compare.bam");
+
+    String result = sut.generateOutputFileName(stub, "10:1900000-2000000");
+    assertThat(result, equalTo(fname));
+  }
+
+  @Test
+  public void test_single_query_filename_construction() {
+    sut.outputFormat(OutputFormat.BAM);
+    String fname = "TEST-HCC1954.NORMAL.7x.compare.10_1900000-2000000.bam";
+
+    Entity stub = new Entity();
+    stub.setFileName("TEST-HCC1954.NORMAL.7x.compare.bam");
+
     String result = sut.generateOutputFileName(stub, "10:1900000-2000000");
     assertThat(result, equalTo(fname));
   }
 
   @Test
   public void test_query_list_filename_construction() {
+    sut.outputFormat(OutputFormat.BAM);
+    String fname =
+        "TEST-HCC1954.NORMAL.7x.compare.chr1_1000-2000__chr5_150000-250000__chr16_100250000-100500000.bam";
+
     List<String> queries = new ArrayList<String>();
     queries.add("chr1:1000-2000");
     queries.add("chr5:150000-250000");
     queries.add("chr16:100250000-100500000");
-    String fname =
-        "TEST-HCC1954.NORMAL.7x.compare.chr1_1000-2000__chr5_150000-250000__chr16_100250000-100500000.bam";
+
     Entity stub = new Entity();
     stub.setFileName("TEST-HCC1954.NORMAL.7x.compare.bam");
+
     String result = sut.generateOutputFileName(stub, queries);
     assertThat(result, equalTo(fname));
   }
