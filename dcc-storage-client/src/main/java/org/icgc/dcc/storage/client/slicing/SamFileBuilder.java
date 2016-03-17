@@ -22,6 +22,7 @@ import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMFileHeader.SortOrder;
 import htsjdk.samtools.SAMFileWriter;
 import htsjdk.samtools.SAMFileWriterFactory;
+import htsjdk.samtools.SAMProgramRecord;
 import htsjdk.samtools.SAMReadGroupRecord;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamInputResource;
@@ -32,6 +33,7 @@ import htsjdk.samtools.util.RuntimeIOException;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -67,6 +69,15 @@ public class SamFileBuilder {
   private File outputDir;
   private boolean outputIndex = false;
   private File bedFile;
+
+  /**
+   * Informational - for @PG record
+   */
+  private String programId;
+  private String programName;
+  private String commandLine;
+  private String description;
+  private String version;
 
   private org.slf4j.Logger session = LoggerFactory.getLogger("session");
 
@@ -120,6 +131,31 @@ public class SamFileBuilder {
 
   public SamFileBuilder samInput(SamInputResource resource) {
     samInputResource = resource;
+    return this;
+  }
+
+  public SamFileBuilder programId(String id) {
+    programId = id;
+    return this;
+  }
+
+  public SamFileBuilder programName(String name) {
+    programName = name;
+    return this;
+  }
+
+  public SamFileBuilder commandLine(String cl) {
+    commandLine = cl;
+    return this;
+  }
+
+  public SamFileBuilder description(String desc) {
+    description = desc;
+    return this;
+  }
+
+  public SamFileBuilder version(String ver) {
+    version = ver;
     return this;
   }
 
@@ -309,9 +345,40 @@ public class SamFileBuilder {
    */
   private SAMFileHeader createNewHeader(@NonNull SAMFileHeader header) {
     val newHeader = new SAMFileHeader();
-    newHeader.setProgramRecords(header.getProgramRecords());
+
+    val pg = updateProgramRecords(header.getProgramRecords());
+    newHeader.setProgramRecords(pg);
+
     newHeader.setSequenceDictionary(header.getSequenceDictionary());
     return newHeader;
+  }
+
+  private List<SAMProgramRecord> updateProgramRecords(List<SAMProgramRecord> pgRecords) {
+    val newPgRecords = new ArrayList<SAMProgramRecord>(pgRecords); // get returns an unmodifiable collection
+
+    String id = programId == null ? "unknown" : programId;
+    val count = getIcgcProgramRecordCount(pgRecords);
+    if (count > 0) {
+      id = String.format("%s.%d", id, count + 1);
+    }
+    SAMProgramRecord icgcClientRecord = new SAMProgramRecord(id);
+    if (programName != null) icgcClientRecord.setProgramName(programName);
+    if (commandLine != null) icgcClientRecord.setCommandLine(commandLine);
+    if (description != null) icgcClientRecord.setAttribute("DS", description);
+    if (version != null) icgcClientRecord.setAttribute("VN", version);
+    if (commandLine != null) icgcClientRecord.setCommandLine(commandLine);
+    newPgRecords.add(icgcClientRecord);
+    return newPgRecords;
+  }
+
+  private int getIcgcProgramRecordCount(List<SAMProgramRecord> pgRecords) {
+    int count = 0;
+    for (val pg : pgRecords) {
+      if (pg.getId().substring(0, programId.length() - 1).equalsIgnoreCase(programId)) {
+        count += 1;
+      }
+    }
+    return count;
   }
 
   @SneakyThrows

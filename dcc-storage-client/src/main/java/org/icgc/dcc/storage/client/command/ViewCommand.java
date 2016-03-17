@@ -35,6 +35,7 @@ import lombok.SneakyThrows;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
+import org.icgc.dcc.common.core.util.VersionUtils;
 import org.icgc.dcc.storage.client.cli.ConverterFactory.OutputFormatConverter;
 import org.icgc.dcc.storage.client.cli.ConverterFactory.OutputTypeConverter;
 import org.icgc.dcc.storage.client.cli.DirectoryValidator;
@@ -50,6 +51,7 @@ import org.icgc.dcc.storage.client.slicing.SamFileBuilder;
 import org.icgc.dcc.storage.client.transport.NullSourceSeekableHTTPStream;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.ApplicationArguments;
 import org.springframework.stereotype.Component;
 
 import com.beust.jcommander.Parameter;
@@ -72,6 +74,9 @@ public class ViewCommand extends AbstractClientCommand {
 
   // arbitrary limit - accounting for pathname as well
   public final static int MAX_FILENAME_LENGTH = 120;
+
+  public final static String ICGC_STORAGE_CLIENT = "ICGC Storage Client";
+  public final static String ICGC = "ICGC";
 
   /**
    * Options.
@@ -117,6 +122,8 @@ public class ViewCommand extends AbstractClientCommand {
   private ManfiestService manifestService;
   @Autowired
   private DownloadService downloadService;
+  @Autowired
+  private ApplicationArguments applicationArguments;
 
   /*
    * Session logger
@@ -193,7 +200,7 @@ public class ViewCommand extends AbstractClientCommand {
   int process(List<String> objectIds) {
     for (val objectId : objectIds) {
       if (process(objectId) != SUCCESS_STATUS) {
-        // TODO: log failure
+        log.error("Failed to process {}", objectId);
         return FAILURE_STATUS;
       }
     }
@@ -220,6 +227,10 @@ public class ViewCommand extends AbstractClientCommand {
     val resource = createInputResource(entity);
 
     val bob = new SamFileBuilder().
+        programName(ICGC_STORAGE_CLIENT).
+        version(VersionUtils.getScmInfo().get("git.commit.id.describe")).
+        programId(ICGC).
+        commandLine(getCommandLine()).
         containedOnly(containedOnly).
         useOriginalHeader(useOriginalHeader).
         outputFormat(outputFormat).
@@ -304,5 +315,13 @@ public class ViewCommand extends AbstractClientCommand {
       System.out.println(region);
       query.add(region);
     }
+  }
+
+  private String getCommandLine() {
+    StringBuilder msg = new StringBuilder();
+    for (val s : applicationArguments.getSourceArgs()) {
+      msg.append(s).append(" ");
+    }
+    return msg.toString();
   }
 }
