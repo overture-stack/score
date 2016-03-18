@@ -45,13 +45,16 @@ public class DownloadStateStore {
       byte[] content = mapper.writeValueAsBytes(spec);
       File objectStateDir = getObjectStateDir(stateDir, spec.getObjectId());
 
+      log.debug("About to delete {}", objectStateDir.toString());
       deleteDirectoryIfExist(objectStateDir);
-
+      log.debug("About to re-create {}", objectStateDir.toString());
       Files.createDirectories(objectStateDir.toPath());
       File specFile = new File(objectStateDir, getSpecificationName());
+      log.debug("About to copy content to {}", specFile.toString());
       Files.copy(new ByteArrayInputStream(content), specFile.toPath());
+      log.debug("Finished writing specification to {}", specFile.toPath().toString());
     } catch (IOException e) {
-      log.error("Fail to create meta file", e);
+      log.error("Failed to create meta file", e);
       throw new NotRetryableException(e);
     }
   }
@@ -102,9 +105,11 @@ public class DownloadStateStore {
   }
 
   public List<Part> getProgress(File stateDir, String objectId) throws IOException {
+    log.debug("Loading local progress for {} from {}", objectId, stateDir.toString());
     ObjectSpecification spec = loadSpecification(stateDir, objectId);
-
+    log.debug("Completed loading local object specification");
     for (Part part : spec.getParts()) {
+      log.debug("Checking md5 for part {}", part.getPartNumber());
       if (isCompleted(stateDir, objectId, part)) {
         Part completedPart = loadPart(stateDir, objectId, getPartName(part));
         part.setMd5(completedPart.getMd5());
@@ -113,23 +118,19 @@ public class DownloadStateStore {
     return spec.getParts();
   }
 
-  /**
-   * @param stateDir
-   * @param objectId
-   * @param part
-   * @return
-   */
   private boolean isCompleted(File stateDir, String objectId, Part part) {
     File partFile = new File(getObjectStateDir(stateDir, objectId), getPartName(part));
     return partFile.exists();
   }
 
   public void commit(File stateDir, String objectId, Part part) {
+    log.debug("Attempting to commit {} part {} to {}", objectId, part.getPartNumber(), stateDir.toString());
     ObjectMapper mapper = new ObjectMapper();
     try {
       byte[] content = mapper.writeValueAsBytes(part);
       File partFile = new File(getObjectStateDir(stateDir, objectId), getPartName(part));
       Files.copy(new ByteArrayInputStream(content), partFile.toPath());
+      log.debug("Copied part {} to {}", part.getPartNumber(), partFile.toPath().toString());
     } catch (IOException e) {
       log.error("Failed to create meta file {} ", stateDir.getAbsolutePath(), e);
       throw new NotRetryableException(e);
