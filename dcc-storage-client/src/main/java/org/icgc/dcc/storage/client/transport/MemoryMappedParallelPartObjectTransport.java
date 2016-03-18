@@ -29,6 +29,7 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -98,6 +99,9 @@ public class MemoryMappedParallelPartObjectTransport extends ParallelPartObjectT
         final MappedByteBuffer buffer =
             fis.getChannel().map(FileChannel.MapMode.READ_ONLY, part.getOffset(), part.getPartSize());
         buffer.load();
+        log.debug("Pausing before creating new Callable task");
+        TimeUnit.SECONDS.sleep(3);
+        log.debug("Submitting new Callable task");
         // progress.incrementByteRead(part.getPartSize());
         results.add(executor.submit(new Callable<Part>() {
 
@@ -109,7 +113,7 @@ public class MemoryMappedParallelPartObjectTransport extends ParallelPartObjectT
               if (part.isCompleted()) {
                 log.debug("Checksumming part: {}", part);
                 if (checksum && isCorrupted(channel, part, file)) {
-                  log.debug("Fail checksumm. Reupload part: {}", part);
+                  log.debug("Fail checksum. Reupload part: {}", part);
                   progress.startTransfer();
                   proxy.uploadPart(channel, part, objectId, uploadId);
                   progress.incrementBytesWritten(part.getPartSize());
@@ -161,6 +165,7 @@ public class MemoryMappedParallelPartObjectTransport extends ParallelPartObjectT
   @Override
   @SneakyThrows
   public void receive(File outputDir) {
+    log.debug("Preparing to receive {} in {}", objectId, outputDir.toString());
     File filename = new File(outputDir, objectId);
     long fileSize = Downloads.calculateTotalSize(parts);
 
@@ -228,7 +233,7 @@ public class MemoryMappedParallelPartObjectTransport extends ParallelPartObjectT
                 }
                 return memoryChannel;
               } catch (RetryableException | NotResumableException | NotRetryableException e) {
-                log.error("fail to receive part: {}", part, e);
+                log.error("Failed to receive part: {}", part, e);
                 throw e;
               } catch (Throwable e) {
                 throw new NotRetryableException(e);
@@ -238,12 +243,13 @@ public class MemoryMappedParallelPartObjectTransport extends ParallelPartObjectT
               }
             }
           }
-        }
+        } // call()
 
-      }));
+      })); // results.push(submit(new Callable()))
       memory.addAndGet(-part.getPartSize());
       log.debug("Remaining Memory : {}", memory.get());
 
+      // if we have no free memory, can't process next Part
       while (memory.get() < 0) {
         try {
           if (!results.isEmpty()) {
@@ -265,7 +271,7 @@ public class MemoryMappedParallelPartObjectTransport extends ParallelPartObjectT
           }
         }
       }
-    }
+    } // for (part)
 
     log.info("all tasks are submitted, waiting for completion...");
     downloadExecutorService.shutdown();

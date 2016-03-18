@@ -30,6 +30,11 @@ import java.util.Set;
 
 import javax.annotation.PostConstruct;
 
+import lombok.NonNull;
+import lombok.SneakyThrows;
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
+
 import org.icgc.dcc.storage.client.cli.Terminal;
 import org.icgc.dcc.storage.client.exception.NotResumableException;
 import org.icgc.dcc.storage.client.exception.NotRetryableException;
@@ -43,11 +48,6 @@ import org.icgc.dcc.storage.core.model.Part;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-
-import lombok.NonNull;
-import lombok.SneakyThrows;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * main class to handle uploading objects
@@ -124,6 +124,7 @@ public class DownloadService {
    */
   public void download(File outputDirectory, String objectId, long offset, long length, boolean redo)
       throws IOException {
+    log.debug("Beginning download of {} to {} {} - {}", objectId, outputDirectory.toString(), offset, length);
     int retry = 0;
     for (; retry < retryNumber; retry++) {
       try {
@@ -146,9 +147,9 @@ public class DownloadService {
             "Download failed during last execution. Checking data integrity. Please wait...", e);
         if (storageService.isDownloadDataRecoverable(outputDirectory, objectId,
             Downloads.getDownloadFile(outputDirectory, objectId).length())) {
-          redo = false;
-        } else {
           redo = true;
+        } else {
+          redo = false;
         }
       }
     }
@@ -159,6 +160,8 @@ public class DownloadService {
 
   private void resumeIfPossible(File outputDirectory, String objectId, long offset, long length, boolean checksum)
       throws IOException {
+    log.debug("Attempting to resume download for {} to {} {} - {}", objectId, outputDirectory.toString(), offset,
+        length);
     List<Part> parts = null;
     try {
       parts = downloadStateStore.getProgress(outputDirectory, objectId);
@@ -171,7 +174,7 @@ public class DownloadService {
   }
 
   private void resume(List<Part> parts, File outputDirectory, String objectId, boolean checksum) {
-    log.info("Resume from previous download...");
+    log.info("Resuming from previous download...");
 
     int totalParts = parts.size();
     int competedParts = numCompletedParts(parts);
@@ -193,6 +196,19 @@ public class DownloadService {
       if (part.getMd5() != null) completedTotal++;
     }
     return completedTotal;
+
+  }
+
+  /**
+   * Calculate the total size of completed parts
+   */
+  private long completedPartsUsedSpace(List<Part> parts) {
+
+    long completedSize = 0;
+    for (Part part : parts) {
+      if (part.getMd5() != null) completedSize += part.getPartSize();
+    }
+    return completedSize;
 
   }
 
@@ -224,10 +240,14 @@ public class DownloadService {
     }
 
     if (!dir.exists()) {
+      log.debug("{} did not exist; creating now", dir.toString());
       Files.createDirectories(dir.toPath());
+      log.debug("finished creating {}", dir.toString());
     }
 
+    log.debug("Downloading specification for {}: {}-{}", objectId, offset, length);
     ObjectSpecification spec = storageService.getDownloadSpecification(objectId, offset, length);
+    log.info("Finished retrieving download specification file");
     downloadStateStore.init(dir, spec);
 
     // TODO: Assign session id
@@ -241,6 +261,7 @@ public class DownloadService {
   @SneakyThrows
   private void downloadParts(List<Part> parts, File file, String objectId, String sessionId, Progress progressBar,
       boolean checksum) {
+    log.debug("Setting up download of parts");
     transportBuilder.withProxy(storageService)
         .withProgressBar(progressBar)
         .withParts(parts)
