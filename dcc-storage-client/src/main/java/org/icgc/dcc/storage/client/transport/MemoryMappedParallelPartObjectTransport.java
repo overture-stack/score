@@ -148,7 +148,7 @@ public class MemoryMappedParallelPartObjectTransport extends ParallelPartObjectT
 
     log.debug("thread pool shut down request ...");
     executor.shutdown();
-    executor.awaitTermination(super.maxTransferDuration, TimeUnit.DAYS);
+    executor.awaitTermination(super.maxUploadDuration, TimeUnit.DAYS);
     log.debug("thread pool shut down request completed.");
 
     progress.stop();
@@ -170,12 +170,8 @@ public class MemoryMappedParallelPartObjectTransport extends ParallelPartObjectT
     long fileSize = Downloads.calculateTotalSize(parts);
 
     log.debug("Downloading object to file: {}, size:{}", filename.getPath(), fileSize);
-
-    val downloadThreadPool = Executors.newFixedThreadPool(nThreads, new ThreadFactoryBuilder()
+    val downloadExecutorService = Executors.newFixedThreadPool(nThreads, new ThreadFactoryBuilder()
         .setNameFormat("downloader-%s").build());
-    ExecutorCompletionService<MemoryMappedDataChannel> completionService =
-        new ExecutorCompletionService<>(downloadThreadPool);
-
     val memoryCollectorService = Executors.newScheduledThreadPool(Math.max(1, nThreads / 2), new ThreadFactoryBuilder()
         .setNameFormat("memory-cleaner-%s").build());
 
@@ -202,8 +198,8 @@ public class MemoryMappedParallelPartObjectTransport extends ParallelPartObjectT
       prevLength = part.getPartSize();
       val currOffset = offset;
 
-      log.debug("Submitting part # '{}' download.", part.getPartNumber());
-      results.push(completionService.submit(new Callable<MemoryMappedDataChannel>() {
+      log.debug("Submiting part # '{}' download.", part.getPartNumber());
+      results.push(downloadExecutorService.submit(new Callable<MemoryMappedDataChannel>() {
 
         @Override
         public MemoryMappedDataChannel call() throws Exception {
@@ -268,7 +264,7 @@ public class MemoryMappedParallelPartObjectTransport extends ParallelPartObjectT
           if (e.getCause() instanceof NotResumableException) {
             log.error("Download cannot be processed", e);
             // properly shutdown executors
-            downloadThreadPool.shutdownNow();
+            downloadExecutorService.shutdownNow();
             memoryCollectorService.shutdownNow();
             // then throw immediately
             throw e.getCause();
@@ -278,10 +274,10 @@ public class MemoryMappedParallelPartObjectTransport extends ParallelPartObjectT
     } // for (part)
 
     log.info("all tasks are submitted, waiting for completion...");
-    downloadThreadPool.shutdown();
-    downloadThreadPool.awaitTermination(super.maxTransferDuration, TimeUnit.DAYS);
+    downloadExecutorService.shutdown();
+    downloadExecutorService.awaitTermination(super.maxUploadDuration, TimeUnit.DAYS);
     memoryCollectorService.shutdown();
-    memoryCollectorService.awaitTermination(super.maxTransferDuration, TimeUnit.DAYS);
+    memoryCollectorService.awaitTermination(super.maxUploadDuration, TimeUnit.DAYS);
     log.info("all tasks are completed");
 
     progress.stop();
