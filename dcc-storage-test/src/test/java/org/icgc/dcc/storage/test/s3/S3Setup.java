@@ -61,6 +61,16 @@ public class S3Setup extends Setup {
     return config;
   }
 
+  @Override
+  protected String getLogsDirectory() {
+    return "target/test/logs";
+  }
+
+  @Override
+  protected String getLogFileName() {
+    return "s3.log";
+  }
+
   private void set(String name, Object value) {
     config = config.withValue(name, fromAnyRef(value));
   }
