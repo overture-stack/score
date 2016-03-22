@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 The Ontario Institute for Cancer Research. All rights reserved.                             
+ * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.                             
  *                                                                                                               
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
  * You should have received a copy of the GNU General Public License along with                                  
@@ -15,35 +15,9 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.test.s3;
+package org.icgc.dcc.storage.core.model;
 
-import sirius.kernel.Setup;
-
-import com.typesafe.config.Config;
-import com.typesafe.config.ConfigFactory;
-import com.typesafe.config.ConfigValueFactory;
-
-public class DefinedLocationSetup extends Setup {
-
-  protected String _baseDir;
-
-  public DefinedLocationSetup(Mode mode, ClassLoader loader, String baseDir) {
-    super(mode, loader);
-    _baseDir = baseDir;
-  }
-
-  @Override
-  public Config loadInstanceConfig() {
-    Config config = ConfigFactory.empty();
-    Config newStorageConfig = config.withValue("storage.baseDir", ConfigValueFactory.fromAnyRef(getBaseDir()));
-    return newStorageConfig;
-  }
-
-  public String getBaseDir() {
-    return _baseDir;
-  }
-
-  public void setBaseDir(String baseDir) {
-    _baseDir = baseDir;
-  }
+public enum FileType {
+  BAM,
+  VCF
 }

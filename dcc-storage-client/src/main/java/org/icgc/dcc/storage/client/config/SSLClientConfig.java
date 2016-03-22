@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 The Ontario Institute for Cancer Research. All rights reserved.                             
+ * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.                             
  *                                                                                                               
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
  * You should have received a copy of the GNU General Public License along with                                  
@@ -19,6 +19,7 @@ package org.icgc.dcc.storage.client.config;
 
 import java.security.KeyStore;
 
+import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLException;
 import javax.net.ssl.TrustManagerFactory;
@@ -26,7 +27,6 @@ import javax.net.ssl.TrustManagerFactory;
 import org.apache.http.conn.ssl.AbstractVerifier;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.conn.ssl.SSLContexts;
-import org.apache.http.conn.ssl.X509HostnameVerifier;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -37,6 +37,7 @@ import lombok.val;
 /**
  * Configurations for SSL
  */
+@SuppressWarnings("deprecation")
 @Configuration
 public class SSLClientConfig {
 
@@ -85,7 +86,7 @@ public class SSLClientConfig {
   }
 
   @Bean
-  public X509HostnameVerifier hostnameVerifier() {
+  public HostnameVerifier hostnameVerifier() {
     val ssl = properties.getSsl();
     if (ssl.isCustom()) {
       return new AbstractVerifier() {

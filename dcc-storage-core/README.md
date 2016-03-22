@@ -1,11 +1,11 @@
-ICGC DCC - Storage Core
-===
+# ICGC DCC - Storage Core
 
 Core library / shared classes for ICGC storage system.
 
-Build
----
+## Build
 
-From the command line:
+To compile, test and package the module, execute the following from the root of the repository:
 
-`mvn package`
+```shell
+mvn -am -pl dcc-storage/dcc-storage-core
+```

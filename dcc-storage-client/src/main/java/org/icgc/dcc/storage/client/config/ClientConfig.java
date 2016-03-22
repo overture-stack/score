@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 The Ontario Institute for Cancer Research. All rights reserved.                             
+ * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.                             
  *                                                                                                               
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
  * You should have received a copy of the GNU General Public License along with                                  
@@ -62,6 +62,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Configuration
 @EnableConfigurationProperties
+@SuppressWarnings("deprecation")
 @Import(PropertyPlaceholderAutoConfiguration.class)
 public class ClientConfig {
 
@@ -100,38 +101,6 @@ public class ClientConfig {
     return dataTemplate;
   }
 
-  private HttpComponentsClientHttpRequestFactory clientHttpRequestFactory() {
-    val factory = new HttpComponentsClientHttpRequestFactory();
-
-    factory.setReadTimeout(properties.getReadTimeoutSeconds() * 1000);
-    factory.setConnectTimeout(properties.getConnectTimeoutSeconds() * 1000);
-    factory.setHttpClient(sslClient());
-
-    return factory;
-  }
-
-  @SneakyThrows
-  private HttpClient sslClient() {
-    val client = HttpClients.custom();
-    client.setSslcontext(sslContext);
-    client.setHostnameVerifier(hostnameVerifier);
-    configureOAuth(client);
-
-    return client.build();
-  }
-
-  private SimpleClientHttpRequestFactory streamingClientHttpRequestFactory() {
-    val factory = new SimpleClientHttpRequestFactory();
-
-    // See http://stackoverflow.com/questions/9934970/can-i-globally-set-the-timeout-of-http-connections#answer-10705424
-    System.setProperty("sun.net.client.defaultConnectTimeout",
-        Long.toString(properties.getConnectTimeoutSeconds() * 1000));
-    System.setProperty("sun.net.client.defaultReadTimeout", Long.toString(properties.getReadTimeoutSeconds() * 1000));
-    factory.setOutputStreaming(true);
-    factory.setBufferRequestBody(false);
-    return factory;
-  }
-
   @Bean
   public RetryTemplate retryTemplate(
       @Value("${storage.retryNumber}") int retryNumber,
@@ -151,8 +120,65 @@ public class ClientConfig {
     val retry = new RetryTemplate();
     retry.setBackOffPolicy(backOffPolicy);
     retry.setRetryPolicy(retryPolicy);
-    return retry;
 
+    return retry;
+  }
+
+  private HttpComponentsClientHttpRequestFactory clientHttpRequestFactory() {
+    val factory = new HttpComponentsClientHttpRequestFactory();
+
+    // HttpComponentsClientHttpRequestFactory *may* ignore these, but lets do it anyways in hopes
+    // to maximize the number of places that it may be used elsewhere
+    configureSystemHttpTimeouts();
+
+    factory.setConnectTimeout(properties.getConnectTimeoutSeconds() * 1000);
+    factory.setReadTimeout(properties.getReadTimeoutSeconds() * 1000);
+
+    factory.setHttpClient(sslClient());
+
+    return factory;
+  }
+
+  private SimpleClientHttpRequestFactory streamingClientHttpRequestFactory() {
+    val factory = new SimpleClientHttpRequestFactory();
+
+    // SimpleClientHttpRequestFactory *will 100%* ignore these, but lets do it anyways in hopes
+    // to maximize the number of places that it may be used elsewhere
+    configureSystemHttpTimeouts();
+
+    // https://jira.oicr.on.ca/browse/COL-487
+    factory.setConnectTimeout(properties.getConnectTimeoutSeconds() * 1000);
+    factory.setReadTimeout(properties.getReadTimeoutSeconds() * 1000);
+
+    factory.setOutputStreaming(true);
+    factory.setBufferRequestBody(false);
+
+    return factory;
+  }
+
+  @SneakyThrows
+  private HttpClient sslClient() {
+    val client = HttpClients.custom();
+    client.setSslcontext(sslContext);
+    client.setHostnameVerifier(hostnameVerifier);
+    configureOAuth(client);
+
+    return client.build();
+  }
+
+  /**
+   * Configure JVM wide timeouts of HTTP sockets.
+   * <p>
+   * May not be respected by all library implementors.
+   * 
+   * @see http://stackoverflow.com/questions/9934970/can-i-globally-set-the-timeout-of-http-connections#answer-10705424
+   */
+  private void configureSystemHttpTimeouts() {
+    // These lines are ignored by SimpleClientHttpRequestFactory
+    System.setProperty("sun.net.client.defaultConnectTimeout",
+        Long.toString(properties.getConnectTimeoutSeconds() * 1000));
+    System.setProperty("sun.net.client.defaultReadTimeout",
+        Long.toString(properties.getReadTimeoutSeconds() * 1000));
   }
 
   private void configureOAuth(HttpClientBuilder client) {
