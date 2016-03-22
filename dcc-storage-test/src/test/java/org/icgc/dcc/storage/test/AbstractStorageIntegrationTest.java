@@ -27,9 +27,6 @@ import static org.icgc.dcc.storage.test.util.SpringBootProcess.bootRun;
 import java.io.File;
 import java.util.List;
 
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
-
 import org.icgc.dcc.storage.client.metadata.Entity;
 import org.icgc.dcc.storage.client.metadata.MetadataClient;
 import org.icgc.dcc.storage.test.auth.AuthClient;
@@ -39,6 +36,9 @@ import org.icgc.dcc.storage.test.s3.S3;
 import org.icgc.dcc.storage.test.util.Port;
 import org.junit.Rule;
 import org.junit.rules.TemporaryFolder;
+
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 
@@ -52,7 +52,9 @@ public abstract class AbstractStorageIntegrationTest {
   protected final int authPort = 8443;
   protected final int metadataPort = 8444;
   protected final int storagePort = 5431;
+
   final String gnosId = "70b07570-0571-11e5-a6c0-1697f925ec7b";
+
   /**
    * State.
    */
@@ -75,7 +77,6 @@ public abstract class AbstractStorageIntegrationTest {
 
   abstract Process storageClient(String accessToken, String... args);
 
-  // @Before
   public void setUp() throws Exception {
     log.info("starting up");
     banner("Starting file system...");
@@ -110,7 +111,6 @@ public abstract class AbstractStorageIntegrationTest {
     waitForPort(storagePort);
   }
 
-  // @After
   public void tearDown() {
     log.info("Shutting down");
     s3.stop();
@@ -127,7 +127,6 @@ public abstract class AbstractStorageIntegrationTest {
   }
 
   public void setupBuckets(File s3Root, int count) {
-
     String objectBucketBase = "oicr.icgc.dev";
     String stateBucketBase = "oicr.icgc.dev.state";
 
@@ -140,8 +139,7 @@ public abstract class AbstractStorageIntegrationTest {
         createBucket(s3Root, objectBucket);
         createBucket(s3Root, stateBucket);
       }
-    }
-    else {
+    } else {
       createBucket(s3Root, objectBucketBase);
       createBucket(s3Root, stateBucketBase);
     }
@@ -321,4 +319,5 @@ public abstract class AbstractStorageIntegrationTest {
     log.info(repeat("#", 100));
     log.info("");
   }
+
 }

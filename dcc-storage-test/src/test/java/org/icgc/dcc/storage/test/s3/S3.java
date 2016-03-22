@@ -17,24 +17,39 @@
  */
 package org.icgc.dcc.storage.test.s3;
 
+import static com.google.common.base.Preconditions.checkState;
+
 import java.io.File;
 
+import lombok.val;
 import sirius.kernel.Setup;
-import sirius.kernel.Setup.Mode;
 import sirius.kernel.Sirius;
 
 public class S3 {
 
   public void start(File s3Root) {
-    // note: Mode.TEST will use a hard-coded working directory, ignoring the baseDir config parameter
-    // altogether.
-    Setup setup =
-        new DefinedLocationSetup(Mode.PROD, ClassLoader.getSystemClassLoader(), s3Root.getAbsolutePath())
-            .withLogToFile(true).withLogToConsole(true);
+    val setup = createSetup(s3Root);
+
     Sirius.start(setup);
   }
 
   public void stop() {
     Sirius.stop();
   }
+
+  private Setup createSetup(File s3Root) {
+    val baseDir = new File(s3Root, "buckets");
+    checkState(baseDir.mkdir(), "Could not create dir: %s", baseDir);
+
+    val multipartDir = new File(s3Root, "multipart");
+    checkState(multipartDir.mkdir(), "Could not create dir: %s", multipartDir);
+
+    return new S3Setup(ClassLoader.getSystemClassLoader())
+        .withAutoCreateBuckets(true)
+        .withBaseDir(baseDir)
+        .withMultipartDir(multipartDir)
+        .withLogToFile(true)
+        .withLogToConsole(true);
+  }
+
 }

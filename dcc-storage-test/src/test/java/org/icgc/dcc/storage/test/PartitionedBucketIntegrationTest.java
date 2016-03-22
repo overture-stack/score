@@ -27,9 +27,6 @@ import static org.icgc.dcc.storage.test.util.SpringBootProcess.bootRun;
 import java.io.File;
 import java.util.List;
 
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
-
 import org.icgc.dcc.storage.client.metadata.Entity;
 import org.icgc.dcc.storage.client.metadata.MetadataClient;
 import org.icgc.dcc.storage.test.auth.AuthClient;
@@ -43,6 +40,9 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
+
 @Slf4j
 public class PartitionedBucketIntegrationTest {
 
@@ -52,6 +52,7 @@ public class PartitionedBucketIntegrationTest {
   protected final int authPort = 8443;
   protected final int metadataPort = 8444;
   protected final int storagePort = 5431;
+
   final String gnosId = "70b07570-0571-11e5-a6c0-1697f925ec7b";
 
   final String objectBucketBase = "oicr.icgc.dev";
@@ -181,8 +182,7 @@ public class PartitionedBucketIntegrationTest {
         createBucket(s3Root, objectBucket);
         createBucket(s3Root, stateBucket);
       }
-    }
-    else {
+    } else {
       createBucket(s3Root, objectBucketBase);
       createBucket(s3Root, stateBucketBase);
     }

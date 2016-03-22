@@ -17,33 +17,52 @@
  */
 package org.icgc.dcc.storage.test.s3;
 
-import sirius.kernel.Setup;
+import static com.typesafe.config.ConfigValueFactory.fromAnyRef;
+
+import java.io.File;
 
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
-import com.typesafe.config.ConfigValueFactory;
 
-public class DefinedLocationSetup extends Setup {
+import sirius.kernel.Setup;
 
-  protected String _baseDir;
+public class S3Setup extends Setup {
 
-  public DefinedLocationSetup(Mode mode, ClassLoader loader, String baseDir) {
-    super(mode, loader);
-    _baseDir = baseDir;
+  private Config config = ConfigFactory.empty();
+
+  public S3Setup(ClassLoader loader) {
+    // NOTE: Mode.TEST will use a hard-coded working directory, ignoring the baseDir config parameter
+    super(Mode.PROD, loader);
+  }
+
+  /**
+   * Base dir for file storage. By default it's the s3 subdirectory from the projects root folder.
+   */
+  public S3Setup withBaseDir(File baseDir) {
+    set("storage.baseDir", baseDir.getAbsolutePath());
+    return this;
+  }
+
+  public S3Setup withMultipartDir(File multipartDir) {
+    set("storage.multipartDir", multipartDir.getAbsolutePath());
+    return this;
+  }
+
+  /**
+   * Will buckets be auto created on the first request via the S3 API?
+   */
+  public S3Setup withAutoCreateBuckets(boolean autoCreate) {
+    set("storage.autocreateBuckets", autoCreate);
+    return this;
   }
 
   @Override
   public Config loadInstanceConfig() {
-    Config config = ConfigFactory.empty();
-    Config newStorageConfig = config.withValue("storage.baseDir", ConfigValueFactory.fromAnyRef(getBaseDir()));
-    return newStorageConfig;
+    return config;
   }
 
-  public String getBaseDir() {
-    return _baseDir;
+  private void set(String name, Object value) {
+    config = config.withValue(name, fromAnyRef(value));
   }
 
-  public void setBaseDir(String baseDir) {
-    _baseDir = baseDir;
-  }
 }
