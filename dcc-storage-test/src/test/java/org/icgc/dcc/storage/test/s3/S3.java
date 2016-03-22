@@ -20,10 +20,14 @@ package org.icgc.dcc.storage.test.s3;
 import static com.google.common.base.Preconditions.checkState;
 
 import java.io.File;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 import lombok.val;
 import sirius.kernel.Setup;
 import sirius.kernel.Sirius;
+import sirius.kernel.di.Injector;
+import sirius.web.controller.Controller;
 
 public class S3 {
 
@@ -31,6 +35,25 @@ public class S3 {
     val setup = createSetup(s3Root);
 
     Sirius.start(setup);
+
+    registerController();
+  }
+
+  public void onRequest(Function<S3Request, Boolean> handler) {
+    getController().setHandler(handler);
+  }
+
+  public void onRequest(Consumer<S3Request> handler) {
+    onRequest((request) -> {
+      handler.accept(request);
+
+      // Continue
+      return false;
+    });
+  }
+
+  public void reset() {
+    getController().unsetHandler();
   }
 
   public void stop() {
@@ -50,6 +73,15 @@ public class S3 {
         .withMultipartDir(multipartDir)
         .withLogToFile(true)
         .withLogToConsole(true);
+  }
+
+  private static void registerController() {
+    val controller = Injector.context().wire(new S3Controller());
+    Injector.context().registerDynamicPart(S3Controller.class.getName(), controller, Controller.class);
+  }
+
+  private static S3Controller getController() {
+    return (S3Controller) Injector.context().findPart(S3Controller.class.getName(), Controller.class);
   }
 
 }

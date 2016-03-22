@@ -17,16 +17,21 @@
  */
 package org.icgc.dcc.storage.test.s3;
 
-import static com.google.common.util.concurrent.Uninterruptibles.sleepUninterruptibly;
-import static io.netty.handler.codec.http.HttpMethod.GET;
-import static java.util.concurrent.TimeUnit.MINUTES;
-import static sirius.kernel.commons.Strings.isFilled;
+import static java.util.stream.Collectors.joining;
+import static org.icgc.dcc.storage.test.s3.S3Request.Resource.BUCKET;
+import static org.icgc.dcc.storage.test.s3.S3Request.Resource.OBJECT;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
 
+import com.google.common.collect.ImmutableList;
+
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
+import sirius.kernel.commons.Strings;
 import sirius.web.controller.Controller;
 import sirius.web.controller.Routed;
 import sirius.web.http.InputStreamHandler;
@@ -39,19 +44,29 @@ public class S3Controller extends ninja.S3Controller implements Controller {
   /**
    * Constants.
    */
-  private static final int PRIORITY = 0;
+  private static final int PRIORITY = 0; // Needs to be lower than all @Routed priorities in super
+  private static final Function<S3Request, Boolean> DEFAULT_HANDLER = (request) -> false;
 
   /**
    * Configuration.
    */
-  private final boolean block;
+  private final AtomicReference<Function<S3Request, Boolean>> handler = new AtomicReference<>(DEFAULT_HANDLER);
+
+  public void setHandler(@NonNull Function<S3Request, Boolean> handler) {
+    this.handler.set(handler);
+  }
+
+  public void unsetHandler() {
+    setHandler(DEFAULT_HANDLER);
+  }
 
   @Override
   @Routed(value = "/s3/:1/:2/**", priority = PRIORITY)
   public void object(WebContext ctx, String bucketName, String objectId, List<String> idList) throws Exception {
     log.info("GET /s3/{}/{}/", bucketName, objectId);
-    if (isBlock(ctx)) {
-      block();
+    val request = new S3Request(ctx, OBJECT, bucketName, resolveObjectId(objectId, idList));
+    if (handle(request)) {
+      return;
     }
 
     super.object(ctx, bucketName, objectId, idList);
@@ -62,6 +77,11 @@ public class S3Controller extends ninja.S3Controller implements Controller {
   public void object(WebContext ctx, String bucketName, String objectId, List<String> idList, InputStreamHandler in)
       throws Exception {
     log.info("PUT /s3/{}/{}/", bucketName, objectId);
+    val request = new S3Request(ctx, OBJECT, bucketName, resolveObjectId(objectId, idList));
+    if (handle(request)) {
+      return;
+    }
+
     super.object(ctx, bucketName, objectId, idList, in);
   }
 
@@ -69,6 +89,11 @@ public class S3Controller extends ninja.S3Controller implements Controller {
   @Routed(value = "/s3/:1", priority = PRIORITY - 1)
   public void bucket(WebContext ctx, String bucketName) {
     log.info("GET /s3/{}/", bucketName);
+    val request = new S3Request(ctx, BUCKET, bucketName, null);
+    if (handle(request)) {
+      return;
+    }
+
     super.bucket(ctx, bucketName);
   }
 
@@ -76,24 +101,21 @@ public class S3Controller extends ninja.S3Controller implements Controller {
   @Routed(value = "/s3/:1", priority = PRIORITY - 1, preDispatchable = true)
   public void bucket(WebContext ctx, String bucketName, InputStreamHandler in) {
     log.info("PUT /s3/{}/", bucketName);
+    val request = new S3Request(ctx, BUCKET, bucketName, null);
+    if (handle(request)) {
+      return;
+    }
+
     super.bucket(ctx, bucketName, in);
   }
 
-  private boolean isBlock(WebContext ctx) {
-    return block && isDownload(ctx);
+  private Boolean handle(S3Request request) {
+    return handler.get().apply(request);
   }
 
-  private boolean isDownload(WebContext ctx) {
-    val method = ctx.getRequest().getMethod();
-    val uploadId = ctx.get("uploadId").asString();
-
-    return method == GET && !isFilled(uploadId);
-  }
-
-  private void block() {
-    val minutes = 2;
-    log.info("*** Blocking for {} minutes...", minutes);
-    sleepUninterruptibly(5, MINUTES);
+  private static String resolveObjectId(String objectId, List<String> idList) {
+    val ids = ImmutableList.<String> builder().add(objectId).addAll(idList).build();
+    return ids.stream().filter(Strings::isFilled).collect(joining("/"));
   }
 
 }

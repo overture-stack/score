@@ -19,13 +19,16 @@ package org.icgc.dcc.storage.test;
 
 import static com.google.common.base.Objects.firstNonNull;
 import static com.google.common.base.Strings.repeat;
+import static com.google.common.util.concurrent.Uninterruptibles.sleepUninterruptibly;
 import static java.util.concurrent.TimeUnit.MINUTES;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.icgc.dcc.storage.test.util.Assertions.assertDirectories;
 import static org.icgc.dcc.storage.test.util.SpringBootProcess.bootRun;
 
 import java.io.File;
 import java.util.List;
+import java.util.function.Consumer;
 
 import org.icgc.dcc.storage.client.metadata.Entity;
 import org.icgc.dcc.storage.client.metadata.MetadataClient;
@@ -33,6 +36,7 @@ import org.icgc.dcc.storage.test.auth.AuthClient;
 import org.icgc.dcc.storage.test.fs.FileSystem;
 import org.icgc.dcc.storage.test.mongo.Mongo;
 import org.icgc.dcc.storage.test.s3.S3;
+import org.icgc.dcc.storage.test.s3.S3Request;
 import org.icgc.dcc.storage.test.util.Port;
 import org.junit.Rule;
 import org.junit.rules.TemporaryFolder;
@@ -155,7 +159,7 @@ public abstract class AbstractStorageIntegrationTest {
     }
   }
 
-  public void test() throws InterruptedException {
+  void execute() throws InterruptedException {
 
     //
     // Authorize
@@ -213,10 +217,21 @@ public abstract class AbstractStorageIntegrationTest {
     //
 
     banner("Downloading...");
+
+    boolean first = true;
     for (val entity : entities) {
       if (isBaiFile(entity)) {
         // Skip BAI files since these will be downloaded when the BAM file is requested
         continue;
+      }
+
+      if (first) {
+        // Induce timeout on request for objectId
+        val objectId = "data/" + entity.getId();
+        val timeout = 60 + 15; // Timeout for client is 60
+        s3.onRequest(delayDownload(objectId, timeout));
+
+        first = false;
       }
 
       val download = storageClient(accessToken,
@@ -224,7 +239,7 @@ public abstract class AbstractStorageIntegrationTest {
           "--object-id", entity.getId(),
           "--output-layout", "bundle",
           "--output-dir", fs.getDownloadsDir().toString());
-      download.waitFor(1, MINUTES);
+      download.waitFor(3, MINUTES);
 
       assertThat(download.exitValue()).isEqualTo(0);
     }
@@ -245,6 +260,9 @@ public abstract class AbstractStorageIntegrationTest {
         "--output-type", "sam");
     view.waitFor(1, MINUTES);
     assertThat(view.exitValue()).isEqualTo(0);
+
+    // Clear handler
+    s3.reset();
   }
 
   Process authServer() {
@@ -295,8 +313,22 @@ public abstract class AbstractStorageIntegrationTest {
     return metadataClient.findEntitiesByGnosId(gnosId);
   }
 
-  private static Entity getBamFile(List<Entity> entities) {
+  static Entity getBamFile(List<Entity> entities) {
     return entities.stream().filter(entity -> entity.getFileName().endsWith(".bam")).findFirst().get();
+  }
+
+  Consumer<S3Request> delayDownload(String objectId, int delaySeconds) {
+    return (request) -> {
+      if (request.isDownload(objectId)) {
+        // Clear this handler and resume normal handling on next request
+        s3.reset();
+
+        // Delay
+        log.info("\n\n\n*** Delaying response for {} seconds... request = {}\n\n\n", delaySeconds, request);
+        sleepUninterruptibly(delaySeconds, SECONDS);
+        log.info("\n\n\n*** Delay complete\n\n\n");
+      }
+    };
   }
 
   static boolean isBaiFile(Entity entity) {
