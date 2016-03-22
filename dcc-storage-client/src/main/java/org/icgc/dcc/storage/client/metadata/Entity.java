@@ -18,11 +18,20 @@
 package org.icgc.dcc.storage.client.metadata;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 @Data
+@EqualsAndHashCode(of = "id")
 public class Entity {
 
+  /**
+   * Uniqueness.
+   */
   String id;
+
+  /**
+   * Metadata.
+   */
   String fileName;
   String gnosId;
   long createdTime;

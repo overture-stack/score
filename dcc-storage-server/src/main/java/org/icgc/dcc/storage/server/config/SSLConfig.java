@@ -19,7 +19,7 @@ package org.icgc.dcc.storage.server.config;
 
 import javax.annotation.PostConstruct;
 
-import org.icgc.dcc.storage.core.util.SSLCertificateValidation;
+import org.icgc.dcc.common.core.security.SSLCertificateValidation;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 

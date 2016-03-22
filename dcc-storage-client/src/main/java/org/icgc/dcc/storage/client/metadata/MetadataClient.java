@@ -17,6 +17,8 @@
  */
 package org.icgc.dcc.storage.client.metadata;
 
+import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
+
 import java.io.FileNotFoundException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -97,6 +99,7 @@ public class MetadataClient {
         val result = MAPPER.readValue(url, ObjectNode.class);
         last = result.path("last").asBoolean();
         List<Entity> page = MAPPER.convertValue(result.path("content"), new TypeReference<ArrayList<Entity>>() {});
+
         results.addAll(page);
         pageNumber++;
       }
@@ -104,7 +107,9 @@ public class MetadataClient {
       throw new EntityNotFoundException(e.getMessage());
     }
 
-    return results;
+    // Remove potential duplicates due to inserts on paging:
+    // See https://jira.oicr.on.ca/browse/COL-491
+    return results.stream().distinct().collect(toImmutableList());
   }
 
   @SneakyThrows
