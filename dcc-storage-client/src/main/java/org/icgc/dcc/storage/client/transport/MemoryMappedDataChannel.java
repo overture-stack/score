@@ -23,8 +23,6 @@ import java.io.OutputStream;
 import java.lang.reflect.Method;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.Channels;
-import java.nio.channels.ReadableByteChannel;
-import java.nio.channels.WritableByteChannel;
 
 import org.icgc.dcc.storage.client.exception.NotRetryableException;
 
@@ -33,6 +31,7 @@ import com.google.common.hash.HashingOutputStream;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -47,6 +46,7 @@ public class MemoryMappedDataChannel extends AbstractDataChannel {
   private final long offset;
   @Getter
   private final long length;
+
   @Getter
   private String md5 = null;
 
@@ -55,7 +55,7 @@ public class MemoryMappedDataChannel extends AbstractDataChannel {
    */
   @Override
   public void reset() throws IOException {
-    log.debug("resetting buffer to the beginning...");
+    log.debug("Resetting buffer to the beginning...");
     buffer.rewind();
   }
 
@@ -64,8 +64,8 @@ public class MemoryMappedDataChannel extends AbstractDataChannel {
    */
   @Override
   public void writeTo(OutputStream os) throws IOException {
-    try (HashingOutputStream hos = new HashingOutputStream(Hashing.md5(), os)) {
-      WritableByteChannel writeChannel = Channels.newChannel(hos);
+    try (val hos = new HashingOutputStream(Hashing.md5(), os)) {
+      val writeChannel = Channels.newChannel(hos);
       writeChannel.write(buffer);
       md5 = hos.hash().toString();
     }
@@ -73,22 +73,30 @@ public class MemoryMappedDataChannel extends AbstractDataChannel {
 
   @Override
   public void readFrom(InputStream is) throws IOException {
-    ReadableByteChannel readChannel = Channels.newChannel(is);
+    val readChannel = Channels.newChannel(is);
     while (buffer.hasRemaining()) {
-      readChannel.read(buffer);
+      val eos = readChannel.read(buffer) < 0;
+      if (eos) {
+        // TODO: Not sure what this condition means. Need to determine if we should throw or not. Right now assume that
+        // MD5 hashing will detect error.
+        log.warn("Reached end of stream while trying to fill buffer: {}", buffer);
+        break;
+      }
     }
   }
 
   /**
-   * buffer needs to be closed proactively so it won't trigger out-of-memory error
+   * Buffer needs to be closed proactively so it won't trigger out-of-memory error
    */
   @Override
   public void commitToDisk() {
     if (!buffer.isDirect()) {
       return;
     }
+
     // Don't call this because it will slow down
     buffer.force();
+
     try {
       Method cleanerMethod = buffer.getClass().getMethod("cleaner");
       cleanerMethod.setAccessible(true);
