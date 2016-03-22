@@ -1,11 +1,18 @@
-ICGC DCC - Storage Test
-===
+# ICGC DCC - Storage Test
 
 Module used for integration testing.
 
-Build
----
+## Libraries
 
-From the command line:
+The test relies on the following components:
 
-`mvn package`
+- [S3 Ninja](http://s3ninja.net/)
+- [Embedded MongoDB](http://flapdoodle-oss.github.io/de.flapdoodle.embed.mongo/)
+
+## Build
+
+To compile, test and package the module, execute the following from the root of the repository:
+
+```shell
+mvn -am -pl dcc-storage/dcc-storage-test
+```
