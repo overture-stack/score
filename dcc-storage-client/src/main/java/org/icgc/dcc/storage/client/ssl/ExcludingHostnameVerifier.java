@@ -15,16 +15,53 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.core.util;
+package org.icgc.dcc.storage.client.ssl;
 
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.SSLSession;
+import javax.net.ssl.SSLException;
 
-public class DumbHostnameVerifier implements HostnameVerifier {
+import org.apache.http.conn.ssl.AbstractVerifier;
+
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import lombok.val;
+
+/**
+ * Custom verifier for cases where the client locally has the server's key installed in the trust store.
+ * <p>
+ * Rationale is that the server is trusted by key instead.
+ * 
+ * TODO: Port to non-deprecated abstractions.
+ */
+@RequiredArgsConstructor
+public final class ExcludingHostnameVerifier extends AbstractVerifier {
+
+  /**
+   * Configuration.
+   */
+  @NonNull
+  private final String excludedCn;
 
   @Override
-  public boolean verify(String hostname, SSLSession sslSession) {
-    return true;
+  public void verify(String host, String[] cns, String[] subjectAlts) throws SSLException {
+    // Short circuit certificate checking if cn is implicitly trusted
+    if (isExcluded(cns)) {
+      // Return indicates success
+      return;
+    }
+
+    // Verify valid certificates as per usual
+    verify(host, cns, subjectAlts, true);
+  }
+
+  private boolean isExcluded(String[] cns) {
+    for (val cn : cns) {
+      val exactMatch = cn.equals(excludedCn);
+      if (exactMatch) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
 }

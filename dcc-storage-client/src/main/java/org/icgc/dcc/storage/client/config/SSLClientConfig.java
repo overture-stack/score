@@ -19,14 +19,13 @@ package org.icgc.dcc.storage.client.config;
 
 import java.security.KeyStore;
 
+import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLException;
 import javax.net.ssl.TrustManagerFactory;
 
-import org.apache.http.conn.ssl.AbstractVerifier;
-import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
-import org.apache.http.conn.ssl.SSLContexts;
-import org.apache.http.conn.ssl.X509HostnameVerifier;
+import org.apache.http.conn.ssl.DefaultHostnameVerifier;
+import org.apache.http.ssl.SSLContexts;
+import org.icgc.dcc.storage.client.ssl.ExcludingHostnameVerifier;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -37,7 +36,6 @@ import lombok.val;
 /**
  * Configurations for SSL
  */
-@SuppressWarnings("deprecation")
 @Configuration
 public class SSLClientConfig {
 
@@ -79,32 +77,19 @@ public class SSLClientConfig {
   public SSLContext sslContext() {
     val ssl = properties.getSsl();
     if (ssl.isCustom()) {
-      return SSLContexts.custom().loadTrustMaterial(trustStore()).useTLS().build();
+      return SSLContexts.custom().loadTrustMaterial(trustStore(), null).build();
     } else {
       return SSLContexts.createDefault();
     }
   }
 
   @Bean
-  public X509HostnameVerifier hostnameVerifier() {
+  public HostnameVerifier hostnameVerifier() {
     val ssl = properties.getSsl();
     if (ssl.isCustom()) {
-      return new AbstractVerifier() {
-
-        @Override
-        public void verify(String host, String[] cns, String[] subjectAlts) throws SSLException {
-          for (String cn : cns) {
-            if (cn.equals(properties.getSsl().getTrustName())) {
-              return;
-            }
-          }
-
-          verify(host, cns, subjectAlts, true);
-        }
-
-      };
+      return new ExcludingHostnameVerifier(ssl.getTrustName());
     } else {
-      return SSLConnectionSocketFactory.BROWSER_COMPATIBLE_HOSTNAME_VERIFIER;
+      return new DefaultHostnameVerifier();
     }
   }
 
