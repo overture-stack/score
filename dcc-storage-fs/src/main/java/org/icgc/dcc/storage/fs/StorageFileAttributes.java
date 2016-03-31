@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 The Ontario Institute for Cancer Research. All rights reserved.                             
+ * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.                             
  *                                                                                                               
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
  * You should have received a copy of the GNU General Public License along with                                  
@@ -27,6 +27,8 @@ import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.UserPrincipal;
 import java.util.Set;
 import java.util.regex.Pattern;
+
+import org.icgc.dcc.storage.core.model.IndexFileType;
 
 import com.google.common.collect.ImmutableSet;
 
@@ -99,9 +101,8 @@ public class StorageFileAttributes implements PosixFileAttributes {
   @Override
   public boolean isSymbolicLink() {
     if (context.getLayout() == StorageFileLayout.OBJECT_ID) {
-      return path.getFileName().endsWith(".bai");
+      return IndexFileType.isIndexFile(path.getFileName().toString());
     }
-
     return false;
   }
 

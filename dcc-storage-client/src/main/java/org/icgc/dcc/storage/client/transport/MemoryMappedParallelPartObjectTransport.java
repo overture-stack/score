@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 The Ontario Institute for Cancer Research. All rights reserved.                             
+ * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.                             
  *                                                                                                               
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
  * You should have received a copy of the GNU General Public License along with                                  
@@ -35,11 +35,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import lombok.AllArgsConstructor;
-import lombok.SneakyThrows;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
-
 import org.icgc.dcc.storage.client.download.Downloads;
 import org.icgc.dcc.storage.client.exception.NotResumableException;
 import org.icgc.dcc.storage.client.exception.NotRetryableException;
@@ -51,6 +46,11 @@ import org.icgc.dcc.storage.core.model.Part;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Ordering;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+
+import lombok.AllArgsConstructor;
+import lombok.SneakyThrows;
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * A data transport using memory mapped channels for parallel upload/download
@@ -98,6 +98,9 @@ public class MemoryMappedParallelPartObjectTransport extends ParallelPartObjectT
         final MappedByteBuffer buffer =
             fis.getChannel().map(FileChannel.MapMode.READ_ONLY, part.getOffset(), part.getPartSize());
         buffer.load();
+        log.debug("Pausing before creating new Callable task");
+        TimeUnit.SECONDS.sleep(3);
+        log.debug("Submitting new Callable task");
         // progress.incrementByteRead(part.getPartSize());
         results.add(executor.submit(new Callable<Part>() {
 
@@ -109,7 +112,7 @@ public class MemoryMappedParallelPartObjectTransport extends ParallelPartObjectT
               if (part.isCompleted()) {
                 log.debug("Checksumming part: {}", part);
                 if (checksum && isCorrupted(channel, part, file)) {
-                  log.debug("Fail checksumm. Reupload part: {}", part);
+                  log.debug("Fail checksum. Reupload part: {}", part);
                   progress.startTransfer();
                   proxy.uploadPart(channel, part, objectId, uploadId);
                   progress.incrementBytesWritten(part.getPartSize());
@@ -161,6 +164,7 @@ public class MemoryMappedParallelPartObjectTransport extends ParallelPartObjectT
   @Override
   @SneakyThrows
   public void receive(File outputDir) {
+    log.debug("Preparing to receive {} in {}", objectId, outputDir.toString());
     File filename = new File(outputDir, objectId);
     long fileSize = Downloads.calculateTotalSize(parts);
 
@@ -228,7 +232,7 @@ public class MemoryMappedParallelPartObjectTransport extends ParallelPartObjectT
                 }
                 return memoryChannel;
               } catch (RetryableException | NotResumableException | NotRetryableException e) {
-                log.error("fail to receive part: {}", part, e);
+                log.error("Failed to receive part: {}", part, e);
                 throw e;
               } catch (Throwable e) {
                 throw new NotRetryableException(e);
@@ -238,12 +242,13 @@ public class MemoryMappedParallelPartObjectTransport extends ParallelPartObjectT
               }
             }
           }
-        }
+        } // call()
 
-      }));
+      })); // results.push(submit(new Callable()))
       memory.addAndGet(-part.getPartSize());
       log.debug("Remaining Memory : {}", memory.get());
 
+      // if we have no free memory, can't process next Part
       while (memory.get() < 0) {
         try {
           if (!results.isEmpty()) {
@@ -265,7 +270,7 @@ public class MemoryMappedParallelPartObjectTransport extends ParallelPartObjectT
           }
         }
       }
-    }
+    } // for (part)
 
     log.info("all tasks are submitted, waiting for completion...");
     downloadExecutorService.shutdown();

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 The Ontario Institute for Cancer Research. All rights reserved.                             
+ * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.                             
  *                                                                                                               
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
  * You should have received a copy of the GNU General Public License along with                                  
@@ -43,6 +43,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.icgc.dcc.storage.core.model.IndexFileType;
 import org.icgc.dcc.storage.fs.util.ReadOnlyFileSystemProvider;
 
 import lombok.Getter;
@@ -123,9 +124,8 @@ public class StorageFileSystemProvider extends ReadOnlyFileSystemProvider {
   @Override
   public boolean isHidden(Path path) throws IOException {
     if (context.getLayout() == StorageFileLayout.OBJECT_ID) {
-      return path.getFileName().endsWith(".bai");
+      return IndexFileType.isIndexFile(path.getFileName().toString());
     }
-
     return false;
   }
 

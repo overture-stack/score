@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 The Ontario Institute for Cancer Research. All rights reserved.                             
+ * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.                             
  *                                                                                                               
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
  * You should have received a copy of the GNU General Public License along with                                  
@@ -51,7 +51,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
-@RequiredArgsConstructor(onConstructor = @__(@Autowired) )
+@RequiredArgsConstructor(onConstructor = @__(@Autowired))
 public class ServerBanner {
 
   /**
@@ -71,13 +71,6 @@ public class ServerBanner {
     log.info("Profiles: {}", Arrays.toString(env.getActiveProfiles()));
     log(env);
     log.info("{}\n\n", line());
-  }
-
-  private static void log(Object values) {
-    val name = values.getClass().getName();
-
-    log.info("{}:", name);
-    log(convert(values));
   }
 
   private static void log(Map<String, ?> values) {

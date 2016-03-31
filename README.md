@@ -1,23 +1,20 @@
-ICGC DCC - Storage
-===
+# ICGC DCC - Storage
 
 Storage and transfer system for ICGC cloud based projects. 
 
-Build
----
+## Build
 
-To build, test and install _all_ modules in the system:
+To compile, test and package the system, execute the following from the root of the repository:
 
-`mvn`
+```shell
+mvn
+```
 
-
-Run
----
+## Run
 
 See module-specific documentation below.
 
-Modules
----
+## Modules
 Top level system modules:
 
 - [Core](dcc-storage-core/README.md)
@@ -26,6 +23,14 @@ Top level system modules:
 - [Server](dcc-storage-server/README.md)
 - [Test](dcc-storage-test/README.md)
 
-Changes
----
-Change log for the user-facing system modules may be found [here](CHANGES.md).
+Rebranding packaging:
+
+- [ICGC Storage Client](icgc-storage-client/README.md) 
+
+## Changes
+
+Change log for the user-facing system modules may be found in [CHANGES.md](CHANGES.md).
+
+## License
+
+Copyright and license information may be found in [LICENSE.md](LICENSE.md).

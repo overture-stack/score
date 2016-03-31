@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 The Ontario Institute for Cancer Research. All rights reserved.                             
+ * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.                             
  *                                                                                                               
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
  * You should have received a copy of the GNU General Public License along with                                  
@@ -17,24 +17,71 @@
  */
 package org.icgc.dcc.storage.test.s3;
 
-import java.io.File;
+import static com.google.common.base.Preconditions.checkState;
 
+import java.io.File;
+import java.util.function.Consumer;
+import java.util.function.Function;
+
+import lombok.val;
 import sirius.kernel.Setup;
-import sirius.kernel.Setup.Mode;
 import sirius.kernel.Sirius;
+import sirius.kernel.di.Injector;
+import sirius.web.controller.Controller;
 
 public class S3 {
 
   public void start(File s3Root) {
-    // note: Mode.TEST will use a hard-coded working directory, ignoring the baseDir config parameter
-    // altogether.
-    Setup setup =
-        new DefinedLocationSetup(Mode.PROD, ClassLoader.getSystemClassLoader(), s3Root.getAbsolutePath())
-            .withLogToFile(true).withLogToConsole(true);
+    val setup = createSetup(s3Root);
+
     Sirius.start(setup);
+
+    registerController();
+  }
+
+  public void onRequest(Function<S3Request, Boolean> handler) {
+    getController().setHandler(handler);
+  }
+
+  public void onRequest(Consumer<S3Request> handler) {
+    onRequest((request) -> {
+      handler.accept(request);
+
+      // Continue
+      return false;
+    });
+  }
+
+  public void reset() {
+    getController().unsetHandler();
   }
 
   public void stop() {
     Sirius.stop();
   }
+
+  private Setup createSetup(File s3Root) {
+    val baseDir = new File(s3Root, "buckets");
+    checkState(baseDir.mkdir(), "Could not create dir: %s", baseDir);
+
+    val multipartDir = new File(s3Root, "multipart");
+    checkState(multipartDir.mkdir(), "Could not create dir: %s", multipartDir);
+
+    return new S3Setup(ClassLoader.getSystemClassLoader())
+        .withAutoCreateBuckets(true)
+        .withBaseDir(baseDir)
+        .withMultipartDir(multipartDir)
+        .withLogToFile(true)
+        .withLogToConsole(true);
+  }
+
+  private static void registerController() {
+    val controller = Injector.context().wire(new S3Controller());
+    Injector.context().registerDynamicPart(S3Controller.class.getName(), controller, Controller.class);
+  }
+
+  private static S3Controller getController() {
+    return (S3Controller) Injector.context().findPart(S3Controller.class.getName(), Controller.class);
+  }
+
 }
