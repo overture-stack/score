@@ -19,7 +19,6 @@ package org.icgc.dcc.storage.client.config;
 
 import java.security.KeyStore;
 
-import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLException;
 import javax.net.ssl.TrustManagerFactory;
@@ -27,6 +26,7 @@ import javax.net.ssl.TrustManagerFactory;
 import org.apache.http.conn.ssl.AbstractVerifier;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.conn.ssl.SSLContexts;
+import org.apache.http.conn.ssl.X509HostnameVerifier;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -86,7 +86,7 @@ public class SSLClientConfig {
   }
 
   @Bean
-  public HostnameVerifier hostnameVerifier() {
+  public X509HostnameVerifier hostnameVerifier() {
     val ssl = properties.getSsl();
     if (ssl.isCustom()) {
       return new AbstractVerifier() {
