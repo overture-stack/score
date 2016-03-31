@@ -25,7 +25,7 @@ import javax.net.ssl.TrustManagerFactory;
 
 import org.apache.http.conn.ssl.DefaultHostnameVerifier;
 import org.apache.http.ssl.SSLContexts;
-import org.icgc.dcc.storage.client.ssl.ExcludingHostnameVerifier;
+import org.icgc.dcc.storage.client.ssl.TrustedCnHostnameVerifier;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -87,7 +87,7 @@ public class SSLClientConfig {
   public HostnameVerifier hostnameVerifier() {
     val ssl = properties.getSsl();
     if (ssl.isCustom()) {
-      return new ExcludingHostnameVerifier(ssl.getTrustName());
+      return new TrustedCnHostnameVerifier(ssl.getTrustName());
     } else {
       return new DefaultHostnameVerifier();
     }
