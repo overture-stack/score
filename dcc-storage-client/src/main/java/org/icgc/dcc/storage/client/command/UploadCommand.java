@@ -85,7 +85,7 @@ public class UploadCommand extends AbstractClientCommand {
   private void uploadFile(String objectId, File file) throws IOException {
     log.info("Uploading file '{}'...", file);
     checkParameter(file.length() > 0,
-        "File '%s' is empty. Uploads of empty files are not permitted. Aborting...", file.getCanonicalPath());
+        "File '%s' is empty. Uploads of empty files are not permitted. Aborting...%n", file.getCanonicalPath());
 
     val exists = uploader.isObjectExist(objectId);
     checkParameter(isForce || !exists,

@@ -54,7 +54,13 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
     <dependency>
       <groupId>org.projectlombok</groupId>
       <artifactId>lombok</artifactId>
+      <scope>provided</scope>
     </dependency>
+    <dependency>
+      <groupId>com.google.code.findbugs</groupId>
+      <artifactId>annotations</artifactId>
+      <scope>provided</scope>
+    </dependency>    
 
   </dependencies>
 
@@ -107,7 +113,7 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
     <dcc-auth.version>1.0.5</dcc-auth.version>
 
     <!-- Versions - Spring -->
-    <spring-boot.version>1.2.6.RELEASE</spring-boot.version>
+    <spring-boot.version>1.3.3.RELEASE</spring-boot.version>
     <spring-retry.version>1.1.2.RELEASE</spring-retry.version>
     <spring-security-oauth2.version>2.0.7.RELEASE</spring-security-oauth2.version>
 
@@ -119,6 +125,7 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
     <guava.version>17.0</guava.version>
     <joda-time.version>2.2</joda-time.version>
     <jsr305.version>1.3.9</jsr305.version>
+    <logback.version>1.1.5</logback.version>
   </properties>
 
 </project>
