@@ -119,18 +119,20 @@ public class DownloadService {
    * 
    * @param file The file to be uploaded
    * @param objectId The object id that is used to associate the file in the remote storage
-   * @param redo If redo the upload is required
+   * @param force If true the upload is required
    * @throws IOException
    */
-  public void download(File outputDirectory, String objectId, long offset, long length, boolean redo)
+  public void download(File outputDirectory, String objectId, long offset, long length, boolean force)
       throws IOException {
     log.debug("Beginning download of {} to {} {} - {}", objectId, outputDirectory.toString(), offset, length);
     int retry = 0;
     for (; retry < retryNumber; retry++) {
       try {
-        if (redo) {
+        if (force) {
+          // create local file handle for output
           File objFile = Downloads.getDownloadFile(outputDirectory, objectId);
           if (objFile.exists()) {
+            // delete if already there
             checkState(objFile.delete());
           }
           startNewDownload(outputDirectory, objectId, offset, length);
@@ -147,9 +149,9 @@ public class DownloadService {
             "Download failed during last execution. Checking data integrity. Please wait...", e);
         if (storageService.isDownloadDataRecoverable(outputDirectory, objectId,
             Downloads.getDownloadFile(outputDirectory, objectId).length())) {
-          redo = true;
+          force = true;
         } else {
-          redo = false;
+          force = false;
         }
       }
     }

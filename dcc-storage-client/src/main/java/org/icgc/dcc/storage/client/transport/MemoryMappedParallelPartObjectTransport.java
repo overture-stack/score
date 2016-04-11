@@ -115,13 +115,11 @@ public class MemoryMappedParallelPartObjectTransport extends ParallelPartObjectT
                   log.debug("Fail checksum. Reupload part: {}", part);
                   progress.startTransfer();
                   proxy.uploadPart(channel, part, objectId, uploadId);
-                  progress.incrementBytesWritten(part.getPartSize());
                 }
                 progress.incrementChecksumParts();
               } else {
                 progress.startTransfer();
                 proxy.uploadPart(channel, part, objectId, uploadId);
-                progress.incrementBytesWritten(part.getPartSize());
                 progress.incrementParts(1);
               }
             } finally {

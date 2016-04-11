@@ -127,23 +127,22 @@ public class StorageService {
       public Void doWithRetry(RetryContext ctx) throws IOException {
         log.debug("Download Part URL: {}", part.getUrl());
 
-        final RequestCallback callback = new RequestCallback() {
+        final RequestCallback requestCallback = new RequestCallback() {
 
           @Override
           public void doWithRequest(final ClientHttpRequest request) throws IOException {
-            // request.getHeaders().setContentLength(channel.getlength());
             request.getHeaders().set(HttpHeaders.RANGE, Parts.getHttpRangeValue(part));
           }
         };
 
-        final ResponseExtractor<HttpHeaders> headersExtractor = new ResponseExtractor<HttpHeaders>() {
+        // return md5 calculated by HashingInputStream
+        final ResponseExtractor<String> headersExtractor = new ResponseExtractor<String>() {
 
           @Override
-          public HttpHeaders extractData(ClientHttpResponse response) throws IOException {
+          public String extractData(ClientHttpResponse response) throws IOException {
             try (HashingInputStream his = new HashingInputStream(Hashing.md5(), response.getBody())) {
               channel.readFrom(his);
-              response.getHeaders().set(HttpHeaders.ETAG, his.hash().toString());
-              return response.getHeaders();
+              return his.hash().toString();
             }
           }
         };
@@ -151,17 +150,20 @@ public class StorageService {
         try {
           // the actual GET operation
           log.debug("performing GET {}", part.getUrl());
-          HttpHeaders headers =
-              dataTemplate.execute(new URI(part.getUrl()), HttpMethod.GET, callback, headersExtractor);
-          part.setMd5(cleanUpETag(headers.getETag()));
+          val md5 = dataTemplate.execute(new URI(part.getUrl()), HttpMethod.GET, requestCallback, headersExtractor);
+          part.setMd5(md5);
+          if (part.hasFailedChecksum()) {
+            val msg = String.format("Checksum failed for Part# %d: %s", part.getPartNumber(), part.getMd5());
+            throw new Exception(msg);
+          }
           // TODO: try catch here for commit
           downloadStateStore.commit(outputDir, objectId, part);
           log.debug("committed {} part# {} to download state store", objectId, part.getPartNumber());
         } catch (NotResumableException | NotRetryableException e) {
-          log.error("Cannot proceed. Failed to receive part for part# {} : {}", part.getPartNumber(), e);
+          log.error("Cannot proceed. Failed to receive part for part# {} : {}", part.getPartNumber(), e.getMessage());
           throw e;
         } catch (Throwable e) {
-          log.warn("Failed to receive part for part number: {}. Retrying. {}", part.getPartNumber(), e);
+          log.warn("Failed to receive part for part number: {}. Retrying. {}", part.getPartNumber(), e.getMessage());
           channel.reset();
           throw new RetryableException(e);
         }
@@ -271,6 +273,7 @@ public class StorageService {
         return null;
       }
     });
+    log.debug("finalizing upload returned");
   }
 
   public void finalizeUploadPart(String objectId, String uploadId, int partNumber, String md5, String etag,

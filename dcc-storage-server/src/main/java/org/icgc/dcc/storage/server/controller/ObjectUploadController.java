@@ -22,6 +22,7 @@ import java.io.IOException;
 import javax.servlet.http.HttpServletRequest;
 
 import lombok.Setter;
+import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 import org.icgc.dcc.storage.core.model.ObjectSpecification;
@@ -121,7 +122,10 @@ public class ObjectUploadController {
       @PathVariable(value = "object-id") String objectId,
       @RequestParam(value = "uploadId", required = true) String uploadId
       ) {
+    val startMs = System.currentTimeMillis();
     uploadService.finalizeUpload(objectId, uploadId);
+    val endMs = System.currentTimeMillis();
+    log.info("Finalize upload completed in {} ms", endMs - startMs);
   }
 
   @RequestMapping(method = RequestMethod.POST, value = "/{object-id}/recovery")

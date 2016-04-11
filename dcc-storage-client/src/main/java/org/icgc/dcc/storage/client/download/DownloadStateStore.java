@@ -86,6 +86,7 @@ public class DownloadStateStore {
   }
 
   private File getObjectStateDir(File stateDir, String objectId) {
+    // local, hidden directory using object id
     return new File(stateDir, "." + objectId);
   }
 
@@ -108,11 +109,12 @@ public class DownloadStateStore {
   public List<Part> getProgress(File stateDir, String objectId) throws IOException {
     log.debug("Loading local progress for {} from {}", objectId, stateDir.toString());
     ObjectSpecification spec = loadSpecification(stateDir, objectId);
-    log.debug("Completed loading local object specification");
+    log.debug("Completed loading local object specification (meta file)");
     for (Part part : spec.getParts()) {
       log.debug("Checking md5 for part {}", part.getPartNumber());
       if (isCompleted(stateDir, objectId, part)) {
         Part completedPart = loadPart(stateDir, objectId, getPartName(part));
+        // copy download md5 into ObjectSpecification
         part.setMd5(completedPart.getMd5());
       }
     }

@@ -26,8 +26,11 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.Setter;
 import lombok.SneakyThrows;
@@ -59,7 +62,7 @@ import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PartETag;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
-import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 /**
  * Stores and retrieves the state of a upload's progress.
@@ -93,6 +96,15 @@ public class UploadStateStore {
   private AmazonS3 s3Client;
   @Autowired
   private BucketNamingService bucketNamingService;
+
+  @Data
+  @NoArgsConstructor
+  class UploadPartDetail {
+
+    private PartETag etag;
+    private int partNumber;
+    private String md5;
+  }
 
   /**
    * Store the upload specification. Writes out entire .meta file in the /upload folder
@@ -205,7 +217,7 @@ public class UploadStateStore {
               return;
             }
           } while (completedPart.getPartNumber() != part.getPartNumber());
-          part.setMd5(completedPart.getMd5());
+          part.setSourceMd5(completedPart.getMd5());
         }
         request.setMarker(objectListing.getNextMarker());
       } while (objectListing.isTruncated());
@@ -260,7 +272,7 @@ public class UploadStateStore {
 
       val meta = new ObjectMetadata();
       meta.setContentLength(0);
-      val data = new ByteArrayInputStream(new byte[0]);
+      ByteArrayInputStream data = new ByteArrayInputStream(new byte[0]);
       val uploadStateKey = getUploadStateKey(objectId, uploadId, partName);
 
       s3Client.putObject(bucketNamingService.getStateBucketName(objectId), uploadStateKey, data, meta);
@@ -279,18 +291,21 @@ public class UploadStateStore {
   }
 
   @SneakyThrows
-  public List<PartETag> getUploadStatePartEtags(String objectId, String uploadId) {
+  public Map<Integer, UploadPartDetail> getUploadStatePartDetails(String objectId, String uploadId) {
     val uploadStateKey = getUploadStateKey(objectId, uploadId, PART);
-    val etags = Lists.<PartETag> newArrayList();
+    val details = Maps.<Integer, UploadPartDetail> newHashMap();
 
     eachObjectSummary(objectId, uploadStateKey, (objectSummary) -> {
       CompletedPart part = readCompletedPart(objectId, uploadId, objectSummary);
+      UploadPartDetail detail = new UploadPartDetail();
       PartETag etag = new PartETag(part.getPartNumber(), part.getEtag());
-
-      etags.add(etag);
+      detail.setEtag(etag);
+      detail.setPartNumber(part.getPartNumber());
+      detail.setMd5(part.getMd5());
+      details.put(part.getPartNumber(), detail);
     });
 
-    return etags;
+    return details;
   }
 
   public String getUploadId(String objectId) {
@@ -337,7 +352,8 @@ public class UploadStateStore {
   private CompletedPart readCompletedPart(String objectId, String uploadId, S3ObjectSummary objectSummary) {
     try {
       val json = extractJson(objectSummary.getKey(), objectId, uploadId);
-      return MAPPER.readValue(json, CompletedPart.class);
+      val part = MAPPER.readValue(json, CompletedPart.class);
+      return part;
     } catch (JsonParseException | JsonMappingException e) {
       log.error("Failed to read completed parts for objectId: {}, uploadId: {}, objectSummary: {}: {}",
           objectId, uploadId, objectSummary.getKey(), e);

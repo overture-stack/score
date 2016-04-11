@@ -213,7 +213,7 @@ public class ParallelPartObjectTransport implements Transport {
 
   // TODO: should remove file parameter
   protected boolean isCorrupted(DataChannel channel, Part part, File outputDir) throws IOException {
-    if (channel.isValidMd5(part.getMd5())) {
+    if (channel.verifyMd5(part.getSourceMd5())) {
       return false;
     }
     log.debug("Part is corrupted: {}", part);
