@@ -25,6 +25,7 @@ import org.icgc.dcc.storage.server.exception.InternalUnrecoverableError;
 import org.icgc.dcc.storage.server.exception.NotRetryableException;
 import org.icgc.dcc.storage.server.exception.RetryableException;
 import org.icgc.dcc.storage.server.service.MetadataService;
+import org.icgc.dcc.storage.server.service.upload.UploadStateStore.UploadPartDetail;
 import org.icgc.dcc.storage.server.util.BucketNamingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -45,8 +46,10 @@ import com.amazonaws.services.s3.model.ListMultipartUploadsRequest;
 import com.amazonaws.services.s3.model.ListPartsRequest;
 import com.amazonaws.services.s3.model.MultipartUpload;
 import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.amazonaws.services.s3.model.PartETag;
 import com.amazonaws.services.s3.model.PartSummary;
 import com.amazonaws.services.s3.model.transform.Unmarshallers.ListPartsResultUnmarshaller;
+import com.google.common.collect.Lists;
 
 /**
  * A service for object upload.
@@ -254,20 +257,29 @@ public class ObjectUploadService {
   }
 
   public void finalizeUpload(String objectId, String uploadId) {
-    log.debug("finalizing upload id: {}", uploadId);
+    log.info("finalizing object id {} with upload id: {}", objectId, uploadId);
 
     val actualBucketName = bucketNamingService.getObjectBucketName(objectId);
     val actualStateBucketName = bucketNamingService.getStateBucketName(objectId);
 
     if (stateStore.isCompleted(objectId, uploadId)) {
       try {
-        val etags = stateStore.getUploadStatePartEtags(objectId, uploadId);
+        val details = stateStore.getUploadStatePartDetails(objectId, uploadId);
+        val etags = Lists.<PartETag> newArrayList();
+        details.values().forEach(detail -> etags.add(detail.getEtag()));
+
         val objectKey = ObjectKeys.getObjectKey(dataDir, objectId);
         val request = new CompleteMultipartUploadRequest(actualBucketName, objectKey.getKey(), uploadId, etags);
 
         s3Client.completeMultipartUpload(request);
 
         val spec = stateStore.read(objectId, uploadId);
+        // update meta with md5's
+        spec.getParts().forEach(part -> {
+          UploadPartDetail detail = details.get(part.getPartNumber());
+          part.setSourceMd5(detail != null ? detail.getMd5() : "<missing>");
+        });
+
         byte[] content = MAPPER.writeValueAsBytes(spec);
         val data = new ByteArrayInputStream(content);
         val meta = new ObjectMetadata();
@@ -276,8 +288,9 @@ public class ObjectUploadService {
         log.debug("about to s3.putObject into " + actualStateBucketName + ": " + objectMetaKey.toString());
         s3Client.putObject(actualStateBucketName, objectMetaKey, data, meta);
         // delete working files in upload directory
+        log.debug("About to delete working files from state directory");
         stateStore.delete(objectId, uploadId);
-        log.trace("end of finalizeUpload()");
+        log.debug("Upload for {} (upload id {}) finalized", objectId, uploadId);
       } catch (AmazonServiceException e) {
         log.error("Service problem with objectId: {}, uploadId: {}", objectId, uploadId, e);
         throw new RetryableException(e);

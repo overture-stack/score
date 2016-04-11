@@ -36,6 +36,7 @@ final public class Part implements Comparable<Part> {
   long offset;
   String url;
   String md5;
+  String sourceMd5;
 
   @JsonIgnore
   public boolean isCompleted() {
@@ -48,4 +49,8 @@ final public class Part implements Comparable<Part> {
     return this.partNumber - otherPart.partNumber;
   }
 
+  @JsonIgnore
+  public boolean hasFailedChecksum() {
+    return !sourceMd5.equals(md5);
+  }
 }

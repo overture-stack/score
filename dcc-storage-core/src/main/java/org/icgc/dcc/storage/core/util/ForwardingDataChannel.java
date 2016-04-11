@@ -56,8 +56,8 @@ public class ForwardingDataChannel implements DataChannel {
   }
 
   @Override
-  public boolean isValidMd5(String expectedMd5) throws IOException {
-    return delegate.isValidMd5(expectedMd5);
+  public boolean verifyMd5(String expectedMd5) throws IOException {
+    return delegate.verifyMd5(expectedMd5);
   }
 
   @Override

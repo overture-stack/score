@@ -33,6 +33,7 @@ import org.icgc.dcc.storage.client.cli.Terminal;
 import org.icgc.dcc.storage.client.command.ClientCommand;
 import org.icgc.dcc.storage.client.metadata.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.Banner;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.annotation.ComponentScan;
@@ -88,7 +89,7 @@ public class ClientMain implements CommandLineRunner {
   private Map<String, ClientCommand> commands;
 
   public static void main(String[] args) {
-    err.print("Starting...");
+    err.println("Starting...");
     try {
       // Bootstrap
       val profiles = bootstrap(args);
@@ -100,7 +101,8 @@ public class ClientMain implements CommandLineRunner {
 
       // Run
       new SpringApplicationBuilder(ClientMain.class)
-          .showBanner(false) // Not appropriate for tool
+          // .showBanner(false) // Not appropriate for tool
+          .bannerMode(Banner.Mode.OFF)
           .initializers(singletonBeans(cli)) // Add cli to context
           .addCommandLineProperties(false) // Only use formal parameters defined in cli
           .profiles(profiles)
@@ -121,7 +123,7 @@ public class ClientMain implements CommandLineRunner {
    */
   @Override
   public void run(String... params) throws Exception {
-    terminal.printStatus("Running...");
+    terminal.println("Running...");
 
     try {
       // Parse
