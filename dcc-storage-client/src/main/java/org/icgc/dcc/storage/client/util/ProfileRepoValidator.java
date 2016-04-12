@@ -17,9 +17,6 @@
  */
 package org.icgc.dcc.storage.client.util;
 
-/**
- * 
- */
 public class ProfileRepoValidator {
 
   /*
