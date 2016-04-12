@@ -15,49 +15,29 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.client.command;
+package org.icgc.dcc.storage.client.util;
 
-import lombok.val;
+public class ProfileRepoValidator {
 
-import org.icgc.dcc.storage.client.cli.Terminal;
-import org.icgc.dcc.storage.client.config.ClientProperties;
-import org.icgc.dcc.storage.client.manifest.Manifest;
-import org.icgc.dcc.storage.client.util.ProfileRepoValidator;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-
-/**
- * Abstract class to handle command line arugments
- */
-public abstract class AbstractClientCommand implements ClientCommand {
-
-  /**
-   * Dependencies.
+  /*
+   * values found in DCC Portal manifest downloads
    */
-  @Autowired
-  protected ClientProperties properties;
-  @Autowired
-  protected Terminal terminal;
-  @Value("${storage.profile}")
-  protected String storageProfile;
+  public final static String COLLABORATORY_REPO = "collaboratory";
+  public final static String AWS_VIRGINIA_REPO = "aws-virginia";
 
-  protected void printTitle() {
-    terminal.printStatus("\n" + terminal.label("> ") + terminal.value("ICGC ") + "Storage Client\n\n");
-  }
+  public final static String COLLABORATORY_PROFILE = "collab";
+  public final static String AWS_PROFILE = "aws";
 
-  protected void validateManifest(final Manifest manifest) {
-    for (val entry : manifest.getEntries()) {
-      try {
-        if (!ProfileRepoValidator.validateRepoAgainstProfile(storageProfile, entry.getRepoCode())) {
-          terminal
-              .printWarn(
-                  "Manifest entry %s - %s (%s) exists in the '%s' repository. However, this ICGC Storage Client instance is using the '%s' profile.",
-                  entry.getFileId(), entry.getFileName(), entry.getFileUuid(), entry.getRepoCode(), storageProfile);
-        }
-      } catch (IllegalArgumentException iae) {
-        terminal.printWarn(iae.getMessage());
-      }
+  public static boolean validateRepoAgainstProfile(String profile, String repoCode) {
+    if (profile.equalsIgnoreCase(COLLABORATORY_PROFILE)) {
+      return repoCode.equalsIgnoreCase(COLLABORATORY_REPO);
     }
-  }
 
+    if (profile.equalsIgnoreCase(AWS_PROFILE)) {
+      return repoCode.equalsIgnoreCase(AWS_VIRGINIA_REPO);
+    }
+
+    throw new IllegalArgumentException(String.format(
+        "Didn't recognize Client Profile/Repository combination '%s'/'%s'", profile, repoCode));
+  }
 }

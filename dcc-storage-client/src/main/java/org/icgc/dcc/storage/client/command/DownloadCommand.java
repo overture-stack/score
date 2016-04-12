@@ -110,6 +110,9 @@ public class DownloadCommand extends AbstractClientCommand {
         return FAILURE_STATUS;
       }
       val manifest = manifestService.getManifest(manifestResource);
+
+      validateManifest(manifest);
+
       val entries = manifest.getEntries();
       if (entries.isEmpty()) {
         terminal.printError("Manifest '%s' is empty", manifestResource);
