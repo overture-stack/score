@@ -53,4 +53,5 @@ final public class Part implements Comparable<Part> {
   public boolean hasFailedChecksum() {
     return !sourceMd5.equals(md5);
   }
+
 }
