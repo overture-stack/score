@@ -29,8 +29,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
-import lombok.Data;
-import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.Setter;
 import lombok.SneakyThrows;
@@ -47,6 +45,7 @@ import org.icgc.dcc.storage.server.exception.IdNotFoundException;
 import org.icgc.dcc.storage.server.exception.InternalUnrecoverableError;
 import org.icgc.dcc.storage.server.exception.NotRetryableException;
 import org.icgc.dcc.storage.server.exception.RetryableException;
+import org.icgc.dcc.storage.server.service.upload.UploadPartDetail.UploadPartDetailBuilder;
 import org.icgc.dcc.storage.server.util.BucketNamingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -95,15 +94,6 @@ public class UploadStateStore {
   private AmazonS3 s3Client;
   @Autowired
   private BucketNamingService bucketNamingService;
-
-  @Data
-  @NoArgsConstructor
-  class UploadPartDetail {
-
-    private PartETag etag;
-    private int partNumber;
-    private String md5;
-  }
 
   /**
    * Store the upload specification. Writes out entire .meta file in the /upload folder
@@ -296,12 +286,11 @@ public class UploadStateStore {
 
     eachObjectSummary(objectId, uploadStateKey, (objectSummary) -> {
       CompletedPart part = readCompletedPart(objectId, uploadId, objectSummary);
-      UploadPartDetail detail = new UploadPartDetail();
+
       PartETag etag = new PartETag(part.getPartNumber(), part.getEtag());
-      detail.setEtag(etag);
-      detail.setPartNumber(part.getPartNumber());
-      detail.setMd5(part.getMd5());
-      details.put(part.getPartNumber(), detail);
+      UploadPartDetailBuilder detailBuilder =
+          UploadPartDetail.builder().etag(etag).partNumber(part.getPartNumber()).md5(part.getMd5());
+      details.put(part.getPartNumber(), detailBuilder.build());
     });
 
     return details;

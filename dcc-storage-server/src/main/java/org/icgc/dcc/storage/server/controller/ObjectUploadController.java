@@ -41,6 +41,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.google.common.base.Stopwatch;
 import com.google.common.net.HttpHeaders;
 
 /**
@@ -115,10 +116,9 @@ public class ObjectUploadController {
       @PathVariable(value = "object-id") String objectId,
       @RequestParam(value = "uploadId", required = true) String uploadId
       ) {
-    val startMs = System.currentTimeMillis();
+    val watch = Stopwatch.createStarted();
     uploadService.finalizeUpload(objectId, uploadId);
-    val endMs = System.currentTimeMillis();
-    log.info("Finalize upload completed in {} ms", endMs - startMs);
+    log.info("Finalize upload completed in {}", watch);
   }
 
   @RequestMapping(method = RequestMethod.POST, value = "/{object-id}/recovery")

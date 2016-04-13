@@ -17,6 +17,7 @@
  */
 package org.icgc.dcc.storage.client.transport;
 
+import static com.google.common.base.Preconditions.checkState;
 import static org.springframework.http.HttpMethod.GET;
 
 import java.io.File;
@@ -124,35 +125,24 @@ public class StorageService {
       public Void doWithRetry(RetryContext ctx) throws IOException {
         log.debug("Download Part URL: {}", part.getUrl());
 
-        final RequestCallback requestCallback = new RequestCallback() {
-
-          @Override
-          public void doWithRequest(final ClientHttpRequest request) throws IOException {
-            request.getHeaders().set(HttpHeaders.RANGE, Parts.getHttpRangeValue(part));
-          }
-        };
-
-        // return md5 calculated by HashingInputStream
-        final ResponseExtractor<String> headersExtractor = new ResponseExtractor<String>() {
-
-          @Override
-          public String extractData(ClientHttpResponse response) throws IOException {
-            try (HashingInputStream his = new HashingInputStream(Hashing.md5(), response.getBody())) {
-              channel.readFrom(his);
-              return his.hash().toString();
-            }
-          }
-        };
-
         try {
           // the actual GET operation
           log.debug("performing GET {}", part.getUrl());
-          val md5 = dataTemplate.execute(new URI(part.getUrl()), HttpMethod.GET, requestCallback, headersExtractor);
+          String md5 = dataTemplate.execute(new URI(part.getUrl()), HttpMethod.GET,
+
+              request -> request.getHeaders().set(HttpHeaders.RANGE, Parts.getHttpRangeValue(part)),
+
+              response -> {
+                try (HashingInputStream his = new HashingInputStream(Hashing.md5(), response.getBody())) {
+                  channel.readFrom(his);
+                  return his.hash().toString();
+                }
+              }
+              );
+
           part.setMd5(md5);
-          if (part.hasFailedChecksum()) {
-            val msg = String.format("Checksum failed for Part# %d: %s", part.getPartNumber(), part.getMd5());
-            throw new Exception(msg);
-          }
+          checkState(!part.hasFailedChecksum(), "Checksum failed for Part# %d: %s", part.getPartNumber(), part.getMd5());
+
           // TODO: try catch here for commit
           downloadStateStore.commit(outputDir, objectId, part);
           log.debug("committed {} part# {} to download state store", objectId, part.getPartNumber());
