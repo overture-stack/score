@@ -57,4 +57,5 @@ final public class Part implements Comparable<Part> {
   public boolean isMissingSourceMd5() {
     return (sourceMd5 == null) || sourceMd5.trim().isEmpty();
   }
+
 }
