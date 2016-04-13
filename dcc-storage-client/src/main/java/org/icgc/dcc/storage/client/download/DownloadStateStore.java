@@ -60,10 +60,6 @@ public class DownloadStateStore {
     }
   }
 
-  /**
-   * @param objectStateDir
-   * @throws IOException
-   */
   private void deleteDirectoryIfExist(File objectStateDir) throws IOException {
     if (objectStateDir.exists()) {
       Files.walkFileTree(objectStateDir.toPath(), new SimpleFileVisitor<Path>() {
@@ -86,7 +82,7 @@ public class DownloadStateStore {
   }
 
   private File getObjectStateDir(File stateDir, String objectId) {
-    // local, hidden directory using object id
+    // Local, hidden directory using object id
     return new File(stateDir, "." + objectId);
   }
 
@@ -114,7 +110,7 @@ public class DownloadStateStore {
       log.debug("Checking md5 for part {}", part.getPartNumber());
       if (isCompleted(stateDir, objectId, part)) {
         Part completedPart = loadPart(stateDir, objectId, getPartName(part));
-        // copy download md5 into ObjectSpecification
+        // Copy download md5 into ObjectSpecification
         part.setMd5(completedPart.getMd5());
       }
     }
@@ -195,4 +191,5 @@ public class DownloadStateStore {
   public void close(File outDir, String objectId) throws IOException {
     deleteDirectoryIfExist(getObjectStateDir(outDir, objectId));
   }
+
 }

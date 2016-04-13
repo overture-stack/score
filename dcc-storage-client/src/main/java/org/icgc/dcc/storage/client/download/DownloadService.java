@@ -30,6 +30,11 @@ import java.util.Set;
 
 import javax.annotation.PostConstruct;
 
+import lombok.NonNull;
+import lombok.SneakyThrows;
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
+
 import org.icgc.dcc.storage.client.cli.Terminal;
 import org.icgc.dcc.storage.client.exception.NotResumableException;
 import org.icgc.dcc.storage.client.exception.NotRetryableException;
@@ -44,14 +49,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import lombok.NonNull;
-import lombok.SneakyThrows;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
-
-/**
- * main class to handle uploading objects
- */
 @Slf4j
 @Component
 public class DownloadService {
@@ -101,7 +98,7 @@ public class DownloadService {
   @SneakyThrows
   public URL getUrl(@NonNull String objectId, long offset, long length) {
     ObjectSpecification spec = storageService.getExternalDownloadSpecification(objectId, offset, length);
-    Part file = getOnlyElement(spec.getParts()); // throws IllegalArgumentException if more than one part
+    Part file = getOnlyElement(spec.getParts()); // Throws IllegalArgumentException if more than one part
 
     return new URL(file.getUrl());
   }
@@ -109,7 +106,7 @@ public class DownloadService {
   @SneakyThrows
   public String getUrlAsString(@NonNull String objectId, long offset, long length) {
     ObjectSpecification spec = storageService.getExternalDownloadSpecification(objectId, offset, length);
-    Part file = getOnlyElement(spec.getParts()); // throws IllegalArgumentException if more than one part
+    Part file = getOnlyElement(spec.getParts()); // Throws IllegalArgumentException if more than one part
 
     return file.getUrl();
   }
@@ -129,15 +126,15 @@ public class DownloadService {
     for (; retry < retryNumber; retry++) {
       try {
         if (force) {
-          // create local file handle for output
+          // Create local file handle for output
           File objFile = Downloads.getDownloadFile(outputDirectory, objectId);
           if (objFile.exists()) {
-            // delete if already there
+            // Delete if already there
             checkState(objFile.delete());
           }
           startNewDownload(outputDirectory, objectId, offset, length);
         } else {
-          // only perform checksum the first time of the resume
+          // Only perform checksum the first time of the resume
           resumeIfPossible(outputDirectory, objectId, offset, length, retry == 0 ? true : false);
         }
         return;

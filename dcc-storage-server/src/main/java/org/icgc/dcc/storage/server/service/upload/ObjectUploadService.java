@@ -8,6 +8,7 @@ import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import lombok.Setter;
 import lombok.SneakyThrows;
@@ -24,7 +25,6 @@ import org.icgc.dcc.storage.server.exception.InternalUnrecoverableError;
 import org.icgc.dcc.storage.server.exception.NotRetryableException;
 import org.icgc.dcc.storage.server.exception.RetryableException;
 import org.icgc.dcc.storage.server.service.MetadataService;
-import org.icgc.dcc.storage.server.service.upload.UploadStateStore.UploadPartDetail;
 import org.icgc.dcc.storage.server.util.BucketNamingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -45,7 +45,6 @@ import com.amazonaws.services.s3.model.ListMultipartUploadsRequest;
 import com.amazonaws.services.s3.model.ListPartsRequest;
 import com.amazonaws.services.s3.model.MultipartUpload;
 import com.amazonaws.services.s3.model.ObjectMetadata;
-import com.amazonaws.services.s3.model.PartETag;
 import com.amazonaws.services.s3.model.PartSummary;
 import com.amazonaws.services.s3.model.transform.Unmarshallers.ListPartsResultUnmarshaller;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -264,9 +263,7 @@ public class ObjectUploadService {
     if (stateStore.isCompleted(objectId, uploadId)) {
       try {
         val details = stateStore.getUploadStatePartDetails(objectId, uploadId);
-        val etags = Lists.<PartETag> newArrayList();
-        details.values().forEach(detail -> etags.add(detail.getEtag()));
-
+        val etags = details.values().stream().map(detail -> detail.getEtag()).collect(Collectors.toList());
         val objectKey = ObjectKeys.getObjectKey(dataDir, objectId);
         val request = new CompleteMultipartUploadRequest(actualBucketName, objectKey.getKey(), uploadId, etags);
 
