@@ -67,6 +67,7 @@ public class BenchmarkObjectUploadController extends ObjectUploadController {
       @PathVariable(value = "object-id") String objectId,
       @RequestParam(value = "overwrite", required = false, defaultValue = "false") boolean overwrite,
       @RequestParam(value = "fileSize", required = true) long fileSize,
+      @RequestHeader(value = "User-Agent", defaultValue = "unknown") String userAgent,
       HttpServletRequest request) {
     return uploadService.initiateUpload(objectId, fileSize, overwrite);
   }
@@ -79,6 +80,7 @@ public class BenchmarkObjectUploadController extends ObjectUploadController {
       @PathVariable(value = "object-id") String objectId,
       @RequestParam(value = "partNumber", required = true) int partNumber,
       @RequestParam(value = "uploadId", required = true) String uploadId,
+      @RequestHeader(value = "User-Agent", defaultValue = "unknown") String userAgent,
       HttpServletRequest request) {
     // NO-OP
   }

@@ -57,6 +57,7 @@ public class ObjectDownloadController {
       @RequestParam(value = "offset", required = true) long offset,
       @RequestParam(value = "length", required = true) long length,
       @RequestParam(value = "external", defaultValue = "false") boolean external,
+      @RequestHeader(value = "User-Agent", defaultValue = "unknown") String userAgent,
       HttpServletRequest request) {
 
     String ipAddress = request.getHeader(HttpHeaders.X_FORWARDED_FOR);
@@ -64,8 +65,8 @@ public class ObjectDownloadController {
       ipAddress = request.getRemoteAddr();
     }
 
-    log.info("Requesting download of object id {} with access token {} (MD5) from {}", objectId,
-        TokenHasher.hashToken(accessToken), ipAddress);
+    log.info("Requesting download of object id {} with access token {} (MD5) from {} and client version {}", objectId,
+        TokenHasher.hashToken(accessToken), ipAddress, userAgent);
     return downloadService.download(objectId, offset, length, external);
   }
 }
