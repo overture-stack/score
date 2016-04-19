@@ -61,6 +61,7 @@ public class ObjectUploadController {
       @PathVariable(value = "object-id") String objectId,
       @RequestParam(value = "overwrite", required = false, defaultValue = "false") boolean overwrite,
       @RequestParam(value = "fileSize", required = true) long fileSize,
+      @RequestHeader(value = "User-Agent", defaultValue = "unknown") String userAgent,
       HttpServletRequest request) {
 
     String ipAddress = request.getHeader(HttpHeaders.X_FORWARDED_FOR);
@@ -68,10 +69,13 @@ public class ObjectUploadController {
       ipAddress = request.getRemoteAddr();
     }
 
-    log.info("Initiating upload of object id {} with access token {} (MD5) having size of {} from {}", objectId,
+    log.info(
+        "Initiating upload of object id {} with access token {} (MD5) having size of {} from {} using client version {}",
+        objectId,
         TokenHasher.hashToken(accessToken),
         Long.toString(fileSize),
-        ipAddress);
+        ipAddress,
+        userAgent);
     return uploadService.initiateUpload(objectId, fileSize, overwrite);
   }
 
@@ -82,6 +86,7 @@ public class ObjectUploadController {
       @PathVariable(value = "object-id") String objectId,
       @RequestParam(value = "partNumber", required = true) int partNumber,
       @RequestParam(value = "uploadId", required = true) String uploadId,
+      @RequestHeader(value = "User-Agent", defaultValue = "unknown") String userAgent,
       HttpServletRequest request) {
 
     String ipAddress = request.getHeader(HttpHeaders.X_FORWARDED_FOR);
@@ -89,9 +94,11 @@ public class ObjectUploadController {
       ipAddress = request.getRemoteAddr();
     }
 
-    log.info("Initiating delete of object id {} part# {} (upload id {}); with access token {} from {}", objectId,
+    log.info(
+        "Initiating delete of object id {} part# {} (upload id {}); with access token {} from {} using client version {}",
+        objectId,
         partNumber,
-        uploadId, TokenHasher.hashToken(accessToken), ipAddress);
+        uploadId, TokenHasher.hashToken(accessToken), ipAddress, userAgent);
     uploadService.deletePart(objectId, uploadId, partNumber);
   }
 
