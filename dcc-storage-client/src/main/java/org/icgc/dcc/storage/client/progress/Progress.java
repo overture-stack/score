@@ -105,8 +105,8 @@ public class Progress {
     terminal.println("Finalizing...");
   }
 
-  public void end(boolean incompleted) {
-    if (incompleted) {
+  public void end(boolean incomplete) {
+    if (incomplete) {
       terminal
           .println(terminal.error("Data transfer has been interrupted. Some parts are missing. Waiting to retry..."));
     }

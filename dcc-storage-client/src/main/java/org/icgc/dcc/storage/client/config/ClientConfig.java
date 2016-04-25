@@ -17,6 +17,7 @@
  */
 package org.icgc.dcc.storage.client.config;
 
+import static com.google.common.base.Objects.firstNonNull;
 import static java.lang.String.format;
 import static java.util.Collections.singletonList;
 import static javax.ws.rs.core.HttpHeaders.AUTHORIZATION;
@@ -78,6 +79,11 @@ public class ClientConfig {
   private SSLContext sslContext;
   @Autowired
   private HostnameVerifier hostnameVerifier;
+
+  @Bean
+  public String clientVersion() {
+    return firstNonNull(ClientConfig.class.getPackage().getImplementationVersion(), "[unknown version]");
+  }
 
   @Bean
   public DownloadStateStore downloadStateStore() {

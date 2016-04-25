@@ -177,11 +177,11 @@ public class DownloadService {
     log.info("Resuming from previous download...");
 
     int totalParts = parts.size();
-    int competedParts = numCompletedParts(parts);
-    int remainingParts = totalParts - competedParts;
+    int completedParts = numCompletedParts(parts);
+    int remainingParts = totalParts - completedParts;
 
-    log.info("Total parts: {}, completed parts: {}, remaining parts: {}", totalParts, competedParts, remainingParts);
-    val progress = new Progress(terminal, quiet, totalParts, competedParts);
+    log.info("Total parts: {}, completed parts: {}, remaining parts: {}", totalParts, completedParts, remainingParts);
+    val progress = new Progress(terminal, quiet, totalParts, completedParts);
     downloadParts(parts, outputDirectory, objectId, objectId, progress, checksum);
 
   }

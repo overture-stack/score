@@ -18,6 +18,7 @@
 package org.icgc.dcc.storage.client.command;
 
 import static java.util.stream.Collectors.toList;
+import static org.icgc.dcc.common.core.util.Formats.formatBytes;
 import static org.icgc.dcc.storage.client.cli.Parameters.checkParameter;
 
 import java.io.File;
@@ -26,11 +27,6 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Set;
 
-import lombok.SneakyThrows;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
-
-import org.icgc.dcc.common.core.util.FormatUtils;
 import org.icgc.dcc.storage.client.cli.ConverterFactory.OutputLayoutConverter;
 import org.icgc.dcc.storage.client.cli.DirectoryValidator;
 import org.icgc.dcc.storage.client.cli.ObjectIdValidator;
@@ -47,6 +43,10 @@ import com.beust.jcommander.Parameters;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
+
+import lombok.SneakyThrows;
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
@@ -105,10 +105,14 @@ public class DownloadCommand extends AbstractClientCommand {
         terminal
             .printError(
                 "Manifest '%s' looks like a GNOS-format manifest file. Please ensure you are using a tab-delimited text file"
-                    + " manifest from https://dcc.icgc.org/repositories", manifestResource.getValue());
+                    + " manifest from https://dcc.icgc.org/repositories",
+                manifestResource.getValue());
         return FAILURE_STATUS;
       }
       val manifest = manifestService.getManifest(manifestResource);
+
+      validateManifest(manifest);
+
       val entries = manifest.getEntries();
       if (entries.isEmpty()) {
         terminal.printError("Manifest '%s' is empty", manifestResource);
@@ -264,18 +268,16 @@ public class DownloadCommand extends AbstractClientCommand {
   private boolean verifyLocalAvailableSpace(Set<Entity> entities) {
     val spaceRequired = downloadService.getSpaceRequired(entities);
     val spaceAvailable = getLocalAvailableSpace();
-
-    log.warn("space required: {} ({})  space available: {} ({})", FormatUtils.formatBytes(spaceRequired),
-        spaceRequired,
-        FormatUtils.formatBytes(spaceAvailable), spaceAvailable);
+    log.warn("space required: {} ({})  space available: {} ({})",
+        formatBytes(spaceRequired), spaceRequired, formatBytes(spaceAvailable), spaceAvailable);
 
     if (spaceRequired > spaceAvailable) {
       terminal.printWarn("Insufficient space to download requested files: Require %s. %s Available",
-          FormatUtils.formatBytes(spaceRequired),
-          FormatUtils.formatBytes(spaceAvailable));
+          formatBytes(spaceRequired), formatBytes(spaceAvailable));
       terminal.clearLine();
       return false;
     }
+
     return true;
   }
 }

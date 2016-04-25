@@ -17,9 +17,14 @@
  */
 package org.icgc.dcc.storage.client.command;
 
+import lombok.val;
+
 import org.icgc.dcc.storage.client.cli.Terminal;
 import org.icgc.dcc.storage.client.config.ClientProperties;
+import org.icgc.dcc.storage.client.manifest.Manifest;
+import org.icgc.dcc.storage.client.util.ProfileRepoValidator;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 
 /**
  * Abstract class to handle command line arugments
@@ -33,9 +38,26 @@ public abstract class AbstractClientCommand implements ClientCommand {
   protected ClientProperties properties;
   @Autowired
   protected Terminal terminal;
+  @Value("${storage.profile}")
+  protected String storageProfile;
 
   protected void printTitle() {
     terminal.printStatus("\n" + terminal.label("> ") + terminal.value("ICGC ") + "Storage Client\n\n");
+  }
+
+  protected void validateManifest(final Manifest manifest) {
+    for (val entry : manifest.getEntries()) {
+      try {
+        if (!ProfileRepoValidator.validateRepoAgainstProfile(storageProfile, entry.getRepoCode())) {
+          terminal
+              .printWarn(
+                  "Manifest entry %s - %s (%s) exists in the '%s' repository. However, this ICGC Storage Client instance is using the '%s' profile.",
+                  entry.getFileId(), entry.getFileName(), entry.getFileUuid(), entry.getRepoCode(), storageProfile);
+        }
+      } catch (IllegalArgumentException iae) {
+        terminal.printWarn(iae.getMessage());
+      }
+    }
   }
 
 }

@@ -266,6 +266,8 @@ public class MountCommand extends AbstractClientCommand {
   private List<ObjectInfo> filterManifestObjects(List<ObjectInfo> objects) {
     val manifest = manfiestService.getManifest(manifestResource);
 
+    validateManifest(manifest);
+
     val objectIds = manifest.getEntries().stream()
         .flatMap(entry -> Stream.of(entry.getFileUuid(), entry.getIndexFileUuid()))
         .collect(toSet());

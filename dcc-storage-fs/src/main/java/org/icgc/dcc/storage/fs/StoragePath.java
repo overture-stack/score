@@ -79,7 +79,7 @@ public class StoragePath extends GenericPath<StorageFileSystem> {
       return Optional.ofNullable(context.getFile(fileName));
     }
 
-    return null;
+    return Optional.empty();
   }
 
   public String getGnosId() {

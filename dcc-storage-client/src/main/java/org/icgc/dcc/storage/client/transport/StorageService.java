@@ -87,6 +87,9 @@ public class StorageService {
   private RestTemplate dataTemplate;
   @Autowired
   private RetryTemplate retry;
+  @Autowired
+  @Qualifier("clientVersion")
+  private String clientVersion;
 
   @SneakyThrows
   public List<ObjectInfo> listObjects() {
@@ -408,6 +411,7 @@ public class StorageService {
 
   private HttpHeaders defaultHeaders() {
     val requestHeaders = new HttpHeaders();
+    requestHeaders.add(HttpHeaders.USER_AGENT, clientVersion);
     return requestHeaders;
   }
 

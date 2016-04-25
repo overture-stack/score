@@ -24,7 +24,7 @@ public class Terminal {
   /**
    * Constants.
    */
-  private final boolean SPIN_WAITING = false;
+  private static final boolean SPIN_WAITING = false;
 
   /**
    * Configuration.

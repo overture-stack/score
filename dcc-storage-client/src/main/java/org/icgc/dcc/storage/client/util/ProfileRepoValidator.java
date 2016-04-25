@@ -15,25 +15,29 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.client.metadata;
+package org.icgc.dcc.storage.client.util;
 
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+public class ProfileRepoValidator {
 
-@Data
-@EqualsAndHashCode(of = "id")
-public class Entity {
-
-  /**
-   * Uniqueness.
+  /*
+   * values found in DCC Portal manifest downloads
    */
-  String id;
+  public final static String COLLABORATORY_REPO = "collaboratory";
+  public final static String AWS_VIRGINIA_REPO = "aws-virginia";
 
-  /**
-   * Metadata.
-   */
-  String fileName;
-  String gnosId;
-  long createdTime;
+  public final static String COLLABORATORY_PROFILE = "collab";
+  public final static String AWS_PROFILE = "aws";
 
+  public static boolean validateRepoAgainstProfile(String profile, String repoCode) {
+    if (profile.equalsIgnoreCase(COLLABORATORY_PROFILE)) {
+      return repoCode.equalsIgnoreCase(COLLABORATORY_REPO);
+    }
+
+    if (profile.equalsIgnoreCase(AWS_PROFILE)) {
+      return repoCode.equalsIgnoreCase(AWS_VIRGINIA_REPO);
+    }
+
+    throw new IllegalArgumentException(String.format(
+        "Didn't recognize Client Profile/Repository combination '%s'/'%s'", profile, repoCode));
+  }
 }
