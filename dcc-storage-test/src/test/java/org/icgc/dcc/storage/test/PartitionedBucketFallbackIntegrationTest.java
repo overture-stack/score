@@ -286,7 +286,7 @@ public class PartitionedBucketFallbackIntegrationTest {
         "--header-only",
         "--input-file",
         new File(new File(fs.getDownloadsDir(), bamFile.getGnosId()), bamFile.getFileName()).toString(),
-        "--output-type", "sam");
+        "--output-format", "sam");
     view.waitFor(1, MINUTES);
     assertThat(view.exitValue()).isEqualTo(0);
   }
