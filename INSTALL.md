@@ -45,8 +45,8 @@ java -jar target/dcc-storage-server-1.0.14-SNAPSHOT.jar \
 --spring.profiles.active=dev,secure,default \
 --logging.file=/var/log/dcc/storage-server/storage-server.log \
 --server.port=5431 \
---bucket.name.object=benjaminran \
---bucket.name.state=benjaminran \
+--bucket.name.object=beni-dcc-storage-dev \
+--bucket.name.state=beni-dcc-storage-dev \
 --auth.server.url=https://localhost:8443/oauth/check_token \
 --auth.server.clientId=storage \
 --auth.server.clientsecret=pass \
@@ -101,27 +101,29 @@ upload --manifest ~/tmp/manifest.txt
 - storage-server
   - handles actual s3 upload/download requests
 
-### icgc-storage-client
-For now I'm directly using dcc-storage-client.jar so I can override sysProps like metadata.url, accessToken, etc. I should find out a way to use icgc-storage-client.
-
-### S3
-- Using bucket beni-dcc-storage-dev for prototype
+### End User Storage Client
+The end user is supposed to use the packaged icgc-storage-client, but then I can't override dcc-storage-client sysProps like metadata.url, accessToken, etc. For now I'm ust directly invoking dcc-storage-client.jar.
 
 ### Auth-server
 Grants access tokens to users wishing to access storage system (e.g. upload, download, etc.)
 
-Using Spring 'dev' profile, which stores (unencrypted) credentials in a local, embedded H2 db.
+Using Spring 'dev' profile, which stores (unencrypted) credentials in a local, embedded H2 db. The db is created on server startup by src/main/resources/sql/schema.sql.
 
 Auth-server has aws.upload/aws.download scopes, but storage-client upload seems to require s3.upload/s3.download, which doesn't seem to be defined/recognized by auth-server.
 Added scopes to OAUTH-CLIENT-DETAILS
 
+### Logging
+Install guide commands currently send all logs to /var/log/dcc/[auth-server|metadata-server|storage-server|storage-client].
+
 ### Miscellaneous
+Using bucket beni-dcc-storage-dev (Oregon) for prototype
+
 Debug integration test:
 ```
 mvn -Dtest=org.icgc.dcc.storage.test.StorageIntegrationTest -Dmaven.surefire.debug test
 ```
 
-Debug storage-server
+Remote debug storage-server
 ```
 java -agentlib:jdwp=transport=dt_socket,server=y,address=5005,suspend=y \
 -jar target/dcc-storage-server-1.0.14-SNAPSHOT.jar \
@@ -141,6 +143,8 @@ java -agentlib:jdwp=transport=dt_socket,server=y,address=5005,suspend=y \
 - Where is the gnosId created?
 - What is the metadata in the metadata-server?
 - What is bucket.state (storage-server systemProp)
+- What is --endpoints.jmx.domain property for? (check application.yaml's)
+- Where are scopes defined?
 
 ### Stack Traces
 TODO
