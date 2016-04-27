@@ -4,13 +4,6 @@ An overview sentence goes here.
 ## Prerequisites
 The storage system must be built using a Maven version between 3.0.3 and 3.2.5 (inclusive). [Maven Version Manager](http://mvnvm.org/) may prove useful.
 
-## Download
-The following JARs will be needed (available from the [ICGC Artifactory](https://seqwaremaven.oicr.on.ca/artifactory/dcc-release/org/icgc/dcc/)):
-- [dcc-auth-server](https://seqwaremaven.oicr.on.ca/artifactory/dcc-release/org/icgc/dcc/dcc-auth-server/)
-- [dcc-metadata-server](https://seqwaremaven.oicr.on.ca/artifactory/dcc-release/org/icgc/dcc/dcc-metadata-server/)
-- [dcc-metadata-client]()
-- List goes on...
-
 ## Build From Source
 Clone and build the [dcc-storage](https://github.com/icgc-dcc/dcc-storage) project:
 ```
@@ -97,3 +90,64 @@ java -Dlogging.file=/var/log/dcc/storage-client/storage-client.log \
 -jar target/dcc-storage-client-1.0.14-SNAPSHOT.jar \
 upload --manifest ~/tmp/manifest.txt
 ```
+
+## Development Notes
+
+### Storage System Components
+- auth-server
+  - grants access tokens when requested from authenticated principal
+- metadata-server
+  - controls metadata in mongo (e.g. what?)
+- storage-server
+  - handles actual s3 upload/download requests
+
+### icgc-storage-client
+For now I'm directly using dcc-storage-client.jar so I can override sysProps like metadata.url, accessToken, etc. I should find out a way to use icgc-storage-client.
+
+### S3
+- Using bucket beni-dcc-storage-dev for prototype
+
+### Auth-server
+Grants access tokens to users wishing to access storage system (e.g. upload, download, etc.)
+
+Using Spring 'dev' profile, which stores (unencrypted) credentials in a local, embedded H2 db.
+
+Auth-server has aws.upload/aws.download scopes, but storage-client upload seems to require s3.upload/s3.download, which doesn't seem to be defined/recognized by auth-server.
+Added scopes to OAUTH-CLIENT-DETAILS
+
+### Miscellaneous
+Debug integration test:
+```
+mvn -Dtest=org.icgc.dcc.storage.test.StorageIntegrationTest -Dmaven.surefire.debug test
+```
+
+Debug storage-server
+```
+java -agentlib:jdwp=transport=dt_socket,server=y,address=5005,suspend=y \
+-jar target/dcc-storage-server-1.0.14-SNAPSHOT.jar \
+--spring.profiles.active=dev,secure,default \
+--logging.file=/var/log/dcc/storage-server/storage-server.log \
+--server.port=5431 \
+--bucket.name.object=beni-dcc-storage-dev \
+--bucket.name.state=beni-dcc-storage-dev \
+--auth.server.url=https://localhost:8443/oauth/check_token \
+--auth.server.clientId=storage \
+--auth.server.clientsecret=pass \
+--metadata.url=https://localhost:8444 \
+--endpoints.jmx.domain=storage
+```
+
+### Questions
+- Where is the gnosId created?
+- What is the metadata in the metadata-server?
+- What is bucket.state (storage-server systemProp)
+
+### Stack Traces
+TODO
+
+### To-Do
+- Integrate successfully with S3
+- Explore dcc-storage/dcc-storage-server/src/main/bin/install and dcc-storage-server scripts
+- Find good way to specify dcc-storage-client java systemProps via icgc-storage-client that won't be interpreted as args to the application
+- ...
+- Rewrite auth-server
