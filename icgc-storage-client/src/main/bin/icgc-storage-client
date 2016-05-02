@@ -36,17 +36,17 @@ fi
 if [[ "$_java" ]]; then
     version=$("$_java" -version 2>&1 | awk -F '"' '/version/ {print $2}')
     if [[ "$version" > "1.8" ]]; then
-        echo 
+        :
     else
         echo Oracle Java 1.8 required for ICGC Storage Client
+        exit 1
     fi
 
     open_pattern="openjdk*"
     impl=$("$_java" -version 2>&1)
     if [[ $impl =~ $open_pattern ]]; then
         echo OpenJDK not supported. ICGC Storage Client requires Oracle JDK
-    else
-        echo
+        exit 1
     fi
 fi
 
