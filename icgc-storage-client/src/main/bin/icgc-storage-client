@@ -19,6 +19,37 @@
 # Description:
 # 	Runs the ICGC DCC storage client to upload/download/slice files in cloud environments
 
+
+# Do Java check
+
+if type -p java 1>/dev/null; then
+#    echo Found Java in PATH
+    _java=java
+elif [[ -n "$JAVA_HOME" ]] && [[ -x "$JAVA_HOME/bin/java" ]];  then
+#    echo Found Java in JAVA_HOME
+    _java="$JAVA_HOME/bin/java"
+else
+    echo "Java not found. The Storage Client requires Oracle JDK 1.8 or higher"
+    exit 1
+fi
+
+if [[ "$_java" ]]; then
+    version=$("$_java" -version 2>&1 | awk -F '"' '/version/ {print $2}')
+    if [[ "$version" > "1.8" ]]; then
+        echo 
+    else
+        echo Oracle Java 1.8 required for ICGC Storage Client
+    fi
+
+    open_pattern="openjdk*"
+    impl=$("$_java" -version 2>&1)
+    if [[ $impl =~ $open_pattern ]]; then
+        echo OpenJDK not supported. ICGC Storage Client requires Oracle JDK
+    else
+        echo
+    fi
+fi
+
 # Binary directory
 BASE_DIR=`dirname $0`/..; export BASE_DIR
 
