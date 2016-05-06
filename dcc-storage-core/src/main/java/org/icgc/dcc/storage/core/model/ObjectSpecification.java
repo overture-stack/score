@@ -20,6 +20,7 @@ package org.icgc.dcc.storage.core.model;
 import java.util.List;
 
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -27,6 +28,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @Slf4j
 @Data
+@NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ObjectSpecification {
 
@@ -42,10 +44,6 @@ public class ObjectSpecification {
   // Flag indicating whether the meta data was found in the expected bucket, or
   // in the "fallback" bucket (created prior to bucket partitioning)
   private boolean isRelocated = false;
-
-  public ObjectSpecification() {
-    super();
-  }
 
   public ObjectSpecification(String objectKey, String objectId, String uploadId, List<Part> parts, long objectSize,
       boolean isRelocated) {

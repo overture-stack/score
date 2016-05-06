@@ -18,6 +18,7 @@
 package org.icgc.dcc.storage.core.model;
 
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -26,6 +27,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
  * An entity to represent a part that the client will be uploaded
  */
 @Data
+@NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 final public class Part implements Comparable<Part> {
 
@@ -37,10 +39,6 @@ final public class Part implements Comparable<Part> {
   @JsonIgnore
   // temporarily ignore until Md5 logic fully deployed
   String sourceMd5; // original md5 of part; set when uploaded to S3/Ceph
-
-  public Part() {
-    super();
-  }
 
   /**
    * @param partNumber
