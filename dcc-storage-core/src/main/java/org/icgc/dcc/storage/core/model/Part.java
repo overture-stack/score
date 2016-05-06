@@ -17,35 +17,62 @@
  */
 package org.icgc.dcc.storage.core.model;
 
-import org.codehaus.jackson.annotate.JsonIgnore;
-
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 /**
  * An entity to represent a part that the client will be uploaded
  */
-@AllArgsConstructor
-@NoArgsConstructor
 @Data
+@NoArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 final public class Part implements Comparable<Part> {
 
   int partNumber;
   long partSize;
   long offset;
   String url;
-  String md5;
+  String md5; // md5 of a local copy of the part (i.e., after a download)
+  @JsonIgnore
+  // temporarily ignore until Md5 logic fully deployed
+  String sourceMd5; // original md5 of part; set when uploaded to S3/Ceph
+
+  /**
+   * @param partNumber
+   * @param partSize
+   * @param offset
+   * @param url
+   * @param md5
+   */
+  public Part(int partNumber, long partSize, long offset, String url, String md5) {
+    super();
+    this.partNumber = partNumber;
+    this.partSize = partSize;
+    this.offset = offset;
+    this.url = url;
+    this.md5 = md5;
+  }
 
   @JsonIgnore
   public boolean isCompleted() {
     return md5 != null;
   }
 
-  @JsonIgnore
   @Override
   public int compareTo(Part otherPart) {
     return this.partNumber - otherPart.partNumber;
   }
 
+  @JsonIgnore
+  public boolean hasFailedChecksum() {
+    return !sourceMd5.equals(md5);
+  }
+
+  @JsonIgnore
+  public boolean isMissingSourceMd5() {
+    return (sourceMd5 == null) || sourceMd5.trim().isEmpty();
+  }
 }

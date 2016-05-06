@@ -18,9 +18,9 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
 --><project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-	<parent>
-		<groupId>org.icgc.dcc</groupId>
-		<artifactId>dcc-storage</artifactId>
+  <parent>
+    <groupId>org.icgc.dcc</groupId>
+    <artifactId>dcc-storage</artifactId>
     <version>1.0.15-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
@@ -53,13 +53,22 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
       <version>19.0</version><!--$NO-MVN-MAN-VER$-->
+    </dependency>   
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-core</artifactId>
     </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+    </dependency>
+
   </dependencies>
 
   <properties>
     <!-- Versions -->
     <!-- TODO: This is duplicated in client -->
-    <jersey.version>1.17.1</jersey.version>
+    <jersey.version>1.19.1</jersey.version>
     <google.http.version>1.17.0-rc</google.http.version>
   </properties>
 </project>

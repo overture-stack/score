@@ -30,10 +30,11 @@ import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
 
-import org.codehaus.jackson.map.ObjectMapper;
 import org.icgc.dcc.storage.client.exception.NotRetryableException;
 import org.icgc.dcc.storage.core.model.ObjectSpecification;
 import org.icgc.dcc.storage.core.model.Part;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Slf4j
 public class DownloadStateStore {
