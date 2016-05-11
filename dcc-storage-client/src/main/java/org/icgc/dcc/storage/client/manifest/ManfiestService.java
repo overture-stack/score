@@ -93,7 +93,7 @@ public class ManfiestService {
   }
 
   private URL resolvePortalManifestUrl(String manifestId) throws MalformedURLException {
-    return new URL(String.format("%s/api/v1/repository/files/manifests/%s", portalUrl, manifestId));
+    return new URL(String.format("%s/api/v1/manifests/%s", portalUrl, manifestId));
   }
 
 }
