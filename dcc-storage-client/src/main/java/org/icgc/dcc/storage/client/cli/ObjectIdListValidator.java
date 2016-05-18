@@ -35,9 +35,9 @@ public class ObjectIdListValidator implements IValueValidator<List<String>> {
       return;
     }
 
-    for (val id : objectIds) {
-      if (tryParse(id) == null) {
-        parameterException(name, id, "is not a valid UUID");
+    for (val objectId : objectIds) {
+      if (tryParse(objectId) == null) {
+        parameterException(name, objectId, "is not a valid UUID");
       }
     }
   }
