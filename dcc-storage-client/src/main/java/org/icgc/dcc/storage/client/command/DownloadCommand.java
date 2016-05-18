@@ -24,12 +24,13 @@ import static org.icgc.dcc.storage.client.cli.Parameters.checkParameter;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
 import org.icgc.dcc.storage.client.cli.ConverterFactory.OutputLayoutConverter;
 import org.icgc.dcc.storage.client.cli.DirectoryValidator;
-import org.icgc.dcc.storage.client.cli.ObjectIdValidator;
+import org.icgc.dcc.storage.client.cli.ObjectIdListValidator;
 import org.icgc.dcc.storage.client.download.DownloadService;
 import org.icgc.dcc.storage.client.manifest.ManfiestService;
 import org.icgc.dcc.storage.client.manifest.ManifestResource;
@@ -40,7 +41,6 @@ import org.springframework.stereotype.Component;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
 
@@ -68,8 +68,8 @@ public class DownloadCommand extends AbstractClientCommand {
   private boolean force = false;
   @Parameter(names = "--manifest", description = "Path to manifest id, url or file")
   private ManifestResource manifestResource;
-  @Parameter(names = "--object-id", description = "Object id to download", validateValueWith = ObjectIdValidator.class)
-  private String objectId;
+  @Parameter(names = "--object-id", description = "Object id to download", validateValueWith = ObjectIdListValidator.class, variableArity = true)
+  private List<String> objectId = new ArrayList<>();
   @Parameter(names = "--offset", description = "The byte position in source file to begin download from")
   private long offset = 0;
   @Parameter(names = "--length", description = "The number of bytes to download")
@@ -95,10 +95,10 @@ public class DownloadCommand extends AbstractClientCommand {
     checkParameter(outputDir.canWrite(), "Cannot write to output dir '%s'. Please check permissions and try again",
         outputDir);
 
-    val single = objectId != null;
-    if (single) {
-      // Ad-hoc single
-      return downloadObjects(ImmutableList.of(objectId));
+    val listed = objectId.size() > 0;
+    if (listed) {
+      // Ad-hoc list of object id's supplied from command line
+      return downloadObjects(objectId);
     } else {
       // Manifest based
       if (manifestResource.isGnosManifest()) {
