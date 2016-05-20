@@ -190,4 +190,5 @@ public class DownloadStateStore {
   public void close(File outDir, String objectId) throws IOException {
     deleteDirectoryIfExist(getObjectStateDir(outDir, objectId));
   }
+
 }
