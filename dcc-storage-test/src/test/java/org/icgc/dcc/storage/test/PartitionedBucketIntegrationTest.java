@@ -27,6 +27,9 @@ import static org.icgc.dcc.storage.test.util.SpringBootProcess.bootRun;
 import java.io.File;
 import java.util.List;
 
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
+
 import org.icgc.dcc.storage.client.metadata.Entity;
 import org.icgc.dcc.storage.client.metadata.MetadataClient;
 import org.icgc.dcc.storage.test.auth.AuthClient;
@@ -36,12 +39,10 @@ import org.icgc.dcc.storage.test.s3.S3;
 import org.icgc.dcc.storage.test.util.Port;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class PartitionedBucketIntegrationTest {
@@ -93,6 +94,7 @@ public class PartitionedBucketIntegrationTest {
     // they ever need to run in parallel in the same environment.
     String s3ninjaPath = s3Root.getRoot().getAbsolutePath();
     banner("setting up S3 buckets in: " + s3ninjaPath + "...");
+    setupBuckets(s3Root.getRoot(), numBucketPartitions);
 
     banner("Starting S3 under " + s3ninjaPath + " ...");
     s3.start(s3Root.getRoot());
@@ -166,6 +168,27 @@ public class PartitionedBucketIntegrationTest {
         "-DaccessToken=" + accessToken);
   }
 
+  public void setupBuckets(File s3Root) {
+    setupBuckets(s3Root, 0);
+  }
+
+  public void setupBuckets(File s3Root, int count) {
+
+    String objectBucket = "";
+    String stateBucket = "";
+    if (count > 0) {
+      for (int i = 0; i < count; i++) {
+        objectBucket = String.format("%s.%d", objectBucketBase, i);
+        stateBucket = String.format("%s.%d", stateBucketBase, i);
+        createBucket(s3Root, objectBucket);
+        createBucket(s3Root, stateBucket);
+      }
+    } else {
+      createBucket(s3Root, objectBucketBase);
+      createBucket(s3Root, stateBucketBase);
+    }
+  }
+
   void createBucket(File s3Root, String name) {
     // create expected S3 buckets
     File bucket = new File(s3Root, name);
@@ -176,6 +199,7 @@ public class PartitionedBucketIntegrationTest {
     }
   }
 
+  @Ignore("Test ignored until Metadata Client producing manifest issue is resolved")
   @Test
   public void test() throws InterruptedException {
 

@@ -226,7 +226,8 @@ public class StorageService {
     });
   }
 
-  public ObjectSpecification initiateUpload(String objectId, long length, boolean overwrite) throws IOException {
+  public ObjectSpecification initiateUpload(String objectId, long length, boolean overwrite, String md5)
+      throws IOException {
     log.debug("Initiating upload, object-id: {} overwrite: {}", objectId, overwrite);
     return retry.execute(new RetryCallback<ObjectSpecification, IOException>() {
 
@@ -234,10 +235,10 @@ public class StorageService {
       public ObjectSpecification doWithRetry(RetryContext ctx) throws IOException {
         val requestEntity = new HttpEntity<Object>(defaultHeaders());
         return serviceTemplate.exchange(
-            endpoint + "/upload/{object-id}/uploads?fileSize={file-size}&overwrite={overwrite}",
+            endpoint + "/upload/{object-id}/uploads?fileSize={file-size}&overwrite={overwrite}&md5={checksum}",
             HttpMethod.POST,
             requestEntity,
-            ObjectSpecification.class, objectId, length, overwrite).getBody();
+            ObjectSpecification.class, objectId, length, overwrite, md5).getBody();
       }
     });
   }

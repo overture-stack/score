@@ -21,7 +21,7 @@ import lombok.val;
 
 import org.icgc.dcc.storage.client.cli.Terminal;
 import org.icgc.dcc.storage.client.config.ClientProperties;
-import org.icgc.dcc.storage.client.manifest.Manifest;
+import org.icgc.dcc.storage.client.manifest.DownloadManifest;
 import org.icgc.dcc.storage.client.util.ProfileRepoValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -45,7 +45,7 @@ public abstract class AbstractClientCommand implements ClientCommand {
     terminal.printStatus("\n" + terminal.label("> ") + terminal.value("ICGC ") + "Storage Client\n\n");
   }
 
-  protected void validateManifest(final Manifest manifest) {
+  protected void validateManifest(final DownloadManifest manifest) {
     for (val entry : manifest.getEntries()) {
       try {
         if (!ProfileRepoValidator.validateRepoAgainstProfile(storageProfile, entry.getRepoCode())) {

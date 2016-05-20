@@ -15,52 +15,27 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.core.model;
+package org.icgc.dcc.storage.client.manifest;
 
 import java.util.List;
 
-import lombok.Data;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import lombok.Builder;
+import lombok.NonNull;
+import lombok.Value;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+@Value
+public class UploadManifest {
 
-@Slf4j
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-@JsonIgnoreProperties(ignoreUnknown = true)
-public class ObjectSpecification {
+  @NonNull
+  private final List<ManifestEntry> entries;
 
-  private String objectKey;
-  private String objectId;
-  private String uploadId;
-  private List<Part> parts;
-  private long objectSize;
-  private String objectMd5;
+  @Value
+  @Builder
+  public static class ManifestEntry {
 
-  // Flag indicating whether the meta data was found in the expected bucket, or
-  // in the "fallback" bucket (created prior to bucket partitioning)
-  @JsonIgnore
-  @Getter(onMethod = @__(@JsonIgnore))
-  // with regular @JsonIgnore, was still getting serialized
-  private boolean relocated = false;
+    String fileUuid;
+    String fileName;
+    String fileMd5sum;
 
-  @JsonIgnore
-  public boolean hasPartChecksums() {
-    int presentCount = 0;
-    if (parts != null) {
-      for (Part p : parts) {
-        if (p.getSourceMd5() != null) {
-          presentCount += 1;
-        }
-        if (presentCount < parts.size()) {
-          log.warn("Some parts missing MD5 checksum (but other parts have one)");
-        }
-      }
-    }
-    return (presentCount > 0);
   }
 }

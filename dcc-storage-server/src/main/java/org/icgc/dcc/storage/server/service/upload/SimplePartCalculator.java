@@ -19,9 +19,9 @@ package org.icgc.dcc.storage.server.service.upload;
 
 import java.util.List;
 
-import org.icgc.dcc.storage.core.model.Part;
-
 import lombok.extern.slf4j.Slf4j;
+
+import org.icgc.dcc.storage.core.model.Part;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;

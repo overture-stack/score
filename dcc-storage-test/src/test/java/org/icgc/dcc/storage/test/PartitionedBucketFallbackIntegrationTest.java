@@ -27,6 +27,9 @@ import static org.icgc.dcc.storage.test.util.SpringBootProcess.bootRun;
 import java.io.File;
 import java.util.List;
 
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
+
 import org.icgc.dcc.storage.client.metadata.Entity;
 import org.icgc.dcc.storage.client.metadata.MetadataClient;
 import org.icgc.dcc.storage.test.auth.AuthClient;
@@ -36,12 +39,10 @@ import org.icgc.dcc.storage.test.s3.S3;
 import org.icgc.dcc.storage.test.util.Port;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class PartitionedBucketFallbackIntegrationTest {
@@ -198,6 +199,7 @@ public class PartitionedBucketFallbackIntegrationTest {
     }
   }
 
+  @Ignore("Test ignored until Metadata Client producing manifest issue is resolved")
   @Test
   public void test() throws InterruptedException {
 
@@ -229,7 +231,8 @@ public class PartitionedBucketFallbackIntegrationTest {
     for (int status = 0; status < 2; status++) {
       val upload = storageClient(accessToken,
           "upload",
-          "--manifest", fs.getRootDir() + "/manifest.txt");
+          "--manifest", "src/test/resources/upload-manifest.txt");
+      // "--manifest", fs.getRootDir() + "/manifest.txt");
       upload.waitFor(10, MINUTES);
       assertThat(upload.exitValue()).isEqualTo(status); // First time 0, second time 1 since no --force
     }

@@ -1,1 +1,3 @@
-00000000-00000000-00000000-00000000=src/test/resources/fixtures/data/upload.bam
+File UUID	File name	File md5sum
+00000000-00000000-00000000-00000000	src/test/resources/fixtures/data/upload.bam	f92dc4d0b5d5d98bbb796056139348f9
+11111111-00000000-00000000-00000000	src/test/resources/fixtures/data/upload.bai	d16a1aafcf9c22a073a4b8af198707c2

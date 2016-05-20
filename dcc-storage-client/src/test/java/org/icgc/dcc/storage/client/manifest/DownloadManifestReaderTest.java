@@ -15,52 +15,54 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.core.model;
+package org.icgc.dcc.storage.client.manifest;
 
-import java.util.List;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasSize;
+import static org.junit.Assert.assertThat;
 
-import lombok.Data;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.io.File;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import org.icgc.dcc.storage.client.manifest.DownloadManifest.ManifestEntry;
+import org.junit.Test;
 
-@Slf4j
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-@JsonIgnoreProperties(ignoreUnknown = true)
-public class ObjectSpecification {
+import lombok.val;
 
-  private String objectKey;
-  private String objectId;
-  private String uploadId;
-  private List<Part> parts;
-  private long objectSize;
-  private String objectMd5;
+public class DownloadManifestReaderTest {
 
-  // Flag indicating whether the meta data was found in the expected bucket, or
-  // in the "fallback" bucket (created prior to bucket partitioning)
-  @JsonIgnore
-  @Getter(onMethod = @__(@JsonIgnore))
-  // with regular @JsonIgnore, was still getting serialized
-  private boolean relocated = false;
+  @Test
+  public void testReadManifest() {
+    val reader = new DownloadManifestReader();
+    val manifest = reader.readManifest(new File("src/test/resources/fixtures/download/manifest.txt"));
 
-  @JsonIgnore
-  public boolean hasPartChecksums() {
-    int presentCount = 0;
-    if (parts != null) {
-      for (Part p : parts) {
-        if (p.getSourceMd5() != null) {
-          presentCount += 1;
-        }
-        if (presentCount < parts.size()) {
-          log.warn("Some parts missing MD5 checksum (but other parts have one)");
-        }
-      }
-    }
-    return (presentCount > 0);
+    assertThat(manifest.getEntries(), hasSize(2));
+    assertThat(manifest.getEntries().get(0), equalTo(ManifestEntry.builder()
+        .repoCode("1")
+        .fileId("2")
+        .fileUuid("3")
+        .fileFormat("4")
+        .fileName("5")
+        .fileSize("6")
+        .fileMd5sum("7")
+        .indexFileUuid("8")
+        .donorId("9")
+        .projectId("10")
+        .study("11")
+        .build()));
+    assertThat(manifest.getEntries().get(1), equalTo(ManifestEntry.builder()
+        .repoCode("11")
+        .fileId("10")
+        .fileUuid("9")
+        .fileFormat("8")
+        .fileName("7")
+        .fileSize("6")
+        .fileMd5sum("5")
+        .indexFileUuid("4")
+        .donorId("3")
+        .projectId("2")
+        .study("1")
+        .build()));
+
   }
+
 }

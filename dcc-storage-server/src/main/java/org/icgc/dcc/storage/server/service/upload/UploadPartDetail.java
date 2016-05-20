@@ -29,4 +29,5 @@ public class UploadPartDetail {
   private PartETag etag;
   private int partNumber;
   private String md5;
+  
 }

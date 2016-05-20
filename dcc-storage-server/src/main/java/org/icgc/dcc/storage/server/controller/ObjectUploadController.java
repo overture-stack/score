@@ -63,9 +63,11 @@ public class ObjectUploadController {
       @PathVariable(value = "object-id") String objectId,
       @RequestParam(value = "overwrite", required = false, defaultValue = "false") boolean overwrite,
       @RequestParam(value = "fileSize", required = true) long fileSize,
+      @RequestParam(value = "md5", required = false) String md5,
       @RequestHeader(value = "User-Agent", defaultValue = "unknown") String userAgent,
       HttpServletRequest request) {
 
+    log.info("Request received from client {}", userAgent);
     String ipAddress = request.getHeader(HttpHeaders.X_FORWARDED_FOR);
     if (ipAddress == null) {
       ipAddress = request.getRemoteAddr();
@@ -78,7 +80,7 @@ public class ObjectUploadController {
         Long.toString(fileSize),
         ipAddress,
         userAgent);
-    return uploadService.initiateUpload(objectId, fileSize, overwrite);
+    return uploadService.initiateUpload(objectId, fileSize, md5, overwrite);
   }
 
   @RequestMapping(method = RequestMethod.DELETE, value = "/{object-id}/parts")
@@ -121,8 +123,7 @@ public class ObjectUploadController {
   public void finalizeUpload(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "object-id") String objectId,
-      @RequestParam(value = "uploadId", required = true) String uploadId
-      ) {
+      @RequestParam(value = "uploadId", required = true) String uploadId) {
     val watch = Stopwatch.createStarted();
     uploadService.finalizeUpload(objectId, uploadId);
     log.info("Finalize upload completed in {}", watch);

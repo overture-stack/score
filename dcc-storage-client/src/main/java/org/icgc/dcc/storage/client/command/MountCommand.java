@@ -37,8 +37,8 @@ import org.icgc.dcc.storage.client.cli.ConverterFactory.MountOptionsConverter;
 import org.icgc.dcc.storage.client.cli.ConverterFactory.StorageFileLayoutConverter;
 import org.icgc.dcc.storage.client.cli.DirectoryValidator;
 import org.icgc.dcc.storage.client.download.DownloadService;
-import org.icgc.dcc.storage.client.manifest.ManfiestService;
 import org.icgc.dcc.storage.client.manifest.ManifestResource;
+import org.icgc.dcc.storage.client.manifest.ManifestService;
 import org.icgc.dcc.storage.client.metadata.Entity;
 import org.icgc.dcc.storage.client.metadata.MetadataService;
 import org.icgc.dcc.storage.client.mount.MountService;
@@ -91,7 +91,7 @@ public class MountCommand extends AbstractClientCommand {
    * Dependencies.
    */
   @Autowired
-  private ManfiestService manfiestService;
+  private ManifestService manifestService;
   @Autowired
   private MetadataService metadataServices;
   @Autowired
@@ -264,7 +264,9 @@ public class MountCommand extends AbstractClientCommand {
   }
 
   private List<ObjectInfo> filterManifestObjects(List<ObjectInfo> objects) {
-    val manifest = manfiestService.getManifest(manifestResource);
+    val manifest = manifestService.getDownloadManifest(manifestResource);
+
+    validateManifest(manifest);
 
     validateManifest(manifest);
 

@@ -28,4 +28,8 @@ public class RetryableException extends RuntimeException {
   public RetryableException(Throwable e) {
     super(e);
   }
+
+  public RetryableException(String message) {
+    super(message);
+  }
 }

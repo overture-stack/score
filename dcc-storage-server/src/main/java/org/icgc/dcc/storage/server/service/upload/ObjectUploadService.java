@@ -89,7 +89,7 @@ public class ObjectUploadService {
   @Autowired
   private ObjectPartCalculator partCalculator;
 
-  public ObjectSpecification initiateUpload(String objectId, long fileSize, boolean overwrite) {
+  public ObjectSpecification initiateUpload(String objectId, long fileSize, String md5, boolean overwrite) {
     // First ensure that the system is aware of the requested object
     checkRegistered(objectId);
 
@@ -133,7 +133,8 @@ public class ObjectUploadService {
             expirationDate));
       }
 
-      val spec = new ObjectSpecification(objectKey.getKey(), objectId, result.getUploadId(), parts, fileSize, false);
+      val spec =
+          new ObjectSpecification(objectKey.getKey(), objectId, result.getUploadId(), parts, fileSize, md5, false);
 
       // write out .meta file
       stateStore.create(spec);
@@ -316,15 +317,19 @@ public class ObjectUploadService {
 
   public UploadProgress getUploadStatus(String objectId, String uploadId, long fileSize) {
     val spec = stateStore.read(objectId, uploadId);
-    val finished = spec.getObjectSize() == fileSize;
-    if (finished) {
+    val validSpec = spec.getObjectSize() == fileSize;
+    if (validSpec) {
       stateStore.markCompletedParts(objectId, uploadId, spec.getParts());
-
       return new UploadProgress(objectId, uploadId, spec.getParts());
     }
 
-    log.error("Error getting upload status for objectId {} uploadId {} fileSize {}", objectId, uploadId, fileSize);
-    throw new NotRetryableException();
+    val msg =
+        String
+            .format(
+                "Error getting upload status for objectId %s with uploadId %s: fileSize %d does not match registered object size %d",
+                objectId, uploadId, fileSize, spec.getObjectSize());
+    log.error(msg);
+    throw new NotRetryableException(new IllegalStateException(msg));
   }
 
   public void cancelUploads() {

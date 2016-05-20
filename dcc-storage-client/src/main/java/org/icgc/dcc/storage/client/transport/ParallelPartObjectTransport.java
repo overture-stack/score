@@ -211,9 +211,9 @@ public class ParallelPartObjectTransport implements Transport {
     }
   }
 
-  // TODO: should remove file parameter
+  // TODO: need unit test confirming case where source MD5 is null
   protected boolean isCorrupted(DataChannel channel, Part part, File outputDir) throws IOException {
-    if (channel.verifyMd5(part.getSourceMd5())) {
+    if ((part.getSourceMd5() != null) && channel.verifyMd5(part.getSourceMd5())) {
       return false;
     }
     log.debug("Part is corrupted: {}", part);

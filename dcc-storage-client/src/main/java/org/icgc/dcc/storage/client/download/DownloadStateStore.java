@@ -26,7 +26,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -102,7 +101,7 @@ public class DownloadStateStore {
     return Files.exists(new File(getObjectStateDir(stateDir, objectId), getSpecificationName()).toPath());
   }
 
-  public List<Part> getProgress(File stateDir, String objectId) throws IOException {
+  public ObjectSpecification getProgress(File stateDir, String objectId) throws IOException {
     log.debug("Loading local progress for {} from {}", objectId, stateDir.toString());
     ObjectSpecification spec = loadSpecification(stateDir, objectId);
     log.debug("Completed loading local object specification (meta file)");
@@ -114,7 +113,7 @@ public class DownloadStateStore {
         part.setMd5(completedPart.getMd5());
       }
     }
-    return spec.getParts();
+    return spec;
   }
 
   private boolean isCompleted(File stateDir, String objectId, Part part) {
@@ -191,5 +190,4 @@ public class DownloadStateStore {
   public void close(File outDir, String objectId) throws IOException {
     deleteDirectoryIfExist(getObjectStateDir(outDir, objectId));
   }
-
 }

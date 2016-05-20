@@ -17,50 +17,65 @@
  */
 package org.icgc.dcc.storage.core.model;
 
-import java.util.List;
+import java.io.File;
+import java.net.URL;
 
-import lombok.Data;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+//import org.codehaus.jackson.map.ObjectMapper;
+import org.junit.Assert;
+import org.junit.Test;
 
-@Slf4j
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-@JsonIgnoreProperties(ignoreUnknown = true)
-public class ObjectSpecification {
+import com.fasterxml.jackson.databind.ObjectMapper;
 
-  private String objectKey;
-  private String objectId;
-  private String uploadId;
-  private List<Part> parts;
-  private long objectSize;
-  private String objectMd5;
+//import com.fasterxml.jackson.databind.ObjectMapper;
 
-  // Flag indicating whether the meta data was found in the expected bucket, or
-  // in the "fallback" bucket (created prior to bucket partitioning)
-  @JsonIgnore
-  @Getter(onMethod = @__(@JsonIgnore))
-  // with regular @JsonIgnore, was still getting serialized
-  private boolean relocated = false;
+public class ObjectSpecificationTest {
 
-  @JsonIgnore
-  public boolean hasPartChecksums() {
-    int presentCount = 0;
-    if (parts != null) {
-      for (Part p : parts) {
-        if (p.getSourceMd5() != null) {
-          presentCount += 1;
-        }
-        if (presentCount < parts.size()) {
-          log.warn("Some parts missing MD5 checksum (but other parts have one)");
-        }
-      }
+  private static final ObjectMapper MAPPER = new ObjectMapper();
+
+  @Test
+  public void test() {
+    URL url = this.getClass().getResource("/test.meta");
+    File testfile = new File(url.getFile());
+
+    try {
+      val sut = MAPPER.readValue(testfile, ObjectSpecification.class);
+      val check = sut.hasPartChecksums();
+      System.out.println("test");
+    } catch (Exception e) {
+      e.printStackTrace();
     }
-    return (presentCount > 0);
+  }
+
+  @Test
+  public void test_no_object_md5() {
+    URL url = this.getClass().getResource("/test.meta");
+    File testfile = new File(url.getFile());
+
+    try {
+      val sut = MAPPER.readValue(testfile, ObjectSpecification.class);
+      Assert.assertNull(sut.getObjectMd5());
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+  }
+
+  @Test
+  public void test_add_object_md5() {
+    URL url = this.getClass().getResource("/legacy.meta");
+    File legacyfile = new File(url.getFile());
+
+    try {
+      val sut = MAPPER.readValue(legacyfile, ObjectSpecification.class);
+      Assert.assertNull(sut.getObjectMd5());
+
+      sut.setObjectMd5("aiwuehcfnoa9w8yrbqv90238y4cnoaq89yrnawe");
+
+      File output = new File("/tmp/test.meta");
+      MAPPER.writeValue(output, sut);
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
   }
 }

@@ -15,52 +15,51 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.core.model;
+package org.icgc.dcc.storage.client.manifest;
 
-import java.util.List;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasSize;
+import static org.junit.Assert.assertThat;
 
-import lombok.Data;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.io.File;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import lombok.val;
 
-@Slf4j
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-@JsonIgnoreProperties(ignoreUnknown = true)
-public class ObjectSpecification {
+import org.icgc.dcc.storage.client.manifest.UploadManifest.ManifestEntry;
+import org.junit.Test;
 
-  private String objectKey;
-  private String objectId;
-  private String uploadId;
-  private List<Part> parts;
-  private long objectSize;
-  private String objectMd5;
+public class UploadManifestReaderTest {
 
-  // Flag indicating whether the meta data was found in the expected bucket, or
-  // in the "fallback" bucket (created prior to bucket partitioning)
-  @JsonIgnore
-  @Getter(onMethod = @__(@JsonIgnore))
-  // with regular @JsonIgnore, was still getting serialized
-  private boolean relocated = false;
+  @Test
+  public void testReadManifest() {
+    val reader = new UploadManifestReader();
+    val manifest = reader.readManifest(new File("src/test/resources/fixtures/upload/manifest.txt"));
 
-  @JsonIgnore
-  public boolean hasPartChecksums() {
-    int presentCount = 0;
-    if (parts != null) {
-      for (Part p : parts) {
-        if (p.getSourceMd5() != null) {
-          presentCount += 1;
-        }
-        if (presentCount < parts.size()) {
-          log.warn("Some parts missing MD5 checksum (but other parts have one)");
-        }
-      }
+    assertThat(manifest.getEntries(), hasSize(2));
+    assertThat(manifest.getEntries().get(0), equalTo(ManifestEntry.builder()
+        .fileUuid("00000000-00000000-00000000-00000000")
+        .fileName("src/test/resources/fixtures/data/upload.bam")
+        .fileMd5sum("f92dc4d0b5d5d98bbb796056139348f9")
+        .build()));
+    assertThat(manifest.getEntries().get(1), equalTo(ManifestEntry.builder()
+        .fileUuid("11111111-00000000-00000000-00000000")
+        .fileName("src/test/resources/fixtures/data/upload.bai")
+        .fileMd5sum("d16a1aafcf9c22a073a4b8af198707c2")
+        .build()));
+
+  }
+
+  @Test(expected = IllegalStateException.class)
+  public void testReadPropertiesFormatManifest() {
+    val reader = new UploadManifestReader();
+    try {
+      val manifest = reader.readManifest(new File("src/test/resources/fixtures/upload/manifest-properties.txt"));
+      System.out.println();
+    } catch (IllegalStateException e) {
+      System.out
+          .println("Invalid Upload manifest file specified. Please check format and ensure it is a 3-column, tab-delimited file. "
+              + e.getMessage());
+      throw e;
     }
-    return (presentCount > 0);
   }
 }
