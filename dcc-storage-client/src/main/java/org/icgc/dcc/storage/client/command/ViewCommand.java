@@ -99,7 +99,7 @@ public class ViewCommand extends AbstractClientCommand {
   private File bamFile = null;
   @Parameter(names = "--input-file-index", description = "Explicit local path to index file (requires --input-file)", validateValueWith = FileValidator.class)
   private File baiFile = null;
-  Parameter(names = "--query", description = "Query to define extract from BAM file (coordinate format 'sequence:start-end'). Multiple"
+  @Parameter(names = "--query", description = "Query to define extract from BAM file (coordinate format 'sequence:start-end'). Multiple"
       + " ranges separated by space", variableArity = true)
   private List<String> query = new ArrayList<>();
   @Parameter(names = "--bed-query", description = "Specify a BED-format file containing ranges to query. Overrides --query parameter", validateValueWith = FileValidator.class)

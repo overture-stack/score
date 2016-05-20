@@ -19,6 +19,7 @@ package org.icgc.dcc.storage.core.model;
 
 import java.util.List;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
