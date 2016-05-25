@@ -313,6 +313,7 @@ public class DownloadService {
       val msg = String.format("MD5 for %s was %s but was expecting %s", outputFile.getAbsolutePath(), downloadedMd5,
           spec.getObjectMd5());
       log.error(msg);
+      terminal.printWarn(msg);
       throw new RetryableException(msg);
     }
   }
