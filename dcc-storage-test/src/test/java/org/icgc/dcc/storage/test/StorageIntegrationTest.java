@@ -22,6 +22,7 @@ import static org.icgc.dcc.storage.test.util.SpringBootProcess.bootRun;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class StorageIntegrationTest extends AbstractStorageIntegrationTest {
@@ -39,6 +40,7 @@ public class StorageIntegrationTest extends AbstractStorageIntegrationTest {
     super.tearDown();
   }
 
+  @Ignore("Test ignored until Metadata Client producing manifest issue is resolved")
   @Test
   public void test() throws InterruptedException {
     execute();

@@ -55,10 +55,19 @@ public class ClientMainTest extends AbstractClientMainTest {
   @Test
   public void testMainUploadEmptyFile() throws Exception {
     val file = tmp.newFile();
+    executeMain("upload", "--object-id", UUID.randomUUID().toString());
+
+    assertTrue(getExitCode() == 1);
+    assertTrue(getOutput().contains("--file must be specified if --object-id is specified"));
+  }
+
+  @Test
+  public void testMainUploadFileButMissingMd5() throws Exception {
+    val file = tmp.newFile();
     executeMain("upload", "--object-id", UUID.randomUUID().toString(), "--file", file.getCanonicalPath());
 
     assertTrue(getExitCode() == 1);
-    assertTrue(getOutput().contains("Uploads of empty files are not permitted"));
+    assertTrue(getOutput().contains("--md5 must be specified if --object-id is specified"));
   }
 
   @Test

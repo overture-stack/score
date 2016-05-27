@@ -15,41 +15,51 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+package org.icgc.dcc.storage.client.manifest;
 
-package org.icgc.dcc.storage.client.transport;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasSize;
+import static org.junit.Assert.assertThat;
 
-import java.io.IOException;
-import java.io.InputStream;
-
-import org.icgc.dcc.storage.core.model.DataChannel;
-
-import com.google.common.io.ByteStreams;
+import java.io.File;
 
 import lombok.val;
-import lombok.extern.slf4j.Slf4j;
 
-/**
- * A representation of a channel for data tranfser.
- */
-@Slf4j
-public abstract class AbstractDataChannel implements DataChannel {
+import org.icgc.dcc.storage.client.manifest.UploadManifest.ManifestEntry;
+import org.junit.Test;
 
-  @Override
-  public boolean verifyMd5(String expectedMd5) throws IOException {
-    // Need to read through the whole stream in order to calculate the md5
-    writeTo(ByteStreams.nullOutputStream());
+public class UploadManifestReaderTest {
 
-    // Now it's available
-    val actualMd5 = getMd5();
-    if (!actualMd5.equals(expectedMd5)) {
-      log.warn("md5 failed. Expected: {}, Actual: {}.", expectedMd5, actualMd5);
-      return false;
-    }
-    return true;
+  @Test
+  public void testReadManifest() {
+    val reader = new UploadManifestReader();
+    val manifest = reader.readManifest(new File("src/test/resources/fixtures/upload/manifest.txt"));
+
+    assertThat(manifest.getEntries(), hasSize(2));
+    assertThat(manifest.getEntries().get(0), equalTo(ManifestEntry.builder()
+        .fileUuid("00000000-00000000-00000000-00000000")
+        .fileName("src/test/resources/fixtures/data/upload.bam")
+        .fileMd5sum("f92dc4d0b5d5d98bbb796056139348f9")
+        .build()));
+    assertThat(manifest.getEntries().get(1), equalTo(ManifestEntry.builder()
+        .fileUuid("11111111-00000000-00000000-00000000")
+        .fileName("src/test/resources/fixtures/data/upload.bai")
+        .fileMd5sum("d16a1aafcf9c22a073a4b8af198707c2")
+        .build()));
+
   }
 
-  @Override
-  public void readFrom(InputStream is) throws IOException {
-    throw new AssertionError("Not implemented");
+  @Test(expected = IllegalStateException.class)
+  public void testReadPropertiesFormatManifest() {
+    val reader = new UploadManifestReader();
+    try {
+      val manifest = reader.readManifest(new File("src/test/resources/fixtures/upload/manifest-properties.txt"));
+      System.out.println();
+    } catch (IllegalStateException e) {
+      System.out
+          .println("Invalid Upload manifest file specified. Please check format and ensure it is a 3-column, tab-delimited file. "
+              + e.getMessage());
+      throw e;
+    }
   }
 }

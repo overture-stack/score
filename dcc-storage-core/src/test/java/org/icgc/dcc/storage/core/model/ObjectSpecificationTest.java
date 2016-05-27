@@ -15,41 +15,67 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+package org.icgc.dcc.storage.core.model;
 
-package org.icgc.dcc.storage.client.transport;
-
-import java.io.IOException;
-import java.io.InputStream;
-
-import org.icgc.dcc.storage.core.model.DataChannel;
-
-import com.google.common.io.ByteStreams;
+import java.io.File;
+import java.net.URL;
 
 import lombok.val;
-import lombok.extern.slf4j.Slf4j;
 
-/**
- * A representation of a channel for data tranfser.
- */
-@Slf4j
-public abstract class AbstractDataChannel implements DataChannel {
+//import org.codehaus.jackson.map.ObjectMapper;
+import org.junit.Assert;
+import org.junit.Test;
 
-  @Override
-  public boolean verifyMd5(String expectedMd5) throws IOException {
-    // Need to read through the whole stream in order to calculate the md5
-    writeTo(ByteStreams.nullOutputStream());
+import com.fasterxml.jackson.databind.ObjectMapper;
 
-    // Now it's available
-    val actualMd5 = getMd5();
-    if (!actualMd5.equals(expectedMd5)) {
-      log.warn("md5 failed. Expected: {}, Actual: {}.", expectedMd5, actualMd5);
-      return false;
+//import com.fasterxml.jackson.databind.ObjectMapper;
+
+public class ObjectSpecificationTest {
+
+  private static final ObjectMapper MAPPER = new ObjectMapper();
+
+  @Test
+  public void test() {
+    URL url = this.getClass().getResource("/test.meta");
+    File testfile = new File(url.getFile());
+
+    try {
+      val sut = MAPPER.readValue(testfile, ObjectSpecification.class);
+      val check = sut.hasPartChecksums();
+      System.out.println("test");
+    } catch (Exception e) {
+      e.printStackTrace();
     }
-    return true;
   }
 
-  @Override
-  public void readFrom(InputStream is) throws IOException {
-    throw new AssertionError("Not implemented");
+  @Test
+  public void test_no_object_md5() {
+    URL url = this.getClass().getResource("/test.meta");
+    File testfile = new File(url.getFile());
+
+    try {
+      val sut = MAPPER.readValue(testfile, ObjectSpecification.class);
+      Assert.assertNull(sut.getObjectMd5());
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+  }
+
+  @Test
+  public void test_add_object_md5() {
+    URL url = this.getClass().getResource("/legacy.meta");
+    File legacyfile = new File(url.getFile());
+
+    try {
+      val sut = MAPPER.readValue(legacyfile, ObjectSpecification.class);
+      Assert.assertNull(sut.getObjectMd5());
+
+      sut.setObjectMd5("aiwuehcfnoa9w8yrbqv90238y4cnoaq89yrnawe");
+
+      File output = new File("/tmp/test.meta");
+      MAPPER.writeValue(output, sut);
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
   }
 }

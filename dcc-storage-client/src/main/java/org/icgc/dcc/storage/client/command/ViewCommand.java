@@ -40,11 +40,11 @@ import org.icgc.dcc.storage.client.cli.ConverterFactory.OutputFormatConverter;
 import org.icgc.dcc.storage.client.cli.ConverterFactory.OutputTypeConverter;
 import org.icgc.dcc.storage.client.cli.DirectoryValidator;
 import org.icgc.dcc.storage.client.cli.FileValidator;
-import org.icgc.dcc.storage.client.cli.ObjectIdValidator;
+import org.icgc.dcc.storage.client.cli.ObjectIdListValidator;
 import org.icgc.dcc.storage.client.download.DownloadService;
-import org.icgc.dcc.storage.client.manifest.ManfiestService;
-import org.icgc.dcc.storage.client.manifest.Manifest.ManifestEntry;
+import org.icgc.dcc.storage.client.manifest.DownloadManifest.ManifestEntry;
 import org.icgc.dcc.storage.client.manifest.ManifestResource;
+import org.icgc.dcc.storage.client.manifest.ManifestService;
 import org.icgc.dcc.storage.client.metadata.Entity;
 import org.icgc.dcc.storage.client.metadata.MetadataService;
 import org.icgc.dcc.storage.client.slicing.SamFileBuilder;
@@ -93,7 +93,7 @@ public class ViewCommand extends AbstractClientCommand {
   // private String fileName;
   @Parameter(names = "--output-format", description = "Output file format for query. SAM or BAM", converter = OutputFormatConverter.class)
   private OutputFormat outputFormat = OutputFormat.SAM;
-  @Parameter(names = "--object-id", description = "Object id of BAM file to download slice from. Will supercede --manifest", validateValueWith = ObjectIdValidator.class)
+  @Parameter(names = "--object-id", description = "Object id of BAM file to download slice from. Will supercede --manifest", validateValueWith = ObjectIdListValidator.class)
   private String objectId;
   @Parameter(names = "--input-file", description = "Local path to BAM file. Will supercede specification of --object-id", validateValueWith = FileValidator.class)
   private File bamFile = null;
@@ -121,7 +121,7 @@ public class ViewCommand extends AbstractClientCommand {
   @Autowired
   private MetadataService metadataService;
   @Autowired
-  private ManfiestService manifestService;
+  private ManifestService manifestService;
   @Autowired
   private DownloadService downloadService;
   @Autowired
@@ -151,7 +151,7 @@ public class ViewCommand extends AbstractClientCommand {
       process(ImmutableList.of(objectId));
     } else if (manifestResource != null) {
       // Manifest based
-      val manifest = manifestService.getManifest(manifestResource);
+      val manifest = manifestService.getDownloadManifest(manifestResource);
       val allEntries = manifest.getEntries();
       if (allEntries.isEmpty()) {
         String msg = String.format("Manifest '%s' is empty", manifestResource);

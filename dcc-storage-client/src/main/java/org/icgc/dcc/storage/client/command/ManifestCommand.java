@@ -17,7 +17,7 @@
  */
 package org.icgc.dcc.storage.client.command;
 
-import org.icgc.dcc.storage.client.manifest.ManfiestService;
+import org.icgc.dcc.storage.client.manifest.ManifestService;
 import org.icgc.dcc.storage.client.manifest.ManifestResource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -41,7 +41,7 @@ public class ManifestCommand extends AbstractClientCommand {
    * Dependencies.
    */
   @Autowired
-  private ManfiestService manfiestService;
+  private ManifestService manfiestService;
 
   @Override
   public int execute() throws Exception {

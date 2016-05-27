@@ -15,41 +15,54 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+package org.icgc.dcc.storage.client.manifest;
 
-package org.icgc.dcc.storage.client.transport;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasSize;
+import static org.junit.Assert.assertThat;
 
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.File;
 
-import org.icgc.dcc.storage.core.model.DataChannel;
-
-import com.google.common.io.ByteStreams;
+import org.icgc.dcc.storage.client.manifest.DownloadManifest.ManifestEntry;
+import org.junit.Test;
 
 import lombok.val;
-import lombok.extern.slf4j.Slf4j;
 
-/**
- * A representation of a channel for data tranfser.
- */
-@Slf4j
-public abstract class AbstractDataChannel implements DataChannel {
+public class DownloadManifestReaderTest {
 
-  @Override
-  public boolean verifyMd5(String expectedMd5) throws IOException {
-    // Need to read through the whole stream in order to calculate the md5
-    writeTo(ByteStreams.nullOutputStream());
+  @Test
+  public void testReadManifest() {
+    val reader = new DownloadManifestReader();
+    val manifest = reader.readManifest(new File("src/test/resources/fixtures/download/manifest.txt"));
 
-    // Now it's available
-    val actualMd5 = getMd5();
-    if (!actualMd5.equals(expectedMd5)) {
-      log.warn("md5 failed. Expected: {}, Actual: {}.", expectedMd5, actualMd5);
-      return false;
-    }
-    return true;
+    assertThat(manifest.getEntries(), hasSize(2));
+    assertThat(manifest.getEntries().get(0), equalTo(ManifestEntry.builder()
+        .repoCode("1")
+        .fileId("2")
+        .fileUuid("3")
+        .fileFormat("4")
+        .fileName("5")
+        .fileSize("6")
+        .fileMd5sum("7")
+        .indexFileUuid("8")
+        .donorId("9")
+        .projectId("10")
+        .study("11")
+        .build()));
+    assertThat(manifest.getEntries().get(1), equalTo(ManifestEntry.builder()
+        .repoCode("11")
+        .fileId("10")
+        .fileUuid("9")
+        .fileFormat("8")
+        .fileName("7")
+        .fileSize("6")
+        .fileMd5sum("5")
+        .indexFileUuid("4")
+        .donorId("3")
+        .projectId("2")
+        .study("1")
+        .build()));
+
   }
 
-  @Override
-  public void readFrom(InputStream is) throws IOException {
-    throw new AssertionError("Not implemented");
-  }
 }

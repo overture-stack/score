@@ -28,7 +28,7 @@ import lombok.Value;
  * UniformmetadataJSONdocumentforICGCDataRepositories-Manifestfileformatfordownloader
  */
 @Value
-public class Manifest {
+public class DownloadManifest {
 
   @NonNull
   private final List<ManifestEntry> entries;

@@ -80,14 +80,14 @@ public class UploadService {
    * @param redo If redo the upload is required
    * @throws IOException
    */
-  public void upload(File file, String objectId, boolean redo) throws IOException {
+  public void upload(File file, String objectId, String md5, boolean redo) throws IOException {
     for (int retry = 0; retry < retryNumber; retry++)
       try {
         if (redo) {
-          startUpload(file, objectId, redo);
+          startUpload(file, objectId, md5, redo);
         } else {
           // only perform checksum the first time of the resume
-          resumeIfPossible(file, objectId, retry == 0 ? true : false);
+          resumeIfPossible(file, objectId, md5, retry == 0 ? true : false);
         }
         return;
       } catch (NotRetryableException e) {
@@ -100,11 +100,11 @@ public class UploadService {
    * Start a upload given the object id
    */
   @SneakyThrows
-  private void startUpload(File file, String objectId, boolean overwrite) {
+  private void startUpload(File file, String objectId, String md5, boolean overwrite) {
     log.info("Start a new upload...");
     ObjectSpecification spec = null;
     try {
-      spec = storageService.initiateUpload(objectId, file.length(), overwrite);
+      spec = storageService.initiateUpload(objectId, file.length(), overwrite, md5);
     } catch (NotRetryableException e) {
       // A NotRetryable exception during initiateUpload should just end whole process
       // a bit of a sleazy hack. Should only be thrown when the Metadata service informs us the supplied
@@ -121,13 +121,13 @@ public class UploadService {
    * upload progress cannot be retrieved.
    */
   @SneakyThrows
-  private void resumeIfPossible(File file, String objectId, boolean checksum) {
+  private void resumeIfPossible(File file, String objectId, String md5, boolean checksum) {
     UploadProgress progress = null;
     try {
       progress = storageService.getProgress(objectId, file.length());
     } catch (NotRetryableException e) {
       log.info("New upload: {}", objectId);
-      startUpload(file, objectId, true);
+      startUpload(file, objectId, md5, true);
       return;
     }
     resume(file, progress, objectId, checksum);

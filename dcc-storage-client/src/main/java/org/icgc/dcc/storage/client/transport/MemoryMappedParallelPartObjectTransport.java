@@ -35,6 +35,11 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import lombok.AllArgsConstructor;
+import lombok.SneakyThrows;
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
+
 import org.icgc.dcc.storage.client.download.Downloads;
 import org.icgc.dcc.storage.client.exception.NotResumableException;
 import org.icgc.dcc.storage.client.exception.NotRetryableException;
@@ -46,11 +51,6 @@ import org.icgc.dcc.storage.core.model.Part;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Ordering;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-
-import lombok.AllArgsConstructor;
-import lombok.SneakyThrows;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * A data transport using memory mapped channels for parallel upload/download
@@ -98,8 +98,8 @@ public class MemoryMappedParallelPartObjectTransport extends ParallelPartObjectT
         final MappedByteBuffer buffer =
             fis.getChannel().map(FileChannel.MapMode.READ_ONLY, part.getOffset(), part.getPartSize());
         buffer.load();
-        log.debug("Pausing before creating new Callable task");
-        TimeUnit.SECONDS.sleep(3);
+        // log.debug("Pausing before creating new Callable task");
+        // TimeUnit.SECONDS.sleep(3);
         log.debug("Submitting new Callable task");
         // progress.incrementByteRead(part.getPartSize());
         results.add(executor.submit(new Callable<Part>() {
@@ -110,18 +110,17 @@ public class MemoryMappedParallelPartObjectTransport extends ParallelPartObjectT
               DataChannel channel =
                   new ProgressDataChannel(new MemoryMappedDataChannel(buffer, 0, part.getPartSize(), null), progress);
               if (part.isCompleted()) {
-                log.debug("Checksumming part: {}", part);
+                log.info("Checksumming part: {}", part);
                 if (checksum && isCorrupted(channel, part, file)) {
-                  log.debug("Fail checksum. Reupload part: {}", part);
+                  log.info("Checksum failed; Reuploading part: {}", part);
                   progress.startTransfer();
                   proxy.uploadPart(channel, part, objectId, uploadId);
-                  progress.incrementBytesWritten(part.getPartSize());
                 }
                 progress.incrementChecksumParts();
               } else {
+                log.info("Sending remaining part {}", part);
                 progress.startTransfer();
                 proxy.uploadPart(channel, part, objectId, uploadId);
-                progress.incrementBytesWritten(part.getPartSize());
                 progress.incrementParts(1);
               }
             } finally {
@@ -197,7 +196,7 @@ public class MemoryMappedParallelPartObjectTransport extends ParallelPartObjectT
       prevLength = part.getPartSize();
       val currOffset = offset;
 
-      log.debug("Submiting part # '{}' download.", part.getPartNumber());
+      log.debug("Submitting part # '{}' download.", part.getPartNumber());
       results.push(downloadExecutorService.submit(new Callable<MemoryMappedDataChannel>() {
 
         @Override
@@ -220,14 +219,14 @@ public class MemoryMappedParallelPartObjectTransport extends ParallelPartObjectT
                     log.debug("Part #{} is corrupted. Re-downloading...", part.getPartNumber());
                     progress.startTransfer();
                     proxy.downloadPart(progressChannel, part, objectId, outputDir);
-                    progress.incrementBytesWritten(part.getPartSize());
+                    // progress.incrementBytesWritten(part.getPartSize());
                   }
                   progress.incrementChecksumParts();
                 } else {
                   log.debug("Part #{} is not downloaded. Downloading...", part.getPartNumber());
                   progress.startTransfer();
                   proxy.downloadPart(progressChannel, part, objectId, outputDir);
-                  progress.incrementBytesWritten(part.getPartSize());
+                  // progress.incrementBytesWritten(part.getPartSize());
                   progress.incrementParts(1);
                 }
                 return memoryChannel;

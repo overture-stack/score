@@ -17,17 +17,21 @@
  */
 package org.icgc.dcc.storage.core.model;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
 /**
  * An entity to represent a part that the client will be uploaded
  */
 @Data
 @NoArgsConstructor
+@AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 final public class Part implements Comparable<Part> {
 
@@ -36,25 +40,8 @@ final public class Part implements Comparable<Part> {
   long offset;
   String url;
   String md5; // md5 of a local copy of the part (i.e., after a download)
-  @JsonIgnore
-  // temporarily ignore until Md5 logic fully deployed
+  @JsonInclude(Include.NON_NULL)
   String sourceMd5; // original md5 of part; set when uploaded to S3/Ceph
-
-  /**
-   * @param partNumber
-   * @param partSize
-   * @param offset
-   * @param url
-   * @param md5
-   */
-  public Part(int partNumber, long partSize, long offset, String url, String md5) {
-    super();
-    this.partNumber = partNumber;
-    this.partSize = partSize;
-    this.offset = offset;
-    this.url = url;
-    this.md5 = md5;
-  }
 
   @JsonIgnore
   public boolean isCompleted() {
@@ -68,7 +55,8 @@ final public class Part implements Comparable<Part> {
 
   @JsonIgnore
   public boolean hasFailedChecksum() {
-    return !sourceMd5.equals(md5);
+    // if we don't have a source MD5 (because it wasn't getting saved), we can't do this check
+    return isMissingSourceMd5() ? false : !sourceMd5.equals(md5);
   }
 
   @JsonIgnore

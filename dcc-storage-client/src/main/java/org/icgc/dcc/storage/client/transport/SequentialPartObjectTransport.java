@@ -61,7 +61,7 @@ public class SequentialPartObjectTransport implements Transport {
 
       boolean resend = false;
       if (part.getMd5() != null) {
-        if (channel.isValidMd5(part.getMd5())) {
+        if (channel.verifyMd5(part.getMd5())) {
           progress.incrementChecksumParts();
           continue;
         }

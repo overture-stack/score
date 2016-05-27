@@ -15,41 +15,27 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+package org.icgc.dcc.storage.client.manifest;
 
-package org.icgc.dcc.storage.client.transport;
+import java.util.List;
 
-import java.io.IOException;
-import java.io.InputStream;
+import lombok.Builder;
+import lombok.NonNull;
+import lombok.Value;
 
-import org.icgc.dcc.storage.core.model.DataChannel;
+@Value
+public class UploadManifest {
 
-import com.google.common.io.ByteStreams;
+  @NonNull
+  private final List<ManifestEntry> entries;
 
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
+  @Value
+  @Builder
+  public static class ManifestEntry {
 
-/**
- * A representation of a channel for data tranfser.
- */
-@Slf4j
-public abstract class AbstractDataChannel implements DataChannel {
+    String fileUuid;
+    String fileName;
+    String fileMd5sum;
 
-  @Override
-  public boolean verifyMd5(String expectedMd5) throws IOException {
-    // Need to read through the whole stream in order to calculate the md5
-    writeTo(ByteStreams.nullOutputStream());
-
-    // Now it's available
-    val actualMd5 = getMd5();
-    if (!actualMd5.equals(expectedMd5)) {
-      log.warn("md5 failed. Expected: {}, Actual: {}.", expectedMd5, actualMd5);
-      return false;
-    }
-    return true;
-  }
-
-  @Override
-  public void readFrom(InputStream is) throws IOException {
-    throw new AssertionError("Not implemented");
   }
 }

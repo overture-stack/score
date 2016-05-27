@@ -27,6 +27,9 @@ import java.util.Properties;
 
 import org.icgc.dcc.storage.client.cli.FileValidator;
 import org.icgc.dcc.storage.client.cli.ObjectIdValidator;
+import org.icgc.dcc.storage.client.manifest.ManifestResource;
+import org.icgc.dcc.storage.client.manifest.ManifestService;
+import org.icgc.dcc.storage.client.manifest.UploadManifest;
 import org.icgc.dcc.storage.client.upload.UploadService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -48,41 +51,47 @@ public class UploadCommand extends AbstractClientCommand {
    */
   @Parameter(names = "--file", description = "Path to file to upload", validateValueWith = FileValidator.class)
   private File file;
-  @Parameter(names = "--manifest", description = "Path to manifest file", validateValueWith = FileValidator.class)
-  private File manifestFile;
+  @Parameter(names = "--manifest", description = "Path to manifest id, url or file")
+  private ManifestResource manifestResource;
   @Parameter(names = "--force", description = "Force re-upload", required = false)
   private boolean isForce = false;
   @Parameter(names = "--object-id", description = "Object id assigned to upload file", validateValueWith = ObjectIdValidator.class)
   private String objectId;
+  @Parameter(names = "--md5", description = "MD5 checksum of file to upload")
+  private String md5;
 
   /**
    * Dependencies.
    */
   @Autowired
+  private ManifestService manifestService;
+  @Autowired
   private UploadService uploader;
 
   @Override
   public int execute() throws Exception {
-    checkParameter(objectId != null || manifestFile != null, "One of --object-id or --manifest must be specified");
+    checkParameter(objectId != null || manifestResource != null, "One of --object-id or --manifest must be specified");
 
     terminal.print("\r");
-    if (manifestFile != null) {
+    if (manifestResource != null) {
       val manifest = readManifest();
-      for (val entry : manifest.entrySet()) {
-        val objectId = (String) entry.getKey();
-        val file = new File((String) entry.getValue());
+      for (val entry : manifest.getEntries()) {
+        val objectId = entry.getFileUuid();
+        val file = new File(entry.getFileName());
+        val checksum = entry.getFileMd5sum();
 
-        uploadFile(objectId, file);
+        uploadFile(objectId, file, checksum);
       }
     } else {
       checkParameter(file != null, "--file must be specified if --object-id is specified");
-      uploadFile(objectId, file);
+      checkParameter(md5 != null, "--md5 must be specified if --object-id is specified");
+      uploadFile(objectId, file, md5);
     }
 
     return SUCCESS_STATUS;
   }
 
-  private void uploadFile(String objectId, File file) throws IOException {
+  private void uploadFile(String objectId, File file, String md5) throws IOException {
     log.info("Uploading file '{}'...", file);
     checkParameter(file.length() > 0,
         "File '%s' is empty. Uploads of empty files are not permitted. Aborting...%n", file.getCanonicalPath());
@@ -97,15 +106,16 @@ public class UploadCommand extends AbstractClientCommand {
     }
 
     terminal.printf("Uploading object: '%s' using the object id %s%n", file, objectId);
-    uploader.upload(file, objectId, isForce);
+    uploader.upload(file, objectId, md5, isForce);
   }
 
-  private Properties readManifest() throws IOException, FileNotFoundException {
-    @Cleanup
-    val inputStream = new FileInputStream(manifestFile);
+  private UploadManifest readManifest() throws IOException, FileNotFoundException {
+    val manifest = manifestService.getUploadManifest(manifestResource);
 
-    val manifest = new Properties();
-    manifest.load(inputStream);
+    val entries = manifest.getEntries();
+    if (entries.isEmpty()) {
+      terminal.printError("Manifest '%s' is empty", manifestResource);
+    }
 
     return manifest;
   }

@@ -15,41 +15,19 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+package org.icgc.dcc.storage.server.service.upload;
 
-package org.icgc.dcc.storage.client.transport;
+import lombok.Builder;
+import lombok.Value;
 
-import java.io.IOException;
-import java.io.InputStream;
+import com.amazonaws.services.s3.model.PartETag;
 
-import org.icgc.dcc.storage.core.model.DataChannel;
+@Builder
+@Value
+public class UploadPartDetail {
 
-import com.google.common.io.ByteStreams;
-
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
-
-/**
- * A representation of a channel for data tranfser.
- */
-@Slf4j
-public abstract class AbstractDataChannel implements DataChannel {
-
-  @Override
-  public boolean verifyMd5(String expectedMd5) throws IOException {
-    // Need to read through the whole stream in order to calculate the md5
-    writeTo(ByteStreams.nullOutputStream());
-
-    // Now it's available
-    val actualMd5 = getMd5();
-    if (!actualMd5.equals(expectedMd5)) {
-      log.warn("md5 failed. Expected: {}, Actual: {}.", expectedMd5, actualMd5);
-      return false;
-    }
-    return true;
-  }
-
-  @Override
-  public void readFrom(InputStream is) throws IOException {
-    throw new AssertionError("Not implemented");
-  }
+  private PartETag etag;
+  private int partNumber;
+  private String md5;
+  
 }

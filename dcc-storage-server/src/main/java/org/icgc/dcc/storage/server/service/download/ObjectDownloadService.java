@@ -126,7 +126,8 @@ public class ObjectDownloadService {
 
       fillPartUrls(objectKey, parts, objectSpec.isRelocated(), forExternalUse);
 
-      return new ObjectSpecification(objectKey.getKey(), objectId, objectId, parts, length, objectSpec.isRelocated());
+      return new ObjectSpecification(objectKey.getKey(), objectId, objectId, parts, length, objectSpec.getObjectMd5(),
+          objectSpec.isRelocated());
     } catch (Exception e) {
       log.error("Failed to download objectId: {}, offset: {}, length: {}, forExternalUse: {}: {} ",
           objectId, offset, length, forExternalUse, e);

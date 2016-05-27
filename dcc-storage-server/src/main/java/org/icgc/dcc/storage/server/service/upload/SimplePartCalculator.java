@@ -19,9 +19,9 @@ package org.icgc.dcc.storage.server.service.upload;
 
 import java.util.List;
 
-import org.icgc.dcc.storage.core.model.Part;
-
 import lombok.extern.slf4j.Slf4j;
+
+import org.icgc.dcc.storage.core.model.Part;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
@@ -54,7 +54,7 @@ public class SimplePartCalculator implements ObjectPartCalculator {
     long currentTotalLength = 0;
     for (int i = 1; currentTotalLength < objectLength; ++i) {
       int partSize = (int) Math.min(defaultPartSize, objectLength - currentTotalLength);
-      parts.add(new Part(i, partSize, offset + currentTotalLength, null, null));
+      parts.add(new Part(i, partSize, offset + currentTotalLength, null, null, null));
       currentTotalLength += partSize;
     }
     return parts.build();
@@ -62,6 +62,6 @@ public class SimplePartCalculator implements ObjectPartCalculator {
 
   @Override
   public List<Part> specify(long offset, long length) {
-    return ImmutableList.of(new Part(1, length, offset, null, null));
+    return ImmutableList.of(new Part(1, length, offset, null, null, null));
   }
 }

@@ -67,9 +67,10 @@ public class BenchmarkObjectUploadController extends ObjectUploadController {
       @PathVariable(value = "object-id") String objectId,
       @RequestParam(value = "overwrite", required = false, defaultValue = "false") boolean overwrite,
       @RequestParam(value = "fileSize", required = true) long fileSize,
+      @RequestParam(value = "md5", required = false) String md5,
       @RequestHeader(value = "User-Agent", defaultValue = "unknown") String userAgent,
       HttpServletRequest request) {
-    return uploadService.initiateUpload(objectId, fileSize, overwrite);
+    return uploadService.initiateUpload(objectId, fileSize, md5, overwrite);
   }
 
   @Override

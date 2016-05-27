@@ -19,7 +19,9 @@ package org.icgc.dcc.storage.core.model;
 
 import java.util.List;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -29,6 +31,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 @Slf4j
 @Data
 @NoArgsConstructor
+@AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ObjectSpecification {
 
@@ -37,25 +40,16 @@ public class ObjectSpecification {
   private String uploadId;
   private List<Part> parts;
   private long objectSize;
-  @JsonIgnore
-  // temporarily ignore until Md5 logic fully deployed
   private String objectMd5;
 
   // Flag indicating whether the meta data was found in the expected bucket, or
   // in the "fallback" bucket (created prior to bucket partitioning)
-  private boolean isRelocated = false;
+  @JsonIgnore
+  @Getter(onMethod = @__(@JsonIgnore))
+  // with regular @JsonIgnore, was still getting serialized
+  private boolean relocated = false;
 
-  public ObjectSpecification(String objectKey, String objectId, String uploadId, List<Part> parts, long objectSize,
-      boolean isRelocated) {
-    super();
-    this.objectKey = objectKey;
-    this.objectId = objectId;
-    this.uploadId = uploadId;
-    this.parts = parts;
-    this.objectSize = objectSize;
-    this.isRelocated = isRelocated;
-  }
-
+  @JsonIgnore
   public boolean hasPartChecksums() {
     int presentCount = 0;
     if (parts != null) {
