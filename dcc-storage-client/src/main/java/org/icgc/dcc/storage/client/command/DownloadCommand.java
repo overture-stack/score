@@ -67,7 +67,7 @@ public class DownloadCommand extends AbstractClientCommand {
   private OutputLayout layout = OutputLayout.FILENAME;
   @Parameter(names = "--force", description = "Force re-download (override local file)")
   private boolean force = false;
-  @Parameter(names = "--manifest", description = "Path to manifest id, url or file")
+  @Parameter(names = "--manifest", description = "Manifest id, url, or path to manifest file")
   private ManifestResource manifestResource;
   @Parameter(names = "--object-id", description = "Object id to download", validateValueWith = ObjectIdListValidator.class, variableArity = true)
   private List<String> objectId = new ArrayList<>();
