@@ -1,228 +1,145 @@
-# Installing the ICGC Storage System
-An overview sentence goes here.
+# Installation Guide
+Installing the ICGC Storage System
 
-## Prerequisites
-The storage system must be built using a Maven version between 3.0.3 and 3.2.5 (inclusive). [Maven Version Manager](http://mvnvm.org/) may prove useful.
 
-## Build From Source
-Clone and build the [dcc-storage](https://github.com/icgc-dcc/dcc-storage) project:
+# Storage System Overview
+Backend Components:
+- storage-server: allows authenticated users to interact with entities in the storage system
+- metadata-server: allows authenticated users to register entities with the storage system
+- auth-server: authenticates users by granting access tokens via a REST api
+
+Client Components:
+- metadata-client: registers entities with the storage system
+- storage-client: primary client for interaction with storage system
+
+Each component is a Spring Boot java application packaged in a jar. Look in src/main/resources/application.yml for configuration properties, which can be overridden by specifying java system properties when running the jar. Configuration can also be set by adding an application.properties file via -Dspring.config.location.
+
+
+# Installation
+This guide describes setting up the ICGC Storage System on a single Ubuntu EC2 instance.
+
+Before getting started:
+- Make an S3 bucket to hold the storage system datal
+- Make a KMS Master Key to encrypt data stored in S3 using the web console (http://docs.aws.amazon.com/kms/latest/developerguide/create-keys.html).
+- Make an IAM role with permission to write to s3 (AmazonS3FullAccess).
+- Launch an Ubuntu EC2 with the newly created IAM role and a static IP.
+- Open ports 8444 and 5431 of the EC2 for anybody who will use the storage system as a client and open port 8443 to anybody who will generate access tokens to be given to end users.
+  - Also, open ports 8443, 8444, 5431, and 27017 of the EC2 to the ip of the EC2 to ensure the servers can communicate with each other.
+- Get a domain and point it towards the new EC2's IP address. The command shown in this guide use the domain storage.ucsc-cgl.org; this should be replaced with the desired domain.
+
+Then do the following on the EC2:
+
+Oracle Java is required.
 ```
-git clone git@github.com:icgc-dcc/dcc-storage.git
-mvn
+# install oracle java
+sudo apt-get install python-software-properties
+sudo add-apt-repository ppa:webupd8team/java
+sudo apt-get update
+sudo apt-get install oracle-java8-installer
 ```
 
-Once the project has been built, its artifacts can be used to run the storage system.
+Add $DCC_HOME environment variable that points to the directory to hold all storage system files.
+```
+# set up $DCC_HOME
+mkdir ~/dcc
+printf "# ICGC Storage System\nexport DCC_HOME=~/dcc\n" >> ~/.bashrc
+source ~/.bashrc
+# add conf directories
+mkdir $DCC_HOME/conf
+mkdir $DCC_HOME/conf/ssl
+mkdir $DCC_HOME/conf/maven
+```
 
-## Configuring the System
-System configuration can be specified as for any Spring Boot application (see [more](http://docs.spring.io/spring-boot/docs/current/reference/html/howto-properties-and-configuration.html)). This guide assumes YAML files will be used.
+Maven version must be between 3.0.3 and 3.2.5 (inclusive).
+```
+# install mvnvm (http://mvnvm.org/)
+curl -s https://bitbucket.org/mjensen/mvnvm/raw/master/mvn > $DCC_HOME/conf/maven/mvn
+chmod 0755 $DCC_HOME/conf/maven/mvn
+sudo ln -s $DCC_HOME/conf/maven/mvn /usr/local/bin/mvn
+echo "mvn_version=3.2.5” >$DCC_HOME/conf/maven/mvnpvm.properties
+```
 
-### Auth-Server Properties
+Also, install unzip if it's not already installed.
+```
+sudo apt-get install unzip
+```
+
+Create an SSL certificate to be used across the storage system. This can be done using the LetsEncrypt certbot client (Note: this will require temporarily opening access to port 443 on the EC2). The root account may need to be used for some of this.
+```
+git clone https://github.com/certbot/certbot
+cd certbot
+./certbot-auto certonly --standalone --email benjaminran@ucsc.edu -d storage.ucsc-cgl.org
+cd /etc/letsencrypt/archive/storage.ucsc-cgl.org/ # or wherever output from the previous command points you
+# convert pem files to pkcs12
+openssl pkcs12 -export -in cert1.pem -inkey privkey1.pem -out ucsc-storage.p12 -name tomcat -CAfile chain1.pem -caname root -chain
+# convert pkcs12 to jks
+keytool -importkeystore -destkeystore ucsc-storage.jks -deststorepass password -srckeystore ucsc-storage.p12 -srcstoretype PKCS12 -srcstorepass password
+chown ubuntu:ubuntu ucsc-storage.p12
+chown ubuntu:ubuntu ucsc-storage.jks
+mv ucsc-storage.p12 ucsc-storage.jks $DCC_HOME/conf/ssl
+```
+
+The LetsEncrypt root CA certificate has to be added to the JVM truststore to tell the JVM to trust our newly generated certificate. To avoid altering the original, I make a copy that can be specified upon invocation of java clients.
+```
+# create copy of jvm truststore with LetsEncrypt cert added
+cp /usr/lib/jvm/java-8-oracle/jre/lib/security/cacerts $DCC_HOME/conf/ssl/
+keytool -import -file chain1.pem -alias LetsEncryptCA -keystore cacerts -storepass changeit
+```
+
+Install and configure MongoDB metadata-server dependency (https://docs.mongodb.com/manual/tutorial/install-mongodb-on-ubuntu/).
+```
+sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv EA312927
+echo "deb http://repo.mongodb.org/apt/ubuntu trusty/mongodb-org/3.2 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-3.2.list
+sudo apt-get update
+sudo apt-get install -y mongodb-org
+```
+
+Pull in and build the storage system source, linking to the ssl certificate while you're at it.
+```
+# clone storage system source
+cd $DCC_HOME
+git clone git@github.com:BD2KGenomics/dcc-storage.git
+git clone git@github.com:BD2KGenomics/dcc-auth.git
+git clone git@github.com:BD2KGenomics/dcc-metadata.git
+# link mvnvm.properties and ssl certificate then build
+for f in $DCC_HOME/dcc-*; do ln -s $DCC_HOME/conf/maven/mvnvm.properties $f/mvnvm.properties && ln -s $DCC_HOME/conf/ssl/ucsc-storage.jks $f/ucsc-storage.jks && cd $f && mvn; done;
+```
+
+Run the system.
+```
+# run the auth-server (TODO: no description of config properties file)
+cd $DCC_HOME/dcc-auth/dcc-auth-server/ && java -Dspring.config.location=$DCC_HOME/conf/conf.old/ucsc-auth-server.properties -jar $DCC_HOME/dcc-auth/dcc-auth-server/target/dcc-auth-server-1.0.13-SNAPSHOT.jar
+# run the metadata-server
+cd $DCC_HOME/dcc-metadata/dcc-metadata-server && java -Djavax.net.ssl.trustStore=$DCC_HOME/conf/ssl/cacerts -Djavax.net.ssl.trustStorePassword=changeit -Dspring.profiles.active=development,secure -Dserver.port=8444 -Dmanagement.port=8544 -Dlogging.file=/var/log/dcc/metadata-server/metadata-server.log -Dauth.server.url=https://storage.ucsc-cgl.org:8443/oauth/check_token -Dauth.server.clientId=metadata -Dauth.server.clientsecret=pass -Dspring.data.mongodb.uri=mongodb://localhost:27017/dcc-metadata -Dserver.ssl.key-store=ucsc-storage.jks -Dserver.ssl.key-store-password=password -Dserver.ssl.key-store-type=JKS -jar target/dcc-metadata-server-0.0.16-SNAPSHOT.jar
+# run the storage-server
+cd $DCC_HOME/dcc-storage/dcc-storage-server && java -Djavax.net.ssl.trustStore=$DCC_HOME/conf/ssl/cacerts -Djavax.net.ssl.trustStorePassword=changeit -Dspring.profiles.active=secure,default -Dlogging.file=/var/log/dcc/storage-server/storage-server.log -Dserver.port=5431 -Dbucket.name.object=icgc-storage-prototype -Dbucket.name.state=icgc-storage-prototype -Dauth.server.url=https://storage.ucsc-cgl.org:8443/oauth/check_token -Dauth.server.clientId=storage -Dauth.server.clientsecret=pass -Dmetadata.url=https://storage.ucsc-cgl.org:8444 -Dendpoints.jmx.domain=storage -Ds3.endpoint=https://s3.amazonaws.com -Ds3.accessKey=foo -Ds3.secretKey=bar -Ds3.masterEncryptionKeyId=baz -Ds3.secured=true -Dupload.clean.enabled=false -Dserver.ssl.key-store=ucsc-storage.jks -Dserver.ssl.key-store-password=password -Dserver.ssl.key-store-type=JKS -jar target/dcc-storage-server-1.0.14-SNAPSHOT.jar
+```
+
+
+# Configuration
+Each storage system component has an `application.yml` configuration file in the codebase whose properties can be overridden using Spring Boot mechanisms such as specifying Java system properties when running the jar or by specifying an external config file (i.e. `java -Dspring.config.location=/path/to/config.properties`).
+
+The various configuration properties used by each component are documented next.
+
+
+## auth-server
 TODO
 
-### Storage-Server Properties
+
+## metadata-server
 TODO
 
-### Storage-Server Properties
+
+## storage-server
+
+
+## metadata-client
 TODO
 
-### Metadata-Client Properties
+
+## storage-client
 TODO
 
-### Storage-Client Properties
-TODO
 
-## Run the System
-First start the auth-server, metadata-server, and storage-server. Then end users can use the system via the icgc-storage-client.
-
-Start the auth-server:
-```
-java -Dspring.config.location=/path/to/config/auth-server.yml -jar target/dcc-auth-server-1.0.13-SNAPSHOT.jar
-```
-
-Start the metadata-server:
-```
-java -Dspring.profiles.active=development,secure \
--Dserver.port=8444 \
--Dmanagement.port=8544 \
--Dlogging.file=/var/log/dcc/metadata-server/metadata-server.log \
--Dendpoints.jmx.domain=metadata \
--Dauth.server.url=https://localhost:8443/oauth/check_token \
--Dauth.server.clientId=metadata \
--Dauth.server.clientsecret=pass \
--Dspring.data.mongodb.uri=mongodb://localhost:27017/dcc-metadata \
--jar target/dcc-metadata-server-0.0.16-SNAPSHOT.jar
-```
-
-Start the storage-server:
-```
-java -Dspring.profiles.active=dev,secure,default \
--Dlogging.file=/var/log/dcc/storage-server/storage-server.log \
--Dserver.port=5431 \
--Dbucket.name.object=beni-dcc-storage-dev \
--Dbucket.name.state=beni-dcc-storage-dev \
--Dauth.server.url=https://localhost:8443/oauth/check_token \
--Dauth.server.clientId=storage \
--Dauth.server.clientsecret=pass \
--Dmetadata.url=https://localhost:8444 \
--Dendpoints.jmx.domain=storage \
--Ds3.endpoint=https://s3-us-west-2.amazonaws.com \
--Ds3.accessKey=foo-bar-baz \
--Ds3.secretKey=qux-corge-norf \
--DmasterEncryptionKeyId=garply-grault-xyzzy-thud \
--jar target/dcc-storage-server-1.0.14-SNAPSHOT.jar
-```
-
-## Using the System
-The `icgc-storage-client` subproject will have built an archive containing the script that should be used for all end-user interactions with the storage system. Look for `icgc-storage-client/target/icgc-storage-client-*-SNAPSHOT.tar.gz` and distribute this to anybody who will be using the storage system.
-
-TODO: set custom properties in dcc-storage-client application.yml or icgc-storage-client application.properties
-
-The end user can extract the archive then get started:
-```
-tar xvf icgc-storage-client-*-SNAPSHOT.tar.gz
-cd icgc-storage-client-*-SNAPSHOT.tar.gz
-bin/icgc-storage-client help
-```
-
-### Get an Access Token
-Access tokens are generated by making requests from the auth-server. To generate a new token:
-```
-curl -k https://localhost:8443/oauth/token  -H "Accept: application/json" -dgrant_type=password -dusername=<username> -dscope="s3.upload s3.download" -u <client_id>:<password>
-```
-If the user already has a matching active accessToken, information on the accessToken will be returned.
-
-### Register an Object
-All data bundles in the storage system are uniquely identified by a UUID that is registered with and tracked by the metadata-server (the gnosId). Each object in the bundle is also uniquely identified by an automatically generated UUID (dcc-metadata.Entity._id in the metadata-server mongo database). To register a new data bundle, data files should be placed in a directory:
-```
-java -Dspring.profiles.active=development \
--Dlogging.file=/var/log/dcc/metadata-client/metadata-client.log \
--Dserver.baseUrl=https://localhost:8444 \
--DaccessToken=${accessToken} \
--jar /Users/benjaminran/dev/dcc-metadata/dcc-metadata-client/target/dcc-metadata-client-0.0.16-SNAPSHOT.jar \
--i /directory/containing/data/files \
--o /directory/to/write/manifest/to \
--m manifest-filename.txt
-```
-This manifest can then be used to upload the actual data.
-
-### Upload an Object
-Use the previously-obtained manifest to carry out the upload.
-```
-java -Dlogging.file=/var/log/dcc/storage-client/storage-client.log \
--Dmetadata.url=https://localhost:5444 \
--Dmetadata.ssl.enabled=false \
--Dstorage.url=http://localhost:5431 \
--DaccessToken=${accessToken} \
--jar /Users/benjaminran/dev/dcc-storage/dcc-storage-client/target/dcc-storage-client-1.0.14-SNAPSHOT.jar \
-upload --manifest ${output}/manifest-${accessToken}.txt
-```
-
-### Download an Object
-Use the storage-client `download` command with the object-id (_id, not gnosId) to download a file from the storage system:
- ```
-java -Dlogging.file=/var/log/dcc/storage-client/storage-client.log \
--Dmetadata.url=https://localhost:8444 \
--Dmetadata.ssl.enabled=false \
--Dstorage.url=http://localhost:5431 \
--DaccessToken=${accessToken} \
--jar /Users/benjaminran/dev/dcc-storage/dcc-storage-client/target/dcc-storage-client-1.0.14-SNAPSHOT.jar
-download --output-dir /path/to/output/dir
---object-id uuid-goes-here
---output-layout bundle
- ```
-
-### Further Reading
-See the [ICGC Documentation](http://docs.icgc.org/cloud/guide/#storage-client-usage) for more information on storage-client usage.
-
-## Managing Authentication Credentials
-[Temporary] Users and scopes can be managed by directly modifying the auth-server database. This can be done with H2 tools and JLine2. Change to the directory containing database.mv.db and run the following:
-
-```
-java -cp /Users/benjaminran/.m2/repository/com/h2database/h2/1.4.181/h2-1.4.181.jar:/Users/benjaminran/dev/jline2/target/jline-2.15-SNAPSHOT.jar jline.console.internal.ConsoleRunner org.h2.tools.Shell
-```
-
-Use URL `jdbc:h2:./database`, default driver, user `sa`, and password `secret`.
-
-To add a new user: (Note: this doesn't actually work--database is regenerated upon server startup and cannot be edited externally while the server is running)
-```
-INSERT INTO USERS VALUES('beni','beni',TRUE);
-INSERT INTO OAUTH_CLIENT_DETAILS VALUES('beni','','beni','collab.upload,collab.download,aws.upload,aws.download,id.create,portal.download,s3.upload,s3.download','password','','ROLE_MANAGEMENT',33333333,null,'{}','');
-```
-### Examples
-Upload a file:
-```
-# Needs amendment: bin/icgc-storage-client upload --manifest manifest.txt --file data.bam
-# Register the upload
-java -jar /Users/benjaminran/dev/dcc-metadata/dcc-metadata-client/target/dcc-metadata-client-0.0.16-SNAPSHOT.jar \
---spring.profiles.active=development \
---logging.file=/var/log/dcc/metadata-client/metadata-client.log \
--server.baseurl=https://localhost:8444 \
---accessToken=dea1b1ff-9b90-4304-83d5-c5b72bd87b4b \
--i /Users/benjaminran/tmp/uploads/70b07570-0571-11e5-a6c0-1697f925ec7b \
--o /Users/benjaminran/tmp/output -m manifest.txt
-
-# Do the upload
-java -Dlogging.file=/var/log/dcc/storage-client/storage-client.log \
--Dmetadata.url=https://localhost:5444 \
--Dmetadata.ssl.enabled=false \
--Dstorage.url=http://localhost:5431 \
--DaccessToken=dea1b1ff-9b90-4304-83d5-c5b72bd87b4b \
--jar target/dcc-storage-client-1.0.14-SNAPSHOT.jar \
-upload --manifest ~/tmp/manifest.txt
-```
-
-## Development Notes
-
-### End User Storage Client
-The end user is supposed to use the packaged icgc-storage-client, but I can't override dcc-storage-client sysProps like metadata.url, accessToken, etc. For now I'm ust directly invoking dcc-storage-client.jar.
-
-### Auth-server
-Grants access tokens to users wishing to access storage system (e.g. upload, download, etc.)
-
-Using Spring 'dev' profile, which stores (unencrypted) credentials in a local, embedded H2 db. The db is created on server startup by src/main/resources/sql/schema.sql.
-
-Auth-server has aws.upload/aws.download scopes, but storage-client upload seems to require s3.upload/s3.download, which doesn't seem to be defined/recognized by auth-server.
-Added scopes to OAUTH-CLIENT-DETAILS
-
-### Logging
-Install guide commands currently send all logs to /var/log/dcc/[auth-server|metadata-server|storage-server|storage-client]. This can be changed according to preference.
-
-### Miscellaneous
-Using bucket beni-dcc-storage-dev (Oregon) for prototype
-
-Debug integration test:
-```
-mvn -Dtest=org.icgc.dcc.storage.test.StorageIntegrationTest -Dmaven.surefire.debug test
-```
-
-Remote debug:
-```
-java -agentlib:jdwp=transport=dt_socket,server=y,address=5005,suspend=y ...
-```
-
-### Questions
-- Where is the gnosId created?
-  - May just be the accessToken
-- Where does manifest.txt come from?
-  - Generated by metadata-client
-- What is the metadata in the metadata-server?
-- What is bucket.state (storage-server systemProp)
-- What is -Dendpoints.jmx.domain property for? (check application.yaml's)
-- Where are scopes defined?
-
-### Stack Traces
-Run storage server with dev profile and -Ds3.endpoint=https://s3-us-west-2.amazonaws.com:
-```
-bash-3.2$ java -Dlogging.file=/var/log/dcc/storage-client/storage-client.log -Dmetadata.url=https://localhost:5444 -Dmetadata.ssl.enabled=false -Dstorage.url=http://localhost:5431 -DaccessToken=0d4917e9-fdaf-4512-abe8-a35de5c68a8c -jar ~/dev/dcc-storage/dcc-storage-client/target/dcc-storage-client-1.0.14-SNAPSHOT.jar upload --manifest ~/tmp/manifest.txt
-ERROR: Command error: java.io.IOException: Storage server error: {"timestamp":1461876296990,"status":503,"error":"Service Unavailable","exception":"org.icgc.dcc.storage.server.exception.RetryableException","message":"com.amazonaws.services.s3.model.AmazonS3Exception: Moved Permanently (Service: Amazon S3; Status Code: 301; Error Code: 301 Moved Permanently; Request ID: 76133CD2B62E9AF7), S3 Extended Request ID: QsOA9R7K7iovPEPXKTpMr5ZEgpXSYSe1eaDYrF21rU6ul7/8BGROg/IjQdDSxUbGxvulmfICork=","path":"/upload/01000000-00000000-00000000-00000000"}
-```
-Cause: application.yaml dev credentials overriding .aws/credentials
-
-### To-Do
-- Explore dcc-storage/dcc-storage-server/src/main/bin/install and dcc-storage-server scripts
-- Confirm s3 data is encrypted
-- Confirm https is used
-  - Production servers shouldn't use self-signed certificates
-- (Maybe) stop using the dev profiles
-- Rewrite auth-server
-- Modify/create icgc-storage-client using custom server urls/info and allowing convenient entity registration with metadata-server/client
+# Storage System Client Usage
+A temporary client is in use; the client is a tar.gz archive containing a packaged combination of the two ICGC clients (storage-client and metadata-client) along with a few small wrapper scripts and ssl configuration. ˜
