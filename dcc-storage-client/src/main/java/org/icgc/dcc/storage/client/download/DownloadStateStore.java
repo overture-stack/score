@@ -26,14 +26,14 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
 
-import org.codehaus.jackson.map.ObjectMapper;
 import org.icgc.dcc.storage.client.exception.NotRetryableException;
 import org.icgc.dcc.storage.core.model.ObjectSpecification;
 import org.icgc.dcc.storage.core.model.Part;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Slf4j
 public class DownloadStateStore {
@@ -59,10 +59,6 @@ public class DownloadStateStore {
     }
   }
 
-  /**
-   * @param objectStateDir
-   * @throws IOException
-   */
   private void deleteDirectoryIfExist(File objectStateDir) throws IOException {
     if (objectStateDir.exists()) {
       Files.walkFileTree(objectStateDir.toPath(), new SimpleFileVisitor<Path>() {
@@ -85,6 +81,7 @@ public class DownloadStateStore {
   }
 
   private File getObjectStateDir(File stateDir, String objectId) {
+    // Local, hidden directory using object id
     return new File(stateDir, "." + objectId);
   }
 
@@ -104,18 +101,19 @@ public class DownloadStateStore {
     return Files.exists(new File(getObjectStateDir(stateDir, objectId), getSpecificationName()).toPath());
   }
 
-  public List<Part> getProgress(File stateDir, String objectId) throws IOException {
+  public ObjectSpecification getProgress(File stateDir, String objectId) throws IOException {
     log.debug("Loading local progress for {} from {}", objectId, stateDir.toString());
     ObjectSpecification spec = loadSpecification(stateDir, objectId);
-    log.debug("Completed loading local object specification");
+    log.debug("Completed loading local object specification (meta file)");
     for (Part part : spec.getParts()) {
       log.debug("Checking md5 for part {}", part.getPartNumber());
       if (isCompleted(stateDir, objectId, part)) {
         Part completedPart = loadPart(stateDir, objectId, getPartName(part));
+        // Copy download md5 into ObjectSpecification
         part.setMd5(completedPart.getMd5());
       }
     }
-    return spec.getParts();
+    return spec;
   }
 
   private boolean isCompleted(File stateDir, String objectId, Part part) {

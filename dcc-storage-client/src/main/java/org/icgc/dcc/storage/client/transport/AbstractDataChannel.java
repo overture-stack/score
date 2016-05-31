@@ -35,7 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 public abstract class AbstractDataChannel implements DataChannel {
 
   @Override
-  public boolean isValidMd5(String expectedMd5) throws IOException {
+  public boolean verifyMd5(String expectedMd5) throws IOException {
     // Need to read through the whole stream in order to calculate the md5
     writeTo(ByteStreams.nullOutputStream());
 

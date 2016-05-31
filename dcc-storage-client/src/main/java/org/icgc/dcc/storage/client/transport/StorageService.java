@@ -17,6 +17,7 @@
  */
 package org.icgc.dcc.storage.client.transport;
 
+import static com.google.common.base.Preconditions.checkState;
 import static org.springframework.http.HttpMethod.GET;
 
 import java.io.File;
@@ -127,41 +128,32 @@ public class StorageService {
       public Void doWithRetry(RetryContext ctx) throws IOException {
         log.debug("Download Part URL: {}", part.getUrl());
 
-        final RequestCallback callback = new RequestCallback() {
-
-          @Override
-          public void doWithRequest(final ClientHttpRequest request) throws IOException {
-            // request.getHeaders().setContentLength(channel.getlength());
-            request.getHeaders().set(HttpHeaders.RANGE, Parts.getHttpRangeValue(part));
-          }
-        };
-
-        final ResponseExtractor<HttpHeaders> headersExtractor = new ResponseExtractor<HttpHeaders>() {
-
-          @Override
-          public HttpHeaders extractData(ClientHttpResponse response) throws IOException {
-            try (HashingInputStream his = new HashingInputStream(Hashing.md5(), response.getBody())) {
-              channel.readFrom(his);
-              response.getHeaders().set(HttpHeaders.ETAG, his.hash().toString());
-              return response.getHeaders();
-            }
-          }
-        };
-
         try {
           // the actual GET operation
           log.debug("performing GET {}", part.getUrl());
-          HttpHeaders headers =
-              dataTemplate.execute(new URI(part.getUrl()), HttpMethod.GET, callback, headersExtractor);
-          part.setMd5(cleanUpETag(headers.getETag()));
+          String md5 = dataTemplate.execute(new URI(part.getUrl()), HttpMethod.GET,
+
+              request -> request.getHeaders().set(HttpHeaders.RANGE, Parts.getHttpRangeValue(part)),
+
+              response -> {
+                try (HashingInputStream his = new HashingInputStream(Hashing.md5(), response.getBody())) {
+                  channel.readFrom(his);
+                  return his.hash().toString();
+                }
+              }
+              );
+
+          part.setMd5(md5);
+          checkState(!part.hasFailedChecksum(), "Checksum failed for Part# %d: %s", part.getPartNumber(), part.getMd5());
+
           // TODO: try catch here for commit
           downloadStateStore.commit(outputDir, objectId, part);
           log.debug("committed {} part# {} to download state store", objectId, part.getPartNumber());
         } catch (NotResumableException | NotRetryableException e) {
-          log.error("Cannot proceed. Failed to receive part for part# {} : {}", part.getPartNumber(), e);
+          log.error("Cannot proceed. Failed to receive part for part# {} : {}", part.getPartNumber(), e.getMessage());
           throw e;
         } catch (Throwable e) {
-          log.warn("Failed to receive part for part number: {}. Retrying. {}", part.getPartNumber(), e);
+          log.warn("Failed to receive part for part number: {}. Retrying. {}", part.getPartNumber(), e.getMessage());
           channel.reset();
           throw new RetryableException(e);
         }
@@ -234,7 +226,8 @@ public class StorageService {
     });
   }
 
-  public ObjectSpecification initiateUpload(String objectId, long length, boolean overwrite) throws IOException {
+  public ObjectSpecification initiateUpload(String objectId, long length, boolean overwrite, String md5)
+      throws IOException {
     log.debug("Initiating upload, object-id: {} overwrite: {}", objectId, overwrite);
     return retry.execute(new RetryCallback<ObjectSpecification, IOException>() {
 
@@ -242,10 +235,10 @@ public class StorageService {
       public ObjectSpecification doWithRetry(RetryContext ctx) throws IOException {
         val requestEntity = new HttpEntity<Object>(defaultHeaders());
         return serviceTemplate.exchange(
-            endpoint + "/upload/{object-id}/uploads?fileSize={file-size}&overwrite={overwrite}",
+            endpoint + "/upload/{object-id}/uploads?fileSize={file-size}&overwrite={overwrite}&md5={checksum}",
             HttpMethod.POST,
             requestEntity,
-            ObjectSpecification.class, objectId, length, overwrite).getBody();
+            ObjectSpecification.class, objectId, length, overwrite, md5).getBody();
       }
     });
   }
@@ -271,6 +264,7 @@ public class StorageService {
         return null;
       }
     });
+    log.debug("finalizing upload returned");
   }
 
   public void finalizeUploadPart(String objectId, String uploadId, int partNumber, String md5, String etag,

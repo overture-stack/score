@@ -15,38 +15,67 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.client.slicing;
+package org.icgc.dcc.storage.core.model;
 
-import htsjdk.samtools.QueryInterval;
-import htsjdk.samtools.SAMFileHeader;
+import java.io.File;
+import java.net.URL;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Arrays;
-import java.util.Collections;
-
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
-import lombok.NonNull;
 import lombok.val;
 
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
-public final class QueryHandler {
+//import org.codehaus.jackson.map.ObjectMapper;
+import org.junit.Assert;
+import org.junit.Test;
 
-  public static List<Slice> parseQueryStrings(@NonNull List<String> query) {
-    // Handle if multiple ranges specified
-    return QueryParser.parse(query);
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+//import com.fasterxml.jackson.databind.ObjectMapper;
+
+public class ObjectSpecificationTest {
+
+  private static final ObjectMapper MAPPER = new ObjectMapper();
+
+  @Test
+  public void test() {
+    URL url = this.getClass().getResource("/test.meta");
+    File testfile = new File(url.getFile());
+
+    try {
+      val sut = MAPPER.readValue(testfile, ObjectSpecification.class);
+      val check = sut.hasPartChecksums();
+      System.out.println("test");
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
   }
 
-  public static QueryInterval[] convertSlices(@NonNull SAMFileHeader header, @NonNull List<Slice> slices) {
-    val converter = new SliceConverter(header.getSequenceDictionary());
-    val intervals = converter.convert(slices);
+  @Test
+  public void test_no_object_md5() {
+    URL url = this.getClass().getResource("/test.meta");
+    File testfile = new File(url.getFile());
 
-    // remove nulls - happens when the query specifies sequences that don't exist in SQ
-    List<QueryInterval> list = new ArrayList<QueryInterval>(Arrays.asList(intervals));
-    list.removeAll(Collections.singleton(null));
-    val cleaned = list.toArray(new QueryInterval[list.size()]);
+    try {
+      val sut = MAPPER.readValue(testfile, ObjectSpecification.class);
+      Assert.assertNull(sut.getObjectMd5());
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+  }
 
-    return QueryInterval.optimizeIntervals(cleaned); // otherwise triggers an assertion
+  @Test
+  public void test_add_object_md5() {
+    URL url = this.getClass().getResource("/legacy.meta");
+    File legacyfile = new File(url.getFile());
+
+    try {
+      val sut = MAPPER.readValue(legacyfile, ObjectSpecification.class);
+      Assert.assertNull(sut.getObjectMd5());
+
+      sut.setObjectMd5("aiwuehcfnoa9w8yrbqv90238y4cnoaq89yrnawe");
+
+      File output = new File("/tmp/test.meta");
+      MAPPER.writeValue(output, sut);
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
   }
 }

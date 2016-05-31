@@ -23,12 +23,8 @@ import lombok.Builder;
 import lombok.NonNull;
 import lombok.Value;
 
-/**
- * See https://wiki.oicr.on.ca/display/DCCSOFT/Uniform+metadata+JSON+document+for+ICGC+Data+Repositories#
- * UniformmetadataJSONdocumentforICGCDataRepositories-Manifestfileformatfordownloader
- */
 @Value
-public class Manifest {
+public class UploadManifest {
 
   @NonNull
   private final List<ManifestEntry> entries;
@@ -37,22 +33,9 @@ public class Manifest {
   @Builder
   public static class ManifestEntry {
 
-    String repoCode;
-    String fileId;
     String fileUuid;
-    String fileFormat;
     String fileName;
-    String fileSize;
     String fileMd5sum;
-    String indexFileUuid;
-    String donorId;
-    String projectId;
-    String study;
 
   }
-
-  public long getTotalSize() {
-    return entries.stream().mapToLong(entry -> Long.valueOf(entry.getFileSize())).sum();
-  }
-
 }

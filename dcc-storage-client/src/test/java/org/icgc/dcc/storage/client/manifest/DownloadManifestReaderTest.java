@@ -15,28 +15,54 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.core.util;
+package org.icgc.dcc.storage.client.manifest;
 
-import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasSize;
+import static org.junit.Assert.assertThat;
 
-import javax.net.ssl.X509TrustManager;
+import java.io.File;
 
-public class DumbX509TrustManager implements X509TrustManager {
+import org.icgc.dcc.storage.client.manifest.DownloadManifest.ManifestEntry;
+import org.junit.Test;
 
-  @Override
-  public void checkClientTrusted(X509Certificate[] chain, String authType) throws CertificateException {
-    // No-op
-  }
+import lombok.val;
 
-  @Override
-  public void checkServerTrusted(X509Certificate[] chain, String authType) throws CertificateException {
-    // No-op
-  }
+public class DownloadManifestReaderTest {
 
-  @Override
-  public X509Certificate[] getAcceptedIssuers() {
-    return null;
+  @Test
+  public void testReadManifest() {
+    val reader = new DownloadManifestReader();
+    val manifest = reader.readManifest(new File("src/test/resources/fixtures/download/manifest.txt"));
+
+    assertThat(manifest.getEntries(), hasSize(2));
+    assertThat(manifest.getEntries().get(0), equalTo(ManifestEntry.builder()
+        .repoCode("1")
+        .fileId("2")
+        .fileUuid("3")
+        .fileFormat("4")
+        .fileName("5")
+        .fileSize("6")
+        .fileMd5sum("7")
+        .indexFileUuid("8")
+        .donorId("9")
+        .projectId("10")
+        .study("11")
+        .build()));
+    assertThat(manifest.getEntries().get(1), equalTo(ManifestEntry.builder()
+        .repoCode("11")
+        .fileId("10")
+        .fileUuid("9")
+        .fileFormat("8")
+        .fileName("7")
+        .fileSize("6")
+        .fileMd5sum("5")
+        .indexFileUuid("4")
+        .donorId("3")
+        .projectId("2")
+        .study("1")
+        .build()));
+
   }
 
 }

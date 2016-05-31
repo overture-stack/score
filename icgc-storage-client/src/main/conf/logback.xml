@@ -21,6 +21,7 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
 
     <property name="LOG_FILE" value="${LOG_FILE:-${LOG_PATH:-${LOG_TEMP:-${java.io.tmpdir:-/tmp}}/}spring.log}"/>
     <property name="FILE_LOG_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} %5p ${PID:- } [%t] --- %-40.40logger{39} : %m%n"/>
+    <property name="SESSION_LOG_FILE" value="${SESSION_LOG_FILE:-${LOG_PATH:-${LOG_TEMP:-${java.io.tmpdir:-/tmp}}/}session.log}"/>
 
     <appender name="FILE"
               class="ch.qos.logback.core.rolling.RollingFileAppender">
@@ -37,6 +38,19 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
         </triggeringPolicy>
     </appender>
 
+    <appender name="SESSION-LOG" class="ch.qos.logback.core.FileAppender">
+        <file>${SESSION_LOG_FILE}</file>
+        <append>true</append>
+        <encoder>
+            <pattern>%date{ISO8601} %msg %n</pattern>
+        </encoder>
+    </appender>
+    
+    <!-- additivity=false ensures session data only goes to the session log -->
+    <logger name="session" level="INFO" additivity="false">
+        <appender-ref ref="SESSION-LOG"/>
+    </logger>
+    
     <root level="INFO">
         <appender-ref ref="FILE" />
     </root>

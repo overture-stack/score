@@ -15,38 +15,19 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.client.slicing;
+package org.icgc.dcc.storage.server.service.upload;
 
-import htsjdk.samtools.QueryInterval;
-import htsjdk.samtools.SAMFileHeader;
+import lombok.Builder;
+import lombok.Value;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Arrays;
-import java.util.Collections;
+import com.amazonaws.services.s3.model.PartETag;
 
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
-import lombok.NonNull;
-import lombok.val;
+@Builder
+@Value
+public class UploadPartDetail {
 
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
-public final class QueryHandler {
-
-  public static List<Slice> parseQueryStrings(@NonNull List<String> query) {
-    // Handle if multiple ranges specified
-    return QueryParser.parse(query);
-  }
-
-  public static QueryInterval[] convertSlices(@NonNull SAMFileHeader header, @NonNull List<Slice> slices) {
-    val converter = new SliceConverter(header.getSequenceDictionary());
-    val intervals = converter.convert(slices);
-
-    // remove nulls - happens when the query specifies sequences that don't exist in SQ
-    List<QueryInterval> list = new ArrayList<QueryInterval>(Arrays.asList(intervals));
-    list.removeAll(Collections.singleton(null));
-    val cleaned = list.toArray(new QueryInterval[list.size()]);
-
-    return QueryInterval.optimizeIntervals(cleaned); // otherwise triggers an assertion
-  }
+  private PartETag etag;
+  private int partNumber;
+  private String md5;
+  
 }

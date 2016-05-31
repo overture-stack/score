@@ -21,11 +21,18 @@ import java.util.List;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+@Slf4j
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ObjectSpecification {
 
   private String objectKey;
@@ -33,9 +40,28 @@ public class ObjectSpecification {
   private String uploadId;
   private List<Part> parts;
   private long objectSize;
+  private String objectMd5;
 
   // Flag indicating whether the meta data was found in the expected bucket, or
   // in the "fallback" bucket (created prior to bucket partitioning)
-  private boolean isRelocated = false;
+  @JsonIgnore
+  @Getter(onMethod = @__(@JsonIgnore))
+  // with regular @JsonIgnore, was still getting serialized
+  private boolean relocated = false;
 
+  @JsonIgnore
+  public boolean hasPartChecksums() {
+    int presentCount = 0;
+    if (parts != null) {
+      for (Part p : parts) {
+        if (p.getSourceMd5() != null) {
+          presentCount += 1;
+        }
+        if (presentCount < parts.size()) {
+          log.warn("Some parts missing MD5 checksum (but other parts have one)");
+        }
+      }
+    }
+    return (presentCount > 0);
+  }
 }

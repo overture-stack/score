@@ -15,38 +15,51 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.client.slicing;
+package org.icgc.dcc.storage.client.manifest;
 
-import htsjdk.samtools.QueryInterval;
-import htsjdk.samtools.SAMFileHeader;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasSize;
+import static org.junit.Assert.assertThat;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Arrays;
-import java.util.Collections;
+import java.io.File;
 
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
-import lombok.NonNull;
 import lombok.val;
 
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
-public final class QueryHandler {
+import org.icgc.dcc.storage.client.manifest.UploadManifest.ManifestEntry;
+import org.junit.Test;
 
-  public static List<Slice> parseQueryStrings(@NonNull List<String> query) {
-    // Handle if multiple ranges specified
-    return QueryParser.parse(query);
+public class UploadManifestReaderTest {
+
+  @Test
+  public void testReadManifest() {
+    val reader = new UploadManifestReader();
+    val manifest = reader.readManifest(new File("src/test/resources/fixtures/upload/manifest.txt"));
+
+    assertThat(manifest.getEntries(), hasSize(2));
+    assertThat(manifest.getEntries().get(0), equalTo(ManifestEntry.builder()
+        .fileUuid("00000000-00000000-00000000-00000000")
+        .fileName("src/test/resources/fixtures/data/upload.bam")
+        .fileMd5sum("f92dc4d0b5d5d98bbb796056139348f9")
+        .build()));
+    assertThat(manifest.getEntries().get(1), equalTo(ManifestEntry.builder()
+        .fileUuid("11111111-00000000-00000000-00000000")
+        .fileName("src/test/resources/fixtures/data/upload.bai")
+        .fileMd5sum("d16a1aafcf9c22a073a4b8af198707c2")
+        .build()));
+
   }
 
-  public static QueryInterval[] convertSlices(@NonNull SAMFileHeader header, @NonNull List<Slice> slices) {
-    val converter = new SliceConverter(header.getSequenceDictionary());
-    val intervals = converter.convert(slices);
-
-    // remove nulls - happens when the query specifies sequences that don't exist in SQ
-    List<QueryInterval> list = new ArrayList<QueryInterval>(Arrays.asList(intervals));
-    list.removeAll(Collections.singleton(null));
-    val cleaned = list.toArray(new QueryInterval[list.size()]);
-
-    return QueryInterval.optimizeIntervals(cleaned); // otherwise triggers an assertion
+  @Test(expected = IllegalStateException.class)
+  public void testReadPropertiesFormatManifest() {
+    val reader = new UploadManifestReader();
+    try {
+      val manifest = reader.readManifest(new File("src/test/resources/fixtures/upload/manifest-properties.txt"));
+      System.out.println();
+    } catch (IllegalStateException e) {
+      System.out
+          .println("Invalid Upload manifest file specified. Please check format and ensure it is a 3-column, tab-delimited file. "
+              + e.getMessage());
+      throw e;
+    }
   }
 }

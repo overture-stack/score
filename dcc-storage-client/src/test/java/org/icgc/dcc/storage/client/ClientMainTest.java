@@ -22,12 +22,12 @@ import static org.junit.Assert.assertTrue;
 import java.io.File;
 import java.util.UUID;
 
+import lombok.val;
+
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-
-import lombok.val;
 
 public class ClientMainTest extends AbstractClientMainTest {
 
@@ -36,28 +36,38 @@ public class ClientMainTest extends AbstractClientMainTest {
 
   @Test
   public void testMainViewFileWithBadOutputType() throws Exception {
-    executeMain("view", "--output-type", "xxx");
+    executeMain("view", "--output-format", "xxx");
 
     assertTrue(getExitCode() == 1);
-    assertTrue(
-        getOutput().contains("Bad parameter(s): \"--output-type\": couldn't convert \"xxx\" to a value in [bam, sam]"));
+    assertTrue(getOutput().contains(
+        "Bad parameter(s): \"--output-format\": couldn't convert \"xxx\" to a value in [bam, sam]"));
   }
 
   @Test
-  public void testMainViewFileWithUpperCaseOutputType() throws Exception {
-    executeMain("view", "--output-type", "BAM");
+  public void testMainViewFileWithUpperCaseOutputFormat() throws Exception {
+    val outDir = tmp.newFolder();
+    executeMain("view", "--output-format", "BAM", "--output-dir", outDir.getCanonicalPath());
 
     assertTrue(getExitCode() == 1);
-    assertTrue(getOutput().contains("One of --object-id or --input-file must be specified"));
+    assertTrue(getOutput().contains("One of --object-id, --input-file or --manifest must be specified"));
   }
 
   @Test
   public void testMainUploadEmptyFile() throws Exception {
     val file = tmp.newFile();
+    executeMain("upload", "--object-id", UUID.randomUUID().toString());
+
+    assertTrue(getExitCode() == 1);
+    assertTrue(getOutput().contains("--file must be specified if --object-id is specified"));
+  }
+
+  @Test
+  public void testMainUploadFileButMissingMd5() throws Exception {
+    val file = tmp.newFile();
     executeMain("upload", "--object-id", UUID.randomUUID().toString(), "--file", file.getCanonicalPath());
 
     assertTrue(getExitCode() == 1);
-    assertTrue(getOutput().contains("Uploads of empty files are not permitted"));
+    assertTrue(getOutput().contains("--md5 must be specified if --object-id is specified"));
   }
 
   @Test
@@ -112,8 +122,10 @@ public class ClientMainTest extends AbstractClientMainTest {
 
   @Test
   public void testViewWithBadDateInHeader() throws Exception {
+    val outDir = tmp.newFolder();
     val file = "src/test/resources/fixtures/view/94c1f438-acc8-51dd-a44e-e24d32a46c07.bam";
-    executeMain("view", "--header-only", "--input-file", file, "--output-type", "sam");
+    executeMain("view", "--header-only", "--input-file", file, "--output-format", "sam", "--output-dir",
+        outDir.getCanonicalPath());
 
     assertTrue(getExitCode() == 0);
   }

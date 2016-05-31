@@ -26,6 +26,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 
 import lombok.NonNull;
@@ -34,9 +35,6 @@ import lombok.SneakyThrows;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
-import org.codehaus.jackson.JsonParseException;
-import org.codehaus.jackson.map.JsonMappingException;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.icgc.dcc.storage.core.model.CompletedPart;
 import org.icgc.dcc.storage.core.model.ObjectSpecification;
 import org.icgc.dcc.storage.core.model.Part;
@@ -44,6 +42,7 @@ import org.icgc.dcc.storage.server.exception.IdNotFoundException;
 import org.icgc.dcc.storage.server.exception.InternalUnrecoverableError;
 import org.icgc.dcc.storage.server.exception.NotRetryableException;
 import org.icgc.dcc.storage.server.exception.RetryableException;
+import org.icgc.dcc.storage.server.service.upload.UploadPartDetail.UploadPartDetailBuilder;
 import org.icgc.dcc.storage.server.util.BucketNamingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -58,7 +57,10 @@ import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PartETag;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
-import com.google.common.collect.Lists;
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.Maps;
 
 /**
  * Stores and retrieves the state of a upload's progress.
@@ -204,7 +206,7 @@ public class UploadStateStore {
               return;
             }
           } while (completedPart.getPartNumber() != part.getPartNumber());
-          part.setMd5(completedPart.getMd5());
+          part.setSourceMd5(completedPart.getMd5());
         }
         request.setMarker(objectListing.getNextMarker());
       } while (objectListing.isTruncated());
@@ -259,7 +261,7 @@ public class UploadStateStore {
 
       val meta = new ObjectMetadata();
       meta.setContentLength(0);
-      val data = new ByteArrayInputStream(new byte[0]);
+      ByteArrayInputStream data = new ByteArrayInputStream(new byte[0]);
       val uploadStateKey = getUploadStateKey(objectId, uploadId, partName);
 
       s3Client.putObject(bucketNamingService.getStateBucketName(objectId), uploadStateKey, data, meta);
@@ -278,18 +280,20 @@ public class UploadStateStore {
   }
 
   @SneakyThrows
-  public List<PartETag> getUploadStatePartEtags(String objectId, String uploadId) {
+  public Map<Integer, UploadPartDetail> getUploadStatePartDetails(String objectId, String uploadId) {
     val uploadStateKey = getUploadStateKey(objectId, uploadId, PART);
-    val etags = Lists.<PartETag> newArrayList();
+    val details = Maps.<Integer, UploadPartDetail> newHashMap();
 
     eachObjectSummary(objectId, uploadStateKey, (objectSummary) -> {
       CompletedPart part = readCompletedPart(objectId, uploadId, objectSummary);
-      PartETag etag = new PartETag(part.getPartNumber(), part.getEtag());
 
-      etags.add(etag);
+      PartETag etag = new PartETag(part.getPartNumber(), part.getEtag());
+      UploadPartDetailBuilder detailBuilder =
+          UploadPartDetail.builder().etag(etag).partNumber(part.getPartNumber()).md5(part.getMd5());
+      details.put(part.getPartNumber(), detailBuilder.build());
     });
 
-    return etags;
+    return details;
   }
 
   public String getUploadId(String objectId) {
@@ -336,7 +340,8 @@ public class UploadStateStore {
   private CompletedPart readCompletedPart(String objectId, String uploadId, S3ObjectSummary objectSummary) {
     try {
       val json = extractJson(objectSummary.getKey(), objectId, uploadId);
-      return MAPPER.readValue(json, CompletedPart.class);
+      val part = MAPPER.readValue(json, CompletedPart.class);
+      return part;
     } catch (JsonParseException | JsonMappingException e) {
       log.error("Failed to read completed parts for objectId: {}, uploadId: {}, objectSummary: {}: {}",
           objectId, uploadId, objectSummary.getKey(), e);

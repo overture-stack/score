@@ -25,7 +25,11 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.List;
 
-import org.icgc.dcc.storage.client.manifest.Manifest.ManifestEntry;
+import lombok.NonNull;
+import lombok.SneakyThrows;
+import lombok.val;
+
+import org.icgc.dcc.storage.client.manifest.UploadManifest.ManifestEntry;
 
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
@@ -33,28 +37,21 @@ import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.io.LineProcessor;
 import com.google.common.io.Resources;
 
-import lombok.NonNull;
-import lombok.SneakyThrows;
-import lombok.val;
+public class UploadManifestReader {
 
-public class ManifestReader {
-
-  /**
-   * Constants.
-   */
-  private static final Splitter LINE_PARSER = Splitter.on('\t').trimResults();
+  protected static final Splitter LINE_PARSER = Splitter.on('\t').trimResults();
 
   @SneakyThrows
-  public Manifest readManifest(@NonNull File manifestFile) {
+  public UploadManifest readManifest(@NonNull File manifestFile) {
     return readManifest(manifestFile.toURI().toURL());
   }
 
   @SneakyThrows
-  public Manifest readManifest(@NonNull URL manifestFile) {
+  public UploadManifest readManifest(@NonNull URL manifestFile) {
     return Resources.readLines(manifestFile, UTF_8, new ManifestLineProcessor());
   }
 
-  private static class ManifestLineProcessor implements LineProcessor<Manifest> {
+  private class ManifestLineProcessor implements LineProcessor<UploadManifest> {
 
     int count = 0;
     Builder<ManifestEntry> entries = ImmutableList.<ManifestEntry> builder();
@@ -73,31 +70,23 @@ public class ManifestReader {
     }
 
     @Override
-    public Manifest getResult() {
-      return new Manifest(entries.build());
+    public UploadManifest getResult() {
+      return new UploadManifest(entries.build());
     }
   }
 
-  private static ManifestEntry createEntry(List<String> values) {
+  protected ManifestEntry createEntry(List<String> values) {
     int i = 0;
     return ManifestEntry.builder()
-        .repoCode(values.get(i++))
-        .fileId(values.get(i++))
         .fileUuid(values.get(i++))
-        .fileFormat(values.get(i++))
         .fileName(values.get(i++))
-        .fileSize(values.get(i++))
         .fileMd5sum(values.get(i++))
-        .indexFileUuid(values.get(i++))
-        .donorId(values.get(i++))
-        .projectId(values.get(i++))
-        .study(values.get(i++))
         .build();
   }
 
-  private static List<String> parseLine(String line) {
+  protected List<String> parseLine(String line) {
     val values = LINE_PARSER.splitToList(line);
-    val expectedColumns = 11;
+    val expectedColumns = 3;
     val actualColumns = values.size();
     checkState(expectedColumns == actualColumns, "Expected %s columns found %s for line '%s'",
         expectedColumns, actualColumns, line);

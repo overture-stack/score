@@ -23,21 +23,22 @@ import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
 
+import lombok.SneakyThrows;
+import lombok.val;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.google.common.io.Resources;
 
-import lombok.SneakyThrows;
-import lombok.val;
-
 @Service
-public class ManfiestService {
+public class ManifestService {
 
   /**
    * Constants
    */
-  private static final ManifestReader READER = new ManifestReader();
+  private static final DownloadManifestReader DOWNLOAD_READER = new DownloadManifestReader();
+  private static final UploadManifestReader UPLOAD_READER = new UploadManifestReader();
 
   /**
    * Configuration
@@ -52,30 +53,60 @@ public class ManfiestService {
   }
 
   @SneakyThrows
-  public Manifest getManifest(ManifestResource resource) {
+  public DownloadManifest getDownloadManifest(ManifestResource resource) {
     val url = resolveManifestUrl(resource);
-    return getManifestByURL(url);
+    return getDownloadManifestByURL(url);
   }
 
   @SneakyThrows
-  public Manifest getManifestById(String manifestId) {
+  public DownloadManifest getDownloadManifestById(String manifestId) {
     val url = resolvePortalManifestUrl(manifestId);
-    return readManifestByURL(url);
+    return readDownloadManifestByURL(url);
   }
 
   @SneakyThrows
-  public Manifest getManifestByURL(URL manifestUrl) {
-    return readManifestByURL(manifestUrl);
+  public DownloadManifest getDownloadManifestByURL(URL manifestUrl) {
+    return readDownloadManifestByURL(manifestUrl);
   }
 
   @SneakyThrows
-  public Manifest getManifestByFile(File manifestFile) {
-    return READER.readManifest(manifestFile);
+  public DownloadManifest getDownloadManifestByFile(File manifestFile) {
+    return DOWNLOAD_READER.readManifest(manifestFile);
   }
 
-  private Manifest readManifestByURL(URL url) {
+  private DownloadManifest readDownloadManifestByURL(URL url) {
     try {
-      return READER.readManifest(url);
+      return DOWNLOAD_READER.readManifest(url);
+    } catch (Exception e) {
+      throw new RuntimeException("Could not read manifest from '" + url + "': " + e.getMessage(), e);
+    }
+  }
+
+  @SneakyThrows
+  public UploadManifest getUploadManifest(ManifestResource resource) {
+    val url = resolveManifestUrl(resource);
+    return getUploadManifestByURL(url);
+  }
+
+  @SneakyThrows
+  public UploadManifest getUploadManifestById(String manifestId) {
+    val url = resolvePortalManifestUrl(manifestId);
+    return readUploadManifestByURL(url);
+  }
+
+  @SneakyThrows
+  public UploadManifest getUploadManifestByURL(URL manifestUrl) {
+    return readUploadManifestByURL(manifestUrl);
+  }
+
+  @SneakyThrows
+  public UploadManifest getUploadManifestByFile(File manifestFile) {
+    return UPLOAD_READER.readManifest(manifestFile);
+  }
+
+  private UploadManifest readUploadManifestByURL(URL url) {
+    try {
+      return UPLOAD_READER.readManifest(url);
     } catch (Exception e) {
       throw new RuntimeException("Could not read manifest from '" + url + "': " + e.getMessage(), e);
     }
@@ -93,7 +124,7 @@ public class ManfiestService {
   }
 
   private URL resolvePortalManifestUrl(String manifestId) throws MalformedURLException {
-    return new URL(String.format("%s/api/v1/repository/files/manifests/%s", portalUrl, manifestId));
+    return new URL(String.format("%s/api/v1/manifests/%s", portalUrl, manifestId));
   }
 
 }

@@ -24,10 +24,10 @@ import static javax.ws.rs.core.HttpHeaders.AUTHORIZATION;
 
 import java.io.IOException;
 
+import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
 
 import org.apache.http.client.HttpClient;
-import org.apache.http.conn.ssl.X509HostnameVerifier;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicHeader;
@@ -78,7 +78,7 @@ public class ClientConfig {
   @Autowired
   private SSLContext sslContext;
   @Autowired
-  private X509HostnameVerifier hostnameVerifier;
+  private HostnameVerifier hostnameVerifier;
 
   @Bean
   public String clientVersion() {
@@ -164,8 +164,8 @@ public class ClientConfig {
   @SneakyThrows
   private HttpClient sslClient() {
     val client = HttpClients.custom();
-    client.setSslcontext(sslContext);
-    client.setHostnameVerifier(hostnameVerifier);
+    client.setSSLContext(sslContext);
+    client.setSSLHostnameVerifier(hostnameVerifier);
     configureOAuth(client);
 
     return client.build();

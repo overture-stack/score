@@ -24,15 +24,17 @@ import static org.icgc.dcc.storage.client.cli.Parameters.checkParameter;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
 import org.icgc.dcc.storage.client.cli.ConverterFactory.OutputLayoutConverter;
 import org.icgc.dcc.storage.client.cli.DirectoryValidator;
-import org.icgc.dcc.storage.client.cli.ObjectIdValidator;
+import org.icgc.dcc.storage.client.cli.ObjectIdListValidator;
+import org.icgc.dcc.storage.client.download.DownloadRequest;
 import org.icgc.dcc.storage.client.download.DownloadService;
-import org.icgc.dcc.storage.client.manifest.ManfiestService;
 import org.icgc.dcc.storage.client.manifest.ManifestResource;
+import org.icgc.dcc.storage.client.manifest.ManifestService;
 import org.icgc.dcc.storage.client.metadata.Entity;
 import org.icgc.dcc.storage.client.metadata.MetadataService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,7 +42,6 @@ import org.springframework.stereotype.Component;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
 
@@ -66,22 +67,24 @@ public class DownloadCommand extends AbstractClientCommand {
   private OutputLayout layout = OutputLayout.FILENAME;
   @Parameter(names = "--force", description = "Force re-download (override local file)")
   private boolean force = false;
-  @Parameter(names = "--manifest", description = "Path to manifest id, url or file")
+  @Parameter(names = "--manifest", description = "Manifest id, url, or path to manifest file")
   private ManifestResource manifestResource;
-  @Parameter(names = "--object-id", description = "Object id to download", validateValueWith = ObjectIdValidator.class)
-  private String objectId;
+  @Parameter(names = "--object-id", description = "Object id to download", validateValueWith = ObjectIdListValidator.class, variableArity = true)
+  private List<String> objectId = new ArrayList<>();
   @Parameter(names = "--offset", description = "The byte position in source file to begin download from")
   private long offset = 0;
   @Parameter(names = "--length", description = "The number of bytes to download")
   private long length = -1;
   @Parameter(names = "--index", description = "Download file index if available?", arity = 1)
   private boolean index = true;
+  @Parameter(names = "--validate", description = "Perform check of MD5 checksum (if available)", arity = 1)
+  private boolean validate = true;
 
   /**
    * Dependencies
    */
   @Autowired
-  private ManfiestService manifestService;
+  private ManifestService manifestService;
   @Autowired
   private MetadataService metadataService;
   @Autowired
@@ -95,10 +98,10 @@ public class DownloadCommand extends AbstractClientCommand {
     checkParameter(outputDir.canWrite(), "Cannot write to output dir '%s'. Please check permissions and try again",
         outputDir);
 
-    val single = objectId != null;
-    if (single) {
-      // Ad-hoc single
-      return downloadObjects(ImmutableList.of(objectId));
+    val listed = objectId.size() > 0;
+    if (listed) {
+      // Ad-hoc list of object id's supplied from command line
+      return downloadObjects(objectId);
     } else {
       // Manifest based
       if (manifestResource.isGnosManifest()) {
@@ -109,7 +112,7 @@ public class DownloadCommand extends AbstractClientCommand {
                 manifestResource.getValue());
         return FAILURE_STATUS;
       }
-      val manifest = manifestService.getManifest(manifestResource);
+      val manifest = manifestService.getDownloadManifest(manifestResource);
 
       validateManifest(manifest);
 
@@ -140,7 +143,13 @@ public class DownloadCommand extends AbstractClientCommand {
           .printf("[%s/%s] Downloading object: %s (%s)%n", i++, entities.size(), terminal.value(entity.getId()),
               entity.getFileName())
           .printLine();
-      downloadService.download(outputDir, entity.getId(), offset, length, force);
+
+      val builder = DownloadRequest.builder();
+      val request =
+          builder.outputDir(outputDir).entity(entity).objectId(entity.getId()).offset(offset).length(length)
+              .validate(validate).build();
+
+      downloadService.download(request, force);
       layoutFile(entity);
       terminal.println("");
     }

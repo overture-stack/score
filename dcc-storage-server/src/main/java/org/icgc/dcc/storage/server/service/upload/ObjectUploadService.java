@@ -8,13 +8,13 @@ import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import lombok.Setter;
 import lombok.SneakyThrows;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
-import org.codehaus.jackson.map.ObjectMapper;
 import org.icgc.dcc.storage.core.model.ObjectKey;
 import org.icgc.dcc.storage.core.model.ObjectSpecification;
 import org.icgc.dcc.storage.core.model.UploadProgress;
@@ -47,6 +47,7 @@ import com.amazonaws.services.s3.model.MultipartUpload;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PartSummary;
 import com.amazonaws.services.s3.model.transform.Unmarshallers.ListPartsResultUnmarshaller;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * A service for object upload.
@@ -88,7 +89,7 @@ public class ObjectUploadService {
   @Autowired
   private ObjectPartCalculator partCalculator;
 
-  public ObjectSpecification initiateUpload(String objectId, long fileSize, boolean overwrite) {
+  public ObjectSpecification initiateUpload(String objectId, long fileSize, String md5, boolean overwrite) {
     // First ensure that the system is aware of the requested object
     checkRegistered(objectId);
 
@@ -132,7 +133,8 @@ public class ObjectUploadService {
             expirationDate));
       }
 
-      val spec = new ObjectSpecification(objectKey.getKey(), objectId, result.getUploadId(), parts, fileSize, false);
+      val spec =
+          new ObjectSpecification(objectKey.getKey(), objectId, result.getUploadId(), parts, fileSize, md5, false);
 
       // write out .meta file
       stateStore.create(spec);
@@ -254,20 +256,27 @@ public class ObjectUploadService {
   }
 
   public void finalizeUpload(String objectId, String uploadId) {
-    log.debug("finalizing upload id: {}", uploadId);
+    log.info("finalizing object id {} with upload id: {}", objectId, uploadId);
 
     val actualBucketName = bucketNamingService.getObjectBucketName(objectId);
     val actualStateBucketName = bucketNamingService.getStateBucketName(objectId);
 
     if (stateStore.isCompleted(objectId, uploadId)) {
       try {
-        val etags = stateStore.getUploadStatePartEtags(objectId, uploadId);
+        val details = stateStore.getUploadStatePartDetails(objectId, uploadId);
+        val etags = details.values().stream().map(detail -> detail.getEtag()).collect(Collectors.toList());
         val objectKey = ObjectKeys.getObjectKey(dataDir, objectId);
         val request = new CompleteMultipartUploadRequest(actualBucketName, objectKey.getKey(), uploadId, etags);
 
         s3Client.completeMultipartUpload(request);
 
         val spec = stateStore.read(objectId, uploadId);
+        // update meta with md5's
+        spec.getParts().forEach(part -> {
+          UploadPartDetail detail = details.get(part.getPartNumber());
+          part.setSourceMd5(detail != null ? detail.getMd5() : "<missing>");
+        });
+
         byte[] content = MAPPER.writeValueAsBytes(spec);
         val data = new ByteArrayInputStream(content);
         val meta = new ObjectMetadata();
@@ -276,8 +285,9 @@ public class ObjectUploadService {
         log.debug("about to s3.putObject into " + actualStateBucketName + ": " + objectMetaKey.toString());
         s3Client.putObject(actualStateBucketName, objectMetaKey, data, meta);
         // delete working files in upload directory
+        log.debug("About to delete working files from state directory");
         stateStore.delete(objectId, uploadId);
-        log.trace("end of finalizeUpload()");
+        log.debug("Upload for {} (upload id {}) finalized", objectId, uploadId);
       } catch (AmazonServiceException e) {
         log.error("Service problem with objectId: {}, uploadId: {}", objectId, uploadId, e);
         throw new RetryableException(e);
@@ -307,15 +317,19 @@ public class ObjectUploadService {
 
   public UploadProgress getUploadStatus(String objectId, String uploadId, long fileSize) {
     val spec = stateStore.read(objectId, uploadId);
-    val finished = spec.getObjectSize() == fileSize;
-    if (finished) {
+    val validSpec = spec.getObjectSize() == fileSize;
+    if (validSpec) {
       stateStore.markCompletedParts(objectId, uploadId, spec.getParts());
-
       return new UploadProgress(objectId, uploadId, spec.getParts());
     }
 
-    log.error("Error getting upload status for objectId {} uploadId {} fileSize {}", objectId, uploadId, fileSize);
-    throw new NotRetryableException();
+    val msg =
+        String
+            .format(
+                "Error getting upload status for objectId %s with uploadId %s: fileSize %d does not match registered object size %d",
+                objectId, uploadId, fileSize, spec.getObjectSize());
+    log.error(msg);
+    throw new NotRetryableException(new IllegalStateException(msg));
   }
 
   public void cancelUploads() {

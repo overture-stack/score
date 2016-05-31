@@ -15,38 +15,35 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.client.slicing;
+package org.icgc.dcc.storage.client.cli;
 
-import htsjdk.samtools.QueryInterval;
-import htsjdk.samtools.SAMFileHeader;
+import static java.lang.String.format;
+import static org.icgc.dcc.storage.core.util.UUIDs.tryParse;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Arrays;
-import java.util.Collections;
 
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
-import lombok.NonNull;
 import lombok.val;
 
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
-public final class QueryHandler {
+import com.beust.jcommander.IValueValidator;
+import com.beust.jcommander.ParameterException;
 
-  public static List<Slice> parseQueryStrings(@NonNull List<String> query) {
-    // Handle if multiple ranges specified
-    return QueryParser.parse(query);
+public class ObjectIdListValidator implements IValueValidator<List<String>> {
+
+  @Override
+  public void validate(String name, List<String> objectIds) throws ParameterException {
+    if (objectIds == null) {
+      return;
+    }
+
+    for (val objectId : objectIds) {
+      if (tryParse(objectId) == null) {
+        parameterException(name, objectId, "is not a valid UUID");
+      }
+    }
   }
 
-  public static QueryInterval[] convertSlices(@NonNull SAMFileHeader header, @NonNull List<Slice> slices) {
-    val converter = new SliceConverter(header.getSequenceDictionary());
-    val intervals = converter.convert(slices);
-
-    // remove nulls - happens when the query specifies sequences that don't exist in SQ
-    List<QueryInterval> list = new ArrayList<QueryInterval>(Arrays.asList(intervals));
-    list.removeAll(Collections.singleton(null));
-    val cleaned = list.toArray(new QueryInterval[list.size()]);
-
-    return QueryInterval.optimizeIntervals(cleaned); // otherwise triggers an assertion
+  private static void parameterException(String name, String objectId, String message) throws ParameterException {
+    throw new ParameterException(format("Invalid option: %s: %s %s", name, objectId, message));
   }
+
 }

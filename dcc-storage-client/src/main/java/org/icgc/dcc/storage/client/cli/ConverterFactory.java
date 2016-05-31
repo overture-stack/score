@@ -20,6 +20,7 @@ package org.icgc.dcc.storage.client.cli;
 import java.util.Map;
 
 import org.icgc.dcc.storage.client.command.DownloadCommand.OutputLayout;
+import org.icgc.dcc.storage.client.command.ViewCommand.OutputFormat;
 import org.icgc.dcc.storage.client.command.ViewCommand.OutputType;
 import org.icgc.dcc.storage.client.manifest.ManifestResource;
 import org.icgc.dcc.storage.client.mount.MountOptions;
@@ -50,6 +51,14 @@ public class ConverterFactory implements IStringConverterFactory {
 
     public OutputTypeConverter(String optionName) {
       super(OutputType.class, optionName);
+    }
+
+  }
+
+  public static class OutputFormatConverter extends EnumConverter<OutputFormat> {
+
+    public OutputFormatConverter(String optionName) {
+      super(OutputFormat.class, optionName);
     }
 
   }

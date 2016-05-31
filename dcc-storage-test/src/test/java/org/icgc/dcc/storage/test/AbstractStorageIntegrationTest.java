@@ -95,7 +95,6 @@ public abstract class AbstractStorageIntegrationTest {
     // they ever need to run in parallel in the same environment.
     String s3ninjaPath = s3Root.getRoot().getAbsolutePath();
     banner("setting up S3 buckets in: " + s3ninjaPath + "...");
-    setupBuckets(s3Root.getRoot());
 
     banner("Starting S3 under " + s3ninjaPath + " ...");
     s3.start(s3Root.getRoot());
@@ -124,29 +123,6 @@ public abstract class AbstractStorageIntegrationTest {
     if (metaServer != null) metaServer.destroy();
 
     if (storageServer != null) storageServer.destroy();
-  }
-
-  public void setupBuckets(File s3Root) {
-    setupBuckets(s3Root, 0);
-  }
-
-  public void setupBuckets(File s3Root, int count) {
-    String objectBucketBase = "oicr.icgc.dev";
-    String stateBucketBase = "oicr.icgc.dev.state";
-
-    String objectBucket = "";
-    String stateBucket = "";
-    if (count > 0) {
-      for (int i = 0; i < count; i++) {
-        objectBucket = String.format("%s.%d", objectBucketBase, i);
-        stateBucket = String.format("%s.%d", stateBucketBase, i);
-        createBucket(s3Root, objectBucket);
-        createBucket(s3Root, stateBucket);
-      }
-    } else {
-      createBucket(s3Root, objectBucketBase);
-      createBucket(s3Root, stateBucketBase);
-    }
   }
 
   void createBucket(File s3Root, String name) {
@@ -257,7 +233,7 @@ public abstract class AbstractStorageIntegrationTest {
         "--header-only",
         "--input-file",
         new File(new File(fs.getDownloadsDir(), bamFile.getGnosId()), bamFile.getFileName()).toString(),
-        "--output-type", "sam");
+        "--output-format", "sam");
     view.waitFor(1, MINUTES);
     assertThat(view.exitValue()).isEqualTo(0);
 

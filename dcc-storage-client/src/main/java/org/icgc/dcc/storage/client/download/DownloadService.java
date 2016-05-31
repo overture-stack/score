@@ -21,18 +21,28 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Iterables.getOnlyElement;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.ByteBuffer;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.Set;
 
 import javax.annotation.PostConstruct;
 
+import lombok.NonNull;
+import lombok.SneakyThrows;
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
+
 import org.icgc.dcc.storage.client.cli.Terminal;
 import org.icgc.dcc.storage.client.exception.NotResumableException;
 import org.icgc.dcc.storage.client.exception.NotRetryableException;
+import org.icgc.dcc.storage.client.exception.RetryableException;
 import org.icgc.dcc.storage.client.metadata.Entity;
 import org.icgc.dcc.storage.client.progress.Progress;
 import org.icgc.dcc.storage.client.transport.StorageService;
@@ -44,14 +54,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import lombok.NonNull;
-import lombok.SneakyThrows;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
-
-/**
- * main class to handle uploading objects
- */
 @Slf4j
 @Component
 public class DownloadService {
@@ -101,7 +103,7 @@ public class DownloadService {
   @SneakyThrows
   public URL getUrl(@NonNull String objectId, long offset, long length) {
     ObjectSpecification spec = storageService.getExternalDownloadSpecification(objectId, offset, length);
-    Part file = getOnlyElement(spec.getParts()); // throws IllegalArgumentException if more than one part
+    Part file = getOnlyElement(spec.getParts()); // Throws IllegalArgumentException if more than one part
 
     return new URL(file.getUrl());
   }
@@ -109,7 +111,7 @@ public class DownloadService {
   @SneakyThrows
   public String getUrlAsString(@NonNull String objectId, long offset, long length) {
     ObjectSpecification spec = storageService.getExternalDownloadSpecification(objectId, offset, length);
-    Part file = getOnlyElement(spec.getParts()); // throws IllegalArgumentException if more than one part
+    Part file = getOnlyElement(spec.getParts()); // Throws IllegalArgumentException if more than one part
 
     return file.getUrl();
   }
@@ -117,26 +119,27 @@ public class DownloadService {
   /**
    * The only public method for client to call to download data from remote storage.
    * 
-   * @param file The file to be uploaded
-   * @param objectId The object id that is used to associate the file in the remote storage
-   * @param redo If redo the upload is required
+   * @param request
+   * @param force If true the upload is required
    * @throws IOException
    */
-  public void download(File outputDirectory, String objectId, long offset, long length, boolean redo)
-      throws IOException {
-    log.debug("Beginning download of {} to {} {} - {}", objectId, outputDirectory.toString(), offset, length);
+  public void download(DownloadRequest downloadRequest, boolean redo) throws IOException {
+    log.debug("Beginning download of {}", downloadRequest.toString());
     int retry = 0;
     for (; retry < retryNumber; retry++) {
       try {
         if (redo) {
-          File objFile = Downloads.getDownloadFile(outputDirectory, objectId);
+          // Create local file handle for output
+          val objFile = downloadRequest.getOutputFilePath();
           if (objFile.exists()) {
+            // Delete if already there
             checkState(objFile.delete());
           }
-          startNewDownload(outputDirectory, objectId, offset, length);
+
+          startNewDownload(downloadRequest);
         } else {
-          // only perform checksum the first time of the resume
-          resumeIfPossible(outputDirectory, objectId, offset, length, retry == 0 ? true : false);
+          // Only perform checksum the first time of the resume
+          resumeIfPossible(downloadRequest, retry == 0 ? true : false);
         }
         return;
       } catch (NotResumableException e) {
@@ -145,12 +148,14 @@ public class DownloadService {
       } catch (NotRetryableException e) {
         log.warn(
             "Download failed during last execution. Checking data integrity. Please wait...", e);
-        if (storageService.isDownloadDataRecoverable(outputDirectory, objectId,
-            Downloads.getDownloadFile(outputDirectory, objectId).length())) {
-          redo = true;
-        } else {
+        if (storageService.isDownloadDataRecoverable(downloadRequest.getOutputDir(), downloadRequest.getObjectId(),
+            downloadRequest.getOutputFilePath().length())) {
           redo = false;
+        } else {
+          redo = true;
         }
+      } catch (RetryableException e) {
+        redo = true;
       }
     }
     if (retry == retryNumber) {
@@ -158,32 +163,36 @@ public class DownloadService {
     }
   }
 
-  private void resumeIfPossible(File outputDirectory, String objectId, long offset, long length, boolean checksum)
+  private void resumeIfPossible(DownloadRequest request, boolean checksum)
       throws IOException {
-    log.debug("Attempting to resume download for {} to {} {} - {}", objectId, outputDirectory.toString(), offset,
-        length);
-    List<Part> parts = null;
+    log.debug("Attempting to resume download for {}", request.toString());
+    ObjectSpecification spec = null;
     try {
-      parts = downloadStateStore.getProgress(outputDirectory, objectId);
+      spec = downloadStateStore.getProgress(request.getOutputDir(), request.getObjectId());
     } catch (NotRetryableException e) {
-      log.info("New download: {} because {}", objectId, e.getMessage());
-      startNewDownload(outputDirectory, objectId, offset, length);
+      log.info("New download: {} because {}", request.getObjectId(), e.getMessage());
+      startNewDownload(request);
       return;
     }
-    resume(parts, outputDirectory, objectId, checksum);
+    resume(request, spec, checksum);
   }
 
-  private void resume(List<Part> parts, File outputDirectory, String objectId, boolean checksum) {
+  private void resume(DownloadRequest request, ObjectSpecification spec, boolean checksum) {
     log.info("Resuming from previous download...");
 
-    int totalParts = parts.size();
-    int completedParts = numCompletedParts(parts);
+    int totalParts = spec.getParts().size();
+    int completedParts = numCompletedParts(spec.getParts());
     int remainingParts = totalParts - completedParts;
 
     log.info("Total parts: {}, completed parts: {}, remaining parts: {}", totalParts, completedParts, remainingParts);
     val progress = new Progress(terminal, quiet, totalParts, completedParts);
-    downloadParts(parts, outputDirectory, objectId, objectId, progress, checksum);
+    downloadParts(spec.getParts(), request.getOutputDir(), request.getObjectId(), request.getObjectId(), progress,
+        checksum);
 
+    if (request.isValidate()) {
+      terminal.printStatus("Verifying checksum...");
+      doMd5Checksum(request, spec);
+    }
   }
 
   /**
@@ -232,28 +241,44 @@ public class DownloadService {
    * Start a download given the object id
    */
   @SneakyThrows
-  private void startNewDownload(File dir, String objectId, long offset, long length) {
+  private void startNewDownload(DownloadRequest request) {
     log.info("Starting a new download...");
-    File objFile = Downloads.getDownloadFile(dir, objectId);
+    File objFile = request.getOutputFilePath();
 
     if (objFile.exists()) {
       throw new NotResumableException(new FileAlreadyExistsException(objFile.getPath()));
     }
 
+    val dir = request.getOutputDir();
     if (!dir.exists()) {
       log.debug("{} did not exist; creating now", dir.toString());
       Files.createDirectories(dir.toPath());
       log.debug("finished creating {}", dir.toString());
     }
 
-    log.debug("Downloading specification for {}: {}-{}", objectId, offset, length);
-    ObjectSpecification spec = storageService.getDownloadSpecification(objectId, offset, length);
+    log.debug("Downloading specification for {}: {}-{}", request.getObjectId(), request.getOffset(),
+        request.getLength());
+    ObjectSpecification spec =
+        storageService.getDownloadSpecification(request.getObjectId(), request.getOffset(), request.getLength());
     log.info("Finished retrieving download specification file");
+
+    // *****
+    // TODO: verify whether source md5 values are present
+    // doesn't really matter if we're just going to skip silently if part md5's aren't there
+    // *****
+
     downloadStateStore.init(dir, spec);
 
     // TODO: Assign session id
     val progress = new Progress(terminal, quiet, spec.getParts().size(), 0);
-    downloadParts(spec.getParts(), dir, objectId, objectId, progress, false);
+    downloadParts(spec.getParts(), dir, request.getObjectId(), request.getObjectId(), progress, false);
+
+    if (request.isValidate()) {
+      terminal.printStatus("Verifying checksum...");
+      log.info("Beginning MD5 checksum calculation for {}", request.getOutputFilePath().toString());
+      doMd5Checksum(request, spec);
+    }
+
   }
 
   /**
@@ -273,4 +298,64 @@ public class DownloadService {
     transportBuilder.build().receive(file);
   }
 
+  private void doMd5Checksum(DownloadRequest req, ObjectSpecification spec) {
+
+    if (spec.getObjectMd5() == null) {
+      log.warn("meta file does not contain the object MD5 checksum. Skipping check.");
+      return;
+    }
+    val outputFile = req.getOutputFilePath();
+    val downloadedMd5 = calculateChecksum(outputFile);
+    boolean check = downloadedMd5.equals(spec.getObjectMd5());
+    if (check) {
+      log.info("MD5 for {} validated correctly", outputFile.getAbsolutePath());
+    } else {
+      val msg = String.format("MD5 for %s was %s but was expecting %s", outputFile.getAbsolutePath(), downloadedMd5,
+          spec.getObjectMd5());
+      log.error(msg);
+      terminal.printWarn(msg);
+      throw new RetryableException(msg);
+    }
+  }
+
+  private String calculateChecksum(File outputFile) {
+    String downloadedMd5 = null;
+    try {
+      val md = MessageDigest.getInstance("MD5");
+      val fis = new FileInputStream(outputFile);
+      val fchannel = fis.getChannel();
+      val buffer = ByteBuffer.allocateDirect(8192); // allocation in bytes - 1024, 2048, 4096, 8192
+
+      int byteCount = fchannel.read(buffer);
+      while ((byteCount != -1) && (byteCount != 0)) {
+        buffer.flip();
+        byte[] bytes = new byte[byteCount];
+        buffer.get(bytes);
+        md.update(bytes, 0, byteCount);
+        buffer.clear();
+        byteCount = fchannel.read(buffer);
+      }
+
+      fis.close();
+      downloadedMd5 = decodeDigest(md.digest());
+
+    } catch (NoSuchAlgorithmException e) {
+      throw new NotRetryableException(e);
+    } catch (IOException ioe) {
+      throw new NotRetryableException(ioe);
+    }
+    return downloadedMd5;
+  }
+
+  private String decodeDigest(byte[] digest) {
+    StringBuffer hexString = new StringBuffer();
+    for (int i = 0; i < digest.length; i++) {
+      val hex = Integer.toHexString(0xFF & digest[i]);
+      if (hex.length() == 1) {
+        hexString.append('0');
+      }
+      hexString.append(hex);
+    }
+    return hexString.toString();
+  }
 }

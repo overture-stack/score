@@ -36,7 +36,7 @@ public interface DataChannel {
 
   String getMd5();
 
-  boolean isValidMd5(String expectedMd5) throws IOException;
+  boolean verifyMd5(String expectedMd5) throws IOException;
 
   void commitToDisk();
 

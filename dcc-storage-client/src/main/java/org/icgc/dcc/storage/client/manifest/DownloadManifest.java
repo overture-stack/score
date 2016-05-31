@@ -15,16 +15,44 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.core.util;
+package org.icgc.dcc.storage.client.manifest;
 
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.SSLSession;
+import java.util.List;
 
-public class DumbHostnameVerifier implements HostnameVerifier {
+import lombok.Builder;
+import lombok.NonNull;
+import lombok.Value;
 
-  @Override
-  public boolean verify(String hostname, SSLSession sslSession) {
-    return true;
+/**
+ * See https://wiki.oicr.on.ca/display/DCCSOFT/Uniform+metadata+JSON+document+for+ICGC+Data+Repositories#
+ * UniformmetadataJSONdocumentforICGCDataRepositories-Manifestfileformatfordownloader
+ */
+@Value
+public class DownloadManifest {
+
+  @NonNull
+  private final List<ManifestEntry> entries;
+
+  @Value
+  @Builder
+  public static class ManifestEntry {
+
+    String repoCode;
+    String fileId;
+    String fileUuid;
+    String fileFormat;
+    String fileName;
+    String fileSize;
+    String fileMd5sum;
+    String indexFileUuid;
+    String donorId;
+    String projectId;
+    String study;
+
+  }
+
+  public long getTotalSize() {
+    return entries.stream().mapToLong(entry -> Long.valueOf(entry.getFileSize())).sum();
   }
 
 }
