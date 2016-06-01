@@ -2,6 +2,8 @@
 
 Software for accessing ICGC data sets in affiliated cloud environments.
 
+(Distribution module with formal ICGC naming / branding instead of DCC.)
+
 ## Usage
 
 An example usage of the container which will download a remote file (with associated index file) having `object-id` `5b845b9a-3dcd-59ef-9f56-9a99396e988f` to `/tmp` on the docker host machine in "bundle" layout. The files will be written with ownership set to the current user (`/usr/bin/id -u`) and group (`/usr/bin/id -g`)
