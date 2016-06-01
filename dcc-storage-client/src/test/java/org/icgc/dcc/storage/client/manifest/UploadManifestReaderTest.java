@@ -23,10 +23,10 @@ import static org.junit.Assert.assertThat;
 
 import java.io.File;
 
-import lombok.val;
-
 import org.icgc.dcc.storage.client.manifest.UploadManifest.ManifestEntry;
 import org.junit.Test;
+
+import lombok.val;
 
 public class UploadManifestReaderTest {
 
@@ -53,12 +53,13 @@ public class UploadManifestReaderTest {
   public void testReadPropertiesFormatManifest() {
     val reader = new UploadManifestReader();
     try {
-      val manifest = reader.readManifest(new File("src/test/resources/fixtures/upload/manifest-properties.txt"));
+      reader.readManifest(new File("src/test/resources/fixtures/upload/manifest-properties.txt"));
       System.out.println();
     } catch (IllegalStateException e) {
       System.out
-          .println("Invalid Upload manifest file specified. Please check format and ensure it is a 3-column, tab-delimited file. "
-              + e.getMessage());
+          .println(
+              "Invalid Upload manifest file specified. Please check format and ensure it is a 3-column, tab-delimited file. "
+                  + e.getMessage());
       throw e;
     }
   }

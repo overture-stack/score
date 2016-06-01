@@ -20,13 +20,13 @@ package org.icgc.dcc.storage.core.model;
 import java.io.File;
 import java.net.URL;
 
-import lombok.val;
-
 //import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Assert;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import lombok.val;
 
 //import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -41,7 +41,7 @@ public class ObjectSpecificationTest {
 
     try {
       val sut = MAPPER.readValue(testfile, ObjectSpecification.class);
-      val check = sut.hasPartChecksums();
+      sut.hasPartChecksums();
       System.out.println("test");
     } catch (Exception e) {
       e.printStackTrace();

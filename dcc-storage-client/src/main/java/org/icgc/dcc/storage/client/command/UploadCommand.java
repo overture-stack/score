@@ -20,10 +20,8 @@ package org.icgc.dcc.storage.client.command;
 import static org.icgc.dcc.storage.client.cli.Parameters.checkParameter;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.Properties;
 
 import org.icgc.dcc.storage.client.cli.FileValidator;
 import org.icgc.dcc.storage.client.cli.ObjectIdValidator;
@@ -37,7 +35,6 @@ import org.springframework.stereotype.Component;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 
-import lombok.Cleanup;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 

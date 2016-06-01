@@ -22,12 +22,12 @@ import static org.junit.Assert.assertTrue;
 import java.io.File;
 import java.util.UUID;
 
-import lombok.val;
-
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+
+import lombok.val;
 
 public class ClientMainTest extends AbstractClientMainTest {
 
@@ -54,7 +54,7 @@ public class ClientMainTest extends AbstractClientMainTest {
 
   @Test
   public void testMainUploadEmptyFile() throws Exception {
-    val file = tmp.newFile();
+    tmp.newFile();
     executeMain("upload", "--object-id", UUID.randomUUID().toString());
 
     assertTrue(getExitCode() == 1);
