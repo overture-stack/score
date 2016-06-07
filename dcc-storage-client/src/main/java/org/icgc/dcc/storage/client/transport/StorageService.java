@@ -246,7 +246,7 @@ public class StorageService {
   public void finalizeDownload(File outDir, String objectId) throws IOException {
     log.debug("finalizing download, object-id: {}", objectId);
     if (downloadStateStore.canFinalize(outDir, objectId)) {
-      downloadStateStore.close(outDir, objectId);
+      DownloadStateStore.close(outDir, objectId);
     } else {
       throw new NotRetryableException(new IOException("Fail download finalization"));
     }

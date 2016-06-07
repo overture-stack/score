@@ -23,6 +23,9 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
+
 import org.icgc.dcc.storage.client.cli.FileValidator;
 import org.icgc.dcc.storage.client.cli.ObjectIdValidator;
 import org.icgc.dcc.storage.client.manifest.ManifestResource;
@@ -34,9 +37,6 @@ import org.springframework.stereotype.Component;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
-
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
@@ -104,6 +104,7 @@ public class UploadCommand extends AbstractClientCommand {
 
     terminal.printf("Uploading object: '%s' using the object id %s%n", file, objectId);
     uploader.upload(file, objectId, md5, isForce);
+    terminal.print("Upload completed");
   }
 
   private UploadManifest readManifest() throws IOException, FileNotFoundException {
