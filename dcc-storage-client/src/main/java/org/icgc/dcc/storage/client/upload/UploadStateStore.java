@@ -34,7 +34,8 @@ import org.icgc.dcc.storage.client.state.TransferState;
 import org.icgc.dcc.storage.core.model.ObjectSpecification;
 
 /**
- * This really shouldn't have 'Store' in the class name - it has no state, so it's not storing anything.
+ * This really shouldn't have 'Store' in the class name - it has no state, so it's not storing anything. It's a
+ * collection of utility methods to manipulate upload id's
  */
 @Slf4j
 public class UploadStateStore extends TransferState {
@@ -106,5 +107,4 @@ public class UploadStateStore extends TransferState {
     }
     return result;
   }
-
 }

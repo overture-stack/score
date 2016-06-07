@@ -332,6 +332,7 @@ public class UploadStateStore {
       throw new NotRetryableException(e);
     }
 
+    // this exception gets returned to client: indicates no upload currently in process for this object id
     log.warn("Upload Id not found for object ID: {}", objectId);
     throw new IdNotFoundException("Upload ID not found for object ID: " + objectId);
   }

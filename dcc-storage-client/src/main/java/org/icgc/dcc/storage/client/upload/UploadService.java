@@ -99,7 +99,7 @@ public class UploadService {
   }
 
   /**
-   * Start a upload given the object id
+   * Start an upload given the object id
    */
   @SneakyThrows
   private void startUpload(File file, String objectId, String md5, boolean overwrite) {
@@ -135,7 +135,9 @@ public class UploadService {
       // progress = storageService.getProgress(objectId, file.length());
       progress = checkProgress(uploadFile, objectId);
     } catch (NotRetryableException e) {
-      log.info("New upload: {}", objectId);
+      // org.icgc.dcc.storage.client.exception.ServiceRetryableResponseErrorHandler translates the 404 received from
+      // server into a NotRetryableException
+      log.info("No upload id found for object id {}. Start new upload.", objectId);
       startUpload(uploadFile, objectId, md5, true);
       return;
     }
@@ -213,7 +215,6 @@ public class UploadService {
       if (part.getMd5() != null) completedTotal++;
     }
     return completedTotal;
-
   }
 
   /**

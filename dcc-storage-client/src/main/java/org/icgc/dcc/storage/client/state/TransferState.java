@@ -32,14 +32,8 @@ import lombok.extern.slf4j.Slf4j;
 public class TransferState {
 
   /**
-   * Base Class for Upload/Download State-keeping that knows how to clean itself up when no longer needed
-   * 
-   * 
+   * Base Class for Upload/Download State-keeping - reusable utility methods (no state is kept)
    */
-  public TransferState() {
-    super();
-  }
-
   protected static void deleteDirectoryIfExist(File objectStateDir) throws IOException {
     if (objectStateDir.exists()) {
       Files.walkFileTree(objectStateDir.toPath(), new SimpleFileVisitor<Path>() {
@@ -58,7 +52,6 @@ public class TransferState {
 
       });
     }
-
   }
 
   public static File getObjectStateDir(File stateDir, String objectId) {
