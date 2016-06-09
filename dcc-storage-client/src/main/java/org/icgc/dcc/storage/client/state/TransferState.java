@@ -25,16 +25,17 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 
+import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+/**
+ * Base Class for Upload/Download State-keeping - reusable utility methods (no state is kept)
+ */
 public class TransferState {
 
-  /**
-   * Base Class for Upload/Download State-keeping - reusable utility methods (no state is kept)
-   */
-  protected static void deleteDirectoryIfExist(File objectStateDir) throws IOException {
+  protected static void deleteDirectoryIfExist(@NonNull File objectStateDir) throws IOException {
     if (objectStateDir.exists()) {
       Files.walkFileTree(objectStateDir.toPath(), new SimpleFileVisitor<Path>() {
 
@@ -54,21 +55,21 @@ public class TransferState {
     }
   }
 
-  public static File getObjectStateDir(File stateDir, String objectId) {
+  public static File getObjectStateDir(@NonNull File stateDir, @NonNull String objectId) {
     // Local, hidden directory using object id
     return new File(stateDir, "." + objectId);
   }
 
-  public static void close(File outDir, String objectId) throws IOException {
+  public static void close(@NonNull File outDir, @NonNull String objectId) throws IOException {
     deleteDirectoryIfExist(getObjectStateDir(outDir, objectId));
   }
 
-  public static void removeDir(File targetDir) {
+  public static void removeDir(@NonNull File targetDir) {
     removeDir(targetDir, false);
   }
 
   @SneakyThrows
-  public static void removeDir(File targetDir, boolean recreate) {
+  public static void removeDir(@NonNull File targetDir, boolean recreate) {
     log.debug("About to delete {}", targetDir.toString());
     deleteDirectoryIfExist(targetDir);
 

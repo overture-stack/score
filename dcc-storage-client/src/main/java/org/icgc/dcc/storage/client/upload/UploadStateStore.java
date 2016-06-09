@@ -24,11 +24,11 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Optional;
 
+import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
-import org.apache.commons.io.FilenameUtils;
 import org.icgc.dcc.storage.client.exception.NotRetryableException;
 import org.icgc.dcc.storage.client.state.TransferState;
 import org.icgc.dcc.storage.core.model.ObjectSpecification;
@@ -50,9 +50,8 @@ public class UploadStateStore extends TransferState {
    * Otherwise, we need to have user specify a working directory for upload - which is a bit too counter-intuitive.
    */
   @SneakyThrows
-  public static File getContainingDir(final File uploadFile) {
-    val filePath = uploadFile.getCanonicalPath();
-    val parentPath = Optional.ofNullable(FilenameUtils.getFullPath(filePath));
+  public static File getContainingDir(@NonNull final File uploadFile) {
+    val parentPath = Optional.ofNullable(uploadFile.getParent());
     if (parentPath.isPresent()) {
       return new File(parentPath.get());
     }
@@ -65,7 +64,7 @@ public class UploadStateStore extends TransferState {
    * @param spec
    * @param force
    */
-  public static void create(File uploadFile, ObjectSpecification spec, boolean force) {
+  public static void create(@NonNull File uploadFile, @NonNull ObjectSpecification spec, boolean force) {
     val filePath = getContainingDir(uploadFile);
 
     try {
@@ -87,7 +86,7 @@ public class UploadStateStore extends TransferState {
     return "uploadid";
   }
 
-  public static Optional<String> fetchUploadId(File uploadFile, String objectId) {
+  public static Optional<String> fetchUploadId(@NonNull File uploadFile, @NonNull String objectId) {
     Optional<String> result = Optional.ofNullable(null);
     File uploadStateDir = getObjectStateDir(getContainingDir(uploadFile), objectId);
     File uploadIdFile = new File(uploadStateDir, getStateName());

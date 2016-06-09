@@ -114,7 +114,7 @@ public class UploadService {
       throw new NotResumableException(e);
     }
 
-    // delete if already present
+    // Delete if already present
     if (overwrite) {
       UploadStateStore.create(file, spec, false);
     }
@@ -132,7 +132,6 @@ public class UploadService {
   private void resumeIfPossible(File uploadFile, String objectId, String md5, boolean checksum) {
     UploadProgress progress = null;
     try {
-      // progress = storageService.getProgress(objectId, file.length());
       progress = checkProgress(uploadFile, objectId);
     } catch (NotRetryableException e) {
       // org.icgc.dcc.storage.client.exception.ServiceRetryableResponseErrorHandler translates the 404 received from
@@ -146,19 +145,19 @@ public class UploadService {
 
   @SneakyThrows
   private UploadProgress checkProgress(File uploadFile, String objectId) {
-    /*
-     * see if there is already an upload in progress for this object id fetch upload id if present, send if missing,
-     * send null
-     */
+
+    // See if there is already an upload in progress for this object id. Fetch upload id and send if present. If
+    // missing, send null
     val uploadId = UploadStateStore.fetchUploadId(uploadFile, objectId);
     UploadProgress progress = null;
     progress = storageService.getProgress(objectId, uploadFile.length());
 
-    // compare upload id's
+    // Compare upload id's
     if (uploadId.isPresent() && progress != null) {
       if (uploadId.get().equalsIgnoreCase(progress.getUploadId())) {
-        // can continue - upload id's match
+        // Can continue; upload id's match
       } else {
+        // Can't continue; upload id's don't match
         val msg =
             String.format(
                 "Local in-progress upload %s conflicts with remote upload in progress %s. Aborting local upload.",
@@ -166,8 +165,8 @@ public class UploadService {
                 progress.getUploadId());
         throw new NotResumableException(new IllegalStateException(msg));
       }
+      // Then local upload id not present
     } else if (progress != null) {
-      // then local upload id is not present
       val msg =
           String
               .format(
@@ -180,7 +179,7 @@ public class UploadService {
   }
 
   /**
-   * Resume a upload given the upload progress. Checksum is required only for the first attempt for each process
+   * Resume an upload given the upload progress. Checksum is required only for the first attempt for each process
    * execution.
    */
   private void resume(File file, UploadProgress uploadProgress, String objectId, boolean checksum) throws IOException {
@@ -190,7 +189,7 @@ public class UploadService {
     int completedParts = numCompletedParts(parts);
     int totalParts = parts.size();
 
-    // remove completed parts if don't require checksumming
+    // Remove completed parts if don't require checksum-ing
     if (!checksum) {
       parts.removeIf(new Predicate<Part>() {
 
@@ -218,7 +217,7 @@ public class UploadService {
   }
 
   /**
-   * start upload parts using a specific configured data transport
+   * Start upload parts using a specific configured data transport
    */
   @SneakyThrows
   private void uploadParts(List<Part> parts, File file, String objectId, String uploadId, Progress progressBar) {

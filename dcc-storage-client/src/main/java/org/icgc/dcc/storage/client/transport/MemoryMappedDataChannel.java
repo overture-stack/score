@@ -24,15 +24,15 @@ import java.lang.reflect.Method;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.Channels;
 
-import org.icgc.dcc.storage.client.exception.NotRetryableException;
-
-import com.google.common.hash.Hashing;
-import com.google.common.hash.HashingOutputStream;
-
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
+
+import org.icgc.dcc.storage.client.exception.NotRetryableException;
+
+import com.google.common.hash.Hashing;
+import com.google.common.hash.HashingOutputStream;
 
 /**
  * Channel based on {@link java.nio.MappedByteBuffer memory mapped buffer}
@@ -74,11 +74,21 @@ public class MemoryMappedDataChannel extends AbstractDataChannel {
   @Override
   public void readFrom(InputStream is) throws IOException {
     val readChannel = Channels.newChannel(is);
+
     while (buffer.hasRemaining()) {
       val eos = readChannel.read(buffer) < 0;
       if (eos) {
-        // TODO: Not sure what this condition means. Need to determine if we should throw or not. Right now assume that
-        // MD5 hashing will detect error.
+        // This end-of-stream check put in as part of COL-492:
+        // Since the while-loop condition is actually on the buffer that is receiving the data from
+        // the input channel continuing to have space, and the input channel is the body of an HttpResponse
+        // that would be subject to network interruptions. Then in the event that the stream gets interrupted
+        // part-way through the stream, the while loop will never exit because the buffer will continue to
+        // have the same number of elements (space) remaining; there is no more input coming into it.
+
+        // Since this is a hypothesis, we have additional insurance from the fact that the InputStream being passed
+        // into the channel is actually a HashingInputStream. When readFrom() returns via the break, the hash that
+        // was calculated until that point will be returned and validated against the expected MD5 for the entire part.
+        // This IllegalStateException is caught and re-thrown as a RetryableException.
         log.warn("Reached end of stream while trying to fill buffer: {}", buffer);
         break;
       }
