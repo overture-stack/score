@@ -24,6 +24,10 @@ import java.util.function.Predicate;
 
 import javax.annotation.PostConstruct;
 
+import lombok.SneakyThrows;
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
+
 import org.icgc.dcc.storage.client.cli.Terminal;
 import org.icgc.dcc.storage.client.exception.NotResumableException;
 import org.icgc.dcc.storage.client.exception.NotRetryableException;
@@ -37,10 +41,6 @@ import org.icgc.dcc.storage.core.model.UploadProgress;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-
-import lombok.SneakyThrows;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * main class to handle uploading objects
@@ -62,6 +62,8 @@ public class UploadService {
    */
   @Autowired
   private StorageService storageService;
+  @Autowired
+  private UploadStateStore uploadStateStore;
   @Autowired
   private Transport.Builder transportBuilder;
   @Autowired
@@ -97,7 +99,7 @@ public class UploadService {
   }
 
   /**
-   * Start a upload given the object id
+   * Start an upload given the object id
    */
   @SneakyThrows
   private void startUpload(File file, String objectId, String md5, boolean overwrite) {
@@ -112,8 +114,14 @@ public class UploadService {
       throw new NotResumableException(e);
     }
 
+    // Delete if already present
+    if (overwrite) {
+      UploadStateStore.create(file, spec, false);
+    }
+
     val progress = new Progress(terminal, quiet, spec.getParts().size(), 0);
     uploadParts(spec.getParts(), file, objectId, spec.getUploadId(), progress);
+    cleanupState(file, objectId);
   }
 
   /**
@@ -121,31 +129,67 @@ public class UploadService {
    * upload progress cannot be retrieved.
    */
   @SneakyThrows
-  private void resumeIfPossible(File file, String objectId, String md5, boolean checksum) {
+  private void resumeIfPossible(File uploadFile, String objectId, String md5, boolean checksum) {
     UploadProgress progress = null;
     try {
-      progress = storageService.getProgress(objectId, file.length());
+      progress = checkProgress(uploadFile, objectId);
     } catch (NotRetryableException e) {
-      log.info("New upload: {}", objectId);
-      startUpload(file, objectId, md5, true);
+      // org.icgc.dcc.storage.client.exception.ServiceRetryableResponseErrorHandler translates the 404 received from
+      // server into a NotRetryableException
+      log.info("No upload id found for object id {}. Start new upload.", objectId);
+      startUpload(uploadFile, objectId, md5, true);
       return;
     }
-    resume(file, progress, objectId, checksum);
+    resume(uploadFile, progress, objectId, checksum);
+  }
 
+  @SneakyThrows
+  private UploadProgress checkProgress(File uploadFile, String objectId) {
+
+    // See if there is already an upload in progress for this object id. Fetch upload id and send if present. If
+    // missing, send null
+    val uploadId = UploadStateStore.fetchUploadId(uploadFile, objectId);
+    UploadProgress progress = null;
+    progress = storageService.getProgress(objectId, uploadFile.length());
+
+    // Compare upload id's
+    if (uploadId.isPresent() && progress != null) {
+      if (uploadId.get().equalsIgnoreCase(progress.getUploadId())) {
+        // Can continue; upload id's match
+      } else {
+        // Can't continue; upload id's don't match
+        val msg =
+            String.format(
+                "Local in-progress upload %s conflicts with remote upload in progress %s. Aborting local upload.",
+                uploadId.get(),
+                progress.getUploadId());
+        throw new NotResumableException(new IllegalStateException(msg));
+      }
+      // Then local upload id not present
+    } else if (progress != null) {
+      val msg =
+          String
+              .format(
+                  "There is already an upload in progress that was started elsewhere with upload id %s. Aborting local upload.",
+                  progress.getUploadId());
+      throw new NotResumableException(new IllegalStateException(msg));
+    }
+
+    return progress;
   }
 
   /**
-   * Resume a upload given the upload progress. Checksum is required only for the first attempt for each process
+   * Resume an upload given the upload progress. Checksum is required only for the first attempt for each process
    * execution.
    */
-  private void resume(File file, UploadProgress uploadProgress, String objectId, boolean checksum) {
+  private void resume(File file, UploadProgress uploadProgress, String objectId, boolean checksum) throws IOException {
     log.info("Resume from the previous upload...");
 
     List<Part> parts = uploadProgress.getParts();
     int completedParts = numCompletedParts(parts);
     int totalParts = parts.size();
 
-    // remove completed parts if don't require checksumming
+    // Remove completed parts if don't require checksum-ing
     if (!checksum) {
       parts.removeIf(new Predicate<Part>() {
 
@@ -158,6 +202,7 @@ public class UploadService {
 
     val progress = new Progress(terminal, quiet, totalParts, completedParts);
     uploadParts(parts, file, uploadProgress.getObjectId(), uploadProgress.getUploadId(), progress);
+    cleanupState(file, objectId);
   }
 
   /**
@@ -169,11 +214,10 @@ public class UploadService {
       if (part.getMd5() != null) completedTotal++;
     }
     return completedTotal;
-
   }
 
   /**
-   * start upload parts using a specific configured data transport
+   * Start upload parts using a specific configured data transport
    */
   @SneakyThrows
   private void uploadParts(List<Part> parts, File file, String objectId, String uploadId, Progress progressBar) {
@@ -188,5 +232,9 @@ public class UploadService {
 
   public boolean isObjectExist(String objectId) throws IOException {
     return storageService.isObjectExist(objectId);
+  }
+
+  private void cleanupState(File uploadFile, String objectId) throws IOException {
+    UploadStateStore.close(UploadStateStore.getContainingDir(uploadFile), objectId);
   }
 }

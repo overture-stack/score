@@ -310,20 +310,20 @@ public class UploadStateStore {
     try {
       ObjectListing objectListing;
       do {
-        // retrieve all folders from state bucket that have the object id as prefix
+        // Retrieve all folders from state bucket that have the object id as prefix
         // (separate upload instances)
         objectListing = s3Client.listObjects(request);
         for (val prefix : objectListing.getCommonPrefixes()) {
           log.debug("Found object upload key: {}", prefix);
-          // look for match on upload id
+          // Look for match on upload id
           val uploadId = getUploadIdFromMeta(objectId, prefix);
-          // see if .meta file for this upload id is present
+          // See if .meta file for this upload id is present
           if (isMetaAvailable(objectId, uploadId)) {
             return uploadId;
           }
         }
-
         request.setMarker(objectListing.getNextMarker());
+        // We only ever care about the first object id we encounter anyway.
       } while (objectListing.isTruncated());
     } catch (AmazonServiceException e) {
       log.error("Amazon returned error during listObjects() call");
@@ -332,6 +332,7 @@ public class UploadStateStore {
       throw new NotRetryableException(e);
     }
 
+    // This exception gets returned to client: indicates no upload currently in process for this object id
     log.warn("Upload Id not found for object ID: {}", objectId);
     throw new IdNotFoundException("Upload ID not found for object ID: " + objectId);
   }
@@ -373,7 +374,7 @@ public class UploadStateStore {
   }
 
   /*
-   * Is the .meta file actually there for the upload id
+   * Is the .meta file actually there for the upload id?
    */
   boolean isMetaAvailable(String objectId, String uploadId) {
     // key for the .meta file

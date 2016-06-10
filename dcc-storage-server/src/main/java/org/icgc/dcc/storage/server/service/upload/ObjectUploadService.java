@@ -10,6 +10,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import lombok.NonNull;
 import lombok.Setter;
 import lombok.SneakyThrows;
 import lombok.val;
@@ -136,7 +137,7 @@ public class ObjectUploadService {
       val spec =
           new ObjectSpecification(objectKey.getKey(), objectId, result.getUploadId(), parts, fileSize, md5, false);
 
-      // write out .meta file
+      // Write out .meta file
       stateStore.create(spec);
       return spec;
     } catch (AmazonServiceException e) {
@@ -149,7 +150,7 @@ public class ObjectUploadService {
     }
   }
 
-  public boolean exists(String objectId) {
+  public boolean exists(@NonNull String objectId) {
     val objectKey = ObjectKeys.getObjectKey(dataDir, objectId);
     String actualBucketName = bucketNamingService.getStateBucketName(objectId);
     try {
@@ -187,7 +188,7 @@ public class ObjectUploadService {
     return false;
   }
 
-  private boolean isPartExists(ObjectKey objectKey, String uploadId, int partNumber, String eTag) {
+  private boolean isPartExists(@NonNull ObjectKey objectKey, String uploadId, int partNumber, String eTag) {
     List<PartSummary> parts = null;
     val objectId = objectKey.getObjectId();
     val actualBucketName = bucketNamingService.getObjectBucketName(objectId);
@@ -271,7 +272,7 @@ public class ObjectUploadService {
         s3Client.completeMultipartUpload(request);
 
         val spec = stateStore.read(objectId, uploadId);
-        // update meta with md5's
+        // Update meta with md5's
         spec.getParts().forEach(part -> {
           UploadPartDetail detail = details.get(part.getPartNumber());
           part.setSourceMd5(detail != null ? detail.getMd5() : "<missing>");
@@ -284,7 +285,7 @@ public class ObjectUploadService {
         val objectMetaKey = ObjectKeys.getObjectMetaKey(dataDir, objectId);
         log.debug("about to s3.putObject into " + actualStateBucketName + ": " + objectMetaKey.toString());
         s3Client.putObject(actualStateBucketName, objectMetaKey, data, meta);
-        // delete working files in upload directory
+        // Delete working files in upload directory
         log.debug("About to delete working files from state directory");
         stateStore.delete(objectId, uploadId);
         log.debug("Upload for {} (upload id {}) finalized", objectId, uploadId);
