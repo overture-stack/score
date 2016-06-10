@@ -44,7 +44,7 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
     <!-- DCC -->
     <repository>
       <id>dcc-release</id>
-      <url>http://seqwaremaven.oicr.on.ca/artifactory/dcc-release</url>
+      <url>https://artifacts.oicr.on.ca/artifactory/dcc-release</url>
     </repository>
   </repositories>
 
