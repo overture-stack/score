@@ -17,22 +17,6 @@
  */
 package org.icgc.dcc.storage.client.slicing;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
-
-import org.apache.commons.lang.StringUtils;
-import org.icgc.dcc.storage.client.command.ViewCommand.OutputFormat;
-import org.icgc.dcc.storage.client.metadata.Entity;
-import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Throwables;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
-
 import htsjdk.samtools.QueryInterval;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMFileHeader.SortOrder;
@@ -46,11 +30,28 @@ import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.ValidationStringency;
 import htsjdk.samtools.util.RuntimeIOException;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
+
 import lombok.Cleanup;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
+
+import org.apache.commons.lang.StringUtils;
+import org.icgc.dcc.storage.client.command.ViewCommand.OutputFormat;
+import org.icgc.dcc.storage.client.metadata.Entity;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Throwables;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 @Slf4j
 public class SamFileBuilder {
@@ -179,7 +180,7 @@ public class SamFileBuilder {
   }
 
   @SneakyThrows
-  private SamReader createSamReader() {
+  protected SamReader createSamReader() {
     try {
       // Need to use non-STRICT due to header date formats in the wild.
       return SamReaderFactory.makeDefault().validationStringency(ValidationStringency.LENIENT).open(samInputResource);

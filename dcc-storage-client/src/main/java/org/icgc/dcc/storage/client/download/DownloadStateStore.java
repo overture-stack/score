@@ -21,22 +21,19 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.SimpleFileVisitor;
-import java.nio.file.attribute.BasicFileAttributes;
 
 import lombok.extern.slf4j.Slf4j;
 
 import org.icgc.dcc.storage.client.exception.NotRetryableException;
+import org.icgc.dcc.storage.client.state.TransferState;
 import org.icgc.dcc.storage.core.model.ObjectSpecification;
 import org.icgc.dcc.storage.core.model.Part;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Slf4j
-public class DownloadStateStore {
+public class DownloadStateStore extends TransferState {
 
   public void init(File stateDir, ObjectSpecification spec) {
     log.debug("Download Specification : {}", spec);
@@ -59,42 +56,16 @@ public class DownloadStateStore {
     }
   }
 
-  private void deleteDirectoryIfExist(File objectStateDir) throws IOException {
-    if (objectStateDir.exists()) {
-      Files.walkFileTree(objectStateDir.toPath(), new SimpleFileVisitor<Path>() {
-
-        @Override
-        public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-          Files.delete(file);
-          return FileVisitResult.CONTINUE;
-        }
-
-        @Override
-        public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
-          Files.delete(dir);
-          return FileVisitResult.CONTINUE;
-        }
-
-      });
-    }
-
-  }
-
-  private File getObjectStateDir(File stateDir, String objectId) {
-    // Local, hidden directory using object id
-    return new File(stateDir, "." + objectId);
-  }
-
-  private String getSpecificationName() {
-    return "meta";
-  }
-
   private String getPartName(Part part) {
     return String.format("%s%08x", getPartPrefix(), (0xFFFFFFFF & part.getPartNumber()));
   }
 
   private String getPartPrefix() {
     return "part-";
+  }
+
+  protected String getSpecificationName() {
+    return "meta";
   }
 
   public boolean hasStarted(File stateDir, String objectId) {
@@ -185,9 +156,5 @@ public class DownloadStateStore {
       }
     }
     return true;
-  }
-
-  public void close(File outDir, String objectId) throws IOException {
-    deleteDirectoryIfExist(getObjectStateDir(outDir, objectId));
   }
 }
