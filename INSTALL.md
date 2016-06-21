@@ -65,7 +65,7 @@ Also, install unzip if it's not already installed.
 sudo apt-get install -y unzip git
 ```
 
-Create an SSL certificate to be used across the storage system. This can be done using the LetsEncrypt certbot client (Note: this will require temporarily opening access to port 443 on the EC2). The root account may need to be used for some of this.
+Create an SSL certificate to be used across the storage system. This can be done using the LetsEncrypt certbot client (**Note:** this will require temporarily opening access to port 443 on the EC2). The root account may need to be used for some of this.
 ```
 git clone https://github.com/certbot/certbot
 cd certbot
