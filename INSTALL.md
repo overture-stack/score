@@ -73,6 +73,13 @@ cd certbot
 cd /etc/letsencrypt/archive/storage.ucsc-cgl.org/ # or wherever output from the previous command points you
 # convert pem files to pkcs12
 openssl pkcs12 -export -in cert1.pem -inkey privkey1.pem -out ucsc-storage.p12 -name tomcat -CAfile chain1.pem -caname root -chain
+# if you get an error "Error unable to get issuer certificate getting chain." see https://hardwarehacks.org/blogs/devops/2016/03/13/1457912280000.html 
+# you'll need to do the following to add in the Letsencrypt root keys
+wget --quiet https://letsencrypt.org/certs/isrgrootx1.pem
+wget --quiet -O dstrootx3.pem https://ssl-tools.net/certificates/dac9024f54d8f6df94935fb1732638ca6ad77c13.pem
+cat isrgrootx1.pem dstrootx3.pem chain1.pem > bundle.pem
+openssl pkcs12 -export -in cert1.pem -inkey privkey1.pem -out ucsc-storage.p12 -name tomcat -CAfile bundle.pem -caname root -chain
+# and use password for password
 # convert pkcs12 to jks
 keytool -importkeystore -destkeystore ucsc-storage.jks -deststorepass password -srckeystore ucsc-storage.p12 -srcstoretype PKCS12 -srcstorepass password
 chown ubuntu:ubuntu ucsc-storage.p12
