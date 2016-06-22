@@ -84,7 +84,7 @@ openssl pkcs12 -export -in cert1.pem -inkey privkey1.pem -out ucsc-storage.p12 -
 keytool -importkeystore -destkeystore ucsc-storage.jks -deststorepass password -srckeystore ucsc-storage.p12 -srcstoretype PKCS12 -srcstorepass password
 chown ubuntu:ubuntu ucsc-storage.p12
 chown ubuntu:ubuntu ucsc-storage.jks
-mv ucsc-storage.p12 ucsc-storage.jks $DCC_HOME/conf/ssl
+mv chain1.pem ucsc-storage.p12 ucsc-storage.jks $DCC_HOME/conf/ssl
 ```
 
 The LetsEncrypt root CA certificate has to be added to the JVM truststore to tell the JVM to trust our newly generated certificate. To avoid altering the original, a copy is made that can be specified upon invocation of java clients.
@@ -92,6 +92,7 @@ The LetsEncrypt root CA certificate has to be added to the JVM truststore to tel
 # create copy of jvm truststore with LetsEncrypt cert added
 cp /usr/lib/jvm/java-8-oracle/jre/lib/security/cacerts $DCC_HOME/conf/ssl/
 keytool -import -file chain1.pem -alias LetsEncryptCA -keystore cacerts -storepass changeit
+# if you used the bundle.pem above then use that in place of chain1.pem here
 ```
 
 Install and configure MongoDB metadata-server dependency (https://docs.mongodb.com/manual/tutorial/install-mongodb-on-ubuntu/). The commands shown below leave access to mongodb unrestricted. The port that mongod listens on shouldn't be open to external IPs, and in production systems access restriction should be enabled.
