@@ -48,13 +48,17 @@ public class MetadataService {
   }
 
   private static boolean isIndexFile(Entity e, String fileName) {
-    return isBaiFile(e, fileName) || isTbiFile(e, fileName);
+    return isBaiFile(e, fileName) || isTbiFile(e, fileName) || isIdxFile(e, fileName);
   }
 
   private static boolean isTbiFile(Entity e, String fileName) {
     return isMatch(e, fileName + ".tbi");
   }
 
+  private static boolean isIdxFile(Entity e, String fileName) {
+    return isMatch(e, fileName + ".idx");
+  }
+  
   private static boolean isBaiFile(Entity e, String fileName) {
     return isMatch(e, fileName + ".bai");
   }
