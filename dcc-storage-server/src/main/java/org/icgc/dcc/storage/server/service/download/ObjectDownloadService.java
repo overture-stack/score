@@ -74,6 +74,8 @@ public class ObjectDownloadService {
   private String dataDir;
   @Value("${collaboratory.download.expiration}")
   private int expiration;
+  @Value("${object.sentinel}")
+  private String sentinelObjectId;
 
   /**
    * Dependencies.
@@ -171,6 +173,18 @@ public class ObjectDownloadService {
     @Cleanup
     val inputStream = obj.getObjectContent();
     return MAPPER.readValue(inputStream, ObjectSpecification.class);
+  }
+
+  public String getSentinelObject() {
+    if ((sentinelObjectId == null) || (sentinelObjectId.isEmpty())) {
+      throw new NotRetryableException(new IllegalArgumentException("Sentinel object id not defined"));
+    }
+    val now = LocalDateTime.now();
+    val expirationDate = Date.from(now.plusMinutes(5).atZone(ZoneId.systemDefault()).toInstant());
+
+    return urlGenerator.getDownloadUrl(
+        bucketNamingService.getObjectBucketName("", true), ObjectKeys.getObjectKey(dataDir, sentinelObjectId),
+        expirationDate);
   }
 
   /*
