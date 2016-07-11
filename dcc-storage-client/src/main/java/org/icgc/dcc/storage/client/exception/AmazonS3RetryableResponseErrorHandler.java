@@ -21,6 +21,7 @@ import java.io.IOException;
 
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.web.client.DefaultResponseErrorHandler;
 
@@ -35,29 +36,27 @@ public class AmazonS3RetryableResponseErrorHandler extends DefaultResponseErrorH
 
   @Override
   public void handleError(ClientHttpResponse response) throws IOException {
-    AmazonS3Exception e = new AmazonS3Exception("s3 exception", IOUtils.toString(response.getBody()));
-    switch (response.getStatusCode()) {
+    HttpStatus status = response.getStatusCode();
+    AmazonS3Exception e = new AmazonS3Exception(IOUtils.toString(response.getBody()));
+    switch (status) {
     case BAD_REQUEST:
       if (e.getErrorCode() == null || e.getErrorCode().equals("RequestTimeout")) {
-        throw new RetryableException(new IOException("Amazon S3 error: "
-            + IOUtils.toString(response.getBody())));
+        throw new RetryableException(new IOException(IOUtils.toString(response.getBody())));
       }
     case NOT_FOUND:
-      throw new NotRetryableException(new IOException("Amazon S3 error: "
-          + IOUtils.toString(response.getBody())));
+      throw new NotRetryableException(new IOException(IOUtils.toString(response.getBody())));
     case INTERNAL_SERVER_ERROR:
       log.warn("Server error. Stop processing: {}", response.getStatusText());
-      throw new NotResumableException(new IOException("Amazon S3 error: "
-          + IOUtils.toString(response.getBody())));
+      throw new NotResumableException(new IOException(IOUtils.toString(response.getBody())));
     case FORBIDDEN:
       log.warn("FORBIDDEN response code received");
-      throw new NotRetryableException(new IOException(
-          "Amazon S3 error: Access refused by object store. Confirm request host is on permitted list"
-              + IOUtils.toString(response.getBody())));
+      throw new NotRetryableException(
+          new IOException(
+              "Access refused by object store. Confirm client is part of repository cloud and that the download was initiated less than 1 day earlier (7 days for uploads)"
+                  + IOUtils.toString(response.getBody())));
     default:
       log.warn("Retryable exception: {}", response.getStatusText());
-      throw new RetryableException(new IOException("Amazon S3 error: "
-          + IOUtils.toString(response.getBody())));
+      throw new RetryableException(new IOException(IOUtils.toString(response.getBody())));
 
     }
   }

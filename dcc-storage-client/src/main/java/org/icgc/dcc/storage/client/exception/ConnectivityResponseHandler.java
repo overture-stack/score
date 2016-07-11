@@ -15,50 +15,40 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.client.command;
+package org.icgc.dcc.storage.client.exception;
 
-import java.net.URL;
+import java.io.IOException;
 
-import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
-import org.icgc.dcc.storage.client.cli.ObjectIdValidator;
-import org.icgc.dcc.storage.client.download.DownloadService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.client.ClientHttpResponse;
+import org.springframework.web.client.DefaultResponseErrorHandler;
 
-import com.beust.jcommander.Parameter;
-import com.beust.jcommander.Parameters;
+import com.amazonaws.util.IOUtils;
 
-@Component
-@Parameters(separators = "=", commandDescription = "Resolve the URL of a specified remote file object")
-public class UrlCommand extends AbstractClientCommand {
-
-  /**
-   * Options.
-   */
-  @Parameter(names = "--object-id", description = "Object id to resolve URL for", required = true, validateValueWith = ObjectIdValidator.class)
-  private String objectId;
-
-  /**
-   * Dependencies.
-   */
-  @Autowired
-  private DownloadService downloader;
+@Slf4j
+public class ConnectivityResponseHandler extends DefaultResponseErrorHandler {
 
   @Override
-  public int execute() throws Exception {
+  public void handleError(ClientHttpResponse response) throws IOException {
+    HttpStatus status = response.getStatusCode();
+    switch (status) {
+    case FORBIDDEN:
+      log.warn("FORBIDDEN response code received. If you are trying to connect to the AWS S3 Repository, you need to be running ths ICGC client on an EC2 VM instance.");
+      throw new NotRetryableException(new IOException(
+          "Amazon S3 error: Access refused by object store. Confirm request host is on permitted list"
+              + IOUtils.toString(response.getBody())));
+    case REQUEST_TIMEOUT:
+      log.warn("Unable to connect to repository endpoint. You need to be running on a compute node within the repository cloud. Or else your network connection is hinky.");
+      throw new NotRetryableException(new IOException(
+          "Cloud error: Access refused by object store. Confirm request host is on permitted list"
+              + IOUtils.toString(response.getBody())));
+    default:
+      log.warn("Non-Retryable exception: {}", response.getStatusText());
+      throw new NotRetryableException(new IOException("Unable to verify connectivity to repository: "
+          + IOUtils.toString(response.getBody())));
 
-    terminal.printStatus("Resolving URL for object: " + terminal.value(objectId) + "\n");
-    val url = downloader.getUrl(objectId);
-
-    display(url);
-
-    return SUCCESS_STATUS;
+    }
   }
-
-  private void display(URL url) {
-    System.out.println(url);
-    System.out.flush();
-  }
-
 }

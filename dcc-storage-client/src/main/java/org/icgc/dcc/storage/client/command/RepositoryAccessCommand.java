@@ -17,48 +17,27 @@
  */
 package org.icgc.dcc.storage.client.command;
 
-import java.net.URL;
+import java.io.IOException;
 
-import lombok.val;
-
-import org.icgc.dcc.storage.client.cli.ObjectIdValidator;
-import org.icgc.dcc.storage.client.download.DownloadService;
+import org.icgc.dcc.storage.client.transport.StorageService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
-import com.beust.jcommander.Parameter;
-import com.beust.jcommander.Parameters;
+/**
+ * 
+ */
+public abstract class RepositoryAccessCommand extends AbstractClientCommand {
 
-@Component
-@Parameters(separators = "=", commandDescription = "Resolve the URL of a specified remote file object")
-public class UrlCommand extends AbstractClientCommand {
-
-  /**
-   * Options.
-   */
-  @Parameter(names = "--object-id", description = "Object id to resolve URL for", required = true, validateValueWith = ObjectIdValidator.class)
-  private String objectId;
-
-  /**
-   * Dependencies.
-   */
   @Autowired
-  private DownloadService downloader;
+  private StorageService storageService;
 
-  @Override
-  public int execute() throws Exception {
-
-    terminal.printStatus("Resolving URL for object: " + terminal.value(objectId) + "\n");
-    val url = downloader.getUrl(objectId);
-
-    display(url);
-
-    return SUCCESS_STATUS;
+  public RepositoryAccessCommand() {
+    super();
   }
 
-  private void display(URL url) {
-    System.out.println(url);
-    System.out.flush();
+  protected void verifyRepoConnection() throws IOException {
+    terminal.println("Validating repository connection...");
+    storageService.ping();
+    terminal.println("Connection verified");
   }
 
 }

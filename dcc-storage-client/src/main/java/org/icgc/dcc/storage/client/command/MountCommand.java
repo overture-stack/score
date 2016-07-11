@@ -33,6 +33,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
+import lombok.SneakyThrows;
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
+
 import org.icgc.dcc.storage.client.cli.ConverterFactory.MountOptionsConverter;
 import org.icgc.dcc.storage.client.cli.ConverterFactory.StorageFileLayoutConverter;
 import org.icgc.dcc.storage.client.cli.DirectoryValidator;
@@ -57,14 +61,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Stopwatch;
 import com.google.common.base.Supplier;
 
-import lombok.SneakyThrows;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
-
 @Slf4j
 @Component
 @Parameters(separators = "=", commandDescription = "Mount a read-only FUSE file system view of the remote storage repository")
-public class MountCommand extends AbstractClientCommand {
+public class MountCommand extends RepositoryAccessCommand {
 
   /**
    * Constants.
@@ -82,6 +82,8 @@ public class MountCommand extends AbstractClientCommand {
   private StorageFileLayout layout = StorageFileLayout.BUNDLE;
   @Parameter(names = "--cache-metadata", description = "To speedup load times, cache metadata on disk locally and use if available")
   private boolean cacheMetadata;
+  @Parameter(names = "--verify-connection", description = "Verify connection to repository", arity = 1)
+  private boolean verifyConnection = true;
   @Parameter(names = "--options", description = "The mount options of the file system (e.g. --options user_allow_other,allow_other,fsname=icgc,debug) "
       + "in addition to those specified internally: " + INTERNAL_MOUNT_OPTIONS + ". See " + FUSE_README_URL
       + " for details", converter = MountOptionsConverter.class)
@@ -107,6 +109,14 @@ public class MountCommand extends AbstractClientCommand {
         "Cannot mount to '%s'. Please check directory permissions and try again", mountPoint);
     checkParameter(mountPoint.list() != null && mountPoint.list().length == 0,
         "Cannot mount to '%s'. Please ensure the directory is empty and is not already mounted", mountPoint);
+
+    if (verifyConnection) {
+      try {
+        verifyRepoConnection();
+      } catch (IOException ioe) {
+        terminal.printError("Could not verify connection to Repository. " + ioe.getMessage());
+      }
+    }
 
     try {
       int i = 1;

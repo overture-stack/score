@@ -36,6 +36,9 @@ bucket:
   name.state: oicr.icgc
   size.pool: 0
   size.key: 2 
+
+object:
+  sentinel: heliograph
   
 collaboratory:
   upload.directory: upload
