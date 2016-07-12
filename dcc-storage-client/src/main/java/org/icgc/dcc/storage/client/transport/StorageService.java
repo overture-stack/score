@@ -23,7 +23,9 @@ import static org.springframework.http.HttpMethod.GET;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.SocketTimeoutException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.List;
 
 import lombok.SneakyThrows;
@@ -55,6 +57,7 @@ import org.springframework.retry.support.RetryTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RequestCallback;
 import org.springframework.web.client.ResponseExtractor;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import com.amazonaws.services.s3.Headers;
@@ -86,6 +89,9 @@ public class StorageService {
   @Autowired
   @Qualifier("dataTemplate")
   private RestTemplate dataTemplate;
+  @Autowired
+  @Qualifier("pingTemplate")
+  private RestTemplate pingTemplate;
   @Autowired
   private RetryTemplate retry;
   @Autowired
@@ -397,6 +403,39 @@ public class StorageService {
         return true;
       }
     });
+  }
+
+  public String ping() {
+    HttpEntity<Object> requestEntity = new HttpEntity<Object>(defaultHeaders());
+    // Get pre-signed URL to retrieve sentinel object from bucket
+    try {
+      val signedUrl =
+          serviceTemplate.exchange(endpoint + "/download/ping", HttpMethod.GET, requestEntity, String.class).getBody();
+      URI uri = null;
+      try {
+        uri = new URI(signedUrl);
+      } catch (URISyntaxException use) {
+        // This should never happen since the URI is generated using the S3 Java SDK
+        log.error(use.getMessage());
+        throw use;
+      }
+      String result = pingTemplate.getForObject(uri, String.class);
+      return result;
+    } catch (RestClientException rce) {
+      if (rce.getRootCause().getClass().equals(SocketTimeoutException.class)) {
+        log.error("Unable to connect to repository endpoint. Verify your network connection. You also need to be running on a compute node within the repository cloud.");
+        throw new NotRetryableException(new IOException(
+            "Access refused by repository. Ensure client is running as part of repository cloud."));
+      }
+      // Some other unanticipated error
+      throw new NotRetryableException(rce);
+    } catch (NotRetryableException nre) {
+      log.error(nre.getMessage());
+      throw nre;
+    } catch (Exception e) {
+      log.error("Received unexpected exception: " + e.getMessage());
+      throw new NotRetryableException(e);
+    }
   }
 
   private HttpEntity<Object> defaultRequestEntity() {

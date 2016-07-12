@@ -41,7 +41,7 @@ import com.beust.jcommander.Parameters;
 @Slf4j
 @Component
 @Parameters(separators = "=", commandDescription = "Upload file object(s) to the remote storage repository")
-public class UploadCommand extends AbstractClientCommand {
+public class UploadCommand extends RepositoryAccessCommand {
 
   /**
    * Options.
@@ -56,6 +56,8 @@ public class UploadCommand extends AbstractClientCommand {
   private String objectId;
   @Parameter(names = "--md5", description = "MD5 checksum of file to upload")
   private String md5;
+  @Parameter(names = "--verify-connection", description = "Verify connection to repository", arity = 1)
+  private boolean verifyConnection = true;
 
   /**
    * Dependencies.
@@ -68,6 +70,14 @@ public class UploadCommand extends AbstractClientCommand {
   @Override
   public int execute() throws Exception {
     checkParameter(objectId != null || manifestResource != null, "One of --object-id or --manifest must be specified");
+
+    if (verifyConnection) {
+      try {
+        verifyRepoConnection();
+      } catch (IOException ioe) {
+        terminal.printError("Could not verify connection to Repository. " + ioe.getMessage());
+      }
+    }
 
     terminal.print("\r");
     if (manifestResource != null) {

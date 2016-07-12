@@ -50,6 +50,22 @@ public class ObjectDownloadController {
   @Autowired
   ObjectDownloadService downloadService;
 
+  @RequestMapping(method = RequestMethod.GET, value = "/ping")
+  public @ResponseBody String ping(
+      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
+      @RequestHeader(value = "User-Agent", defaultValue = "unknown") String userAgent,
+      HttpServletRequest request) {
+
+    String ipAddress = request.getHeader(HttpHeaders.X_FORWARDED_FOR);
+    if (ipAddress == null) {
+      ipAddress = request.getRemoteAddr();
+    }
+
+    log.info("Requesting download of sentinel object id with access token {} (MD5) from {} and client version {}",
+        TokenHasher.hashToken(accessToken), ipAddress, userAgent);
+    return downloadService.getSentinelObject();
+  }
+
   @RequestMapping(method = RequestMethod.GET, value = "/{object-id}")
   public @ResponseBody ObjectSpecification downloadPartialObject(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,

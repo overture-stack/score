@@ -22,12 +22,12 @@ import static org.junit.Assert.assertTrue;
 import java.io.File;
 import java.util.UUID;
 
+import lombok.val;
+
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-
-import lombok.val;
 
 public class ClientMainTest extends AbstractClientMainTest {
 
@@ -36,7 +36,7 @@ public class ClientMainTest extends AbstractClientMainTest {
 
   @Test
   public void testMainViewFileWithBadOutputType() throws Exception {
-    executeMain("view", "--output-format", "xxx");
+    executeMain("view", "--output-format", "xxx", "--verify-connection", "false");
 
     assertTrue(getExitCode() == 1);
     assertTrue(getOutput().contains(
@@ -46,7 +46,8 @@ public class ClientMainTest extends AbstractClientMainTest {
   @Test
   public void testMainViewFileWithUpperCaseOutputFormat() throws Exception {
     val outDir = tmp.newFolder();
-    executeMain("view", "--output-format", "BAM", "--output-dir", outDir.getCanonicalPath());
+    executeMain("view", "--output-format", "BAM", "--output-dir", outDir.getCanonicalPath(), "--verify-connection",
+        "false");
 
     assertTrue(getExitCode() == 1);
     assertTrue(getOutput().contains("One of --object-id, --input-file or --manifest must be specified"));
@@ -54,8 +55,8 @@ public class ClientMainTest extends AbstractClientMainTest {
 
   @Test
   public void testMainUploadEmptyFile() throws Exception {
-    tmp.newFile();
-    executeMain("upload", "--object-id", UUID.randomUUID().toString());
+    val file = tmp.newFile();
+    executeMain("upload", "--object-id", UUID.randomUUID().toString(), "--verify-connection", "false");
 
     assertTrue(getExitCode() == 1);
     assertTrue(getOutput().contains("--file must be specified if --object-id is specified"));
@@ -64,7 +65,8 @@ public class ClientMainTest extends AbstractClientMainTest {
   @Test
   public void testMainUploadFileButMissingMd5() throws Exception {
     val file = tmp.newFile();
-    executeMain("upload", "--object-id", UUID.randomUUID().toString(), "--file", file.getCanonicalPath());
+    executeMain("upload", "--object-id", UUID.randomUUID().toString(), "--file", file.getCanonicalPath(),
+        "--verify-connection", "false");
 
     assertTrue(getExitCode() == 1);
     assertTrue(getOutput().contains("--md5 must be specified if --object-id is specified"));
@@ -74,7 +76,8 @@ public class ClientMainTest extends AbstractClientMainTest {
   public void testMainDownloadWithNonExistentManifest() throws Exception {
     val file = new File("/foo");
     val outDir = tmp.newFolder();
-    executeMain("download", "--manifest", file.getCanonicalPath(), "--output-dir", outDir.getCanonicalPath());
+    executeMain("download", "--manifest", file.getCanonicalPath(), "--output-dir", outDir.getCanonicalPath(),
+        "--verify-connection", "false");
 
     assertTrue(getExitCode() == 1);
     assertTrue(getOutput().contains("Could not read manifest from 'file:/foo': /foo (No such file or directory)"));
@@ -84,7 +87,8 @@ public class ClientMainTest extends AbstractClientMainTest {
   public void testMainDownloadWithNonExistentOutDir() throws Exception {
     val file = tmp.newFile();
     val outDir = new File("/foo");
-    executeMain("download", "--manifest", file.getCanonicalPath(), "--output-dir", outDir.getCanonicalPath());
+    executeMain("download", "--manifest", file.getCanonicalPath(), "--output-dir", outDir.getCanonicalPath(),
+        "--verify-connection", "false");
 
     assertTrue(getExitCode() == 1);
     assertTrue(getOutput().contains("Bad parameter(s): Invalid option: --output-dir: /foo does not exist"));
@@ -94,7 +98,8 @@ public class ClientMainTest extends AbstractClientMainTest {
   public void testMainDownloadWithEmptyManifest() throws Exception {
     val file = tmp.newFile();
     val outDir = tmp.newFolder();
-    executeMain("download", "--manifest", file.getCanonicalPath(), "--output-dir", outDir.getCanonicalPath());
+    executeMain("download", "--manifest", file.getCanonicalPath(), "--output-dir", outDir.getCanonicalPath(),
+        "--verify-connection", "false");
 
     assertTrue(getExitCode() == 1);
     assertTrue(getOutput().contains(" is empty"));
@@ -105,7 +110,8 @@ public class ClientMainTest extends AbstractClientMainTest {
   public void testMainDownloadWithPopulatedManifest() throws Exception {
     val file = new File("src/test/resources/fixtures/download/manifest.txt");
     val outDir = tmp.newFolder();
-    executeMain("download", "--manifest", file.getCanonicalPath(), "--output-dir", outDir.getCanonicalPath());
+    executeMain("download", "--manifest", file.getCanonicalPath(), "--output-dir", outDir.getCanonicalPath(),
+        "--verify-connection", "false");
 
     assertTrue(getExitCode() == 1);
     assertTrue(getOutput().contains(" is empty. Exiting."));
@@ -114,7 +120,8 @@ public class ClientMainTest extends AbstractClientMainTest {
   @Test
   public void testMainDownloadWithBadObjectId() throws Exception {
     val outDir = tmp.newFolder();
-    executeMain("download", "--object-id", "xxx", "--out-dir", outDir.getCanonicalPath());
+    executeMain("download", "--object-id", "xxx", "--out-dir", outDir.getCanonicalPath(), "--verify-connection",
+        "false");
 
     assertTrue(getExitCode() == 1);
     assertTrue(getOutput().contains("Invalid option: --object-id: xxx is not a valid UUID"));
@@ -125,7 +132,7 @@ public class ClientMainTest extends AbstractClientMainTest {
     val outDir = tmp.newFolder();
     val file = "src/test/resources/fixtures/view/94c1f438-acc8-51dd-a44e-e24d32a46c07.bam";
     executeMain("view", "--header-only", "--input-file", file, "--output-format", "sam", "--output-dir",
-        outDir.getCanonicalPath());
+        outDir.getCanonicalPath(), "--verify-connection", "false");
 
     assertTrue(getExitCode() == 0);
   }

@@ -32,4 +32,5 @@ public interface ObjectURLGenerator {
   public String getDownloadPartUrl(String bucketName, ObjectKey objectKey, Part part, Date expiration);
 
   public String getDownloadUrl(String bucketName, ObjectKey objectKey, Date expiration);
+
 }
