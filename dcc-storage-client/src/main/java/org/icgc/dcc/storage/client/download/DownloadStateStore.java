@@ -23,10 +23,12 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 
+import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 import org.icgc.dcc.storage.client.exception.NotRetryableException;
 import org.icgc.dcc.storage.client.state.TransferState;
+import org.icgc.dcc.storage.client.util.PresignedUrlValidator;
 import org.icgc.dcc.storage.core.model.ObjectSpecification;
 import org.icgc.dcc.storage.core.model.Part;
 
@@ -74,30 +76,47 @@ public class DownloadStateStore extends TransferState {
 
   public ObjectSpecification getProgress(File stateDir, String objectId) throws IOException {
     log.debug("Loading local progress for {} from {}", objectId, stateDir.toString());
-    ObjectSpecification spec = loadSpecification(stateDir, objectId);
+    val spec = loadSpecification(stateDir, objectId);
     log.debug("Completed loading local object specification (meta file)");
-    for (Part part : spec.getParts()) {
+    for (val part : spec.getParts()) {
       log.debug("Checking md5 for part {}", part.getPartNumber());
       if (isCompleted(stateDir, objectId, part)) {
-        Part completedPart = loadPart(stateDir, objectId, getPartName(part));
+        val completedPart = loadPart(stateDir, objectId, getPartName(part));
         // Copy download md5 into ObjectSpecification
         part.setMd5(completedPart.getMd5());
+      } else {
+        // part is not complete - check if it has expired
+        if (PresignedUrlValidator.isUrlExpired(part.getUrl())) {
+          val expiredMsg =
+              String
+                  .format("Presigned URL's have expired because download was not completed in alloted period. Restarting.");
+          val ise = new IllegalStateException(expiredMsg);
+          throw new NotRetryableException(ise);
+        }
       }
     }
     return spec;
   }
 
+  /**
+   * A marker file is written to the working directory after each part is downloaded and the MD5 checksum is verified.
+   * Checking to see if a part was completed previously is based on the presence of this marker file.
+   * @param stateDir - working directory for download
+   * @param objectId - object id
+   * @param part - metadata about part - really just for part number
+   * @return
+   */
   private boolean isCompleted(File stateDir, String objectId, Part part) {
-    File partFile = new File(getObjectStateDir(stateDir, objectId), getPartName(part));
+    val partFile = new File(getObjectStateDir(stateDir, objectId), getPartName(part));
     return partFile.exists();
   }
 
   public void commit(File stateDir, String objectId, Part part) {
     log.debug("Attempting to commit {} part {} to {}", objectId, part.getPartNumber(), stateDir.toString());
-    ObjectMapper mapper = new ObjectMapper();
+    val mapper = new ObjectMapper();
     try {
       byte[] content = mapper.writeValueAsBytes(part);
-      File partFile = new File(getObjectStateDir(stateDir, objectId), getPartName(part));
+      val partFile = new File(getObjectStateDir(stateDir, objectId), getPartName(part));
       Files.copy(new ByteArrayInputStream(content), partFile.toPath());
       log.debug("Copied part {} to {}", part.getPartNumber(), partFile.toPath().toString());
     } catch (IOException e) {
@@ -110,9 +129,9 @@ public class DownloadStateStore extends TransferState {
     File objectStateDir = getObjectStateDir(stateDir, objectId);
     File partFile = new File(objectStateDir, partFileName);
 
-    ObjectMapper mapper = new ObjectMapper();
+    val mapper = new ObjectMapper();
     Part part = null;
-    try (FileInputStream partStream = new FileInputStream(partFile)) {
+    try (val partStream = new FileInputStream(partFile)) {
       part = mapper.readValue(partStream, Part.class);
     } catch (IOException e) {
       throw new NotRetryableException(e);
@@ -135,7 +154,7 @@ public class DownloadStateStore extends TransferState {
   }
 
   public void deletePart(File stateDir, String objectId, Part part) {
-    File partStateFile = new File(getObjectStateDir(stateDir, objectId), getPartName(part));
+    val partStateFile = new File(getObjectStateDir(stateDir, objectId), getPartName(part));
     try {
       partStateFile.delete();
     } catch (Throwable e) {
@@ -144,13 +163,13 @@ public class DownloadStateStore extends TransferState {
   }
 
   public long getObjectSize(File stateDir, String objectId) {
-    ObjectSpecification spec = loadSpecification(stateDir, objectId);
+    val spec = loadSpecification(stateDir, objectId);
     return spec.getObjectSize();
   }
 
   public boolean canFinalize(File outDir, String objectId) {
-    ObjectSpecification spec = loadSpecification(outDir, objectId);
-    for (Part part : spec.getParts()) {
+    val spec = loadSpecification(outDir, objectId);
+    for (val part : spec.getParts()) {
       if (!isCompleted(outDir, objectId, part)) {
         return false;
       }
