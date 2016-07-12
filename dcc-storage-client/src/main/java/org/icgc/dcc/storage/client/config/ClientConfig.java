@@ -37,6 +37,7 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicHeader;
 import org.icgc.dcc.storage.client.download.DownloadStateStore;
 import org.icgc.dcc.storage.client.exception.AmazonS3RetryableResponseErrorHandler;
+import org.icgc.dcc.storage.client.exception.ConnectivityResponseHandler;
 import org.icgc.dcc.storage.client.exception.NotResumableException;
 import org.icgc.dcc.storage.client.exception.NotRetryableException;
 import org.icgc.dcc.storage.client.exception.RetryableException;
@@ -113,6 +114,14 @@ public class ClientConfig {
   }
 
   @Bean
+  public RestTemplate pingTemplate() {
+    val pingTemplate = new RestTemplate(pingHttpRequestFactory());
+    pingTemplate.setErrorHandler(new ConnectivityResponseHandler());
+
+    return pingTemplate;
+  }
+
+  @Bean
   public RetryTemplate retryTemplate(
       @Value("${storage.retryNumber}") int retryNumber,
       @Value("${storage.retryTimeout}") int retryTimeout) {
@@ -133,6 +142,19 @@ public class ClientConfig {
     retry.setRetryPolicy(retryPolicy);
 
     return retry;
+  }
+
+  private HttpComponentsClientHttpRequestFactory pingHttpRequestFactory() {
+    val factory = new HttpComponentsClientHttpRequestFactory();
+
+    // HttpComponentsClientHttpRequestFactory *may* ignore these, but lets do it anyways in hopes
+    // to maximize the number of places that it may be used elsewhere
+    configureSystemHttpTimeouts();
+
+    factory.setConnectTimeout(5000);
+    factory.setReadTimeout(5000);
+
+    return factory;
   }
 
   private HttpComponentsClientHttpRequestFactory clientHttpRequestFactory() {

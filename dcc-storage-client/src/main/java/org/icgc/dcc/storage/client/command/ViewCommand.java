@@ -27,6 +27,7 @@ import htsjdk.tribble.bed.BEDFeature;
 import htsjdk.tribble.readers.LineIterator;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -62,7 +63,7 @@ import com.google.common.collect.Lists;
 @Slf4j
 @Component
 @Parameters(separators = "=", commandDescription = "Locally store/display some or all of a remote SAM/BAM file object")
-public class ViewCommand extends AbstractClientCommand {
+public class ViewCommand extends RepositoryAccessCommand {
 
   public enum OutputFormat {
     BAM, SAM
@@ -114,6 +115,8 @@ public class ViewCommand extends AbstractClientCommand {
   private boolean outputIndex = false;
   @Parameter(names = "--stdout", description = "Switch to send output to stdout. Only used with --object-id. Output will be forced to SAM format.")
   private boolean stdout = false;
+  @Parameter(names = "--verify-connection", description = "Verify connection to repository", arity = 1)
+  private boolean verifyConnection = true;
 
   /**
    * Dependencies.
@@ -137,6 +140,14 @@ public class ViewCommand extends AbstractClientCommand {
     terminal.println("Viewing...");
     session.info("***** Beginning view session");
     validateParms();
+
+    if (verifyConnection) {
+      try {
+        verifyRepoConnection();
+      } catch (IOException ioe) {
+        terminal.printError("Could not verify connection to Repository. " + ioe.getMessage());
+      }
+    }
 
     if (bedFile != null) {
       handleBedFile();

@@ -15,50 +15,42 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.client.command;
+package org.icgc.dcc.storage.client.exception;
 
-import java.net.URL;
+import java.io.IOException;
 
-import lombok.val;
+import org.springframework.http.client.ClientHttpResponse;
 
-import org.icgc.dcc.storage.client.cli.ObjectIdValidator;
-import org.icgc.dcc.storage.client.download.DownloadService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import com.amazonaws.util.IOUtils;
 
-import com.beust.jcommander.Parameter;
-import com.beust.jcommander.Parameters;
+public class ControlExceptionFactory {
 
-@Component
-@Parameters(separators = "=", commandDescription = "Resolve the URL of a specified remote file object")
-public class UrlCommand extends AbstractClientCommand {
-
-  /**
-   * Options.
-   */
-  @Parameter(names = "--object-id", description = "Object id to resolve URL for", required = true, validateValueWith = ObjectIdValidator.class)
-  private String objectId;
-
-  /**
-   * Dependencies.
-   */
-  @Autowired
-  private DownloadService downloader;
-
-  @Override
-  public int execute() throws Exception {
-
-    terminal.printStatus("Resolving URL for object: " + terminal.value(objectId) + "\n");
-    val url = downloader.getUrl(objectId);
-
-    display(url);
-
-    return SUCCESS_STATUS;
+  public static RetryableException retryableException(ClientHttpResponse response) throws IOException {
+    return retryableException(null, response);
   }
 
-  private void display(URL url) {
-    System.out.println(url);
-    System.out.flush();
+  public static RetryableException retryableException(String prefix, ClientHttpResponse response) throws IOException {
+    return new RetryableException(
+        new IOException((prefix == null ? "" : prefix) + IOUtils.toString(response.getBody())));
   }
 
+  public static NotRetryableException notRetryableException(ClientHttpResponse response) throws IOException {
+    return notRetryableException(null, response);
+  }
+
+  public static NotRetryableException notRetryableException(String prefix, ClientHttpResponse response)
+      throws IOException {
+    return new NotRetryableException(new IOException((prefix == null ? "" : prefix)
+        + IOUtils.toString(response.getBody())));
+  }
+
+  public static NotResumableException notResumableException(ClientHttpResponse response) throws IOException {
+    return notResumableException(null, response);
+  }
+
+  public static NotResumableException notResumableException(String prefix, ClientHttpResponse response)
+      throws IOException {
+    return new NotResumableException(new IOException((prefix == null ? "" : prefix)
+        + IOUtils.toString(response.getBody())));
+  }
 }

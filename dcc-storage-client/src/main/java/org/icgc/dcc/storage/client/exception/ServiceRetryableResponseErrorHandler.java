@@ -17,14 +17,16 @@
  */
 package org.icgc.dcc.storage.client.exception;
 
+import static org.icgc.dcc.storage.client.exception.ControlExceptionFactory.notResumableException;
+import static org.icgc.dcc.storage.client.exception.ControlExceptionFactory.notRetryableException;
+import static org.icgc.dcc.storage.client.exception.ControlExceptionFactory.retryableException;
+
 import java.io.IOException;
+
+import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.web.client.DefaultResponseErrorHandler;
-
-import com.amazonaws.util.IOUtils;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * responsible to translate server side errors to client side errors
@@ -38,21 +40,19 @@ public class ServiceRetryableResponseErrorHandler extends DefaultResponseErrorHa
     case NOT_FOUND:
     case BAD_REQUEST:
       log.warn("Bad request. Stop processing: {}", response.getStatusText());
-      throw new NotRetryableException(new IOException("Storage client error: "
-          + IOUtils.toString(response.getBody())));
+      throw notRetryableException("Storage client error: ", response);
+
     case INTERNAL_SERVER_ERROR:
       log.warn("Server error. Stop processing: {}", response.getStatusText());
-      throw new NotResumableException(new IOException("Storage client error: "
-          + IOUtils.toString(response.getBody())));
+      throw notResumableException("Storage client error: ", response);
+
     case UNAUTHORIZED:
       log.warn("Unauthorized. Stop processing: {}", response.getStatusText());
-      throw new NotResumableException(new IOException("Storage client error: "
-          + IOUtils.toString(response.getBody())));
+      throw notResumableException("Storage client error: ", response);
+
     default:
       log.warn("Retryable exception: {}", response.getStatusText());
-      throw new RetryableException(new IOException("Storage server error: "
-          + IOUtils.toString(response.getBody())));
+      throw retryableException("Storage server error: ", response);
     }
   }
-
 }

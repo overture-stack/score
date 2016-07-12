@@ -28,6 +28,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import lombok.SneakyThrows;
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
+
 import org.icgc.dcc.storage.client.cli.ConverterFactory.OutputLayoutConverter;
 import org.icgc.dcc.storage.client.cli.DirectoryValidator;
 import org.icgc.dcc.storage.client.cli.ObjectIdListValidator;
@@ -45,14 +49,10 @@ import com.beust.jcommander.Parameters;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
 
-import lombok.SneakyThrows;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
-
 @Slf4j
 @Component
 @Parameters(separators = "=", commandDescription = "Retrieve file object(s) from the remote storage repository")
-public class DownloadCommand extends AbstractClientCommand {
+public class DownloadCommand extends RepositoryAccessCommand {
 
   public enum OutputLayout {
     BUNDLE, FILENAME, ID
@@ -79,6 +79,8 @@ public class DownloadCommand extends AbstractClientCommand {
   private boolean index = true;
   @Parameter(names = "--validate", description = "Perform check of MD5 checksum (if available)", arity = 1)
   private boolean validate = true;
+  @Parameter(names = "--verify-connection", description = "Verify connection to repository", arity = 1)
+  private boolean verifyConnection = true;
 
   /**
    * Dependencies
@@ -92,11 +94,12 @@ public class DownloadCommand extends AbstractClientCommand {
 
   @Override
   public int execute() throws Exception {
-    terminal.printStatus("Downloading...");
-    checkParameter(objectId != null || manifestResource != null, "One of --object-id or --manifest must be specified");
-    checkParameter(outputDir.exists(), "Output directory '%s' is missing", outputDir.getCanonicalPath());
-    checkParameter(outputDir.canWrite(), "Cannot write to output dir '%s'. Please check permissions and try again",
-        outputDir);
+    validateParms();
+    if (verifyConnection) {
+      verifyRepoConnection();
+    }
+
+    terminal.println("Downloading...");
 
     val listed = objectId.size() > 0;
     if (listed) {
@@ -151,7 +154,7 @@ public class DownloadCommand extends AbstractClientCommand {
 
       downloadService.download(request, force);
       layoutFile(entity);
-      terminal.println("");
+      terminal.println("Done.");
     }
 
     return SUCCESS_STATUS;
@@ -288,5 +291,17 @@ public class DownloadCommand extends AbstractClientCommand {
     }
 
     return true;
+  }
+
+  private void validateParms() {
+    checkParameter(objectId != null || manifestResource != null, "One of --object-id or --manifest must be specified");
+    try {
+      checkParameter(outputDir.exists(), "Output directory '%s' is missing", outputDir.getCanonicalPath());
+    } catch (IOException e) {
+      throw new RuntimeException("Unable to evaluate output path", e);
+    }
+    checkParameter(outputDir.canWrite(), "Cannot write to output dir '%s'. Please check permissions and try again",
+        outputDir);
+
   }
 }
