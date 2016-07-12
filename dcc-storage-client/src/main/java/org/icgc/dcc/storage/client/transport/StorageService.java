@@ -407,7 +407,7 @@ public class StorageService {
 
   public String ping() {
     HttpEntity<Object> requestEntity = new HttpEntity<Object>(defaultHeaders());
-    // get pre-signed URL to retrieve sentinel object from bucket
+    // Get pre-signed URL to retrieve sentinel object from bucket
     try {
       val signedUrl =
           serviceTemplate.exchange(endpoint + "/download/ping", HttpMethod.GET, requestEntity, String.class).getBody();
@@ -427,7 +427,7 @@ public class StorageService {
         throw new NotRetryableException(new IOException(
             "Access refused by repository. Ensure client is running as part of repository cloud."));
       }
-      // some other unanticipated error
+      // Some other unanticipated error
       throw new NotRetryableException(rce);
     } catch (NotRetryableException nre) {
       log.error(nre.getMessage());

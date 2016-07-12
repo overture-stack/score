@@ -94,16 +94,12 @@ public class DownloadCommand extends RepositoryAccessCommand {
 
   @Override
   public int execute() throws Exception {
-    terminal.println("Downloading...");
-
     validateParms();
     if (verifyConnection) {
       verifyRepoConnection();
-      /*
-       * try { verifyRepoConnection(); } catch (IOException ioe) {
-       * terminal.printError("Could not verify connection to Repository. " + ioe.getMessage()); }
-       */
     }
+
+    terminal.println("Downloading...");
 
     val listed = objectId.size() > 0;
     if (listed) {

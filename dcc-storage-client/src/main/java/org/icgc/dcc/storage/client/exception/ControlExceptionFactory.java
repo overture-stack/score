@@ -15,22 +15,42 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.client.command;
+package org.icgc.dcc.storage.client.exception;
 
 import java.io.IOException;
 
-import org.icgc.dcc.storage.client.transport.StorageService;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.client.ClientHttpResponse;
 
-public abstract class RepositoryAccessCommand extends AbstractClientCommand {
+import com.amazonaws.util.IOUtils;
 
-  @Autowired
-  private StorageService storageService;
+public class ControlExceptionFactory {
 
-  protected void verifyRepoConnection() throws IOException {
-    terminal.println("Validating repository connection...");
-    storageService.ping();
-    terminal.println("Connection verified");
+  public static RetryableException retryableException(ClientHttpResponse response) throws IOException {
+    return retryableException(null, response);
   }
 
+  public static RetryableException retryableException(String prefix, ClientHttpResponse response) throws IOException {
+    return new RetryableException(
+        new IOException((prefix == null ? "" : prefix) + IOUtils.toString(response.getBody())));
+  }
+
+  public static NotRetryableException notRetryableException(ClientHttpResponse response) throws IOException {
+    return notRetryableException(null, response);
+  }
+
+  public static NotRetryableException notRetryableException(String prefix, ClientHttpResponse response)
+      throws IOException {
+    return new NotRetryableException(new IOException((prefix == null ? "" : prefix)
+        + IOUtils.toString(response.getBody())));
+  }
+
+  public static NotResumableException notResumableException(ClientHttpResponse response) throws IOException {
+    return notResumableException(null, response);
+  }
+
+  public static NotResumableException notResumableException(String prefix, ClientHttpResponse response)
+      throws IOException {
+    return new NotResumableException(new IOException((prefix == null ? "" : prefix)
+        + IOUtils.toString(response.getBody())));
+  }
 }

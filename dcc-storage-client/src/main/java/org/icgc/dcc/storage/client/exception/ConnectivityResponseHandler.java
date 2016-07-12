@@ -17,37 +17,36 @@
  */
 package org.icgc.dcc.storage.client.exception;
 
+import static org.icgc.dcc.storage.client.exception.ControlExceptionFactory.notRetryableException;
+
 import java.io.IOException;
 
+import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.web.client.DefaultResponseErrorHandler;
-
-import com.amazonaws.util.IOUtils;
 
 @Slf4j
 public class ConnectivityResponseHandler extends DefaultResponseErrorHandler {
 
   @Override
   public void handleError(ClientHttpResponse response) throws IOException {
-    HttpStatus status = response.getStatusCode();
+    val status = response.getStatusCode();
     switch (status) {
     case FORBIDDEN:
       log.warn("FORBIDDEN response code received. If you are trying to connect to the AWS S3 Repository, you need to be running ths ICGC client on an EC2 VM instance.");
-      throw new NotRetryableException(new IOException(
-          "Amazon S3 error: Access refused by object store. Confirm request host is on permitted list"
-              + IOUtils.toString(response.getBody())));
+      throw notRetryableException(
+          "Amazon S3 error: Access refused by object store. Confirm request host is on permitted list", response);
+
     case REQUEST_TIMEOUT:
       log.warn("Unable to connect to repository endpoint. You need to be running on a compute node within the repository cloud. Or else your network connection is hinky.");
-      throw new NotRetryableException(new IOException(
-          "Cloud error: Access refused by object store. Confirm request host is on permitted list"
-              + IOUtils.toString(response.getBody())));
+      throw notRetryableException(
+          "Cloud error: Access refused by object store. Confirm request host is on permitted list", response);
+
     default:
       log.warn("Non-Retryable exception: {}", response.getStatusText());
-      throw new NotRetryableException(new IOException("Unable to verify connectivity to repository: "
-          + IOUtils.toString(response.getBody())));
+      throw notRetryableException("Unable to verify connectivity to repository: ", response);
 
     }
   }

@@ -17,6 +17,10 @@
  */
 package org.icgc.dcc.storage.client.exception;
 
+import static org.icgc.dcc.storage.client.exception.ControlExceptionFactory.notResumableException;
+import static org.icgc.dcc.storage.client.exception.ControlExceptionFactory.notRetryableException;
+import static org.icgc.dcc.storage.client.exception.ControlExceptionFactory.retryableException;
+
 import java.io.IOException;
 
 import lombok.extern.slf4j.Slf4j;
@@ -41,22 +45,24 @@ public class AmazonS3RetryableResponseErrorHandler extends DefaultResponseErrorH
     switch (status) {
     case BAD_REQUEST:
       if (e.getErrorCode() == null || e.getErrorCode().equals("RequestTimeout")) {
-        throw new RetryableException(new IOException(IOUtils.toString(response.getBody())));
+        throw retryableException(response);
       }
     case NOT_FOUND:
-      throw new NotRetryableException(new IOException(IOUtils.toString(response.getBody())));
+      throw notRetryableException(response);
+
     case INTERNAL_SERVER_ERROR:
       log.warn("Server error. Stop processing: {}", response.getStatusText());
-      throw new NotResumableException(new IOException(IOUtils.toString(response.getBody())));
+      throw notResumableException(response);
+
     case FORBIDDEN:
       log.warn("FORBIDDEN response code received");
-      throw new NotRetryableException(
-          new IOException(
-              "Access refused by object store. Confirm client is part of repository cloud and that the download was initiated less than 1 day earlier (7 days for uploads)"
-                  + IOUtils.toString(response.getBody())));
+      throw notRetryableException(
+          "Access refused by object store. Confirm client is part of repository cloud and that the download was initiated less than 1 day earlier (7 days for uploads)",
+          response);
+
     default:
       log.warn("Retryable exception: {}", response.getStatusText());
-      throw new RetryableException(new IOException(IOUtils.toString(response.getBody())));
+      throw retryableException(response);
 
     }
   }

@@ -175,6 +175,12 @@ public class ObjectDownloadService {
     return MAPPER.readValue(inputStream, ObjectSpecification.class);
   }
 
+  /**
+   * Attempts to fetch a pre-defined object id (defined in application.yml) from the object repository. Used to confirm
+   * that basic access to the repository is permitted. The AWS S3 bucket blocks access to IP's within the AWS cloud, and
+   * Collaboratory also restricts access by IP (albeit via a firewall, so instead of a 403, a timeout happens instead)
+   * @return contents of the sentinel object (a text file by default)
+   */
   public String getSentinelObject() {
     if ((sentinelObjectId == null) || (sentinelObjectId.isEmpty())) {
       throw new NotRetryableException(new IllegalArgumentException("Sentinel object id not defined"));
