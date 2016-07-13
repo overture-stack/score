@@ -25,7 +25,6 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -118,12 +117,6 @@ public class PresignedUrlValidator {
     log.trace("Now DateTime: %s%n", now);
     log.trace("Specified Expiry: %s%n", expiry);
 
-    // TOOD: remove this bit
-    if (expiry.isBefore(now)) {
-      System.out.println("Expired!");
-    } else {
-      System.out.println("Not expired; still " + ChronoUnit.SECONDS.between(now, expiry) + " seconds to go");
-    }
     return expiry.isBefore(now);
   }
 
@@ -131,7 +124,6 @@ public class PresignedUrlValidator {
     val result = new HashMap<String, String>();
     for (val pair : args) {
       // store keys as lower case by convention
-      // System.out.println(pair.getName().toLowerCase() + " = " + pair.getValue());
       result.put(pair.getName().toLowerCase(), pair.getValue());
     }
     return result;
