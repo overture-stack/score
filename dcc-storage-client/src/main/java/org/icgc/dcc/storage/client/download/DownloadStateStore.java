@@ -19,7 +19,6 @@ package org.icgc.dcc.storage.client.download;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 
@@ -37,11 +36,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @Slf4j
 public class DownloadStateStore extends TransferState {
 
+  private static final ObjectMapper MAPPER = new ObjectMapper();
+
   public void init(File stateDir, ObjectSpecification spec) {
     log.debug("Download Specification : {}", spec);
-    ObjectMapper mapper = new ObjectMapper();
     try {
-      byte[] content = mapper.writeValueAsBytes(spec);
+      byte[] content = MAPPER.writeValueAsBytes(spec);
       File objectStateDir = getObjectStateDir(stateDir, spec.getObjectId());
 
       log.debug("About to delete {}", objectStateDir.toString());
@@ -113,9 +113,8 @@ public class DownloadStateStore extends TransferState {
 
   public void commit(File stateDir, String objectId, Part part) {
     log.debug("Attempting to commit {} part {} to {}", objectId, part.getPartNumber(), stateDir.toString());
-    val mapper = new ObjectMapper();
     try {
-      byte[] content = mapper.writeValueAsBytes(part);
+      byte[] content = MAPPER.writeValueAsBytes(part);
       val partFile = new File(getObjectStateDir(stateDir, objectId), getPartName(part));
       Files.copy(new ByteArrayInputStream(content), partFile.toPath());
       log.debug("Copied part {} to {}", part.getPartNumber(), partFile.toPath().toString());
@@ -129,28 +128,32 @@ public class DownloadStateStore extends TransferState {
     File objectStateDir = getObjectStateDir(stateDir, objectId);
     File partFile = new File(objectStateDir, partFileName);
 
-    val mapper = new ObjectMapper();
-    Part part = null;
-    try (val partStream = new FileInputStream(partFile)) {
-      part = mapper.readValue(partStream, Part.class);
+    return readPart(partFile);
+  }
+
+  protected Part readPart(File partFile) {
+    try {
+      val part = MAPPER.readValue(partFile, Part.class);
+      return part;
     } catch (IOException e) {
       throw new NotRetryableException(e);
     }
-    return part;
   }
 
   public ObjectSpecification loadSpecification(File stateDir, String objectId) {
     File objectStateDir = getObjectStateDir(stateDir, objectId);
     File specFile = new File(objectStateDir, getSpecificationName());
 
-    ObjectMapper mapper = new ObjectMapper();
-    ObjectSpecification spec = null;
-    try (FileInputStream specStream = new FileInputStream(specFile)) {
-      spec = mapper.readValue(specStream, ObjectSpecification.class);
+    return readMeta(specFile);
+  }
+
+  protected ObjectSpecification readMeta(File specFile) {
+    try {
+      val spec = MAPPER.readValue(specFile, ObjectSpecification.class);
+      return spec;
     } catch (IOException e) {
       throw new NotRetryableException(e);
     }
-    return spec;
   }
 
   public void deletePart(File stateDir, String objectId, Part part) {

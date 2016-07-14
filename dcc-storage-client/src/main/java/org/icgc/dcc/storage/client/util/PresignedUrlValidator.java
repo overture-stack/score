@@ -25,7 +25,6 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -35,6 +34,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
+
+import com.google.common.collect.ImmutableMap;
 
 @Slf4j
 public class PresignedUrlValidator {
@@ -121,11 +122,11 @@ public class PresignedUrlValidator {
   }
 
   static Map<String, String> collectQuery(List<NameValuePair> args) {
-    val result = new HashMap<String, String>();
+    val result = new ImmutableMap.Builder<String, String>();
     for (val pair : args) {
       // store keys as lower case by convention
       result.put(pair.getName().toLowerCase(), pair.getValue());
     }
-    return result;
+    return result.build();
   }
 }

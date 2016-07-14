@@ -54,6 +54,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import com.google.common.io.BaseEncoding;
+
 @Slf4j
 @Component
 public class DownloadService {
@@ -351,14 +353,6 @@ public class DownloadService {
   }
 
   private String decodeDigest(byte[] digest) {
-    val hexString = new StringBuffer();
-    for (int i = 0; i < digest.length; i++) {
-      val hex = Integer.toHexString(0xFF & digest[i]);
-      if (hex.length() == 1) {
-        hexString.append('0');
-      }
-      hexString.append(hex);
-    }
-    return hexString.toString();
+    return BaseEncoding.base16().lowerCase().encode(digest);
   }
 }
