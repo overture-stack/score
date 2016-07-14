@@ -32,6 +32,11 @@ import java.util.Map;
 
 import javax.annotation.PostConstruct;
 
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.config.RandomValuePropertySource;
 import org.springframework.core.env.EnumerablePropertySource;
@@ -44,11 +49,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
-
 @Slf4j
 @Component
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
@@ -59,6 +59,8 @@ public class ClientBanner {
    */
   @NonNull
   private final StandardEnvironment env;
+
+  private static final ObjectMapper CONVERTING_MAPPER = new ObjectMapper().configure(FAIL_ON_EMPTY_BEANS, false);
 
   @PostConstruct
   public void log() {
@@ -102,8 +104,7 @@ public class ClientBanner {
   }
 
   private static Map<String, Object> convert(Object values) {
-    return new ObjectMapper().configure(FAIL_ON_EMPTY_BEANS, false).convertValue(values,
-        new TypeReference<Map<String, Object>>() {});
+    return CONVERTING_MAPPER.convertValue(values, new TypeReference<Map<String, Object>>() {});
   }
 
   private static String line() {

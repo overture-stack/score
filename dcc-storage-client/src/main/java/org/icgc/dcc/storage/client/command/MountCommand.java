@@ -103,6 +103,8 @@ public class MountCommand extends RepositoryAccessCommand {
   @Autowired
   private MountService mountService;
 
+  private static final ObjectMapper MAPPER = new ObjectMapper();
+  
   @Override
   public int execute() throws Exception {
     checkParameter(mountPoint.canExecute(),
@@ -254,12 +256,12 @@ public class MountCommand extends RepositoryAccessCommand {
   private <T> List<T> resolveList(String name, Supplier<List<T>> factory, TypeReference<List<T>> typeReference) {
     val cacheFile = new File("." + name + ".cache");
     if (cacheMetadata && cacheFile.exists()) {
-      return new ObjectMapper().readValue(cacheFile, typeReference);
+      return MAPPER.readValue(cacheFile, typeReference);
     }
 
     val values = factory.get();
     if (cacheMetadata) {
-      new ObjectMapper().writeValue(cacheFile, values);
+    	MAPPER.writeValue(cacheFile, values);
     }
 
     return values;

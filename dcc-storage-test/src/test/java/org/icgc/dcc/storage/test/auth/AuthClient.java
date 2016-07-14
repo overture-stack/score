@@ -23,19 +23,21 @@ import java.nio.charset.StandardCharsets;
 
 import javax.net.ssl.HttpsURLConnection;
 
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
+import lombok.val;
+
 import org.icgc.dcc.common.core.security.SSLCertificateValidation;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.io.BaseEncoding;
 
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
-import lombok.val;
-
 @RequiredArgsConstructor
 public class AuthClient {
+
+  private static final ObjectMapper MAPPER = new ObjectMapper();
 
   @NonNull
   private final String serverUrl;
@@ -65,7 +67,7 @@ public class AuthClient {
       wr.write(data);
     }
 
-    return new ObjectMapper().readValue(connection.getInputStream(), ObjectNode.class).get("access_token").textValue();
+    return MAPPER.readValue(connection.getInputStream(), ObjectNode.class).get("access_token").textValue();
   }
 
 }

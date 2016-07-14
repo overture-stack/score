@@ -54,6 +54,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import com.google.common.io.BaseEncoding;
+
 @Slf4j
 @Component
 public class DownloadService {
@@ -102,16 +104,16 @@ public class DownloadService {
    */
   @SneakyThrows
   public URL getUrl(@NonNull String objectId, long offset, long length) {
-    ObjectSpecification spec = storageService.getExternalDownloadSpecification(objectId, offset, length);
-    Part file = getOnlyElement(spec.getParts()); // Throws IllegalArgumentException if more than one part
+    val spec = storageService.getExternalDownloadSpecification(objectId, offset, length);
+    val file = getOnlyElement(spec.getParts()); // Throws IllegalArgumentException if more than one part
 
     return new URL(file.getUrl());
   }
 
   @SneakyThrows
   public String getUrlAsString(@NonNull String objectId, long offset, long length) {
-    ObjectSpecification spec = storageService.getExternalDownloadSpecification(objectId, offset, length);
-    Part file = getOnlyElement(spec.getParts()); // Throws IllegalArgumentException if more than one part
+    val spec = storageService.getExternalDownloadSpecification(objectId, offset, length);
+    val file = getOnlyElement(spec.getParts()); // Throws IllegalArgumentException if more than one part
 
     return file.getUrl();
   }
@@ -129,13 +131,7 @@ public class DownloadService {
     for (; retry < retryNumber; retry++) {
       try {
         if (redo) {
-          // Create local file handle for output
-          val objFile = downloadRequest.getOutputFilePath();
-          if (objFile.exists()) {
-            // Delete if already there
-            checkState(objFile.delete());
-          }
-
+          resetDownload(downloadRequest.getOutputFilePath());
           startNewDownload(downloadRequest);
         } else {
           // Only perform checksum the first time of the resume
@@ -163,6 +159,13 @@ public class DownloadService {
     }
   }
 
+  protected void resetDownload(File objFile) {
+    if (objFile.exists()) {
+      // Delete if already there
+      checkState(objFile.delete());
+    }
+  }
+
   private void resumeIfPossible(DownloadRequest request, boolean checksum)
       throws IOException {
     log.debug("Attempting to resume download for {}", request.toString());
@@ -171,6 +174,8 @@ public class DownloadService {
       spec = downloadStateStore.getProgress(request.getOutputDir(), request.getObjectId());
     } catch (NotRetryableException e) {
       log.info("New download: {} because {}", request.getObjectId(), e.getMessage());
+      terminal.printStatus("Restarting ");
+      resetDownload(request.getOutputFilePath());
       startNewDownload(request);
       return;
     }
@@ -180,9 +185,9 @@ public class DownloadService {
   private void resume(DownloadRequest request, ObjectSpecification spec, boolean checksum) {
     log.info("Resuming from previous download...");
 
-    int totalParts = spec.getParts().size();
-    int completedParts = numCompletedParts(spec.getParts());
-    int remainingParts = totalParts - completedParts;
+    val totalParts = spec.getParts().size();
+    val completedParts = numCompletedParts(spec.getParts());
+    val remainingParts = totalParts - completedParts;
 
     log.info("Total parts: {}, completed parts: {}, remaining parts: {}", totalParts, completedParts, remainingParts);
     val progress = new Progress(terminal, quiet, totalParts, completedParts);
@@ -192,6 +197,7 @@ public class DownloadService {
     if (request.isValidate()) {
       terminal.printStatus("Verifying checksum...");
       doMd5Checksum(request, spec);
+      terminal.printStatus("Ok");
     }
   }
 
@@ -201,7 +207,7 @@ public class DownloadService {
   private int numCompletedParts(List<Part> parts) {
 
     int completedTotal = 0;
-    for (Part part : parts) {
+    for (val part : parts) {
       if (part.getMd5() != null) completedTotal++;
     }
     return completedTotal;
@@ -215,7 +221,7 @@ public class DownloadService {
   private long completedPartsUsedSpace(List<Part> parts) {
     long completedSize = 0;
 
-    for (Part part : parts) {
+    for (val part : parts) {
       if (part.getMd5() != null) completedSize += part.getPartSize();
     }
     return completedSize;
@@ -230,7 +236,7 @@ public class DownloadService {
     long total = 0L;
 
     for (val entity : entities) {
-      ObjectSpecification spec = storageService.getDownloadSpecification(entity.getId());
+      val spec = storageService.getDownloadSpecification(entity.getId());
       total += spec.getObjectSize();
     }
 
@@ -243,7 +249,7 @@ public class DownloadService {
   @SneakyThrows
   private void startNewDownload(DownloadRequest request) {
     log.info("Starting a new download...");
-    File objFile = request.getOutputFilePath();
+    val objFile = request.getOutputFilePath();
 
     if (objFile.exists()) {
       throw new NotResumableException(new FileAlreadyExistsException(objFile.getPath()));
@@ -258,8 +264,7 @@ public class DownloadService {
 
     log.debug("Downloading specification for {}: {}-{}", request.getObjectId(), request.getOffset(),
         request.getLength());
-    ObjectSpecification spec =
-        storageService.getDownloadSpecification(request.getObjectId(), request.getOffset(), request.getLength());
+    val spec = storageService.getDownloadSpecification(request.getObjectId(), request.getOffset(), request.getLength());
     log.info("Finished retrieving download specification file");
 
     // *****
@@ -306,7 +311,7 @@ public class DownloadService {
     }
     val outputFile = req.getOutputFilePath();
     val downloadedMd5 = calculateChecksum(outputFile);
-    boolean check = downloadedMd5.equals(spec.getObjectMd5());
+    val check = downloadedMd5.equals(spec.getObjectMd5());
     if (check) {
       log.info("MD5 for {} validated correctly", outputFile.getAbsolutePath());
     } else {
@@ -348,14 +353,6 @@ public class DownloadService {
   }
 
   private String decodeDigest(byte[] digest) {
-    StringBuffer hexString = new StringBuffer();
-    for (int i = 0; i < digest.length; i++) {
-      val hex = Integer.toHexString(0xFF & digest[i]);
-      if (hex.length() == 1) {
-        hexString.append('0');
-      }
-      hexString.append(hex);
-    }
-    return hexString.toString();
+    return BaseEncoding.base16().lowerCase().encode(digest);
   }
 }
