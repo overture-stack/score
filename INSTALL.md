@@ -39,6 +39,11 @@ sudo apt-get update
 sudo apt-get install -y oracle-java8-installer
 ```
 
+Ruby is used.
+```
+sudo apt-get install ruby
+```
+
 Add $DCC_HOME environment variable that points to the directory to hold all storage system files.
 ```
 # set up $DCC_HOME
