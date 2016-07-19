@@ -136,6 +136,10 @@ sudo mkdir -p /var/log/dcc/storage-server
 sudo chown -R ubuntu:ubuntu /var/log/dcc
 ```
 
+Create AWS credentials file in:
+
+    /home/ubuntu/.aws/credentials
+
 Run the system.
 ```
 # run the auth-server (TODO: no description of config properties file)
