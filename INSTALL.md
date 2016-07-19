@@ -127,6 +127,14 @@ git clone git@github.com:BD2KGenomics/dcc-metadata.git
 for f in $DCC_HOME/dcc-*; do ln -s $DCC_HOME/conf/maven/mvnvm.properties $f/mvnvm.properties && ln -s $DCC_HOME/conf/ssl/ucsc-storage.jks $f/ucsc-storage.jks && cd $f && mvn; done;
 ```
 
+Make log dirs.
+```
+sudo mkdir -p /var/log/dcc/auth-server
+sudo mkdir -p /var/log/dcc/metadata-server
+sudo mkdir -p /var/log/dcc/storage-server
+sudo chown -R ubuntu:ubuntu /var/log/dcc
+```
+
 Run the system.
 ```
 # run the auth-server (TODO: no description of config properties file)
