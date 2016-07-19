@@ -97,7 +97,7 @@ The LetsEncrypt root CA certificate has to be added to the JVM truststore to tel
 # create copy of jvm truststore with LetsEncrypt cert added
 cp /usr/lib/jvm/java-8-oracle/jre/lib/security/cacerts $DCC_HOME/conf/ssl/
 keytool -import -file chain1.pem -alias LetsEncryptCA -keystore cacerts -storepass changeit
-# if you used the bundle.pem above then use that in place of chain1.pem here
+# if you used the bundle.pem above then use that in addition to chain1.pem here... you'll want to import both so the cacerts can be used by the client
 ```
 
 Install and configure MongoDB metadata-server dependency (https://docs.mongodb.com/manual/tutorial/install-mongodb-on-ubuntu/). The commands shown below leave access to mongodb unrestricted. The port that mongod listens on shouldn't be open to external IPs, and in production systems access restriction should be enabled.
