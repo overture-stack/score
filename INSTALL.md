@@ -107,7 +107,8 @@ echo "deb http://repo.mongodb.org/apt/ubuntu trusty/mongodb-org/3.2 multiverse" 
 sudo apt-get update
 sudo apt-get install -y mongodb-org
 printf 'use admin\ndb.createUser({user:"%s",pwd:"%s", roles:[{role:"userAdminAnyDatabase",db:"admin"}]})' metadata pass | mongo
-printf '\n# Enable auth\nauth=true\n' | sudo tee -a /etc/mongod.conf >/dev/null 2>&1
+# TODO: turning on auth causes mongo to crash, need to debug
+#printf '\n# Enable auth\nauth=true\n' | sudo tee -a /etc/mongod.conf >/dev/null 2>&1
 sudo service mongod restart
 ```
 
