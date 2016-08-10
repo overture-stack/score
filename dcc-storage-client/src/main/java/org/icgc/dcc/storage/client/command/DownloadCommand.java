@@ -33,7 +33,7 @@ import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 import org.icgc.dcc.storage.client.cli.ConverterFactory.OutputLayoutConverter;
-import org.icgc.dcc.storage.client.cli.DirectoryValidator;
+import org.icgc.dcc.storage.client.cli.CreatableDirectoryValidator;
 import org.icgc.dcc.storage.client.cli.ObjectIdListValidator;
 import org.icgc.dcc.storage.client.download.DownloadRequest;
 import org.icgc.dcc.storage.client.download.DownloadService;
@@ -61,7 +61,7 @@ public class DownloadCommand extends RepositoryAccessCommand {
   /**
    * Options
    */
-  @Parameter(names = "--output-dir", description = "Path to output directory", required = true, validateValueWith = DirectoryValidator.class)
+  @Parameter(names = "--output-dir", description = "Path to output directory", required = true, validateValueWith = CreatableDirectoryValidator.class)
   private File outputDir;
   @Parameter(names = "--output-layout", description = "Layout of the output-dir. One of 'bundle' (nest files in bundle directory), 'filename' (nest files in filename directory), or 'id' (flat list of files named by their associated object id)", converter = OutputLayoutConverter.class)
   private OutputLayout layout = OutputLayout.FILENAME;
@@ -95,6 +95,7 @@ public class DownloadCommand extends RepositoryAccessCommand {
   @Override
   public int execute() throws Exception {
     validateParms();
+    validateLayout();
     if (verifyConnection) {
       verifyRepoConnection();
     }
@@ -177,6 +178,23 @@ public class DownloadCommand extends RepositoryAccessCommand {
         }
       }
     }
+  }
+
+  private void validateLayout() {
+    String fullPathStr = "";
+
+    try {
+      fullPathStr = outputDir.getCanonicalPath();
+    } catch (IOException ioe) {
+      throw new RuntimeException("Unable to evaluate output path. Check for invalid characters or device.", ioe);
+    }
+
+    if (!outputDir.exists()) {
+      checkParameter(outputDir.mkdir(), "Unable to create specified output directory '%s'", fullPathStr);
+    }
+
+    checkParameter(outputDir.canWrite(), "Cannot write to output dir '%s'. Please check permissions and try again",
+        outputDir);
   }
 
   /**
@@ -295,13 +313,5 @@ public class DownloadCommand extends RepositoryAccessCommand {
 
   private void validateParms() {
     checkParameter(objectId != null || manifestResource != null, "One of --object-id or --manifest must be specified");
-    try {
-      checkParameter(outputDir.exists(), "Output directory '%s' is missing", outputDir.getCanonicalPath());
-    } catch (IOException e) {
-      throw new RuntimeException("Unable to evaluate output path", e);
-    }
-    checkParameter(outputDir.canWrite(), "Cannot write to output dir '%s'. Please check permissions and try again",
-        outputDir);
-
   }
 }

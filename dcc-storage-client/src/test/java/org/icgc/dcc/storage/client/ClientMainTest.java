@@ -90,8 +90,13 @@ public class ClientMainTest extends AbstractClientMainTest {
     executeMain("download", "--manifest", file.getCanonicalPath(), "--output-dir", outDir.getCanonicalPath(),
         "--verify-connection", "false");
 
+    assertTrue(outDir.exists());
+    // clean up
+    outDir.delete();
+
+    // will fail on empty manifest, not on missing output dir
     assertTrue(getExitCode() == 1);
-    assertTrue(getOutput().contains("Bad parameter(s): Invalid option: --output-dir: /foo does not exist"));
+    assertTrue(getOutput().contains(" is empty"));
   }
 
   @Test

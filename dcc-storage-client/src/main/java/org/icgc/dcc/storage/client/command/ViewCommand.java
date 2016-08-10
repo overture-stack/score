@@ -39,7 +39,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.icgc.dcc.common.core.util.VersionUtils;
 import org.icgc.dcc.storage.client.cli.ConverterFactory.OutputFormatConverter;
 import org.icgc.dcc.storage.client.cli.ConverterFactory.OutputTypeConverter;
-import org.icgc.dcc.storage.client.cli.DirectoryValidator;
+import org.icgc.dcc.storage.client.cli.CreatableDirectoryValidator;
 import org.icgc.dcc.storage.client.cli.FileValidator;
 import org.icgc.dcc.storage.client.cli.ObjectIdValidator;
 import org.icgc.dcc.storage.client.download.DownloadService;
@@ -109,7 +109,7 @@ public class ViewCommand extends RepositoryAccessCommand {
   private ManifestResource manifestResource;
   @Parameter(names = "--output-type", description = "File output structure for queries. TRIMMED, MERGED, CROSS. Only used with --manifest", converter = OutputTypeConverter.class)
   private OutputType outputType = OutputType.TRIMMED;
-  @Parameter(names = "--output-dir", description = "Path to output directory. Only used with --manifest", validateValueWith = DirectoryValidator.class)
+  @Parameter(names = "--output-dir", description = "Path to output directory. Only used with --manifest", validateValueWith = CreatableDirectoryValidator.class)
   private File outputDir;
   @Parameter(names = "--output-index", description = "Switch to write index files. Only used with --manifest")
   private boolean outputIndex = false;
