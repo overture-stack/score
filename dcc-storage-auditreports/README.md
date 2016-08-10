@@ -3,6 +3,8 @@
 Standalone program to parse our own Audit log files and compile basic statistics. Note that DCC Storage audit logs track REQUESTS received for uploads/downloads - 
 whether the operation completed successfully or not, is not available.  
 
+The program fetches two sets of reference data (Object types and User e-mail addresses) from their systems of record
+
 This is checked-in as a Maven Module but is not included in the Reactor so it will not be built with the rest of the DCC Storage project. It can be built independently using Maven
 
 
@@ -36,8 +38,11 @@ _now=$(date +"%m_%d_%Y-%H:%M:%S")
 echo "Ending:" $_now
 ```
 
-The report generator looks for audit log files in the specified, locally-accessible directory only. This script file will use the AWS CLI to SYNC the s3://oicr.icgc.audit bucket to ensure
-the most recent log files are available.
+The report generator looks for audit log files in the specified, locally-accessible directory only. This script file will use the AWS CLI to SYNC 
+the s3://oicr.icgc.audit bucket to ensure the most recent log files are available.
+
+This script assumes that the AWS credentials are located in the /home/ec2-user/.aws directory - which is why $HOME is explicitly set in the script. 
+See http://serverfault.com/questions/614890/cant-run-aws-cli-from-cron-credentials 
 
 ## Options
 ```
