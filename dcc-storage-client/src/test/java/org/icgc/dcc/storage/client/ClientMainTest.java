@@ -86,7 +86,7 @@ public class ClientMainTest extends AbstractClientMainTest {
   @Test
   public void testMainDownloadWithNonExistentOutDir() throws Exception {
     val file = tmp.newFile();
-    val outDir = new File("/foo");
+    val outDir = new File("/tmp/foo");
     executeMain("download", "--manifest", file.getCanonicalPath(), "--output-dir", outDir.getCanonicalPath(),
         "--verify-connection", "false");
 
