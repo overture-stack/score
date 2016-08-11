@@ -95,7 +95,6 @@ public class DownloadCommand extends RepositoryAccessCommand {
   @Override
   public int execute() throws Exception {
     validateParms();
-    validateLayout();
     if (verifyConnection) {
       verifyRepoConnection();
     }
@@ -178,23 +177,6 @@ public class DownloadCommand extends RepositoryAccessCommand {
         }
       }
     }
-  }
-
-  private void validateLayout() {
-    String fullPathStr = "";
-
-    try {
-      fullPathStr = outputDir.getCanonicalPath();
-    } catch (IOException ioe) {
-      throw new RuntimeException("Unable to evaluate output path. Check for invalid characters or device.", ioe);
-    }
-
-    if (!outputDir.exists()) {
-      checkParameter(outputDir.mkdir(), "Unable to create specified output directory '%s'", fullPathStr);
-    }
-
-    checkParameter(outputDir.canWrite(), "Cannot write to output dir '%s'. Please check permissions and try again",
-        outputDir);
   }
 
   /**

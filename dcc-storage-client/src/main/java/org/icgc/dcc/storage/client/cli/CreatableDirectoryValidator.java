@@ -34,8 +34,7 @@ public class CreatableDirectoryValidator implements IValueValidator<File> {
     try {
       fullPathStr = dir.getCanonicalPath();
     } catch (IOException ioe) {
-      parameterException(name, dir,
-          String.format("Unable to evaluate path. %s Check for invalid characters or device.", ioe.getMessage()));
+      parameterException(name, dir, String.format("Unable to evaluate path: %s", ioe.getMessage()));
     }
 
     if (dir.exists() == false) {

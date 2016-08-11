@@ -17,6 +17,7 @@
  */
 package org.icgc.dcc.storage.client;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
@@ -97,6 +98,25 @@ public class ClientMainTest extends AbstractClientMainTest {
     // will fail on empty manifest, not on missing output dir
     assertTrue(getExitCode() == 1);
     assertTrue(getOutput().contains(" is empty"));
+  }
+
+  @Test
+  public void testMainDownloadWithInvalidOutDir() throws Exception {
+    val file = tmp.newFile();
+    val outDirStr = "\u0000";
+    val outDir = new File(outDirStr);
+    // passing output-dir as a string here because we are in part testing the file.getCanonicalPath() call which would
+    // throw an exception prematurely
+    executeMain("download", "--manifest", file.getCanonicalPath(), "--output-dir", outDirStr, "--verify-connection",
+        "false");
+
+    assertFalse(outDir.exists());
+    // clean up
+    // outDir.delete();
+
+    // will fail on empty manifest, not on missing output dir
+    assertTrue(getExitCode() == 1);
+    assertTrue(getOutput().contains(" could not be created"));
   }
 
   @Test
