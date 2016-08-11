@@ -17,7 +17,7 @@
  */
 package org.icgc.dcc.storage.client.cli;
 
-import static java.lang.String.format;
+import static org.icgc.dcc.storage.client.cli.Parameters.checkParameter;
 
 import java.io.File;
 import java.io.IOException;
@@ -34,29 +34,15 @@ public class CreatableDirectoryValidator implements IValueValidator<File> {
     try {
       fullPathStr = dir.getCanonicalPath();
     } catch (IOException ioe) {
-      parameterException(name, dir, String.format("Unable to evaluate path: %s", ioe.getMessage()));
+      checkParameter(ioe != null, "Unable to evaluate path: %s", ioe.getMessage());
     }
 
     if (dir.exists() == false) {
-      if (!dir.mkdir()) {
-        parameterException(name, fullPathStr, "could not be created.");
-      }
+      checkParameter(dir.mkdir(), "Invalid option: %s: %s could not be created", name, fullPathStr);
     }
 
-    if (dir.isDirectory() == false) {
-      parameterException(name, dir, "is not a directory");
-    }
-
-    if (!dir.canWrite()) {
-      parameterException(name, fullPathStr, "could not be written to. Please check permissions and try again");
-    }
-  }
-
-  private static void parameterException(String name, File dir, String message) throws ParameterException {
-    throw new ParameterException(format("Invalid option: %s: %s %s", name, dir.getAbsolutePath(), message));
-  }
-
-  private static void parameterException(String name, String path, String message) throws ParameterException {
-    throw new ParameterException(format("Invalid option: %s: %s %s", name, path, message));
+    checkParameter(dir.isDirectory(), "Invalid option: %s: %s is not a directory", name, fullPathStr);
+    checkParameter(dir.canWrite(), "Invalid option: %s: %s could not be written to. Please check permissions.", name,
+        fullPathStr);
   }
 }

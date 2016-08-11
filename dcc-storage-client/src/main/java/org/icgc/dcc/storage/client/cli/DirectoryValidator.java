@@ -17,7 +17,7 @@
  */
 package org.icgc.dcc.storage.client.cli;
 
-import static java.lang.String.format;
+import static org.icgc.dcc.storage.client.cli.Parameters.checkParameter;
 
 import java.io.File;
 
@@ -28,16 +28,7 @@ public class DirectoryValidator implements IValueValidator<File> {
 
   @Override
   public void validate(String name, File file) throws ParameterException {
-    if (file.exists() == false) {
-      parameterException(name, file, "does not exist");
-    }
-    if (file.isDirectory() == false) {
-      parameterException(name, file, "is not a directory");
-    }
+    checkParameter(file.exists(), "Invalid option: %s: %s does not exist", name, file.getAbsolutePath());
+    checkParameter(file.isDirectory(), "Invalid option: %s: %s is not a directory", name, file.getAbsolutePath());
   }
-
-  private static void parameterException(String name, File file, String message) throws ParameterException {
-    throw new ParameterException(format("Invalid option: %s: %s %s", name, file.getAbsolutePath(), message));
-  }
-
 }
