@@ -34,6 +34,7 @@ public class CreatableDirectoryValidator implements IValueValidator<File> {
     try {
       fullPathStr = dir.getCanonicalPath();
     } catch (IOException ioe) {
+      // don't mind this tortured use of checkParameter()... - addresses findbugs warning
       checkParameter(ioe != null, "Unable to evaluate path: %s", ioe.getMessage());
     }
 

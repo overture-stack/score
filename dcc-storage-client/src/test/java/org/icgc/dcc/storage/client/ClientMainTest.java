@@ -55,8 +55,7 @@ public class ClientMainTest extends AbstractClientMainTest {
   }
 
   @Test
-  public void testMainUploadEmptyFile() throws Exception {
-    val file = tmp.newFile();
+  public void testMainUploadMissingFileArgument() throws Exception {
     executeMain("upload", "--object-id", UUID.randomUUID().toString(), "--verify-connection", "false");
 
     assertTrue(getExitCode() == 1);
