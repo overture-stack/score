@@ -86,7 +86,10 @@ public class ClientMainTest extends AbstractClientMainTest {
   @Test
   public void testMainDownloadWithNonExistentOutDir() throws Exception {
     val file = tmp.newFile();
-    val outDir = new File("/tmp/foo");
+    // create our own directory placeholder in temporary folder
+    val outDir = new File(tmp.getRoot(), "foo");
+    assertFalse(outDir.exists());
+
     executeMain("download", "--manifest", file.getCanonicalPath(), "--output-dir", outDir.getCanonicalPath(),
         "--verify-connection", "false");
 
