@@ -17,6 +17,7 @@
  */
 package org.icgc.dcc.storage.client;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
@@ -54,8 +55,7 @@ public class ClientMainTest extends AbstractClientMainTest {
   }
 
   @Test
-  public void testMainUploadEmptyFile() throws Exception {
-    val file = tmp.newFile();
+  public void testMainUploadMissingFileArgument() throws Exception {
     executeMain("upload", "--object-id", UUID.randomUUID().toString(), "--verify-connection", "false");
 
     assertTrue(getExitCode() == 1);
@@ -86,12 +86,18 @@ public class ClientMainTest extends AbstractClientMainTest {
   @Test
   public void testMainDownloadWithNonExistentOutDir() throws Exception {
     val file = tmp.newFile();
-    val outDir = new File("/foo");
+    // create our own directory placeholder in temporary folder
+    val outDir = new File(tmp.getRoot(), "foo");
+    assertFalse(outDir.exists());
+
     executeMain("download", "--manifest", file.getCanonicalPath(), "--output-dir", outDir.getCanonicalPath(),
         "--verify-connection", "false");
 
+    assertTrue(outDir.exists());
+
+    // will fail on empty manifest, not on missing output dir
     assertTrue(getExitCode() == 1);
-    assertTrue(getOutput().contains("Bad parameter(s): Invalid option: --output-dir: /foo does not exist"));
+    assertTrue(getOutput().contains(" is empty"));
   }
 
   @Test

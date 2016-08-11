@@ -20,15 +20,30 @@ package org.icgc.dcc.storage.client.cli;
 import static org.icgc.dcc.storage.client.cli.Parameters.checkParameter;
 
 import java.io.File;
+import java.io.IOException;
 
 import com.beust.jcommander.IValueValidator;
 import com.beust.jcommander.ParameterException;
 
-public class DirectoryValidator implements IValueValidator<File> {
+public class CreatableDirectoryValidator implements IValueValidator<File> {
 
   @Override
-  public void validate(String name, File file) throws ParameterException {
-    checkParameter(file.exists(), "Invalid option: %s: %s does not exist", name, file.getAbsolutePath());
-    checkParameter(file.isDirectory(), "Invalid option: %s: %s is not a directory", name, file.getAbsolutePath());
+  public void validate(String name, File dir) throws ParameterException {
+    String fullPathStr = "";
+
+    try {
+      fullPathStr = dir.getCanonicalPath();
+    } catch (IOException ioe) {
+      // don't mind this tortured use of checkParameter()... - addresses findbugs warning
+      checkParameter(ioe != null, "Unable to evaluate path: %s", ioe.getMessage());
+    }
+
+    if (dir.exists() == false) {
+      checkParameter(dir.mkdir(), "Invalid option: %s: %s could not be created", name, fullPathStr);
+    }
+
+    checkParameter(dir.isDirectory(), "Invalid option: %s: %s is not a directory", name, fullPathStr);
+    checkParameter(dir.canWrite(), "Invalid option: %s: %s could not be written to. Please check permissions.", name,
+        fullPathStr);
   }
 }
