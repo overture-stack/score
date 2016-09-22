@@ -19,11 +19,14 @@ package org.icgc.dcc.storage.server.model;
 
 import lombok.Data;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 @Data
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class MetadataEntity {
 
   private String id;
   private String gnosId;
   private String fileName;
-
+  private String projectCode;
 }
