@@ -20,7 +20,10 @@ package org.icgc.dcc.storage.client.metadata;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 @Data
+@JsonIgnoreProperties(ignoreUnknown = true)
 @EqualsAndHashCode(of = "id")
 public class Entity {
 
@@ -35,5 +38,6 @@ public class Entity {
   String fileName;
   String gnosId;
   long createdTime;
+  String projectCode;
 
 }
