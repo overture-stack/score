@@ -18,8 +18,6 @@
 package org.icgc.dcc.storage.server.controller;
 
 import java.io.IOException;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -33,12 +31,7 @@ import org.icgc.dcc.storage.server.service.upload.ObjectUploadService;
 import org.icgc.dcc.storage.server.util.TokenHasher;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -49,6 +42,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.google.common.base.Stopwatch;
+import com.google.common.net.HttpHeaders;
 
 /**
  * A controller to expose RESTful API for upload
@@ -63,7 +57,6 @@ public class ObjectUploadController {
   @Autowired
   ObjectUploadService uploadService;
 
-  @ProjectCodeScoped
   @RequestMapping(method = RequestMethod.POST, value = "/{object-id}/uploads")
   public @ResponseBody ObjectSpecification initializeMultipartUpload(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
@@ -75,7 +68,7 @@ public class ObjectUploadController {
       HttpServletRequest request) {
 
     log.info("Request received from client {}", userAgent);
-    String ipAddress = request.getHeader(com.google.common.net.HttpHeaders.X_FORWARDED_FOR);
+    String ipAddress = request.getHeader(HttpHeaders.X_FORWARDED_FOR);
     if (ipAddress == null) {
       ipAddress = request.getRemoteAddr();
     }
@@ -90,7 +83,6 @@ public class ObjectUploadController {
     return uploadService.initiateUpload(objectId, fileSize, md5, overwrite);
   }
 
-  @ProjectCodeScoped
   @RequestMapping(method = RequestMethod.DELETE, value = "/{object-id}/parts")
   @ResponseStatus(value = HttpStatus.OK)
   public void deletePart(
@@ -101,7 +93,7 @@ public class ObjectUploadController {
       @RequestHeader(value = "User-Agent", defaultValue = "unknown") String userAgent,
       HttpServletRequest request) {
 
-    String ipAddress = request.getHeader(com.google.common.net.HttpHeaders.X_FORWARDED_FOR);
+    String ipAddress = request.getHeader(HttpHeaders.X_FORWARDED_FOR);
     if (ipAddress == null) {
       ipAddress = request.getRemoteAddr();
     }
@@ -114,7 +106,6 @@ public class ObjectUploadController {
     uploadService.deletePart(objectId, uploadId, partNumber);
   }
 
-  @ProjectCodeScoped
   @RequestMapping(method = RequestMethod.POST, value = "/{object-id}/parts")
   @ResponseStatus(value = HttpStatus.OK)
   public void finalizePartUpload(
@@ -127,7 +118,6 @@ public class ObjectUploadController {
     uploadService.finalizeUploadPart(objectId, uploadId, partNumber, md5, eTag);
   }
 
-  @ProjectCodeScoped
   @RequestMapping(method = RequestMethod.POST, value = "/{object-id}")
   @ResponseStatus(value = HttpStatus.OK)
   public void finalizeUpload(
@@ -139,7 +129,6 @@ public class ObjectUploadController {
     log.info("Finalize upload completed in {}", watch);
   }
 
-  @ProjectCodeScoped
   @RequestMapping(method = RequestMethod.POST, value = "/{object-id}/recovery")
   @ResponseStatus(value = HttpStatus.OK)
   public void tryRecover(
@@ -150,7 +139,6 @@ public class ObjectUploadController {
     uploadService.recover(objectId, fileSize);
   }
 
-  @ProjectCodeScoped
   @RequestMapping(method = RequestMethod.GET, value = "/{object-id}/status")
   public @ResponseBody UploadProgress getUploadProgress(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
@@ -161,14 +149,12 @@ public class ObjectUploadController {
     return uploadService.getUploadStatus(objectId, uploadService.getUploadId(objectId), fileSize);
   }
 
-  @ProjectCodeScoped
   @RequestMapping(method = RequestMethod.GET, value = "/{object-id}")
   public @ResponseBody Boolean isObjectExist(@RequestHeader(HttpHeaders.AUTHORIZATION) final String accessToken,
       @PathVariable("object-id") String objectId) {
     return uploadService.exists(objectId);
   }
 
-  @ProjectCodeScoped
   @RequestMapping(method = RequestMethod.DELETE, value = "/{object-id}")
   @ResponseStatus(value = HttpStatus.OK)
   public void cancelUpload(@RequestHeader(HttpHeaders.AUTHORIZATION) final String accessToken,
@@ -176,40 +162,10 @@ public class ObjectUploadController {
     uploadService.cancelUpload(objectId, uploadService.getUploadId(objectId));
   }
 
-  @ProjectCodeScoped
   @RequestMapping(method = RequestMethod.POST, value = "/cancel")
   @ResponseStatus(value = HttpStatus.OK)
   public void cancelAll()
       throws IOException {
     uploadService.cancelUploads();
-  }
-
-  @ProjectCodeScoped
-  @RequestMapping(method = RequestMethod.GET, value = "/test/{object-id}")
-  @ResponseStatus(value = HttpStatus.OK)
-  public @ResponseBody String test(
-      @RequestHeader(value = HttpHeaders.AUTHORIZATION) final String accessToken,
-      @PathVariable(value = "object-id") String objectId) {
-    log.info("Test invoked!");
-    return "Upload Test Operation executed";
-  }
-
-  /**
-   * Exception handler specific to the Spring Security processing in this controller
-   * @return Error if Spring Security policies are violated
-   */
-  @ExceptionHandler({ AccessDeniedException.class })
-  public ResponseEntity<Object> handleAccessDeniedException(HttpServletRequest req, AccessDeniedException ex) {
-    log.error("Token missing required scope to update project");
-    return new ResponseEntity<Object>("Token missing required scope to update project", new HttpHeaders(),
-        HttpStatus.FORBIDDEN);
-  }
-
-  /**
-   * Method Security Meta Annotation
-   */
-  @Retention(RetentionPolicy.RUNTIME)
-  @PreAuthorize("@projectSecurity.authorize(authentication,#objectId)")
-  public @interface ProjectCodeScoped {
   }
 }

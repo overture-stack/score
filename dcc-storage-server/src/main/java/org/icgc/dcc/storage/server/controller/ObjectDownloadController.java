@@ -27,12 +27,6 @@ import org.icgc.dcc.storage.server.service.download.ObjectDownloadService;
 import org.icgc.dcc.storage.server.util.TokenHasher;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -40,6 +34,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.google.common.net.HttpHeaders;
 
 /**
  * A controller to expose RESTful API for download
@@ -56,23 +52,23 @@ public class ObjectDownloadController {
 
   @RequestMapping(method = RequestMethod.GET, value = "/ping")
   public @ResponseBody String ping(
-      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) final String accessToken,
-      @RequestHeader(value = "User-Agent", defaultValue = "unknown") String userAgent, HttpServletRequest request) {
+      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
+      @RequestHeader(value = "User-Agent", defaultValue = "unknown") String userAgent,
+      HttpServletRequest request) {
 
-    String ipAddress = request.getHeader(com.google.common.net.HttpHeaders.X_FORWARDED_FOR);
+    String ipAddress = request.getHeader(HttpHeaders.X_FORWARDED_FOR);
     if (ipAddress == null) {
       ipAddress = request.getRemoteAddr();
     }
 
     log.info("Requesting download of sentinel object id with access token {} (MD5) from {} and client version {}",
-        identifier(accessToken), ipAddress, userAgent);
+        TokenHasher.hashToken(accessToken), ipAddress, userAgent);
     return downloadService.getSentinelObject();
   }
 
-  @PreAuthorize("@accessSecurity.authorize(authentication,#objectId)")
   @RequestMapping(method = RequestMethod.GET, value = "/{object-id}")
   public @ResponseBody ObjectSpecification downloadPartialObject(
-      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) final String accessToken,
+      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "object-id") String objectId,
       @RequestParam(value = "offset", required = true) long offset,
       @RequestParam(value = "length", required = true) long length,
@@ -80,33 +76,13 @@ public class ObjectDownloadController {
       @RequestHeader(value = "User-Agent", defaultValue = "unknown") String userAgent,
       HttpServletRequest request) {
 
-    String ipAddress = request.getHeader(com.google.common.net.HttpHeaders.X_FORWARDED_FOR);
+    String ipAddress = request.getHeader(HttpHeaders.X_FORWARDED_FOR);
     if (ipAddress == null) {
       ipAddress = request.getRemoteAddr();
     }
 
     log.info("Requesting download of object id {} with access token {} (MD5) from {} and client version {}", objectId,
-        identifier(accessToken), ipAddress, userAgent);
+        TokenHasher.hashToken(accessToken), ipAddress, userAgent);
     return downloadService.download(objectId, offset, length, external);
-  }
-
-  protected String identifier(String accessToken) {
-    String identifier = "<none>";
-    if ((accessToken != null) && (!accessToken.isEmpty())) {
-      identifier = TokenHasher.hashToken(accessToken);
-    }
-    return identifier;
-  }
-
-  /**
-   * Exception handler specific to the Spring Security processing in this controller
-   * @return Error if Spring Security policies are violated
-   */
-  @ExceptionHandler({ AccessDeniedException.class })
-  public ResponseEntity<Object> handleAccessDeniedException(HttpServletRequest req, AccessDeniedException ex) {
-    log.error("Token missing required scope to download controlled-access file");
-    return new ResponseEntity<Object>("Token missing required scope to download controlled-access file",
-        new HttpHeaders(),
-        HttpStatus.FORBIDDEN);
   }
 }

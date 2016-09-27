@@ -39,6 +39,5 @@ public class Entity {
   String gnosId;
   long createdTime;
   String projectCode;
-  String access;
 
 }

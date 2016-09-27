@@ -93,7 +93,7 @@ public class UploadService {
         }
         return;
       } catch (NotRetryableException e) {
-        log.warn("Upload was not completed successfully in the last execution. Checking data integrity. Please wait...");
+        log.warn("Upload is not completed successfully in the last execution. Checking data integrity. Please wait...");
         redo = !storageService.isUploadDataRecoverable(objectId, file.length());
       }
   }
