@@ -15,30 +15,22 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.client.metadata;
+package org.icgc.dcc.storage.server.authorize;
 
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import org.icgc.dcc.storage.server.service.MetadataService;
+import org.mockito.Mockito;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
+import org.springframework.context.annotation.Profile;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+@Profile("test")
+@Configuration
+public class ScopeStrategyConfig {
 
-@Data
-@JsonIgnoreProperties(ignoreUnknown = true)
-@EqualsAndHashCode(of = "id")
-public class Entity {
-
-  /**
-   * Uniqueness.
-   */
-  String id;
-
-  /**
-   * Metadata.
-   */
-  String fileName;
-  String gnosId;
-  long createdTime;
-  String projectCode;
-  String access;
-
+  @Bean
+  @Primary
+  public MetadataService metadataService() {
+    return Mockito.mock(MetadataService.class);
+  }
 }

@@ -157,6 +157,10 @@ public class ClientConfig {
     return factory;
   }
 
+  /**
+   * Request Factory that contains security headers
+   * @return
+   */
   private HttpComponentsClientHttpRequestFactory clientHttpRequestFactory() {
     val factory = new HttpComponentsClientHttpRequestFactory();
 
@@ -167,7 +171,7 @@ public class ClientConfig {
     factory.setConnectTimeout(properties.getConnectTimeoutSeconds() * 1000);
     factory.setReadTimeout(properties.getReadTimeoutSeconds() * 1000);
 
-    factory.setHttpClient(sslClient());
+    factory.setHttpClient(secureClient());
 
     return factory;
   }
@@ -190,7 +194,11 @@ public class ClientConfig {
   }
 
   @SneakyThrows
-  private HttpClient sslClient() {
+  /**
+   * 
+   * @return instance of HttpClient with SSL and OAuth configuration
+   */
+  private HttpClient secureClient() {
     val client = HttpClients.custom();
     client.setSSLContext(sslContext);
     client.setSSLHostnameVerifier(hostnameVerifier);
@@ -214,13 +222,20 @@ public class ClientConfig {
         Long.toString(properties.getReadTimeoutSeconds() * 1000));
   }
 
+  /**
+   * Populates Authorization header with OAuth token
+   * @param HttpClientBuilder instance to set Default Header on. Existing Headers will be overwritten.
+   */
   private void configureOAuth(HttpClientBuilder client) {
     val accessToken = properties.getAccessToken();
 
-    val defined = accessToken != null;
+    val defined = (accessToken != null) && (!accessToken.isEmpty());
     if (defined) {
       log.debug("Setting access token: {}", accessToken);
       client.setDefaultHeaders(singletonList(new BasicHeader(AUTHORIZATION, format("Bearer %s", accessToken))));
+    } else {
+      // omit header if access token is null/empty in configuration (application.yml and conf/properties file
+      log.warn("No access token specified");
     }
   }
 

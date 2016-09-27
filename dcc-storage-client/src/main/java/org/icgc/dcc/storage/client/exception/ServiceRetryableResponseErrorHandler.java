@@ -29,7 +29,7 @@ import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.web.client.DefaultResponseErrorHandler;
 
 /**
- * responsible to translate server side errors to client side errors
+ * Responsible for translating server-side errors to client-side errors
  */
 @Slf4j
 public class ServiceRetryableResponseErrorHandler extends DefaultResponseErrorHandler {
@@ -48,6 +48,10 @@ public class ServiceRetryableResponseErrorHandler extends DefaultResponseErrorHa
 
     case UNAUTHORIZED:
       log.warn("Unauthorized. Stop processing: {}", response.getStatusText());
+      throw notResumableException("Storage client error: ", response);
+
+    case FORBIDDEN:
+      log.warn("Access Denied. Stop processing: {}", response.getStatusText());
       throw notResumableException("Storage client error: ", response);
 
     default:

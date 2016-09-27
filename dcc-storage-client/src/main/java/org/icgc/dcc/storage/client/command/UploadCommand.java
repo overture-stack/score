@@ -114,7 +114,7 @@ public class UploadCommand extends RepositoryAccessCommand {
 
     terminal.printf("Uploading object: '%s' using the object id %s%n", file, objectId);
     uploader.upload(file, objectId, md5, isForce);
-    terminal.print("Upload completed");
+    terminal.println("Upload completed");
   }
 
   private UploadManifest readManifest() throws IOException, FileNotFoundException {
