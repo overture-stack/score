@@ -37,7 +37,8 @@ public class ConnectivityResponseHandler extends DefaultResponseErrorHandler {
     case FORBIDDEN:
       log.warn("FORBIDDEN response code received. If you are trying to connect to the AWS S3 Repository, you need to be running ths ICGC client on an EC2 VM instance.");
       throw notRetryableException(
-          "Amazon S3 error: Access refused by object store. Confirm request host is on permitted list", response);
+          "Amazon S3 error: FORBIDDEN: If you are trying to connect to the AWS S3 Repository, you need to be running ths ICGC client on an EC2 VM instance",
+          response);
 
     case REQUEST_TIMEOUT:
       log.warn("Unable to connect to repository endpoint. You need to be running on a compute node within the repository cloud. Or else your network connection is hinky.");

@@ -115,10 +115,12 @@ public class SecurityConfig extends ResourceServerConfigurerAdapter {
     http
       .authorizeRequests()
       .antMatchers("/health").permitAll()
-      .antMatchers("/upload/**")
-      .access("#oauth2.hasScope('" + uploadScope + "')")
-      .antMatchers("/download/**")
-      .access("#oauth2.hasScope('" + downloadScope + "')")
+      .antMatchers("/upload/**").permitAll()
+//      .antMatchers("/upload/**")
+//      .access("#oauth2.hasScope('" + uploadScope + "')")
+      .antMatchers("/download/**").permitAll()
+//      .antMatchers("/download/**")
+//      .access("#oauth2.hasScope('" + downloadScope + "')")
       .and()
       
       .authorizeRequests()

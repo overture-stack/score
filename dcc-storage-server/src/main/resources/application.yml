@@ -101,7 +101,7 @@ bucket:
 
 spring:
   profiles: collaboratory
-  profiles.include: prod
+
 
 s3:
   endpoint: https://object.cancercollaboratory.org:9080

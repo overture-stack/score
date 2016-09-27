@@ -29,4 +29,5 @@ public class MetadataEntity {
   private String gnosId;
   private String fileName;
   private String projectCode;
+  private String access;
 }

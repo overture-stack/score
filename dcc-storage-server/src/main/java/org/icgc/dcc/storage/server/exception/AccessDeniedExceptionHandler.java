@@ -15,30 +15,22 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.client.metadata;
+package org.icgc.dcc.storage.server.exception;
 
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.extern.slf4j.Slf4j;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.context.request.WebRequest;
 
-@Data
-@JsonIgnoreProperties(ignoreUnknown = true)
-@EqualsAndHashCode(of = "id")
-public class Entity {
+@Slf4j
+public class AccessDeniedExceptionHandler {
 
-  /**
-   * Uniqueness.
-   */
-  String id;
-
-  /**
-   * Metadata.
-   */
-  String fileName;
-  String gnosId;
-  long createdTime;
-  String projectCode;
-  String access;
-
+  // @ExceptionHandler({ AccessDeniedException.class })
+  public ResponseEntity<Object> handleAccessDeniedException(Exception ex, WebRequest request) {
+    return new ResponseEntity<Object>("Access denied message: " + request.getParameterMap().toString(),
+        new HttpHeaders(),
+        HttpStatus.FORBIDDEN);
+  }
 }

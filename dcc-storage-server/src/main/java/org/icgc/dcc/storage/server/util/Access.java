@@ -15,30 +15,24 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.client.metadata;
+package org.icgc.dcc.storage.server.util;
 
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+public class Access {
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+  public final static String OPEN = "open";
+  public final static String CONTROLLED = "controlled";
 
-@Data
-@JsonIgnoreProperties(ignoreUnknown = true)
-@EqualsAndHashCode(of = "id")
-public class Entity {
+  private String value;
 
-  /**
-   * Uniqueness.
-   */
-  String id;
+  public Access(String accessType) {
+    value = accessType;
+  }
 
-  /**
-   * Metadata.
-   */
-  String fileName;
-  String gnosId;
-  long createdTime;
-  String projectCode;
-  String access;
+  public boolean isOpen() {
+    return OPEN.equalsIgnoreCase(value);
+  }
 
+  public boolean isControlled() {
+    return CONTROLLED.equalsIgnoreCase(value);
+  }
 }
