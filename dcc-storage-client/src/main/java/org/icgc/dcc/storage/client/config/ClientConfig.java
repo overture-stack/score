@@ -159,7 +159,6 @@ public class ClientConfig {
 
   /**
    * Request Factory that contains security headers
-   * @return
    */
   private HttpComponentsClientHttpRequestFactory clientHttpRequestFactory() {
     val factory = new HttpComponentsClientHttpRequestFactory();
@@ -195,7 +194,6 @@ public class ClientConfig {
 
   @SneakyThrows
   /**
-   * 
    * @return instance of HttpClient with SSL and OAuth configuration
    */
   private HttpClient secureClient() {
@@ -234,7 +232,7 @@ public class ClientConfig {
       log.debug("Setting access token: {}", accessToken);
       client.setDefaultHeaders(singletonList(new BasicHeader(AUTHORIZATION, format("Bearer %s", accessToken))));
     } else {
-      // omit header if access token is null/empty in configuration (application.yml and conf/properties file
+      // Omit header if access token is null/empty in configuration (application.yml and conf/properties file
       log.warn("No access token specified");
     }
   }
