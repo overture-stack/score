@@ -242,7 +242,7 @@ public abstract class AbstractStorageIntegrationTest {
     int debugPort = Integer.parseInt(firstNonNull(System.getProperty("auth.server.debugPort"), "-1"));
 
     return bootRun(
-        org.icgc.dcc.auth.server.ServerMain.class,
+        "dcc-auth-server",
         debugPort,
         "-Dspring.profiles.active=dev,no_scope_validation", // Don't validate if user has scopes
         "-Dlogging.file=" + fs.getLogsDir() + "/dcc-auth-server.log",
@@ -255,7 +255,7 @@ public abstract class AbstractStorageIntegrationTest {
     int debugPort = Integer.parseInt(firstNonNull(System.getProperty("meta.server.debugPort"), "-1"));
 
     return bootRun(
-        org.icgc.dcc.metadata.server.ServerMain.class,
+        "dcc-metadata-server",
         debugPort,
         "-Dspring.profiles.active=development,secure", // Secure
         "-Dlogging.file=" + fs.getLogsDir() + "/dcc-metadata-server.log",
@@ -272,7 +272,7 @@ public abstract class AbstractStorageIntegrationTest {
     int debugPort = Integer.parseInt(firstNonNull(System.getProperty("meta.client.debugPort"), "-1"));
 
     return bootRun(
-        org.icgc.dcc.metadata.client.ClientMain.class,
+        "dcc-metadata-client",
         debugPort,
         args,
         "-Dspring.profiles.active=development",
@@ -306,11 +306,6 @@ public abstract class AbstractStorageIntegrationTest {
 
   static boolean isBaiFile(Entity entity) {
     return entity.getFileName().endsWith(".bai");
-  }
-
-  static File resolveJarFile(String artifactId) {
-    val targetDir = new File("../" + artifactId + "/target");
-    return targetDir.listFiles((File file, String name) -> name.startsWith(artifactId) && name.endsWith(".jar"))[0];
   }
 
   static void waitForPort(int port) {

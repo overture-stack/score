@@ -51,7 +51,7 @@ public class StorageIntegrationTest extends AbstractStorageIntegrationTest {
     int debugPort = Integer.parseInt(System.getProperty("storage.server.debugPort", "-1"));
 
     return bootRun(
-        resolveJarFile("dcc-storage-server"),
+        "dcc-storage-server",
         debugPort,
         "-Dspring.profiles.active=dev,secure,default", // Secure
         "-Dlogging.file=" + fs.getLogsDir() + "/dcc-storage-server.log",
@@ -70,7 +70,7 @@ public class StorageIntegrationTest extends AbstractStorageIntegrationTest {
     int debugPort = Integer.parseInt(firstNonNull(System.getProperty("storage.client.debugPort"), "-1"));
 
     return bootRun(
-        resolveJarFile("dcc-storage-client"),
+        "dcc-storage-client",
         debugPort,
         args,
         "-Dlogging.file=" + fs.getLogsDir() + "/dcc-storage-client.log",

@@ -17,17 +17,31 @@
  */
 package org.icgc.dcc.storage.test.util;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.StandardSystemProperty.JAVA_CLASS_PATH;
+
 import java.io.File;
+
+import org.icgc.dcc.common.core.util.Splitters;
+
+import com.google.common.collect.ImmutableList;
 
 import lombok.SneakyThrows;
 import lombok.val;
-
-import com.google.common.collect.ImmutableList;
 
 /**
  * Spring boot process wrapper.
  */
 public class SpringBootProcess {
+
+  public static Process bootRun(String artifactId, int debugPort, String[] args, String... systemProperties) {
+    val file = findArtifact(artifactId);
+    return bootRun(file, debugPort, args, systemProperties);
+  }
+
+  public static Process bootRun(String artifactId, int debugPort, String... systemProperties) {
+    return bootRun(artifactId, debugPort, new String[] {}, systemProperties);
+  }
 
   public static Process bootRun(Class<?> mainClass, int debugPort, String... systemProperties) {
     return bootRun(mainClass, debugPort, new String[] {}, systemProperties);
@@ -62,6 +76,31 @@ public class SpringBootProcess {
     val process = new ProcessBuilder(args).inheritIO().start();
     Runtime.getRuntime().addShutdownHook(new Thread(() -> process.destroyForcibly()));
     return process;
+  }
+
+  @SneakyThrows
+  private static File findArtifact(String artifactId) {
+    // Try other dependencies
+    val paths = Splitters.COLON.splitToList(System.getProperty(JAVA_CLASS_PATH.key()));
+    for (val path : paths) {
+      val file = new File(path);
+      if (file.getName().startsWith(artifactId)) {
+        return file;
+      }
+    }
+
+    // Try project dependencies
+    val targetDir = new File("../" + artifactId + "/target").getCanonicalFile();
+    File[] localFiles =
+        targetDir.listFiles((File file, String name) -> name.startsWith(artifactId) && name.endsWith(".jar"));
+    if (localFiles != null && localFiles.length > 0) {
+      return localFiles[0];
+    }
+
+    checkArgument(false, "Could not find artifact %s in %s or %s",
+        artifactId, targetDir, paths);
+
+    return null;
   }
 
 }

@@ -118,8 +118,8 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
 
   <properties>
     <!-- Versions - DCC -->
-    <dcc-metadata.version>0.0.14</dcc-metadata.version>
-    <dcc-auth.version>1.0.5</dcc-auth.version>
+    <dcc-metadata.version>0.0.19</dcc-metadata.version>
+    <dcc-auth.version>4.2.1</dcc-auth.version>
 
     <!-- Versions - Spring -->
     <spring-boot.version>1.4.1.RELEASE</spring-boot.version>

@@ -310,7 +310,7 @@ public class PartitionedBucketIntegrationTest {
     int debugPort = Integer.parseInt(firstNonNull(System.getProperty("meta.server.debugPort"), "-1"));
 
     return bootRun(
-        org.icgc.dcc.metadata.server.ServerMain.class,
+        "dcc-metadata-server",
         debugPort,
         "-Dspring.profiles.active=development,secure", // Secure
         "-Dlogging.file=" + fs.getLogsDir() + "/dcc-metadata-server.log",
@@ -327,7 +327,7 @@ public class PartitionedBucketIntegrationTest {
     int debugPort = Integer.parseInt(firstNonNull(System.getProperty("meta.client.debugPort"), "-1"));
 
     return bootRun(
-        org.icgc.dcc.metadata.client.ClientMain.class,
+        "dcc-metadata-client",
         debugPort,
         args,
         "-Dspring.profiles.active=development",
