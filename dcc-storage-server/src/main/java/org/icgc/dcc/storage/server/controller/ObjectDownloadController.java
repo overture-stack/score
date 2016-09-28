@@ -98,11 +98,12 @@ public class ObjectDownloadController {
    * Exception handler specific to the Spring Security processing in this controller
    * @return Error if Spring Security policies are violated
    */
-  @ExceptionHandler({ AccessDeniedException.class })
+  @ExceptionHandler(AccessDeniedException.class)
   public ResponseEntity<Object> handleAccessDeniedException(HttpServletRequest req, AccessDeniedException ex) {
     log.error("Token missing required scope to download controlled-access file");
     return new ResponseEntity<Object>("Token missing required scope to download controlled-access file",
         new HttpHeaders(),
         HttpStatus.FORBIDDEN);
   }
+
 }
