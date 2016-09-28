@@ -103,7 +103,7 @@ public class ProjectScopeStrategy extends AbstractScopeAuthorizationStrategy {
    */
   protected String fetchProjectCode(@NonNull final String objectId) {
     // makes a query to meta service to retrieve project code for the given object id
-    val entity = metadataClient.getEntity(objectId);
+    val entity = metadataService.getEntity(objectId);
     if (entity != null) {
       return entity.getProjectCode();
     } else {

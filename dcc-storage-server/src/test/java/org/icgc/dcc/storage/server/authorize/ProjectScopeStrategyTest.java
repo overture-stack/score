@@ -28,7 +28,6 @@ import java.util.HashSet;
 
 import lombok.val;
 
-import org.icgc.dcc.storage.server.authorize.ProjectScopeStrategy;
 import org.icgc.dcc.storage.server.util.AuthScope;
 import org.junit.Before;
 import org.junit.Test;
@@ -117,4 +116,5 @@ public class ProjectScopeStrategyTest {
     String uuid = "a0bec88a-c5e3-51a9-87bfg-3bd6f9c7f23c";
     assertFalse(_sut.validate(uuid));
   }
+
 }

@@ -89,7 +89,7 @@ public class BasicScopeAuthorizationStrategy extends AbstractScopeAuthorizationS
    */
   protected String fetchObjectAccessType(@NonNull final String objectId) {
     // makes a query to meta service to retrieve project code for the given object id
-    val entity = metadataClient.getEntity(objectId);
+    val entity = metadataService.getEntity(objectId);
     if (entity != null) {
       return entity.getAccess();
     } else {
@@ -98,5 +98,5 @@ public class BasicScopeAuthorizationStrategy extends AbstractScopeAuthorizationS
       throw new NotRetryableException(new IllegalArgumentException(msg));
     }
   }
-  
+
 }

@@ -19,6 +19,7 @@ package org.icgc.dcc.storage.server.authorize;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -34,24 +35,23 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
 public class BasicScopeAuthorizationStrategyTest {
 
   @Mock
-  private MetadataService metadataClient;
+  private MetadataService metadataService;
 
-  private BasicScopeAuthorizationStrategy _sut;
+  private BasicScopeAuthorizationStrategy sut;
 
   public static final String TEST_SCOPE = "test.download";
   public static final AuthScope testScope = AuthScope.from(TEST_SCOPE);
 
   @Before
   public void init() {
-    _sut = new BasicScopeAuthorizationStrategy(TEST_SCOPE);
-    _sut.setMetadataClient(metadataClient);
+    sut = new BasicScopeAuthorizationStrategy(TEST_SCOPE);
+    sut.setMetadataService(metadataService);
   }
 
   public MetadataEntity entity(String id, String gnosId, String fileName, String projectCode, String accessType) {
@@ -67,56 +67,56 @@ public class BasicScopeAuthorizationStrategyTest {
   @Test
   public void test_open_no_scope() {
     val openEntity = entity("123", "abc", "something.bam", "PROJ-CD", "open");
-    Mockito.when(metadataClient.getEntity("123")).thenReturn(openEntity);
+    when(metadataService.getEntity("123")).thenReturn(openEntity);
 
     // no test.download scope
     val scopeStrs =
         new HashSet<String>(Arrays.asList("test1.download", "test.OTHER-CODE.upload",
             "test.ALT-CODE.upload", "test.CODE.upload", "test2.download"));
-    val scopes = _sut.extractScopes(scopeStrs);
+    val scopes = sut.extractScopes(scopeStrs);
 
-    val result = _sut.verify(scopes, "123");
+    val result = sut.verify(scopes, "123");
     assertTrue(result);
   }
 
   @Test
   public void test_open_no_token() {
     val openEntity = entity("123", "abc", "something.bam", "PROJ-CD", "open");
-    Mockito.when(metadataClient.getEntity("123")).thenReturn(openEntity);
+    when(metadataService.getEntity("123")).thenReturn(openEntity);
 
     // no token, means no scopes at all
     List<AuthScope> scopes = Collections.<AuthScope> emptyList();
 
-    val result = _sut.verify(scopes, "123");
+    val result = sut.verify(scopes, "123");
     assertTrue(result);
   }
 
   @Test
   public void test_controlled() {
     val openEntity = entity("123", "abc", "something.bam", "PROJ-CD", "controlled");
-    Mockito.when(metadataClient.getEntity("123")).thenReturn(openEntity);
+    when(metadataService.getEntity("123")).thenReturn(openEntity);
 
     val scopeStrs =
         new HashSet<String>(Arrays.asList("test1.download", "test.download", "test.OTHER-CODE.upload",
             "test.ALT-CODE.upload", "test.CODE.upload", "test2.download"));
-    List<AuthScope> scopes = _sut.extractScopes(scopeStrs);
+    List<AuthScope> scopes = sut.extractScopes(scopeStrs);
 
-    val result = _sut.verify(scopes, "123");
+    val result = sut.verify(scopes, "123");
     assertTrue(result);
   }
 
   @Test
   public void test_controlled_no_scope() {
     val openEntity = entity("123", "abc", "something.bam", "PROJ-CD", "controlled");
-    Mockito.when(metadataClient.getEntity("123")).thenReturn(openEntity);
+    when(metadataService.getEntity("123")).thenReturn(openEntity);
 
     // missing test.download scope
     val scopeStrs =
         new HashSet<String>(Arrays.asList("test1.download", "test.OTHER-CODE.upload",
             "test.ALT-CODE.upload", "test.CODE.upload", "test2.download"));
-    List<AuthScope> scopes = _sut.extractScopes(scopeStrs);
+    List<AuthScope> scopes = sut.extractScopes(scopeStrs);
 
-    val result = _sut.verify(scopes, "123");
+    val result = sut.verify(scopes, "123");
     assertFalse(result);
   }
 
@@ -125,9 +125,9 @@ public class BasicScopeAuthorizationStrategyTest {
     val scopeStrs =
         new HashSet<String>(Arrays.asList("test1.download", "test.download", "test.OTHER-CODE.upload",
             "test.ALT-CODE.upload", "test.CODE.upload", "test2.download"));
-    List<AuthScope> scopes = _sut.extractScopes(scopeStrs);
+    List<AuthScope> scopes = sut.extractScopes(scopeStrs);
 
-    assertTrue(_sut.verifyBasicScope(scopes));
+    assertTrue(sut.verifyBasicScope(scopes));
   }
 
   @Test
@@ -135,8 +135,8 @@ public class BasicScopeAuthorizationStrategyTest {
     val scopeStrs =
         new HashSet<String>(Arrays.asList("test1.download", "test.OTHER-CODE.upload",
             "test.ALT-CODE.upload", "test.CODE.upload", "test2.download"));
-    List<AuthScope> scopes = _sut.extractScopes(scopeStrs);
+    List<AuthScope> scopes = sut.extractScopes(scopeStrs);
 
-    assertFalse(_sut.verifyBasicScope(scopes));
+    assertFalse(sut.verifyBasicScope(scopes));
   }
 }

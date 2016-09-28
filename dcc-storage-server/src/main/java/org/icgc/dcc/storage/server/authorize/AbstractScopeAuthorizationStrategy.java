@@ -41,7 +41,7 @@ public abstract class AbstractScopeAuthorizationStrategy {
   protected AuthScope scope;
 
   @Autowired
-  protected MetadataService metadataClient;
+  protected MetadataService metadataService;
 
   /**
    * Package-private constructor for use in unit tests (to initialize scope context) without a Spring Context
@@ -105,8 +105,8 @@ public abstract class AbstractScopeAuthorizationStrategy {
     }
   }
 
-  void setMetadataClient(MetadataService mock) {
-    metadataClient = mock;
+  void setMetadataService(MetadataService mock) {
+    metadataService = mock;
   }
 
 }
