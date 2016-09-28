@@ -15,7 +15,8 @@ TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
 OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
 IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
 ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
---><project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
@@ -50,13 +51,11 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
     <dependency>
       <groupId>org.icgc.dcc</groupId>
       <artifactId>dcc-storage-client</artifactId>
-      <version>1.0.20-SNAPSHOT</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.icgc.dcc</groupId>
       <artifactId>dcc-storage-server</artifactId>
-      <version>1.0.20-SNAPSHOT</version>
       <scope>test</scope>
     </dependency>
 
@@ -69,6 +68,12 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
     </dependency>
 
     <!-- Test - DCC Metadata -->
+    <dependency>
+      <groupId>org.icgc.dcc</groupId>
+      <artifactId>dcc-metadata-core</artifactId>
+      <version>${dcc-metadata.version}</version>
+      <scope>test</scope>
+    </dependency>
     <dependency>
       <groupId>org.icgc.dcc</groupId>
       <artifactId>dcc-metadata-client</artifactId>
@@ -95,19 +100,19 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
     <!-- Versions - S3 -->
     <s3ninja.version>2.7</s3ninja.version>
   </properties>
-  
+
   <build>
     <plugins>
-	  <plugin>
-	    <groupId>org.apache.maven.plugins</groupId>
-	    <artifactId>maven-surefire-plugin</artifactId>
-	    <version>2.16</version><!--$NO-MVN-MAN-VER$-->
-	    <configuration>
-	      <forkMode>always</forkMode>
-	    </configuration>
-	  </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>2.16</version><!--$NO-MVN-MAN-VER$-->
+        <configuration>
+          <forkMode>always</forkMode>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
-      
-  
+
+
 </project>

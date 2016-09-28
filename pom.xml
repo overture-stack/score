@@ -74,6 +74,16 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
       </dependency>
       <dependency>
         <groupId>${project.groupId}</groupId>
+        <artifactId>dcc-storage-client</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>dcc-storage-server</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>${project.groupId}</groupId>
         <artifactId>dcc-storage-fs</artifactId>
         <version>${project.version}</version>
       </dependency>

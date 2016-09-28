@@ -30,10 +30,10 @@ import java.io.File;
 import java.util.List;
 import java.util.function.Consumer;
 
-import org.icgc.dcc.storage.client.metadata.Entity;
-import org.icgc.dcc.storage.client.metadata.MetadataClient;
 import org.icgc.dcc.storage.test.auth.AuthClient;
 import org.icgc.dcc.storage.test.fs.FileSystem;
+import org.icgc.dcc.storage.test.meta.Entity;
+import org.icgc.dcc.storage.test.meta.MetadataClient;
 import org.icgc.dcc.storage.test.mongo.Mongo;
 import org.icgc.dcc.storage.test.s3.S3;
 import org.icgc.dcc.storage.test.s3.S3Request;
@@ -44,9 +44,6 @@ import org.junit.rules.TemporaryFolder;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * 
- */
 @Slf4j
 public abstract class AbstractStorageIntegrationTest {
 
