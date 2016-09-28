@@ -17,32 +17,15 @@
  */
 package org.icgc.dcc.storage.server.util;
 
-import com.google.common.base.Strings;
+import javax.servlet.http.HttpServletRequest;
 
-public class Access {
+public class RequestHeaderUtils {
 
-  public final static String OPEN = "open";
-  public final static String CONTROLLED = "controlled";
-
-  private String value;
-
-  public Access(String accessType) {
-    if (Strings.isNullOrEmpty(accessType) || accessType.equalsIgnoreCase("null")) {
-      value = CONTROLLED;
-    } else {
-      value = accessType;
+  public static String getIpAddress(HttpServletRequest request) {
+    String ipAddress = request.getHeader(com.google.common.net.HttpHeaders.X_FORWARDED_FOR);
+    if (ipAddress == null) {
+      ipAddress = request.getRemoteAddr();
     }
-  }
-
-  public boolean isOpen() {
-    return OPEN.equalsIgnoreCase(value);
-  }
-
-  public boolean isControlled() {
-    return CONTROLLED.equalsIgnoreCase(value);
-  }
-
-  public boolean isOther() {
-    return !(isControlled() || isOpen());
+    return ipAddress;
   }
 }

@@ -35,9 +35,6 @@ public class BasicScopeAuthorizationStrategy extends AbstractScopeAuthorizationS
   @Value("${auth.server.downloadScope}")
   private String downloadScope;
 
-  // @Autowired
-  // private MetadataService metadataClient;
-
   public BasicScopeAuthorizationStrategy() {
     super();
   }
@@ -64,6 +61,7 @@ public class BasicScopeAuthorizationStrategy extends AbstractScopeAuthorizationS
   protected boolean verifyAccessType(@NonNull List<AuthScope> grantedScopes, @NonNull final String objectId) {
     val objectAccessType = fetchObjectAccessType(objectId);
     val accessType = new Access(objectAccessType);
+
     if (accessType.isOpen()) {
       return true;
     } else if (accessType.isControlled()) {
@@ -100,4 +98,5 @@ public class BasicScopeAuthorizationStrategy extends AbstractScopeAuthorizationS
       throw new NotRetryableException(new IllegalArgumentException(msg));
     }
   }
+  
 }

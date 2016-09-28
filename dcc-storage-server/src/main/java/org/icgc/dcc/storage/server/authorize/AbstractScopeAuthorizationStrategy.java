@@ -23,6 +23,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
@@ -34,16 +35,13 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
 
 @Slf4j
+@NoArgsConstructor
 public abstract class AbstractScopeAuthorizationStrategy {
 
   protected AuthScope scope;
 
   @Autowired
   protected MetadataService metadataClient;
-
-  public AbstractScopeAuthorizationStrategy() {
-    super();
-  }
 
   /**
    * Package-private constructor for use in unit tests (to initialize scope context) without a Spring Context
@@ -110,4 +108,5 @@ public abstract class AbstractScopeAuthorizationStrategy {
   void setMetadataClient(MetadataService mock) {
     metadataClient = mock;
   }
+
 }

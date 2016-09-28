@@ -20,10 +20,12 @@ package org.icgc.dcc.storage.server.controller;
 import javax.servlet.http.HttpServletRequest;
 
 import lombok.Setter;
+import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 import org.icgc.dcc.storage.core.model.ObjectSpecification;
 import org.icgc.dcc.storage.server.service.download.ObjectDownloadService;
+import org.icgc.dcc.storage.server.util.RequestHeaderUtils;
 import org.icgc.dcc.storage.server.util.TokenHasher;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
@@ -59,10 +61,7 @@ public class ObjectDownloadController {
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) final String accessToken,
       @RequestHeader(value = "User-Agent", defaultValue = "unknown") String userAgent, HttpServletRequest request) {
 
-    String ipAddress = request.getHeader(com.google.common.net.HttpHeaders.X_FORWARDED_FOR);
-    if (ipAddress == null) {
-      ipAddress = request.getRemoteAddr();
-    }
+    val ipAddress = RequestHeaderUtils.getIpAddress(request);
 
     log.info("Requesting download of sentinel object id with access token {} (MD5) from {} and client version {}",
         identifier(accessToken), ipAddress, userAgent);
@@ -80,10 +79,7 @@ public class ObjectDownloadController {
       @RequestHeader(value = "User-Agent", defaultValue = "unknown") String userAgent,
       HttpServletRequest request) {
 
-    String ipAddress = request.getHeader(com.google.common.net.HttpHeaders.X_FORWARDED_FOR);
-    if (ipAddress == null) {
-      ipAddress = request.getRemoteAddr();
-    }
+    val ipAddress = RequestHeaderUtils.getIpAddress(request);
 
     log.info("Requesting download of object id {} with access token {} (MD5) from {} and client version {}", objectId,
         identifier(accessToken), ipAddress, userAgent);

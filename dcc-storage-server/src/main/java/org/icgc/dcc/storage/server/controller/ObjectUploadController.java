@@ -30,6 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.icgc.dcc.storage.core.model.ObjectSpecification;
 import org.icgc.dcc.storage.core.model.UploadProgress;
 import org.icgc.dcc.storage.server.service.upload.ObjectUploadService;
+import org.icgc.dcc.storage.server.util.RequestHeaderUtils;
 import org.icgc.dcc.storage.server.util.TokenHasher;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
@@ -75,10 +76,7 @@ public class ObjectUploadController {
       HttpServletRequest request) {
 
     log.info("Request received from client {}", userAgent);
-    String ipAddress = request.getHeader(com.google.common.net.HttpHeaders.X_FORWARDED_FOR);
-    if (ipAddress == null) {
-      ipAddress = request.getRemoteAddr();
-    }
+    val ipAddress = RequestHeaderUtils.getIpAddress(request);
 
     log.info(
         "Initiating upload of object id {} with access token {} (MD5) having size of {} from {} using client version {}",
@@ -101,10 +99,7 @@ public class ObjectUploadController {
       @RequestHeader(value = "User-Agent", defaultValue = "unknown") String userAgent,
       HttpServletRequest request) {
 
-    String ipAddress = request.getHeader(com.google.common.net.HttpHeaders.X_FORWARDED_FOR);
-    if (ipAddress == null) {
-      ipAddress = request.getRemoteAddr();
-    }
+    val ipAddress = RequestHeaderUtils.getIpAddress(request);
 
     log.info(
         "Initiating delete of object id {} part# {} (upload id {}); with access token {} from {} using client version {}",
