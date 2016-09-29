@@ -19,6 +19,7 @@ package org.icgc.dcc.storage.client;
 
 import static com.google.common.base.Objects.firstNonNull;
 import static java.lang.System.err;
+import static java.lang.System.out;
 import static org.icgc.dcc.storage.client.cli.Parameters.checkCommand;
 import static org.icgc.dcc.storage.client.command.ClientCommand.APPLICATION_NAME;
 import static org.icgc.dcc.storage.client.command.ClientCommand.FAILURE_STATUS;
@@ -89,12 +90,12 @@ public class ClientMain implements CommandLineRunner {
   private Map<String, ClientCommand> commands;
 
   public static void main(String[] args) {
-    err.println("Starting...");
     try {
       // Bootstrap
       val profiles = bootstrap(args);
 
       // Setup
+      err.println("Starting...");
       val cli = new JCommander();
       cli.setProgramName(APPLICATION_NAME);
       cli.addConverterFactory(new ConverterFactory());
@@ -211,6 +212,12 @@ public class ClientMain implements CommandLineRunner {
     cli.setAcceptUnknownOptions(true);
     cli.addObject(options);
     cli.parse(args);
+
+    // Establish stdout / stdin handling going forward
+    if (options.silent) {
+      err.close();
+      out.close();
+    }
 
     // Pass to spring
     System.setProperty("client.silent", Boolean.toString(options.silent));

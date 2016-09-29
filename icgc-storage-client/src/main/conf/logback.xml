@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
 Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.
- 
+
 This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
 You should have received a copy of the GNU General Public License along with
 this program. If not, see <http://www.gnu.org/licenses/>.
@@ -16,43 +16,28 @@ OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
 IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
 ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 -->
-<configuration>
-    <statusListener class="ch.qos.logback.core.status.NopStatusListener" />
+<configuration debug="false">
 
-    <property name="LOG_FILE" value="${LOG_FILE:-${LOG_PATH:-${LOG_TEMP:-${java.io.tmpdir:-/tmp}}/}spring.log}"/>
-    <property name="FILE_LOG_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} %5p ${PID:- } [%t] --- %-40.40logger{39} : %m%n"/>
-    <property name="SESSION_LOG_FILE" value="${SESSION_LOG_FILE:-${LOG_PATH:-${LOG_TEMP:-${java.io.tmpdir:-/tmp}}/}session.log}"/>
+  <property name="log.dir" value="${logging.path:-/tmp/icgc-storage-client/logs}" />
+  <property name="log.name" value="client" />
+  <property name="pattern" value="%date{ISO8601} [%thread] %-5level %logger{20} - %msg%n" />
 
-    <appender name="FILE"
-              class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <encoder>
-            <pattern>${FILE_LOG_PATTERN}</pattern>
-        </encoder>
-        <file>${LOG_FILE}</file>
-        <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
-            <fileNamePattern>${LOG_FILE}.%i</fileNamePattern>
-        </rollingPolicy>
-        <triggeringPolicy
-                class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
-            <MaxFileSize>10MB</MaxFileSize>
-        </triggeringPolicy>
-    </appender>
+  <contextListener class="ch.qos.logback.classic.jul.LevelChangePropagator">
+    <resetJUL>true</resetJUL>
+  </contextListener>
 
-    <appender name="SESSION-LOG" class="ch.qos.logback.core.FileAppender">
-        <file>${SESSION_LOG_FILE}</file>
-        <append>true</append>
-        <encoder>
-            <pattern>%date{ISO8601} %msg %n</pattern>
-        </encoder>
-    </appender>
-    
-    <!-- additivity=false ensures session data only goes to the session log -->
-    <logger name="session" level="INFO" additivity="false">
-        <appender-ref ref="SESSION-LOG"/>
-    </logger>
-    
-    <root level="INFO">
-        <appender-ref ref="FILE" />
-    </root>
+  <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <File>${log.dir}/${log.name}.log</File>
+    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+      <FileNamePattern>${log.dir}/${log.name}.%d{yyyy-MM-dd}.log</FileNamePattern>
+    </rollingPolicy>
+    <encoder>
+      <pattern>${pattern}</pattern>
+    </encoder>
+  </appender>
+
+  <root level="INFO">
+    <appender-ref ref="FILE" />
+  </root>
 
 </configuration>

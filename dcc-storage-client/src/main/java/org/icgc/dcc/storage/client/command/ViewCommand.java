@@ -19,22 +19,12 @@ package org.icgc.dcc.storage.client.command;
 
 import static java.util.stream.Collectors.toList;
 import static org.icgc.dcc.storage.client.cli.Parameters.checkParameter;
-import htsjdk.samtools.SamInputResource;
-import htsjdk.tribble.AbstractFeatureReader;
-import htsjdk.tribble.Feature;
-import htsjdk.tribble.bed.BEDCodec;
-import htsjdk.tribble.bed.BEDFeature;
-import htsjdk.tribble.readers.LineIterator;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-
-import lombok.SneakyThrows;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
 
 import org.icgc.dcc.common.core.util.VersionUtils;
 import org.icgc.dcc.storage.client.cli.ConverterFactory.OutputFormatConverter;
@@ -50,6 +40,7 @@ import org.icgc.dcc.storage.client.metadata.Entity;
 import org.icgc.dcc.storage.client.metadata.MetadataService;
 import org.icgc.dcc.storage.client.slicing.SamFileBuilder;
 import org.icgc.dcc.storage.client.transport.NullSourceSeekableHTTPStream;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
@@ -59,6 +50,16 @@ import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+
+import htsjdk.samtools.SamInputResource;
+import htsjdk.tribble.AbstractFeatureReader;
+import htsjdk.tribble.Feature;
+import htsjdk.tribble.bed.BEDCodec;
+import htsjdk.tribble.bed.BEDFeature;
+import htsjdk.tribble.readers.LineIterator;
+import lombok.SneakyThrows;
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
@@ -130,10 +131,10 @@ public class ViewCommand extends RepositoryAccessCommand {
   @Autowired
   private ApplicationArguments applicationArguments;
 
-  /*
+  /**
    * Session logger
    */
-  private org.slf4j.Logger session = LoggerFactory.getLogger("session");
+  private Logger session = LoggerFactory.getLogger("session");
 
   @Override
   public int execute() throws Exception {
@@ -253,21 +254,11 @@ public class ViewCommand extends RepositoryAccessCommand {
     // Line up bam and index file (encapsulated in a SamInputResource)
     val resource = createInputResource(entity);
 
-    val bob = new SamFileBuilder().
-        programName(ICGC_STORAGE_CLIENT).
-        version(VersionUtils.getScmInfo().get("git.commit.id.describe")).
-        programId(ICGC).
-        commandLine(getCommandLine()).
-        containedOnly(containedOnly).
-        useOriginalHeader(useOriginalHeader).
-        outputFormat(outputFormat).
-        queries(query).
-        outputDir(outputDir).
-        bedFile(bedFile).
-        outputIndex(outputIndex).
-        entity(entity.get()).
-        stdout(stdout).
-        samInput(resource);
+    val bob = new SamFileBuilder().programName(ICGC_STORAGE_CLIENT)
+        .version(VersionUtils.getScmInfo().get("git.commit.id.describe")).programId(ICGC).commandLine(getCommandLine())
+        .containedOnly(containedOnly).useOriginalHeader(useOriginalHeader).outputFormat(outputFormat).queries(query)
+        .outputDir(outputDir).bedFile(bedFile).outputIndex(outputIndex).entity(entity.get()).stdout(stdout)
+        .samInput(resource);
 
     log.info("Constructed SamFileBuilder: " + bob.toString());
 

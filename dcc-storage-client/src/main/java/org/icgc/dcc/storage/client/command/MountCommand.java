@@ -33,10 +33,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
-import lombok.SneakyThrows;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
-
 import org.icgc.dcc.storage.client.cli.ConverterFactory.MountOptionsConverter;
 import org.icgc.dcc.storage.client.cli.ConverterFactory.StorageFileLayoutConverter;
 import org.icgc.dcc.storage.client.cli.DirectoryValidator;
@@ -60,6 +56,12 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Stopwatch;
 import com.google.common.base.Supplier;
+import com.sun.akuma.Daemon;
+import com.sun.akuma.JavaVMArguments;
+
+import lombok.SneakyThrows;
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
@@ -82,6 +84,8 @@ public class MountCommand extends RepositoryAccessCommand {
   private StorageFileLayout layout = StorageFileLayout.BUNDLE;
   @Parameter(names = "--cache-metadata", description = "To speedup load times, cache metadata on disk locally and use if available")
   private boolean cacheMetadata;
+  @Parameter(names = "--daemonize", description = "Detach and run in background")
+  private boolean daemonize;
   @Parameter(names = "--verify-connection", description = "Verify connection to repository", arity = 1)
   private boolean verifyConnection = true;
   @Parameter(names = "--options", description = "The mount options of the file system (e.g. --options user_allow_other,allow_other,fsname=icgc,debug) "
@@ -104,13 +108,18 @@ public class MountCommand extends RepositoryAccessCommand {
   private MountService mountService;
 
   private static final ObjectMapper MAPPER = new ObjectMapper();
-  
+
   @Override
   public int execute() throws Exception {
     checkParameter(mountPoint.canExecute(),
         "Cannot mount to '%s'. Please check directory permissions and try again", mountPoint);
     checkParameter(mountPoint.list() != null && mountPoint.list().length == 0,
         "Cannot mount to '%s'. Please ensure the directory is empty and is not already mounted", mountPoint);
+
+    // If requested, put into the background
+    if (daemonize()) {
+      return SUCCESS_STATUS;
+    }
 
     if (verifyConnection) {
       try {
@@ -127,9 +136,11 @@ public class MountCommand extends RepositoryAccessCommand {
       // Collect and index metadata
       //
 
+      log.info("Indexing remote entities...");
       terminal.printStatus(i++, "Indexing remote entities. Please wait");
       val entities = terminal.printWaiting(this::resolveEntities);
 
+      log.info("Indexing remove objects...");
       terminal.printStatus(i++, "Indexing remote objects. Please wait");
       List<ObjectInfo> objects = terminal.printWaiting(this::resolveObjects);
       if (hasManifest()) {
@@ -141,6 +152,7 @@ public class MountCommand extends RepositoryAccessCommand {
       // Check access
       //
 
+      log.info("Checking access...");
       terminal.printStatus(i++, "Checking access. Please wait");
       val context =
           new MountStorageContext(layout, downloadService, entities, objects);
@@ -154,6 +166,7 @@ public class MountCommand extends RepositoryAccessCommand {
       //
 
       if (hasManifest()) {
+        log.info("Applying manifest view...");
         terminal.printStatus(i++, "Applying manifest view:\n");
         reportManifest(context);
       }
@@ -188,6 +201,30 @@ public class MountCommand extends RepositoryAccessCommand {
     return SUCCESS_STATUS;
   }
 
+  private boolean daemonize() throws Exception, IOException {
+    val daemon = new Daemon();
+    if (daemon.isDaemonized()) {
+      daemon.init();
+    } else {
+      if (daemonize) {
+        val args = JavaVMArguments.current();
+        for (int i = 0; i < args.size(); i++) {
+          val arg = args.get(i);
+          if (arg.equals("mount")) {
+            args.add(i, "--silent");
+            break;
+          }
+        }
+
+        terminal.printStatus(terminal.value("Daemonizing...")).println("");
+        daemon.daemonize(args);
+        return true;
+      }
+    }
+
+    return false;
+  }
+
   @SneakyThrows
   private void mount(MountStorageContext context) {
     val fileSystem = StorageFileSystems.newFileSystem(context);
@@ -205,6 +242,8 @@ public class MountCommand extends RepositoryAccessCommand {
 
     long totalSize = 0;
     val files = context.getFiles();
+    log.info("Files: {}", files);
+
     for (val file : files) {
       terminal.printf(" - %s: %s/%s %s %s %s%n",
           terminal.ansi("@|blue " + file.getObjectId() + "|@"),
@@ -261,7 +300,7 @@ public class MountCommand extends RepositoryAccessCommand {
 
     val values = factory.get();
     if (cacheMetadata) {
-    	MAPPER.writeValue(cacheFile, values);
+      MAPPER.writeValue(cacheFile, values);
     }
 
     return values;
