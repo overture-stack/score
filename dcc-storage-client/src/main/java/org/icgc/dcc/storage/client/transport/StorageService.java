@@ -18,7 +18,9 @@
 package org.icgc.dcc.storage.client.transport;
 
 import static com.google.common.base.Preconditions.checkState;
+import static org.springframework.http.HttpMethod.DELETE;
 import static org.springframework.http.HttpMethod.GET;
+import static org.springframework.http.HttpMethod.POST;
 
 import java.io.File;
 import java.io.IOException;
@@ -27,10 +29,6 @@ import java.net.SocketTimeoutException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
-
-import lombok.SneakyThrows;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
 
 import org.icgc.dcc.storage.client.download.DownloadStateStore;
 import org.icgc.dcc.storage.client.exception.NotResumableException;
@@ -49,8 +47,6 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.client.ClientHttpRequest;
-import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.retry.RetryCallback;
 import org.springframework.retry.RetryContext;
 import org.springframework.retry.support.RetryTemplate;
@@ -64,6 +60,10 @@ import com.amazonaws.services.s3.Headers;
 import com.amazonaws.services.s3.model.SSEAlgorithm;
 import com.google.common.hash.Hashing;
 import com.google.common.hash.HashingInputStream;
+
+import lombok.SneakyThrows;
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Service responsible for interacting with the remote upload service.
@@ -101,30 +101,17 @@ public class StorageService {
   @SneakyThrows
   public List<ObjectInfo> listObjects() {
     log.debug("Listing objects...");
-    return retry.execute(new RetryCallback<List<ObjectInfo>, IOException>() {
-
-      @Override
-      public List<ObjectInfo> doWithRetry(RetryContext ctx) throws IOException {
-        val requestEntity = defaultRequestEntity();
-        return serviceTemplate.exchange(endpoint + "/listing", GET, requestEntity,
-            new ParameterizedTypeReference<List<ObjectInfo>>() {}).getBody();
-      }
-
-    });
+    return retry.execute(
+        ctx -> serviceTemplate.exchange(endpoint + "/listing", GET,
+            defaultEntity(),
+            new ParameterizedTypeReference<List<ObjectInfo>>() {}).getBody());
   }
 
   public UploadProgress getProgress(String objectId, long fileSize) throws IOException {
-    return retry.execute(new RetryCallback<UploadProgress, IOException>() {
-
-      @Override
-      public UploadProgress doWithRetry(RetryContext ctx) throws IOException {
-        HttpEntity<Object> requestEntity = new HttpEntity<Object>(defaultHeaders());
-        return serviceTemplate.exchange(endpoint + "/upload/{object-id}/status?fileSize={file-size}", HttpMethod.GET,
-            requestEntity,
-            UploadProgress.class, objectId, fileSize).getBody();
-      }
-    });
-
+    return retry.execute(
+        ctx -> serviceTemplate.exchange(endpoint + "/upload/{object-id}/status?fileSize={file-size}", GET,
+            defaultEntity(),
+            UploadProgress.class, objectId, fileSize).getBody());
   }
 
   public void downloadPart(DataChannel channel, Part part, String objectId, File outputDir) throws IOException {
@@ -146,11 +133,11 @@ public class StorageService {
                   channel.readFrom(his);
                   return his.hash().toString();
                 }
-              }
-              );
+              });
 
           part.setMd5(md5);
-          checkState(!part.hasFailedChecksum(), "Checksum failed for Part# %d: %s", part.getPartNumber(), part.getMd5());
+          checkState(!part.hasFailedChecksum(), "Checksum failed for Part# %d: %s", part.getPartNumber(),
+              part.getMd5());
 
           // TODO: try catch here for commit
           downloadStateStore.commit(outputDir, objectId, part);
@@ -180,25 +167,15 @@ public class StorageService {
       public Void doWithRetry(RetryContext ctx) throws IOException {
         log.debug("Upload Part URL: {}", part.getUrl());
 
-        final RequestCallback callback = new RequestCallback() {
-
-          @Override
-          public void doWithRequest(final ClientHttpRequest request) throws IOException {
-            HttpHeaders requestHeader = request.getHeaders();
-            requestHeader.setContentLength(channel.getLength());
-            try (OutputStream os = request.getBody()) {
-              channel.writeTo(os);
-            }
+        final RequestCallback callback = request -> {
+          HttpHeaders requestHeader = request.getHeaders();
+          requestHeader.setContentLength(channel.getLength());
+          try (OutputStream os = request.getBody()) {
+            channel.writeTo(os);
           }
         };
 
-        final ResponseExtractor<HttpHeaders> headersExtractor = new ResponseExtractor<HttpHeaders>() {
-
-          @Override
-          public HttpHeaders extractData(ClientHttpResponse response) throws IOException {
-            return response.getHeaders();
-          }
-        };
+        final ResponseExtractor<HttpHeaders> headersExtractor = response -> response.getHeaders();
 
         try {
           HttpHeaders headers =
@@ -208,7 +185,8 @@ public class StorageService {
             finalizeUploadPart(objectId, uploadId, part.getPartNumber(), channel.getMd5(),
                 cleanUpETag(headers.getETag()), disableChecksum(headers));
           } catch (NotRetryableException e) {
-            log.warn("Checksum failed for part #{}, MD5={}, ETAG={} : {}", part, channel.getMd5(), headers.getETag(), e);
+            log.warn("Checksum failed for part #{}, MD5={}, ETAG={} : {}", part, channel.getMd5(), headers.getETag(),
+                e);
             throw new RetryableException(e);
           }
         } catch (NotResumableException | NotRetryableException e) {
@@ -235,18 +213,11 @@ public class StorageService {
   public ObjectSpecification initiateUpload(String objectId, long length, boolean overwrite, String md5)
       throws IOException {
     log.debug("Initiating upload, object-id: {} overwrite: {}", objectId, overwrite);
-    return retry.execute(new RetryCallback<ObjectSpecification, IOException>() {
-
-      @Override
-      public ObjectSpecification doWithRetry(RetryContext ctx) throws IOException {
-        val requestEntity = new HttpEntity<Object>(defaultHeaders());
-        return serviceTemplate.exchange(
-            endpoint + "/upload/{object-id}/uploads?fileSize={file-size}&overwrite={overwrite}&md5={checksum}",
-            HttpMethod.POST,
-            requestEntity,
-            ObjectSpecification.class, objectId, length, overwrite, md5).getBody();
-      }
-    });
+    return retry.execute(ctx -> serviceTemplate.exchange(
+        endpoint + "/upload/{object-id}/uploads?fileSize={file-size}&overwrite={overwrite}&md5={checksum}",
+        POST,
+        defaultEntity(),
+        ObjectSpecification.class, objectId, length, overwrite, md5).getBody());
   }
 
   public void finalizeDownload(File outDir, String objectId) throws IOException {
@@ -260,15 +231,10 @@ public class StorageService {
 
   public void finalizeUpload(String objectId, String uploadId) throws IOException {
     log.debug("finalizing upload, object-id: {}, upload-id: {}", objectId, uploadId);
-    retry.execute(new RetryCallback<Void, IOException>() {
-
-      @Override
-      public Void doWithRetry(RetryContext ctx) throws IOException {
-        val requestEntity = new HttpEntity<Object>(defaultHeaders());
-        serviceTemplate.exchange(endpoint + "/upload/{object-id}?uploadId={upload-id}", HttpMethod.POST, requestEntity,
-            Void.class, objectId, uploadId);
-        return null;
-      }
+    retry.execute(ctx -> {
+      serviceTemplate.exchange(endpoint + "/upload/{object-id}?uploadId={upload-id}", HttpMethod.POST, defaultEntity(),
+          Void.class, objectId, uploadId);
+      return null;
     });
     log.debug("finalizing upload returned");
   }
@@ -277,38 +243,27 @@ public class StorageService {
       boolean disableChecksum)
       throws IOException {
     log.debug("Finalizing upload part, object-id: {}, upload-id: {}, part-number: {}", objectId, uploadId, partNumber);
-    retry.execute(new RetryCallback<Void, IOException>() {
-
-      @Override
-      public Void doWithRetry(RetryContext ctx) throws IOException {
-        if (disableChecksum || md5.equals(etag)) {
-          val requestEntity = new HttpEntity<Object>(defaultHeaders());
-          serviceTemplate
-              .exchange(
-                  endpoint
-                      + "/upload/{object-id}/parts?uploadId={upload-id}&partNumber={partNumber}&md5={md5}&etag={etag}",
-                  HttpMethod.POST, requestEntity,
-                  Void.class, objectId, uploadId, partNumber, md5, etag);
-          return null;
-        }
-        throw new NotRetryableException(); // using this as control mechanism?
+    retry.execute(ctx -> {
+      if (disableChecksum || md5.equals(etag)) {
+        serviceTemplate
+            .exchange(
+                endpoint
+                    + "/upload/{object-id}/parts?uploadId={upload-id}&partNumber={partNumber}&md5={md5}&etag={etag}",
+                HttpMethod.POST, defaultEntity(),
+                Void.class, objectId, uploadId, partNumber, md5, etag);
+        return null;
       }
+      throw new NotRetryableException(); // using this as control mechanism?
     });
   }
 
   public boolean isObjectExist(String objectId) throws IOException {
     log.debug("Checking existence on Storage server for object-id: {}", objectId);
-    return retry.execute(new RetryCallback<Boolean, IOException>() {
-
-      @Override
-      public Boolean doWithRetry(RetryContext ctx) throws IOException {
-        val requestEntity = new HttpEntity<Object>(defaultHeaders());
-
-        boolean result = serviceTemplate.exchange(endpoint + "/upload/{object-id}",
-            HttpMethod.GET, requestEntity,
-            Boolean.class, objectId).getBody();
-        return result;
-      }
+    return retry.execute(ctx -> {
+      boolean result = serviceTemplate.exchange(endpoint + "/upload/{object-id}",
+          GET, defaultEntity(),
+          Boolean.class, objectId).getBody();
+      return result;
     });
 
   }
@@ -319,16 +274,11 @@ public class StorageService {
 
   public ObjectSpecification getDownloadSpecification(String objectId, long offset, long length) throws IOException {
     log.debug("Endpoint: {}", endpoint);
-    return retry.execute(new RetryCallback<ObjectSpecification, IOException>() {
-
-      @Override
-      public ObjectSpecification doWithRetry(RetryContext ctx) throws IOException {
-        val requestEntity = new HttpEntity<Object>(defaultHeaders());
-        return serviceTemplate.exchange(endpoint + "/download/{object-id}?offset={offset}&length={length}",
-            HttpMethod.GET,
-            requestEntity,
-            ObjectSpecification.class, objectId, offset, length).getBody();
-      }
+    return retry.execute(ctx -> {
+      return serviceTemplate.exchange(endpoint + "/download/{object-id}?offset={offset}&length={length}",
+          GET,
+          defaultEntity(),
+          ObjectSpecification.class, objectId, offset, length).getBody();
     });
   }
 
@@ -340,18 +290,11 @@ public class StorageService {
   public ObjectSpecification getExternalDownloadSpecification(String objectId, long offset, long length)
       throws IOException {
     log.debug("Endpoint: {}", endpoint);
-    return retry.execute(new RetryCallback<ObjectSpecification, IOException>() {
-
-      @Override
-      public ObjectSpecification doWithRetry(RetryContext ctx) throws IOException {
-        val requestEntity = new HttpEntity<Object>(defaultHeaders());
-        return serviceTemplate.exchange(
-            endpoint + "/download/{object-id}?offset={offset}&length={length}&external=true",
-            HttpMethod.GET,
-            requestEntity,
-            ObjectSpecification.class, objectId, offset, length).getBody();
-      }
-    });
+    return retry.execute(ctx -> serviceTemplate.exchange(
+        endpoint + "/download/{object-id}?offset={offset}&length={length}&external=true",
+        GET,
+        defaultEntity(),
+        ObjectSpecification.class, objectId, offset, length).getBody());
   }
 
   public void deleteDownloadPart(File stateDir, String objectId, Part part) {
@@ -361,17 +304,12 @@ public class StorageService {
 
   public void deleteUploadPart(String objectId, String uploadId, Part part) throws IOException {
     log.debug("Deleting part for object-id: {}, upload-id: {}, part: {}", objectId, uploadId, part);
-    retry.execute(new RetryCallback<Void, IOException>() {
-
-      @Override
-      public Void doWithRetry(RetryContext ctx) throws IOException {
-        val requestEntity = new HttpEntity<Object>(defaultHeaders());
-        serviceTemplate.exchange(
-            endpoint + "/upload/{object-id}/parts?uploadId={upload-id}&partNumber={partNumber}",
-            HttpMethod.DELETE, requestEntity,
-            Void.class, objectId, uploadId, part.getPartNumber());
-        return null;
-      }
+    retry.execute(ctx -> {
+      serviceTemplate.exchange(
+          endpoint + "/upload/{object-id}/parts?uploadId={upload-id}&partNumber={partNumber}",
+          DELETE, defaultEntity(),
+          Void.class, objectId, uploadId, part.getPartNumber());
+      return null;
     });
   }
 
@@ -387,30 +325,25 @@ public class StorageService {
 
   public boolean isUploadDataRecoverable(String objectId, long fileSize) throws IOException {
     log.debug("Recovering upload, object-id: {}", objectId);
-    return retry.execute(new RetryCallback<Boolean, IOException>() {
-
-      @Override
-      public Boolean doWithRetry(RetryContext ctx) throws IOException {
-        try {
-          val requestEntity = new HttpEntity<Object>(defaultHeaders());
-          serviceTemplate.exchange(
-              endpoint + "/upload/{object-id}/recovery?fileSize={file-size}",
-              HttpMethod.POST, requestEntity,
-              Boolean.class, objectId, fileSize);
-        } catch (NotRetryableException e) {
-          return false;
-        }
-        return true;
+    return retry.execute(ctx -> {
+      try {
+        serviceTemplate.exchange(
+            endpoint + "/upload/{object-id}/recovery?fileSize={file-size}",
+            HttpMethod.POST, defaultEntity(),
+            Boolean.class, objectId, fileSize);
+      } catch (NotRetryableException e) {
+        return false;
       }
+      return true;
     });
   }
 
   public String ping() {
-    HttpEntity<Object> requestEntity = new HttpEntity<Object>(defaultHeaders());
     // Get pre-signed URL to retrieve sentinel object from bucket
     try {
       val signedUrl =
-          serviceTemplate.exchange(endpoint + "/download/ping", HttpMethod.GET, requestEntity, String.class).getBody();
+          serviceTemplate.exchange(endpoint + "/download/ping", HttpMethod.GET, defaultEntity(), String.class)
+              .getBody();
       URI uri = null;
       try {
         uri = new URI(signedUrl);
@@ -423,7 +356,8 @@ public class StorageService {
       return result;
     } catch (RestClientException rce) {
       if (rce.getRootCause().getClass().equals(SocketTimeoutException.class)) {
-        log.error("Unable to connect to repository endpoint. Verify your network connection. You also need to be running on a compute node within the repository cloud.");
+        log.error(
+            "Unable to connect to repository endpoint. Verify your network connection. You also need to be running on a compute node within the repository cloud.");
         throw new NotRetryableException(new IOException(
             "Access refused by repository. Ensure client is running as part of repository cloud."));
       }
@@ -438,7 +372,7 @@ public class StorageService {
     }
   }
 
-  private HttpEntity<Object> defaultRequestEntity() {
+  private HttpEntity<Object> defaultEntity() {
     return new HttpEntity<Object>(defaultHeaders());
   }
 
