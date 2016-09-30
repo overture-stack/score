@@ -28,10 +28,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import lombok.SneakyThrows;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
-
 import org.icgc.dcc.storage.client.cli.ConverterFactory.OutputLayoutConverter;
 import org.icgc.dcc.storage.client.cli.CreatableDirectoryValidator;
 import org.icgc.dcc.storage.client.cli.ObjectIdListValidator;
@@ -48,6 +44,10 @@ import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
+
+import lombok.SneakyThrows;
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
@@ -99,7 +99,7 @@ public class DownloadCommand extends RepositoryAccessCommand {
       verifyRepoConnection();
     }
 
-    terminal.println("Downloading...");
+    terminal.printStatus("Downloading...");
 
     val listed = objectId.size() > 0;
     if (listed) {

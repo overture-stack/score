@@ -28,9 +28,8 @@ public abstract class RepositoryAccessCommand extends AbstractClientCommand {
   private StorageService storageService;
 
   protected void verifyRepoConnection() throws IOException {
-    terminal.println("Validating repository connection...");
+    terminal.printStatus("Validating repository connection...");
     storageService.ping();
-    terminal.println("Connection verified");
   }
 
 }

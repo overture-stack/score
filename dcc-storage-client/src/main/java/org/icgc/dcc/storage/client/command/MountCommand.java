@@ -136,12 +136,15 @@ public class MountCommand extends RepositoryAccessCommand {
       // Collect and index metadata
       //
 
+      val tip =
+          cacheMetadata ? "" : " (Tip: use " + terminal.option("--cache-metadata") + " to skip this step next time)";
+
       log.info("Indexing remote entities...");
-      terminal.printStatus(i++, "Indexing remote entities. Please wait");
+      terminal.printStatus(i++, "Indexing remote entities" + tip + ". Please wait");
       val entities = terminal.printWaiting(this::resolveEntities);
 
       log.info("Indexing remove objects...");
-      terminal.printStatus(i++, "Indexing remote objects. Please wait");
+      terminal.printStatus(i++, "Indexing remote objects" + tip + ". Please wait");
       List<ObjectInfo> objects = terminal.printWaiting(this::resolveObjects);
       if (hasManifest()) {
         // Manifest is a filtered view y'all!
@@ -264,7 +267,10 @@ public class MountCommand extends RepositoryAccessCommand {
   private void reportMount() {
     val location = terminal.value(mountPoint.getAbsolutePath());
     terminal.printStatus(
-        terminal.label("Successfully mounted file system at " + location + " and is now ready for use!"));
+        terminal.label("Successfully mounted file system at " + location + " and is now ready for use."));
+
+    terminal.print("\nOpen a new terminal for interaction or relaunch with " + terminal.option("--daemonize")
+        + " to put in background");
   }
 
   private void reportSummary(MountStorageContext context, Stopwatch watch) {

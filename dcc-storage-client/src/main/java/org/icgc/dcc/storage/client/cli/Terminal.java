@@ -84,7 +84,7 @@ public class Terminal {
           val state = " " + ansi().fg(GREEN).a(c).reset().toString();
           print(state);
         } else {
-          Thread.sleep(2000L);
+          Thread.sleep(5000L);
           print(".");
         }
       }
@@ -144,6 +144,10 @@ public class Terminal {
 
   public String ansi(String text) {
     return ansi().render(text).toString();
+  }
+
+  public String option(String text) {
+    return ansi().render("@|bold " + text + "|@").toString();
   }
 
   public String label(String text) {

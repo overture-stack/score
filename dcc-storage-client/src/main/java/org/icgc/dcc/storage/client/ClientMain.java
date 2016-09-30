@@ -95,7 +95,7 @@ public class ClientMain implements CommandLineRunner {
       val profiles = bootstrap(args);
 
       // Setup
-      err.println("Starting...");
+      err.print("Starting...");
       val cli = new JCommander();
       cli.setProgramName(APPLICATION_NAME);
       cli.addConverterFactory(new ConverterFactory());
@@ -123,7 +123,7 @@ public class ClientMain implements CommandLineRunner {
    */
   @Override
   public void run(String... params) throws Exception {
-    terminal.println("Running...");
+    terminal.printStatus("Running...");
 
     try {
       // Parse
