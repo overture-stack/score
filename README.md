@@ -2,6 +2,8 @@
 
 Storage and transfer system for ICGC cloud based projects. 
 
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/201ae314ab3842baad25bc820069e90a)](https://www.codacy.com/app/icgc-dcc/dcc-storage?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=icgc-dcc/dcc-storage&amp;utm_campaign=Badge_Grade)
+
 ## Build
 
 To compile, test and package the system, execute the following from the root of the repository:
