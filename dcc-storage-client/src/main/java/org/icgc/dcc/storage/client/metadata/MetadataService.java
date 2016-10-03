@@ -35,6 +35,10 @@ public class MetadataService {
     return metadataClient.findEntities();
   }
 
+  public List<Entity> getEntities(String... fields) {
+    return metadataClient.findEntities(fields);
+  }
+
   public Entity getEntity(String objectId) {
     return metadataClient.findEntity(objectId);
   }
@@ -58,7 +62,7 @@ public class MetadataService {
   private static boolean isIdxFile(Entity e, String fileName) {
     return isMatch(e, fileName + ".idx");
   }
-  
+
   private static boolean isBaiFile(Entity e, String fileName) {
     return isMatch(e, fileName + ".bai");
   }

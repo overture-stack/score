@@ -294,7 +294,8 @@ public class MountCommand extends RepositoryAccessCommand {
   }
 
   private List<Entity> resolveEntities() throws IOException {
-    return resolveList("entities", metadataServices::getEntities, new TypeReference<List<Entity>>() {});
+    return resolveList("entities", () -> metadataServices.getEntities("id", "fileName", "gnosId"),
+        new TypeReference<List<Entity>>() {});
   }
 
   @SneakyThrows

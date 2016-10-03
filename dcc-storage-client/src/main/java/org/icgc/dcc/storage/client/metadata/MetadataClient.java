@@ -17,12 +17,14 @@
  */
 package org.icgc.dcc.storage.client.metadata;
 
+import static java.util.stream.Collectors.joining;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 
 import java.io.FileNotFoundException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 
 import org.icgc.dcc.common.core.security.SSLCertificateValidation;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -73,11 +75,19 @@ public class MetadataClient {
   }
 
   public List<Entity> findEntities() throws EntityNotFoundException {
-    return readAll("/");
+    return findEntities(new String[] {});
+  }
+
+  public List<Entity> findEntities(String... fields) throws EntityNotFoundException {
+    return readAll("/" + (fields.length > 0 ? "?" + resolveFields(fields) : ""));
   }
 
   public List<Entity> findEntitiesByGnosId(@NonNull String gnosId) throws EntityNotFoundException {
-    return readAll("?gnosId=" + gnosId);
+    return findEntitiesByGnosId(gnosId, new String[] {});
+  }
+
+  public List<Entity> findEntitiesByGnosId(@NonNull String gnosId, String... fields) throws EntityNotFoundException {
+    return readAll("?gnosId=" + gnosId + (fields.length > 0 ? "&" + resolveFields(fields) : ""));
   }
 
   @SneakyThrows
@@ -119,6 +129,10 @@ public class MetadataClient {
   @SneakyThrows
   private URL resolveUrl(String path) {
     return new URL(serverUrl + "/entities" + path);
+  }
+
+  private static String resolveFields(String[] fields) {
+    return Stream.of(fields).map(f -> "fields=" + f).collect(joining("&"));
   }
 
 }
