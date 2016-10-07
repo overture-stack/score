@@ -90,11 +90,6 @@ public class DownloadService {
     return getUrl(objectId, 0, -1);
   }
 
-  @SneakyThrows
-  public String getUrlAsString(@NonNull String objectId) {
-    return getUrlAsString(objectId, 0, -1);
-  }
-
   /**
    * This method returns a pre-signed URL for downloading the blob associated with the objectId S3 key.
    * @param objectId
@@ -108,14 +103,6 @@ public class DownloadService {
     val file = getOnlyElement(spec.getParts()); // Throws IllegalArgumentException if more than one part
 
     return new URL(file.getUrl());
-  }
-
-  @SneakyThrows
-  public String getUrlAsString(@NonNull String objectId, long offset, long length) {
-    val spec = storageService.getExternalDownloadSpecification(objectId, offset, length);
-    val file = getOnlyElement(spec.getParts()); // Throws IllegalArgumentException if more than one part
-
-    return file.getUrl();
   }
 
   /**
