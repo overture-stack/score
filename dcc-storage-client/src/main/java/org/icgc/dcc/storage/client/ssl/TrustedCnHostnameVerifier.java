@@ -50,7 +50,7 @@ public final class TrustedCnHostnameVerifier implements HostnameVerifier {
   private final String trustedCn;
   private final HostnameVerifier delegate;
 
-  public TrustedCnHostnameVerifier(@NonNull String excludedCn, @NonNull HostnameVerifier delegate) {
+  public TrustedCnHostnameVerifier(String excludedCn, @NonNull HostnameVerifier delegate) {
     this.trustedCn = excludedCn;
     this.delegate = delegate;
   }

@@ -56,7 +56,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class SamFileBuilder {
 
-  // arbitrary limit - actual max for file name (not including path) is probably 255
+  // Arbitrary limit - actual max for file name (not including path) is probably 255
   public final static int MAX_FILENAME_LENGTH = 128;
 
   /**
@@ -420,7 +420,11 @@ public class SamFileBuilder {
 
       // Overwrite existing output
       if (outFile.exists()) {
-        outFile.delete();
+        if (outFile.delete()) {
+          session.info("Overwriting previous output");
+        } else {
+          // Throws IOException if delete() fails
+        }
       }
 
       return outputFormat == OutputFormat.BAM ? factory.makeBAMWriter(header, true, outFile) : factory

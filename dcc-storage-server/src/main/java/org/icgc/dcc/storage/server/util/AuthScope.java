@@ -31,7 +31,7 @@ import lombok.NonNull;
  */
 public class AuthScope {
 
-  public static String ALL_PROJECTS = "*";
+  public static final String ALL_PROJECTS = "*";
   private String system = "";
   private String project = "";
   private String operation = "";

@@ -40,7 +40,8 @@ public class FileSystem {
   @SneakyThrows
   public void start() {
     deleteDirectory(rootDir);
-    for (val path : new String[] { "s3/buckets", "s3/multipart", "downloads", "uploads", "logs" }) {
+    // Removed s3 directory creation - S3 class does it again anyways during createSetup()
+    for (val path : new String[] { "downloads", "uploads", "logs" }) {
       val dir = new File(rootDir, path);
 
       log.info("Creating '{}'...", dir);

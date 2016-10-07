@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
 import lombok.NonNull;
@@ -73,7 +74,7 @@ public class UploadStateStore extends TransferState {
       removeDir(uploadStateDir, true);
 
       File uploadIdFile = new File(uploadStateDir, getStateName());
-      try (PrintWriter out = new PrintWriter(uploadIdFile.getCanonicalPath())) {
+      try (PrintWriter out = new PrintWriter(uploadIdFile, StandardCharsets.UTF_8.name())) {
         out.println(spec.getUploadId());
       }
     } catch (IOException e) {
