@@ -19,10 +19,10 @@ package org.icgc.dcc.storage.client;
 
 import java.util.function.Consumer;
 
-import org.junit.Rule;
-import org.springframework.boot.test.OutputCapture;
-
 import lombok.Getter;
+
+import org.junit.Rule;
+import org.springframework.boot.test.rule.OutputCapture;
 
 public abstract class AbstractClientMainTest {
 

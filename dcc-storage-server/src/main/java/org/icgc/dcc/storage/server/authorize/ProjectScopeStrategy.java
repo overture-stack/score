@@ -107,7 +107,7 @@ public class ProjectScopeStrategy extends AbstractScopeAuthorizationStrategy {
     if (entity != null) {
       return entity.getProjectCode();
     } else {
-      val msg = String.format("Failed to retrieve metadata for objectId: {}", objectId);
+      val msg = String.format("Failed to retrieve metadata for objectId: %s", objectId);
       log.error(msg);
       throw new NotRetryableException(new IllegalArgumentException(msg));
     }

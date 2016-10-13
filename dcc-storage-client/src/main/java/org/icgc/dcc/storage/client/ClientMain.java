@@ -241,7 +241,7 @@ public class ClientMain implements CommandLineRunner {
     return System.getProperty("storage.profile", firstNonNull(System.getenv("STORAGE_PROFILE"), "aws"));
   }
 
-  private static void exit(int status) {
+  private static final void exit(int status) {
     exit.accept(status);
   }
 

@@ -212,7 +212,7 @@ public class ObjectUploadService {
         log.debug("xml: {}", correctXml);
 
         // TODO: make this better by rewriting ListPartsResultUnmarshaller
-        val data = new ByteArrayInputStream(correctXml.getBytes());
+        val data = new ByteArrayInputStream(correctXml.getBytes("UTF-8"));
         parts = new ListPartsResultUnmarshaller().unmarshall(data).getParts();
       }
     } catch (RestClientException | AmazonClientException | URISyntaxException e) {

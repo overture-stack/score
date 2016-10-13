@@ -64,4 +64,9 @@ public class ProgressInputStream extends ForwardingInputStream {
     return value;
   }
 
+  @Override
+  public boolean equals(Object obj) {
+    return super.equals(obj);
+  }
+
 }

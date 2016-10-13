@@ -53,7 +53,7 @@ public class AuthClient {
     val basicAuth =
         "Basic " + new String(BaseEncoding.base64().encode(userCredentials.getBytes(StandardCharsets.UTF_8)));
     byte[] data =
-        "grant_type=password&username=workflow&scope=s3.upload%20s3.download".getBytes(StandardCharsets.UTF_8);
+        "grant_type=password&username=workflow&scope=aws.upload%20aws.download".getBytes(StandardCharsets.UTF_8);
     connection.setDoOutput(true);
     connection.setUseCaches(false);
     connection.setRequestMethod("POST");

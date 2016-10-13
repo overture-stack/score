@@ -24,6 +24,9 @@
 
 server:
   port: 5431
+  compression:
+    enabled: true
+    mime-types: application/json
   
 s3:
   secured: true
@@ -140,8 +143,8 @@ auth:
     url: https://localhost:8443/oauth/check_token
     clientId: resource
     clientSecret: pass
-    uploadScope: s3.upload
-    downloadScope: s3.download
+    uploadScope: aws.upload
+    downloadScope: aws.download
     #uploadScope=collab.upload
     #downloadScope=collab.download
 
