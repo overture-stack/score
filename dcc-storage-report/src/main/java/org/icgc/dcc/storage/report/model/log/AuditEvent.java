@@ -1,4 +1,4 @@
-package org.icgc.dcc.storage.audit.model.log;
+package org.icgc.dcc.storage.report.model.log;
 
 import org.joda.time.DateTime;
 import org.joda.time.format.ISODateTimeFormat;

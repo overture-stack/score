@@ -17,7 +17,7 @@
  */
 package org.icgc.dcc.storage.server.util;
 
-import java.nio.charset.Charset;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
@@ -30,7 +30,7 @@ public class TokenHasher {
 
   public static String hashToken(String accessToken) {
     HashFunction hf = Hashing.md5();
-    HashCode hc = hf.newHasher().putString(scrubToken(accessToken), Charset.forName("UTF-8")).hash();
+    HashCode hc = hf.newHasher().putString(scrubToken(accessToken), UTF_8).hash();
     return hc.toString();
   }
 

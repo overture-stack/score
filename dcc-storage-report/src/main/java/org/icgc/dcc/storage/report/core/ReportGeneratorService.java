@@ -1,4 +1,4 @@
-package org.icgc.dcc.storage.audit.report;
+package org.icgc.dcc.storage.report.core;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -13,11 +13,11 @@ import lombok.SneakyThrows;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
-import org.icgc.dcc.storage.audit.model.log.AuditEvent;
-import org.icgc.dcc.storage.audit.model.reference.ObjectEntry;
-import org.icgc.dcc.storage.audit.model.reference.TokenEntry;
-import org.icgc.dcc.storage.audit.model.report.ReportRow;
-import org.icgc.dcc.storage.audit.model.report.ReportType;
+import org.icgc.dcc.storage.report.model.ReportRow;
+import org.icgc.dcc.storage.report.model.ReportType;
+import org.icgc.dcc.storage.report.model.log.AuditEvent;
+import org.icgc.dcc.storage.report.model.reference.ObjectEntry;
+import org.icgc.dcc.storage.report.model.reference.TokenEntry;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;

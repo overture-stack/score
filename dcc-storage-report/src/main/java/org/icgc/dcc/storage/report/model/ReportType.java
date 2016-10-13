@@ -1,4 +1,4 @@
-package org.icgc.dcc.storage.audit.model.report;
+package org.icgc.dcc.storage.report.model;
 
 public enum ReportType {
 	BY_DATE,

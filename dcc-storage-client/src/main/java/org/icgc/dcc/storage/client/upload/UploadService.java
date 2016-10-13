@@ -24,10 +24,6 @@ import java.util.function.Predicate;
 
 import javax.annotation.PostConstruct;
 
-import lombok.SneakyThrows;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
-
 import org.icgc.dcc.storage.client.cli.Terminal;
 import org.icgc.dcc.storage.client.exception.NotResumableException;
 import org.icgc.dcc.storage.client.exception.NotRetryableException;
@@ -41,6 +37,10 @@ import org.icgc.dcc.storage.core.model.UploadProgress;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+
+import lombok.SneakyThrows;
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * main class to handle uploading objects
@@ -62,8 +62,6 @@ public class UploadService {
    */
   @Autowired
   private StorageService storageService;
-  @Autowired
-  private UploadStateStore uploadStateStore;
   @Autowired
   private Transport.Builder transportBuilder;
   @Autowired
@@ -93,7 +91,8 @@ public class UploadService {
         }
         return;
       } catch (NotRetryableException e) {
-        log.warn("Upload was not completed successfully in the last execution. Checking data integrity. Please wait...");
+        log.warn(
+            "Upload was not completed successfully in the last execution. Checking data integrity. Please wait...");
         redo = !storageService.isUploadDataRecoverable(objectId, file.length());
       }
   }

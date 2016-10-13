@@ -1,4 +1,4 @@
-package org.icgc.dcc.storage.audit;
+package org.icgc.dcc.storage.report;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -24,15 +24,15 @@ import lombok.extern.slf4j.Slf4j;
 import net.thisptr.jackson.jq.JsonQuery;
 
 import org.apache.commons.beanutils.PropertyUtils;
-import org.icgc.dcc.storage.audit.cli.ReportConverter;
-import org.icgc.dcc.storage.audit.model.log.AuditEvent;
-import org.icgc.dcc.storage.audit.model.log.EventType;
-import org.icgc.dcc.storage.audit.model.reference.Digests;
-import org.icgc.dcc.storage.audit.model.reference.ObjectEntry;
-import org.icgc.dcc.storage.audit.model.reference.TokenEntry;
-import org.icgc.dcc.storage.audit.model.report.ReportType;
-import org.icgc.dcc.storage.audit.report.BasicAuthRestTemplate;
-import org.icgc.dcc.storage.audit.report.ReportGeneratorService;
+import org.icgc.dcc.storage.report.cli.ReportConverter;
+import org.icgc.dcc.storage.report.core.BasicAuthRestTemplate;
+import org.icgc.dcc.storage.report.core.ReportGeneratorService;
+import org.icgc.dcc.storage.report.model.ReportType;
+import org.icgc.dcc.storage.report.model.log.AuditEvent;
+import org.icgc.dcc.storage.report.model.log.EventType;
+import org.icgc.dcc.storage.report.model.reference.Digests;
+import org.icgc.dcc.storage.report.model.reference.ObjectEntry;
+import org.icgc.dcc.storage.report.model.reference.TokenEntry;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.springframework.http.HttpEntity;

@@ -1,4 +1,4 @@
-package org.icgc.dcc.storage.audit.report;
+package org.icgc.dcc.storage.report.core;
 
 import java.io.IOException;
 import java.net.URI;

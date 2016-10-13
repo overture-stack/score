@@ -1,5 +1,7 @@
 package org.icgc.dcc.storage.server.service.upload;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -9,12 +11,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
-
-import lombok.NonNull;
-import lombok.Setter;
-import lombok.SneakyThrows;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
 
 import org.icgc.dcc.storage.core.model.ObjectKey;
 import org.icgc.dcc.storage.core.model.ObjectSpecification;
@@ -49,6 +45,12 @@ import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PartSummary;
 import com.amazonaws.services.s3.model.transform.Unmarshallers.ListPartsResultUnmarshaller;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import lombok.NonNull;
+import lombok.Setter;
+import lombok.SneakyThrows;
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * A service for object upload.
@@ -212,7 +214,7 @@ public class ObjectUploadService {
         log.debug("xml: {}", correctXml);
 
         // TODO: make this better by rewriting ListPartsResultUnmarshaller
-        val data = new ByteArrayInputStream(correctXml.getBytes("UTF-8"));
+        val data = new ByteArrayInputStream(correctXml.getBytes(UTF_8));
         parts = new ListPartsResultUnmarshaller().unmarshall(data).getParts();
       }
     } catch (RestClientException | AmazonClientException | URISyntaxException e) {

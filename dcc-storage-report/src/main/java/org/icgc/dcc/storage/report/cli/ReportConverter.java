@@ -1,6 +1,6 @@
-package org.icgc.dcc.storage.audit.cli;
+package org.icgc.dcc.storage.report.cli;
 
-import org.icgc.dcc.storage.audit.model.report.ReportType;
+import org.icgc.dcc.storage.report.model.ReportType;
 
 import com.beust.jcommander.IStringConverter;
 import com.beust.jcommander.ParameterException;

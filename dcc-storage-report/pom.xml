@@ -2,7 +2,7 @@
     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.icgc.dcc</groupId>
-    <artifactId>dcc-storage-auditreports</artifactId>
+    <artifactId>dcc-storage-report</artifactId>
     <version>0.1-SNAPSHOT</version>
     <name>${project.artifactId}</name>
     <description>${project.name}</description>
@@ -98,6 +98,7 @@
             <artifactId>h2</artifactId>
         </dependency>
        
+        <!-- TODO: Where is this?!?!?! -->
         <dependency>
             <groupId>com.hiramsoft.commons</groupId>
             <artifactId>jsalparser</artifactId>

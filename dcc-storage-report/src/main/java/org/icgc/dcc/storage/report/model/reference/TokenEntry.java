@@ -1,4 +1,4 @@
-package org.icgc.dcc.storage.audit.model.reference;
+package org.icgc.dcc.storage.report.model.reference;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
