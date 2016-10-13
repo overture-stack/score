@@ -15,41 +15,53 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.server.config;
+package org.icgc.dcc.storage.server.repository;
 
-import org.icgc.dcc.storage.server.repository.PartCalculator;
-import org.icgc.dcc.storage.server.repository.SimplePartCalculator;
-import org.icgc.dcc.storage.server.repository.URLGenerator;
-import org.icgc.dcc.storage.server.repository.UploadStateStore;
-import org.icgc.dcc.storage.server.repository.s3.S3URLGenerator;
-import org.icgc.dcc.storage.server.repository.s3.S3UploadStateStore;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
+import java.util.List;
+
+import lombok.extern.slf4j.Slf4j;
+
+import org.icgc.dcc.storage.core.model.Part;
+
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableList.Builder;
 
 /**
- * Server level configuration
+ * a simple way to divide an object into multi parts
  */
-@Configuration
-@Profile({ "prod", "default", "debug" })
-public class ServerConfig {
+@Slf4j
+public class SimplePartCalculator implements PartCalculator {
 
-  @Value("${upload.partsize}")
-  private int partSize;
+  private static final int MAX_NUM_PART = 10000;
+  private static final int MIN_PART_SIZE = 20 * 1024 * 1024; // 20MB
 
-  @Bean
-  public UploadStateStore stateStore() {
-    return new S3UploadStateStore();
+  private final int minPartSize;
+
+  public SimplePartCalculator(int minPartSize) {
+    this.minPartSize = Math.max(minPartSize, MIN_PART_SIZE);
   }
 
-  @Bean
-  public PartCalculator calculator() {
-    return new SimplePartCalculator(partSize);
+  @Override
+  public List<Part> divide(long fileSize) {
+    return divide(0, fileSize);
   }
 
-  @Bean
-  public URLGenerator url() {
-    return new S3URLGenerator();
+  @Override
+  public List<Part> divide(long offset, long objectLength) {
+    int defaultPartSize = Math.max(minPartSize, (int) (objectLength / MAX_NUM_PART) + 1);
+    log.debug("Part Size: {}", defaultPartSize);
+    Builder<Part> parts = ImmutableList.builder();
+    long currentTotalLength = 0;
+    for (int i = 1; currentTotalLength < objectLength; ++i) {
+      int partSize = (int) Math.min(defaultPartSize, objectLength - currentTotalLength);
+      parts.add(new Part(i, partSize, offset + currentTotalLength, null, null, null));
+      currentTotalLength += partSize;
+    }
+    return parts.build();
+  }
+
+  @Override
+  public List<Part> specify(long offset, long length) {
+    return ImmutableList.of(new Part(1, length, offset, null, null, null));
   }
 }

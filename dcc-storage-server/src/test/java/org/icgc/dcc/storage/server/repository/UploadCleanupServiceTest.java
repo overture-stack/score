@@ -15,41 +15,33 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.server.config;
+package org.icgc.dcc.storage.server.repository;
 
-import org.icgc.dcc.storage.server.repository.PartCalculator;
-import org.icgc.dcc.storage.server.repository.SimplePartCalculator;
-import org.icgc.dcc.storage.server.repository.URLGenerator;
-import org.icgc.dcc.storage.server.repository.UploadStateStore;
-import org.icgc.dcc.storage.server.repository.s3.S3URLGenerator;
-import org.icgc.dcc.storage.server.repository.s3.S3UploadStateStore;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
+import org.icgc.dcc.storage.server.Tests;
+import org.icgc.dcc.storage.server.repository.UploadCleanupService;
+import org.junit.Ignore;
+import org.junit.Test;
 
-/**
- * Server level configuration
- */
-@Configuration
-@Profile({ "prod", "default", "debug" })
-public class ServerConfig {
+import lombok.val;
 
-  @Value("${upload.partsize}")
-  private int partSize;
+@Ignore("For development only")
+public class UploadCleanupServiceTest {
 
-  @Bean
-  public UploadStateStore stateStore() {
-    return new S3UploadStateStore();
+  @Test
+  public void testClean() {
+    val cleanupService = createCleanupService();
+
+    cleanupService.clean();
   }
 
-  @Bean
-  public PartCalculator calculator() {
-    return new SimplePartCalculator(partSize);
+  private UploadCleanupService createCleanupService() {
+    val uploadService = Tests.createUploadService();
+
+    val cleanupService = new UploadCleanupService();
+    cleanupService.setDataDir(Tests.DATA_DIR);
+    cleanupService.setExpiration(7);
+    cleanupService.setUploadService(uploadService);
+    return cleanupService;
   }
 
-  @Bean
-  public URLGenerator url() {
-    return new S3URLGenerator();
-  }
 }

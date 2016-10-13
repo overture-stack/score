@@ -15,41 +15,26 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.server.config;
+package org.icgc.dcc.storage.server.security;
 
-import org.icgc.dcc.storage.server.repository.PartCalculator;
-import org.icgc.dcc.storage.server.repository.SimplePartCalculator;
-import org.icgc.dcc.storage.server.repository.URLGenerator;
-import org.icgc.dcc.storage.server.repository.UploadStateStore;
-import org.icgc.dcc.storage.server.repository.s3.S3URLGenerator;
-import org.icgc.dcc.storage.server.repository.s3.S3UploadStateStore;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
+import static java.nio.charset.StandardCharsets.UTF_8;
+
+import com.google.common.hash.HashCode;
+import com.google.common.hash.HashFunction;
+import com.google.common.hash.Hashing;
 
 /**
- * Server level configuration
+ * 
  */
-@Configuration
-@Profile({ "prod", "default", "debug" })
-public class ServerConfig {
+public class TokenHasher {
 
-  @Value("${upload.partsize}")
-  private int partSize;
-
-  @Bean
-  public UploadStateStore stateStore() {
-    return new S3UploadStateStore();
+  public static String hashToken(String accessToken) {
+    HashFunction hf = Hashing.md5();
+    HashCode hc = hf.newHasher().putString(scrubToken(accessToken), UTF_8).hash();
+    return hc.toString();
   }
 
-  @Bean
-  public PartCalculator calculator() {
-    return new SimplePartCalculator(partSize);
-  }
-
-  @Bean
-  public URLGenerator url() {
-    return new S3URLGenerator();
+  public static String scrubToken(String accessToken) {
+    return accessToken == null ? "" : accessToken.replace("Bearer", "").trim();
   }
 }

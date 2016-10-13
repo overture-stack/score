@@ -15,41 +15,43 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.server.config;
+package org.icgc.dcc.storage.server.metadata;
 
-import org.icgc.dcc.storage.server.repository.PartCalculator;
-import org.icgc.dcc.storage.server.repository.SimplePartCalculator;
-import org.icgc.dcc.storage.server.repository.URLGenerator;
-import org.icgc.dcc.storage.server.repository.UploadStateStore;
-import org.icgc.dcc.storage.server.repository.s3.S3URLGenerator;
-import org.icgc.dcc.storage.server.repository.s3.S3UploadStateStore;
+import static java.lang.String.format;
+import static org.springframework.http.HttpStatus.NOT_FOUND;
+
+import org.icgc.dcc.storage.server.exception.IdNotFoundException;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestTemplate;
 
-/**
- * Server level configuration
- */
-@Configuration
-@Profile({ "prod", "default", "debug" })
-public class ServerConfig {
+import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 
-  @Value("${upload.partsize}")
-  private int partSize;
+@Slf4j
+@Service
+public class MetadataService {
 
-  @Bean
-  public UploadStateStore stateStore() {
-    return new S3UploadStateStore();
+  private final RestTemplate restTemplate = new RestTemplate();
+
+  @Value("${metadata.url}")
+  private String metadataUrl;
+
+  public MetadataEntity getEntity(@NonNull String id) {
+    log.debug("using " + metadataUrl + " for MetaData server");
+    try {
+      return restTemplate.getForEntity(metadataUrl + "/entities/" + id, MetadataEntity.class).getBody();
+    } catch (HttpClientErrorException e) {
+      if (e.getStatusCode() == NOT_FOUND) {
+        throw new IdNotFoundException(format("Entity %s is not registered on the server.", id));
+      }
+
+      log.error("Unexpected response code {} while getting ID {}", e.getStatusCode(), id);
+
+      throw e;
+    }
+
   }
 
-  @Bean
-  public PartCalculator calculator() {
-    return new SimplePartCalculator(partSize);
-  }
-
-  @Bean
-  public URLGenerator url() {
-    return new S3URLGenerator();
-  }
 }

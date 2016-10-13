@@ -15,41 +15,22 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.server.config;
+package org.icgc.dcc.storage.server.repository.s3;
 
-import org.icgc.dcc.storage.server.repository.PartCalculator;
-import org.icgc.dcc.storage.server.repository.SimplePartCalculator;
-import org.icgc.dcc.storage.server.repository.URLGenerator;
-import org.icgc.dcc.storage.server.repository.UploadStateStore;
-import org.icgc.dcc.storage.server.repository.s3.S3URLGenerator;
-import org.icgc.dcc.storage.server.repository.s3.S3UploadStateStore;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
+import lombok.Data;
+
+import com.amazonaws.services.s3.model.S3Object;
 
 /**
- * Server level configuration
+ * Wrapper for an S3Object to carry additional info about the payload
  */
-@Configuration
-@Profile({ "prod", "default", "debug" })
-public class ServerConfig {
+@Data
+public class S3FetchedObject {
 
-  @Value("${upload.partsize}")
-  private int partSize;
+  private S3Object s3Object;
+  private boolean relocated = false;
 
-  @Bean
-  public UploadStateStore stateStore() {
-    return new S3UploadStateStore();
-  }
-
-  @Bean
-  public PartCalculator calculator() {
-    return new SimplePartCalculator(partSize);
-  }
-
-  @Bean
-  public URLGenerator url() {
-    return new S3URLGenerator();
+  public S3FetchedObject(S3Object s3obj) {
+    s3Object = s3obj;
   }
 }

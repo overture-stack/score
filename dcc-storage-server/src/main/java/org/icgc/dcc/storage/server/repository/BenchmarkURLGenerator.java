@@ -15,41 +15,39 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.server.config;
+package org.icgc.dcc.storage.server.repository;
 
-import org.icgc.dcc.storage.server.repository.PartCalculator;
-import org.icgc.dcc.storage.server.repository.SimplePartCalculator;
-import org.icgc.dcc.storage.server.repository.URLGenerator;
-import org.icgc.dcc.storage.server.repository.UploadStateStore;
-import org.icgc.dcc.storage.server.repository.s3.S3URLGenerator;
-import org.icgc.dcc.storage.server.repository.s3.S3UploadStateStore;
+import java.util.Date;
+
+import lombok.extern.slf4j.Slf4j;
+
+import org.icgc.dcc.storage.core.model.ObjectKey;
+import org.icgc.dcc.storage.core.model.Part;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
 
 /**
- * Server level configuration
+ * To generate url for benchmarking
  */
-@Configuration
-@Profile({ "prod", "default", "debug" })
-public class ServerConfig {
+@Slf4j
+public class BenchmarkURLGenerator implements URLGenerator {
 
-  @Value("${upload.partsize}")
-  private int partSize;
+  @Value("${benchmark.endpoint}")
+  private String endpoint;
 
-  @Bean
-  public UploadStateStore stateStore() {
-    return new S3UploadStateStore();
+  @Override
+  public String getUploadPartUrl(String bucketName, ObjectKey objectKey, String uploadId, Part part, Date expiration) {
+    log.info("Benchmark mode is on");
+    return endpoint + "/upload/" + objectKey + "?partNumber=" + String.valueOf(part.getPartNumber()) + "&uploadId="
+        + uploadId;
   }
 
-  @Bean
-  public PartCalculator calculator() {
-    return new SimplePartCalculator(partSize);
+  @Override
+  public String getDownloadPartUrl(String bucketName, ObjectKey objectKey, Part part, Date expiration) {
+    return null;
   }
 
-  @Bean
-  public URLGenerator url() {
-    return new S3URLGenerator();
+  @Override
+  public String getDownloadUrl(String bucketName, ObjectKey objectKey, Date expiration) {
+    return null;
   }
 }

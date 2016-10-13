@@ -24,6 +24,7 @@ import lombok.val;
 import org.icgc.dcc.storage.core.model.ObjectKey;
 import org.icgc.dcc.storage.core.model.ObjectSpecification;
 import org.icgc.dcc.storage.core.model.Part;
+import org.icgc.dcc.storage.server.repository.s3.S3FetchedObject;
 
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.Protocol;
@@ -57,8 +58,8 @@ public class ObjectDownloadServiceStubFactory {
     return result;
   }
 
-  public static FetchedS3Object createS3Object() {
-    val result = new FetchedS3Object(null);
+  public static S3FetchedObject createS3Object() {
+    val result = new S3FetchedObject(null);
     result.setRelocated(true);
     return result;
   }
