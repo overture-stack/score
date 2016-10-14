@@ -15,41 +15,21 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.server.config;
+package org.icgc.dcc.storage.server.repository;
 
-import org.icgc.dcc.storage.server.repository.PartCalculator;
-import org.icgc.dcc.storage.server.repository.SimplePartCalculator;
-import org.icgc.dcc.storage.server.repository.URLGenerator;
-import org.icgc.dcc.storage.server.repository.UploadStateStore;
-import org.icgc.dcc.storage.server.repository.s3.S3URLGenerator;
-import org.icgc.dcc.storage.server.repository.s3.S3UploadStateStore;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
+import java.util.List;
+
+import org.icgc.dcc.storage.core.model.Part;
 
 /**
- * Server level configuration
+ * An interface to represent a way to calculate the part size given the file size
  */
-@Configuration
-@Profile({ "prod", "default", "debug" })
-public class ServerConfig {
+public interface PartCalculator {
 
-  @Value("${upload.partsize}")
-  private int partSize;
+  public List<Part> divide(long offset, long fileSize);
 
-  @Bean
-  public UploadStateStore stateStore() {
-    return new S3UploadStateStore();
-  }
+  public List<Part> divide(long fileSize);
 
-  @Bean
-  public PartCalculator calculator() {
-    return new SimplePartCalculator(partSize);
-  }
+  public List<Part> specify(long offset, long length);
 
-  @Bean
-  public URLGenerator url() {
-    return new S3URLGenerator();
-  }
 }

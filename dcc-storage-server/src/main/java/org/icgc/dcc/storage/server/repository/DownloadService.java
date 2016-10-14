@@ -15,41 +15,20 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.server.config;
+package org.icgc.dcc.storage.server.repository;
 
-import org.icgc.dcc.storage.server.repository.PartCalculator;
-import org.icgc.dcc.storage.server.repository.SimplePartCalculator;
-import org.icgc.dcc.storage.server.repository.URLGenerator;
-import org.icgc.dcc.storage.server.repository.UploadStateStore;
-import org.icgc.dcc.storage.server.repository.s3.S3URLGenerator;
-import org.icgc.dcc.storage.server.repository.s3.S3UploadStateStore;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
+import org.icgc.dcc.storage.core.model.ObjectSpecification;
 
-/**
- * Server level configuration
- */
-@Configuration
-@Profile({ "prod", "default", "debug" })
-public class ServerConfig {
+public interface DownloadService {
 
-  @Value("${upload.partsize}")
-  private int partSize;
+  ObjectSpecification download(String objectId, long offset, long length, boolean forExternalUse);
 
-  @Bean
-  public UploadStateStore stateStore() {
-    return new S3UploadStateStore();
-  }
+  /**
+   * Attempts to fetch a pre-defined object id (defined in application.yml) from the object repository. Used to confirm
+   * that basic access to the repository is permitted. The AWS S3 bucket blocks access to IP's within the AWS cloud, and
+   * Collaboratory also restricts access by IP (albeit via a firewall, so instead of a 403, a timeout happens instead)
+   * @return contents of the sentinel object (a text file by default)
+   */
+  String getSentinelObject();
 
-  @Bean
-  public PartCalculator calculator() {
-    return new SimplePartCalculator(partSize);
-  }
-
-  @Bean
-  public URLGenerator url() {
-    return new S3URLGenerator();
-  }
 }

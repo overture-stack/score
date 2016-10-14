@@ -15,41 +15,41 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.server.config;
+package org.icgc.dcc.storage.server.security;
 
-import org.icgc.dcc.storage.server.repository.PartCalculator;
-import org.icgc.dcc.storage.server.repository.SimplePartCalculator;
-import org.icgc.dcc.storage.server.repository.URLGenerator;
-import org.icgc.dcc.storage.server.repository.UploadStateStore;
-import org.icgc.dcc.storage.server.repository.s3.S3URLGenerator;
-import org.icgc.dcc.storage.server.repository.s3.S3UploadStateStore;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
+import static org.assertj.core.api.Assertions.assertThat;
 
-/**
- * Server level configuration
- */
-@Configuration
-@Profile({ "prod", "default", "debug" })
-public class ServerConfig {
+import org.icgc.dcc.storage.server.security.Access;
 
-  @Value("${upload.partsize}")
-  private int partSize;
+import lombok.val;
 
-  @Bean
-  public UploadStateStore stateStore() {
-    return new S3UploadStateStore();
+import org.junit.Test;
+
+public class AccessTest {
+
+  @Test
+  public void test_invalid_access_type() {
+    val sut = new Access("gumby");
+    assertThat(sut.isOpen()).isFalse();
+    assertThat(sut.isControlled()).isFalse();
+    assertThat(sut.isOther()).isTrue();
   }
 
-  @Bean
-  public PartCalculator calculator() {
-    return new SimplePartCalculator(partSize);
+  @Test
+  public void test_missing_access_type() {
+    val sut = new Access("");
+    assertThat(sut.isControlled()).isTrue();
   }
 
-  @Bean
-  public URLGenerator url() {
-    return new S3URLGenerator();
+  @Test
+  public void test_null_access_type() {
+    val sut = new Access(null);
+    assertThat(sut.isControlled()).isTrue();
+  }
+
+  @Test
+  public void test_literal_null_access_type() {
+    val sut = new Access("null");
+    assertThat(sut.isControlled()).isTrue();
   }
 }

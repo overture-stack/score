@@ -17,8 +17,8 @@
  */
 package org.icgc.dcc.storage.server.config;
 
-import org.icgc.dcc.storage.server.authorize.BasicScopeAuthorizationStrategy;
-import org.icgc.dcc.storage.server.authorize.ProjectScopeStrategy;
+import org.icgc.dcc.storage.server.security.BasicScopeAuthorizationStrategy;
+import org.icgc.dcc.storage.server.security.ProjectScopeStrategy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.SecurityProperties;
 import org.springframework.context.ApplicationContext;
