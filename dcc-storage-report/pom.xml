@@ -97,13 +97,6 @@
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
         </dependency>
-       
-        <!-- TODO: Where is this?!?!?! -->
-        <dependency>
-            <groupId>com.hiramsoft.commons</groupId>
-            <artifactId>jsalparser</artifactId>
-            <version>0.1</version>
-        </dependency>
         <dependency>
             <groupId>net.thisptr</groupId>
             <artifactId>jackson-jq</artifactId>
