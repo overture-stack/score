@@ -70,7 +70,7 @@ Also, install unzip if it's not already installed.
 sudo apt-get install -y unzip git
 ```
 
-Create an SSL certificate to be used across the storage system. This can be done using the LetsEncrypt certbot client (**Note:** this will require temporarily opening access to port 443 on the EC2). The root account may need to be used for some of this.
+Create an SSL certificate to be used across the storage system. This can be done using the LetsEncrypt certbot client (**NOTE:** this will require temporarily opening access to port 443 on the EC2). The root account may need to be used for some of this.
 ```
 git clone https://github.com/certbot/certbot
 cd certbot
@@ -99,7 +99,22 @@ cp /usr/lib/jvm/java-8-oracle/jre/lib/security/cacerts $DCC_HOME/conf/ssl/
 keytool -import -file chain1.pem -alias LetsEncryptCA -keystore cacerts -storepass changeit
 # if you used the bundle.pem above then use that in addition to chain1.pem here... you'll want to import both so the cacerts can be used by the client
 ```
-NOTE: Let's Encrypt only supplies certificates for 90 days *but* they have a very easy system for renewing.  Using `./certbot-auto renew`.  This really should be automated to run every 80 days or so.  For an explanation of why they do this see: https://letsencrypt.org/2015/11/09/why-90-days.html
+
+**NOTE**: Let's Encrypt only supplies certificates for 90 days *but* they have a very easy system for renewing.  Using `./certbot-auto renew`.  This really should be automated to run every 80 days or so.  For an explanation of why they do this see: https://letsencrypt.org/2015/11/09/why-90-days.html  Here's an example of what I needed to do after a successful renewal:
+
+```
+# open up port 443 again
+./certbot-auto renew
+sudo su -
+cd /etc/letsencrypt/live/storage2.ucsc-cgl.org
+wget --quiet https://letsencrypt.org/certs/isrgrootx1.pem
+wget --quiet -O dstrootx3.pem https://ssl-tools.net/certificates/dac9024f54d8f6df94935fb1732638ca6ad77c13.pem
+cat isrgrootx1.pem dstrootx3.pem chain.pem > bundle.pem
+openssl pkcs12 -export -in cert.pem -inkey privkey.pem -out ucsc-storage.p12 -name tomcat -CAfile bundle.pem  -caname root -chain
+keytool -importkeystore -destkeystore ucsc-storage.jks -deststorepass password -srckeystore ucsc-storage.p12 -srcstoretype PKCS12 -srcstorepass password
+cp -L chain.pem ucsc-storage.p12 ucsc-storage.jks ~ubuntu/dcc/conf/ssl/
+# and now restart the services
+```
 
 Install and configure MongoDB metadata-server dependency (https://docs.mongodb.com/manual/tutorial/install-mongodb-on-ubuntu/). The commands shown below leave access to mongodb unrestricted. The port that mongod listens on shouldn't be open to external IPs, and in production systems access restriction should be enabled.
 ```
