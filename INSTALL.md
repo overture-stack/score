@@ -112,7 +112,8 @@ wget --quiet -O dstrootx3.pem https://ssl-tools.net/certificates/dac9024f54d8f6d
 cat isrgrootx1.pem dstrootx3.pem chain.pem > bundle.pem
 openssl pkcs12 -export -in cert.pem -inkey privkey.pem -out ucsc-storage.p12 -name tomcat -CAfile bundle.pem  -caname root -chain
 keytool -importkeystore -destkeystore ucsc-storage.jks -deststorepass password -srckeystore ucsc-storage.p12 -srcstoretype PKCS12 -srcstorepass password
-cp -L chain.pem ucsc-storage.p12 ucsc-storage.jks ~ubuntu/dcc/conf/ssl/
+cp -L bundle.pem ucsc-storage.p12 ucsc-storage.jks ~ubuntu/dcc/conf/ssl/
+chown -R ubuntu:ubuntu ~ubuntu/dcc/conf/ssl/
 # and now restart the services
 ```
 
