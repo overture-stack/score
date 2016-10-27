@@ -2,7 +2,7 @@
 Installing the ICGC Storage System
 
 
-# Storage System Overview
+## Storage System Overview
 Backend Components:
 - storage-server: allows authenticated users to interact with entities in the storage system
 - metadata-server: allows authenticated users to register entities with the storage system
@@ -15,7 +15,7 @@ Client Components:
 Each component is a Spring Boot java application packaged in a JAR. Look in src/main/resources/application.yml for default configuration properties, which can be overridden by specifying java system properties when running the jar or by adding an application.properties file via -Dspring.config.location.
 
 
-# Installation
+## Installation
 This guide describes setting up the ICGC Storage System on a single Ubuntu EC2 instance.
 
 Before getting started:
@@ -167,3 +167,16 @@ cd $DCC_HOME/dcc-metadata/dcc-metadata-server && java -Djavax.net.ssl.trustStore
 cd $DCC_HOME/dcc-storage/dcc-storage-server && java -Djavax.net.ssl.trustStore=$DCC_HOME/conf/ssl/cacerts -Djavax.net.ssl.trustStorePassword=changeit -Dspring.profiles.active=secure,default -Dlogging.file=/var/log/dcc/storage-server/storage-server.log -Dserver.port=5431 -Dbucket.name.object=<s3-bucket-name> -Dbucket.name.state=<s3-bucket-name> -Dauth.server.url=https://storage.ucsc-cgl.org:8443/oauth/check_token -Dauth.server.clientId=storage -Dauth.server.clientsecret=pass -Dmetadata.url=https://storage.ucsc-cgl.org:8444 -Dendpoints.jmx.domain=storage -Ds3.endpoint=https://s3.amazonaws.com -Ds3.accessKey=foo -Ds3.secretKey=bar -Ds3.masterEncryptionKeyId=baz -Ds3.secured=true -Dupload.clean.enabled=false -Dserver.ssl.key-store=ucsc-storage.jks -Dserver.ssl.key-store-password=password -Dserver.ssl.key-store-type=JKS -jar target/dcc-storage-server-1.0.14-SNAPSHOT.jar
 ```
 Note: passwords (and ideally all configuration) should be specified in configuration files in production systems.
+
+## Clearing Contents
+
+Sometimes you might want to clear the contents of the storage system without setting it up from scratch:
+
+```
+# clear contents of S3 bucket:
+aws s3 rm --recursive s3://<s3-bucket-name>/data/
+# clearning DB
+mongo # (opens a mongodb shell)
+use dcc-metadata
+db.Entity.remove({})
+```
