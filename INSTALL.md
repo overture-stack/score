@@ -99,6 +99,7 @@ cp /usr/lib/jvm/java-8-oracle/jre/lib/security/cacerts $DCC_HOME/conf/ssl/
 keytool -import -file chain1.pem -alias LetsEncryptCA -keystore cacerts -storepass changeit
 # if you used the bundle.pem above then use that in addition to chain1.pem here... you'll want to import both so the cacerts can be used by the client
 ```
+NOTE: Let's Encrypt only supplies certificates for 90 days *but* they have a very easy system for renewing.  Using `./certbot-auto renew`.  This really should be automated to run every 80 days or so.  For an explanation of why they do this see: https://letsencrypt.org/2015/11/09/why-90-days.html
 
 Install and configure MongoDB metadata-server dependency (https://docs.mongodb.com/manual/tutorial/install-mongodb-on-ubuntu/). The commands shown below leave access to mongodb unrestricted. The port that mongod listens on shouldn't be open to external IPs, and in production systems access restriction should be enabled.
 ```
