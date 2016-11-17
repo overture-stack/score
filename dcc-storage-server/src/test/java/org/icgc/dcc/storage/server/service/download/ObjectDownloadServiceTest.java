@@ -29,8 +29,8 @@ import java.util.regex.Pattern;
 import org.icgc.dcc.storage.core.util.ObjectKeys;
 import org.icgc.dcc.storage.server.config.ServerConfig;
 import org.icgc.dcc.storage.server.exception.IdNotFoundException;
-import org.icgc.dcc.storage.server.repository.BucketNamingService;
 import org.icgc.dcc.storage.server.repository.SimplePartCalculator;
+import org.icgc.dcc.storage.server.repository.s3.S3BucketNamingService;
 import org.icgc.dcc.storage.server.repository.s3.S3DownloadService;
 import org.icgc.dcc.storage.server.repository.s3.S3URLGenerator;
 import org.junit.Before;
@@ -72,7 +72,7 @@ public class ObjectDownloadServiceTest extends S3DownloadService {
   @InjectMocks
   S3DownloadService service;
 
-  BucketNamingService namingService = new BucketNamingService();
+  S3BucketNamingService namingService = new S3BucketNamingService();
 
   @Before
   public void setUp() {

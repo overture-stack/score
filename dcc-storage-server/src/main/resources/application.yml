@@ -112,6 +112,28 @@ s3:
 ---
 
 ###############################################################################
+# Profile - "azure"
+###############################################################################
+
+spring:
+  profiles: azure
+
+azure:
+  endpointProtocol: https 
+  accountName: oicricgc
+  accountKey: 
+
+bucket:
+  name.object: data
+  policy.upload: UploadPolicy
+  policy.download: DownloadPolicy
+  
+download:
+  partsize: 250000000
+  
+---
+
+###############################################################################
 # Profile - "prod"
 ###############################################################################
 
@@ -147,7 +169,9 @@ auth:
     downloadScope: aws.download
     #uploadScope=collab.upload
     #downloadScope=collab.download
-
+    #uploadScope=azure.upload
+    #downloadScope=azure.download
+    
 ---
 
 ###############################################################################

@@ -15,49 +15,58 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.server;
+package org.icgc.dcc.storage.server.repository.azure;
 
-import static lombok.AccessLevel.PRIVATE;
+import java.util.List;
 
-import lombok.NoArgsConstructor;
-import lombok.val;
+import org.icgc.dcc.storage.core.model.Part;
+import org.icgc.dcc.storage.server.repository.PartCalculator;
 
-import org.icgc.dcc.storage.server.config.S3Config;
-import org.icgc.dcc.storage.server.repository.UploadService;
-import org.icgc.dcc.storage.server.repository.s3.S3BucketNamingService;
-import org.icgc.dcc.storage.server.repository.s3.S3UploadService;
-import org.icgc.dcc.storage.server.repository.s3.S3UploadStateStore;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableList.Builder;
 
-@NoArgsConstructor(access = PRIVATE)
-public class Tests {
+import lombok.extern.slf4j.Slf4j;
 
-  public static final String DATA_DIR = "data";
-  public static final String UPLOAD_DIR = "upload";
-  public static final String OBJECT_BUCKET_NAME = "oicr.icgc";
-  public static final String STATE_BUCKET_NAME = "oicr.icgc.state";
+@Slf4j
+public class AzurePartCalculator implements PartCalculator {
 
-  public static UploadService createUploadService() {
-    val endpoint = "https://www.cancercollaboratory.org:9080";
-    val s3Config = new S3Config();
-    s3Config.setEndpoint(endpoint);
-    val s3Client = s3Config.s3();
+  private static final int MAX_NUM_PART = 50000;
+  private static final int MAX_PART_SIZE = 4 * 1024 * 1024; // 4 MB
 
-    val namingService = new S3BucketNamingService();
-    namingService.setObjectBucketName(OBJECT_BUCKET_NAME);
-    namingService.setStateBucketName(STATE_BUCKET_NAME);
-    val stateStore = new S3UploadStateStore();
-    stateStore.setBucketNamingService(namingService);
-    stateStore.setUploadDir(UPLOAD_DIR);
-    stateStore.setS3Client(s3Client);
+  private int partSize = MAX_PART_SIZE;
 
-    val uploadService = new S3UploadService();
-    stateStore.setBucketNamingService(namingService);
-    uploadService.setDataDir(DATA_DIR);
-    uploadService.setS3Conf(s3Config);
-    uploadService.setS3Client(s3Client);
-    uploadService.setStateStore(stateStore);
+  public AzurePartCalculator() {
+  }
 
-    return uploadService;
+  public AzurePartCalculator(int maxPartSize) {
+    this.partSize = maxPartSize;
+  }
+
+  public void setPartSize(int size) {
+    partSize = size;
+  }
+
+  @Override
+  public List<Part> divide(long fileSize) {
+    return divide(0, fileSize);
+  }
+
+  @Override
+  public List<Part> divide(long offset, long objectLength) {
+    log.debug("Part Size: {}", partSize);
+    Builder<Part> parts = ImmutableList.builder();
+    long currentTotalLength = 0;
+    for (int i = 1; currentTotalLength < objectLength; ++i) {
+      int size = (int) Math.min(partSize, objectLength - currentTotalLength);
+      parts.add(new Part(i, size, offset + currentTotalLength, null, null, null));
+      currentTotalLength += size;
+    }
+    return parts.build();
+  }
+
+  @Override
+  public List<Part> specify(long offset, long length) {
+    return ImmutableList.of(new Part(1, length, offset, null, null, null));
   }
 
 }

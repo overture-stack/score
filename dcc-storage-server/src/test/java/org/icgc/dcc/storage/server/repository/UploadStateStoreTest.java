@@ -31,7 +31,7 @@ import java.io.InputStream;
 import lombok.val;
 
 import org.icgc.dcc.storage.core.model.ObjectSpecification;
-import org.icgc.dcc.storage.server.repository.BucketNamingService;
+import org.icgc.dcc.storage.server.repository.s3.S3BucketNamingService;
 import org.icgc.dcc.storage.server.repository.s3.S3UploadStateStore;
 import org.junit.Before;
 import org.junit.Test;
@@ -69,7 +69,7 @@ public class UploadStateStoreTest {
   @Before
   public void setUp() {
     // Configure
-    BucketNamingService namingService = new BucketNamingService();
+    S3BucketNamingService namingService = new S3BucketNamingService();
     namingService.setObjectBucketName(OBJECT_BUCKET_NAME);
     namingService.setStateBucketName(STATE_BUCKET_NAME);
     namingService.setBucketPoolSize(0);

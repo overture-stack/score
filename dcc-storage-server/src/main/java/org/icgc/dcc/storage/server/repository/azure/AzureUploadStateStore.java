@@ -15,48 +15,77 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.server.config;
+package org.icgc.dcc.storage.server.repository.azure;
 
-import org.icgc.dcc.storage.server.repository.BucketNamingService;
-import org.icgc.dcc.storage.server.repository.PartCalculator;
-import org.icgc.dcc.storage.server.repository.SimplePartCalculator;
-import org.icgc.dcc.storage.server.repository.URLGenerator;
+import java.util.List;
+import java.util.Map;
+
+import org.icgc.dcc.storage.core.model.ObjectSpecification;
+import org.icgc.dcc.storage.core.model.Part;
+import org.icgc.dcc.storage.server.repository.UploadPartDetail;
 import org.icgc.dcc.storage.server.repository.UploadStateStore;
-import org.icgc.dcc.storage.server.repository.s3.S3BucketNamingService;
-import org.icgc.dcc.storage.server.repository.s3.S3URLGenerator;
-import org.icgc.dcc.storage.server.repository.s3.S3UploadStateStore;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
+
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 
 /**
- * Server level configuration
+ * Stores and retrieves the state of a upload's progress.
  */
-@Configuration
-@Profile({ "aws", "collaboratory" })
-public class ServerConfig {
+@Slf4j
+@Setter
+public class AzureUploadStateStore implements UploadStateStore {
 
-  @Value("${upload.partsize}")
-  private int partSize;
+  @Override
+  public void create(ObjectSpecification spec) {
+    // TODO Auto-generated method stub
 
-  @Bean
-  public UploadStateStore stateStore() {
-    return new S3UploadStateStore();
   }
 
-  @Bean
-  public PartCalculator calculator() {
-    return new SimplePartCalculator(partSize);
+  @Override
+  public ObjectSpecification read(String objectId, String uploadId) {
+    // TODO Auto-generated method stub
+    return null;
   }
 
-  @Bean
-  public URLGenerator url() {
-    return new S3URLGenerator();
+  @Override
+  public void delete(String objectId, String uploadId) {
+    // TODO Auto-generated method stub
+
   }
 
-  @Bean
-  public BucketNamingService bucketNamingService() {
-    return new S3BucketNamingService();
+  @Override
+  public void deletePart(String objectId, String uploadId, int partNumber) {
+    // TODO Auto-generated method stub
+
+  }
+
+  @Override
+  public void markCompletedParts(String objectId, String uploadId, List<Part> parts) {
+    // TODO Auto-generated method stub
+
+  }
+
+  @Override
+  public boolean isCompleted(String objectId, String uploadId) {
+    // TODO Auto-generated method stub
+    return false;
+  }
+
+  @Override
+  public void finalizeUploadPart(String objectId, String uploadId, int partNumber, String md5, String eTag) {
+    // TODO Auto-generated method stub
+
+  }
+
+  @Override
+  public Map<Integer, UploadPartDetail> getUploadStatePartDetails(String objectId, String uploadId) {
+    // TODO Auto-generated method stub
+    return null;
+  }
+
+  @Override
+  public String getUploadId(String objectId) {
+    // TODO Auto-generated method stub
+    return null;
   }
 }

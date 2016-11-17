@@ -23,6 +23,7 @@ import static com.google.common.collect.Iterables.getOnlyElement;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.file.FileAlreadyExistsException;
@@ -34,11 +35,7 @@ import java.util.Set;
 
 import javax.annotation.PostConstruct;
 
-import lombok.NonNull;
-import lombok.SneakyThrows;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
-
+import org.apache.commons.codec.DecoderException;
 import org.icgc.dcc.storage.client.cli.Terminal;
 import org.icgc.dcc.storage.client.exception.NotResumableException;
 import org.icgc.dcc.storage.client.exception.NotRetryableException;
@@ -50,11 +47,17 @@ import org.icgc.dcc.storage.client.transport.Transport;
 import org.icgc.dcc.storage.client.transport.Transport.Mode;
 import org.icgc.dcc.storage.core.model.ObjectSpecification;
 import org.icgc.dcc.storage.core.model.Part;
+import org.icgc.dcc.storage.core.util.MD5s;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import com.google.common.io.BaseEncoding;
+
+import lombok.NonNull;
+import lombok.SneakyThrows;
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
@@ -298,7 +301,16 @@ public class DownloadService {
     }
     val outputFile = req.getOutputFilePath();
     val downloadedMd5 = calculateChecksum(outputFile);
-    val check = downloadedMd5.equals(spec.getObjectMd5());
+    // val check = downloadedMd5.equals(spec.getObjectMd5());
+    @val
+    boolean check;
+    try {
+      check = MD5s.isEqual(downloadedMd5, spec.getObjectMd5());
+    } catch (UnsupportedEncodingException | DecoderException e) {
+      log.error("MD5's not recognized as either HEX or BASE64: of downloaded file: {}, spec file: {}", downloadedMd5,
+          spec.getObjectMd5());
+      throw new NotRetryableException(e);
+    }
     if (check) {
       log.info("MD5 for {} validated correctly", outputFile.getAbsolutePath());
     } else {

@@ -17,46 +17,57 @@
  */
 package org.icgc.dcc.storage.server.config;
 
-import org.icgc.dcc.storage.server.repository.BucketNamingService;
-import org.icgc.dcc.storage.server.repository.PartCalculator;
-import org.icgc.dcc.storage.server.repository.SimplePartCalculator;
-import org.icgc.dcc.storage.server.repository.URLGenerator;
-import org.icgc.dcc.storage.server.repository.UploadStateStore;
-import org.icgc.dcc.storage.server.repository.s3.S3BucketNamingService;
-import org.icgc.dcc.storage.server.repository.s3.S3URLGenerator;
-import org.icgc.dcc.storage.server.repository.s3.S3UploadStateStore;
+import java.net.URISyntaxException;
+import java.security.InvalidKeyException;
+
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 
-/**
- * Server level configuration
- */
+import com.microsoft.azure.storage.CloudStorageAccount;
+import com.microsoft.azure.storage.StorageException;
+import com.microsoft.azure.storage.blob.CloudBlobClient;
+import com.microsoft.azure.storage.blob.CloudBlobContainer;
+
+import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
+
 @Configuration
-@Profile({ "aws", "collaboratory" })
-public class ServerConfig {
+@Data
+@Slf4j
+@Profile({ "azure" })
+@ConfigurationProperties(prefix = "azure")
+public class AzureConfig {
 
-  @Value("${upload.partsize}")
-  private int partSize;
+  private String endpointProtocol;
+  private String accountName;
+  private String accountKey;
 
-  @Bean
-  public UploadStateStore stateStore() {
-    return new S3UploadStateStore();
+  @Value("${bucket.name.object}")
+  private String containerName;
+
+  public String storageConnectionString() {
+    return String.format("DefaultEndpointsProtocol=%s;AccountName=%s;AccountKey=%s", endpointProtocol, accountName,
+        accountKey);
+  }
+
+  private CloudBlobClient azureClient() throws InvalidKeyException, URISyntaxException {
+    CloudStorageAccount account = CloudStorageAccount.parse(storageConnectionString());
+    // Create a blob service client
+    return account.createCloudBlobClient();
   }
 
   @Bean
-  public PartCalculator calculator() {
-    return new SimplePartCalculator(partSize);
+  public CloudBlobContainer azureContainer() throws URISyntaxException, StorageException, InvalidKeyException {
+    CloudBlobContainer result = azureClient().getContainerReference(containerName);
+    if (!result.exists()) {
+      log.error(String.format("What the? No '%s' container found", containerName));
+      throw new IllegalStateException(String.format("Container '%s' not found for Azure Blob Storage account '%s'",
+          containerName, accountName));
+    }
+    return result;
   }
 
-  @Bean
-  public URLGenerator url() {
-    return new S3URLGenerator();
-  }
-
-  @Bean
-  public BucketNamingService bucketNamingService() {
-    return new S3BucketNamingService();
-  }
 }

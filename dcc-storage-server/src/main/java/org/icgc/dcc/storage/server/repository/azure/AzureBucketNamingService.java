@@ -15,49 +15,35 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.server;
+package org.icgc.dcc.storage.server.repository.azure;
 
-import static lombok.AccessLevel.PRIVATE;
+import org.icgc.dcc.storage.server.repository.BucketNamingService;
 
-import lombok.NoArgsConstructor;
-import lombok.val;
+public class AzureBucketNamingService implements BucketNamingService {
 
-import org.icgc.dcc.storage.server.config.S3Config;
-import org.icgc.dcc.storage.server.repository.UploadService;
-import org.icgc.dcc.storage.server.repository.s3.S3BucketNamingService;
-import org.icgc.dcc.storage.server.repository.s3.S3UploadService;
-import org.icgc.dcc.storage.server.repository.s3.S3UploadStateStore;
+  @Override
+  public String getStateBucketName(String objectId) {
+    return "data";
+  }
 
-@NoArgsConstructor(access = PRIVATE)
-public class Tests {
+  @Override
+  public String getObjectBucketName(String objectId, boolean bypass) {
+    return "data";
+  }
 
-  public static final String DATA_DIR = "data";
-  public static final String UPLOAD_DIR = "upload";
-  public static final String OBJECT_BUCKET_NAME = "oicr.icgc";
-  public static final String STATE_BUCKET_NAME = "oicr.icgc.state";
+  @Override
+  public String getObjectBucketName(String objectId) {
+    return "data";
+  }
 
-  public static UploadService createUploadService() {
-    val endpoint = "https://www.cancercollaboratory.org:9080";
-    val s3Config = new S3Config();
-    s3Config.setEndpoint(endpoint);
-    val s3Client = s3Config.s3();
+  @Override
+  public String getBaseStateBucketName() {
+    return "data";
+  }
 
-    val namingService = new S3BucketNamingService();
-    namingService.setObjectBucketName(OBJECT_BUCKET_NAME);
-    namingService.setStateBucketName(STATE_BUCKET_NAME);
-    val stateStore = new S3UploadStateStore();
-    stateStore.setBucketNamingService(namingService);
-    stateStore.setUploadDir(UPLOAD_DIR);
-    stateStore.setS3Client(s3Client);
-
-    val uploadService = new S3UploadService();
-    stateStore.setBucketNamingService(namingService);
-    uploadService.setDataDir(DATA_DIR);
-    uploadService.setS3Conf(s3Config);
-    uploadService.setS3Client(s3Client);
-    uploadService.setStateStore(stateStore);
-
-    return uploadService;
+  @Override
+  public boolean isPartitioned() {
+    return false;
   }
 
 }

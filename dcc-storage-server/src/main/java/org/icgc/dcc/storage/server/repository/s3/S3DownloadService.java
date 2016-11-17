@@ -39,6 +39,7 @@ import org.icgc.dcc.storage.server.repository.PartCalculator;
 import org.icgc.dcc.storage.server.repository.URLGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -61,6 +62,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Setter
 @Service
+@Profile({ "aws", "collaboratory" })
 public class S3DownloadService implements DownloadService {
 
   /**
@@ -90,11 +92,6 @@ public class S3DownloadService implements DownloadService {
   @Autowired
   private PartCalculator partCalculator;
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see org.icgc.dcc.storage.server.service.download.DownloadService#download(java.lang.String, long, long, boolean)
-   */
   @Override
   public ObjectSpecification download(String objectId, long offset, long length, boolean forExternalUse) {
     try {

@@ -15,49 +15,47 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.server;
+package org.icgc.dcc.storage.core.util;
 
-import static lombok.AccessLevel.PRIVATE;
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 
-import lombok.NoArgsConstructor;
-import lombok.val;
+import org.apache.commons.codec.DecoderException;
+import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.codec.binary.Hex;
 
-import org.icgc.dcc.storage.server.config.S3Config;
-import org.icgc.dcc.storage.server.repository.UploadService;
-import org.icgc.dcc.storage.server.repository.s3.S3BucketNamingService;
-import org.icgc.dcc.storage.server.repository.s3.S3UploadService;
-import org.icgc.dcc.storage.server.repository.s3.S3UploadStateStore;
+/*
+ * Using Commons Codec because Java's Integer.parseInt() wasn't behaving as expected. Codec also already a transitive dependency.
+ */
+public class MD5s {
 
-@NoArgsConstructor(access = PRIVATE)
-public class Tests {
-
-  public static final String DATA_DIR = "data";
-  public static final String UPLOAD_DIR = "upload";
-  public static final String OBJECT_BUCKET_NAME = "oicr.icgc";
-  public static final String STATE_BUCKET_NAME = "oicr.icgc.state";
-
-  public static UploadService createUploadService() {
-    val endpoint = "https://www.cancercollaboratory.org:9080";
-    val s3Config = new S3Config();
-    s3Config.setEndpoint(endpoint);
-    val s3Client = s3Config.s3();
-
-    val namingService = new S3BucketNamingService();
-    namingService.setObjectBucketName(OBJECT_BUCKET_NAME);
-    namingService.setStateBucketName(STATE_BUCKET_NAME);
-    val stateStore = new S3UploadStateStore();
-    stateStore.setBucketNamingService(namingService);
-    stateStore.setUploadDir(UPLOAD_DIR);
-    stateStore.setS3Client(s3Client);
-
-    val uploadService = new S3UploadService();
-    stateStore.setBucketNamingService(namingService);
-    uploadService.setDataDir(DATA_DIR);
-    uploadService.setS3Conf(s3Config);
-    uploadService.setS3Client(s3Client);
-    uploadService.setStateStore(stateStore);
-
-    return uploadService;
+  public static String toBase64(String hexMd5) throws DecoderException, UnsupportedEncodingException {
+    byte[] decodedHex = Hex.decodeHex(hexMd5.toCharArray());
+    // byte[] test = Integer.toString((Integer.parseInt(hexMd5))).getBytes();
+    byte[] encodedHexB64 = Base64.encodeBase64(decodedHex);
+    return new String(encodedHexB64, StandardCharsets.UTF_8);
   }
 
+  public static String toHex(String base64Md5) {
+    byte[] decodedHexB64 = Base64.decodeBase64(base64Md5.getBytes());
+    char[] encodedHex = Hex.encodeHex(decodedHexB64);
+    return String.valueOf(encodedHex);
+  }
+
+  public static boolean isBase64(String value) {
+    // Azure returns MD5's padded out to 24 characters
+    return (value.length() == 24) && (Base64.isBase64(value.getBytes()));
+  }
+
+  public static boolean isHex(String value) {
+    return value.matches("[a-fA-F0-9]{32}");
+  }
+
+  public static boolean isEqual(String firstMD5, String secondMD5) throws UnsupportedEncodingException,
+      DecoderException {
+    // convert all MD5's to Base64
+    String left = isHex(firstMD5) ? toBase64(firstMD5) : firstMD5;
+    String right = isHex(secondMD5) ? toBase64(secondMD5) : secondMD5;
+    return left.equals(right);
+  }
 }
