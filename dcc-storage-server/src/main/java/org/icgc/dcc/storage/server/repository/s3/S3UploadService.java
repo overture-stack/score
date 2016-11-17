@@ -2,6 +2,12 @@ package org.icgc.dcc.storage.server.repository.s3;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+import lombok.NonNull;
+import lombok.Setter;
+import lombok.SneakyThrows;
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -51,19 +57,13 @@ import com.amazonaws.services.s3.model.PartSummary;
 import com.amazonaws.services.s3.model.transform.Unmarshallers.ListPartsResultUnmarshaller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import lombok.NonNull;
-import lombok.Setter;
-import lombok.SneakyThrows;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
-
 /**
  * A service for object upload.
  */
 @Slf4j
 @Setter
 @Service
-@Profile({ "aws", "collaboratory" })
+@Profile({ "aws", "collaboratory", "default" })
 public class S3UploadService implements UploadService {
 
   /**

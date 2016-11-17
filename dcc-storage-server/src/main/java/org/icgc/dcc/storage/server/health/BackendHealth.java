@@ -30,7 +30,7 @@ import com.amazonaws.services.s3.AmazonS3;
  * check health for object upload service
  */
 @Component
-@Profile({ "aws", "collab" })
+@Profile({ "aws", "collaboratory", "default" })
 public class BackendHealth implements HealthIndicator {
 
   @Autowired

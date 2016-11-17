@@ -19,6 +19,10 @@ package org.icgc.dcc.storage.server.repository.s3;
 
 import static org.icgc.dcc.storage.core.util.UUIDs.isUUID;
 
+import lombok.Setter;
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
+
 import java.io.File;
 import java.util.List;
 import java.util.function.Consumer;
@@ -39,14 +43,10 @@ import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.google.common.collect.Lists;
 
-import lombok.Setter;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
-
 @Slf4j
 @Setter
 @Service
-@Profile({ "aws", "collaboratory" })
+@Profile({ "aws", "collaboratory", "default" })
 public class S3ListingService implements ListingService {
 
   /**

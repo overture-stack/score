@@ -19,6 +19,11 @@ package org.icgc.dcc.storage.server.repository.s3;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+import lombok.Cleanup;
+import lombok.Setter;
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
+
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -51,18 +56,13 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import lombok.Cleanup;
-import lombok.Setter;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
-
 /**
  * service responsible for object download (full or partial)
  */
 @Slf4j
 @Setter
 @Service
-@Profile({ "aws", "collaboratory" })
+@Profile({ "aws", "collaboratory", "default" })
 public class S3DownloadService implements DownloadService {
 
   /**

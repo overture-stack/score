@@ -26,12 +26,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.icgc.dcc.storage.test.util.Assertions.assertDirectories;
 import static org.icgc.dcc.storage.test.util.SpringBootProcess.bootRun;
 
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
+
 import java.io.File;
 import java.util.List;
 import java.util.function.Consumer;
-
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
 
 import org.icgc.dcc.storage.test.auth.AuthClient;
 import org.icgc.dcc.storage.test.fs.FileSystem;
@@ -238,6 +238,7 @@ public abstract class AbstractStorageIntegrationTest {
         "-Dlogging.file=" + fs.getLogsDir() + "/dcc-auth-server.log",
         "-Dserver.port=" + authPort,
         "-Dmanagement.port=8543",
+        "-Dicgc.cgpUrl=http://beta-www1.icgc.org/ud_oauth/1/search",
         "-Dicgc.consumerKey=SVxsazJThJhiv5sPj4Yu9KWFxvzZUGDj_ck",
         "-Dicgc.consumerSecret=DF7oXc32NDyHHE3xy5U44YZMz8ubhsMN_cs",
         "-Dicgc.accessToken=c39yXaCcVqgPhZSAiiLH3bi8C2bpqQvv_at",

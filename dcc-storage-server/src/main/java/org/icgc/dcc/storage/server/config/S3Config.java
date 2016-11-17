@@ -29,7 +29,7 @@ import com.amazonaws.services.s3.model.SSEAlgorithm;
 @Data
 @Slf4j
 @Configuration
-@Profile({ "aws", "collaboratory" })
+@Profile({ "aws", "collaboratory", "default" })
 @ConfigurationProperties(prefix = "s3")
 public class S3Config {
 
