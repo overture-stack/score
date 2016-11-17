@@ -238,7 +238,6 @@ public abstract class AbstractStorageIntegrationTest {
         "-Dlogging.file=" + fs.getLogsDir() + "/dcc-auth-server.log",
         "-Dserver.port=" + authPort,
         "-Dmanagement.port=8543",
-        "-Dicgc.cgpUrl=http://beta-www1.icgc.org/ud_oauth/1/search",
         "-Dicgc.consumerKey=SVxsazJThJhiv5sPj4Yu9KWFxvzZUGDj_ck",
         "-Dicgc.consumerSecret=DF7oXc32NDyHHE3xy5U44YZMz8ubhsMN_cs",
         "-Dicgc.accessToken=c39yXaCcVqgPhZSAiiLH3bi8C2bpqQvv_at",
