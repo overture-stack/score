@@ -17,12 +17,14 @@
  */
 package org.icgc.dcc.storage.server.repository.azure;
 
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
+
 import java.net.URISyntaxException;
 import java.security.InvalidKeyException;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 
 import org.icgc.dcc.storage.core.model.ObjectKey;
@@ -36,16 +38,13 @@ import com.microsoft.azure.storage.StorageException;
 import com.microsoft.azure.storage.blob.CloudBlobContainer;
 import com.microsoft.azure.storage.blob.SharedAccessBlobPolicy;
 
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
-
 /**
  * Amazon specific: To generate presigned url for s3-like object storage
  */
 @Slf4j
 public class AzureURLGenerator implements URLGenerator {
 
-  private static DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
+  private static DateTimeFormatter df = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
 
   @Value("${bucket.policy.upload}")
   private String uploadPolicy;
@@ -109,16 +108,16 @@ public class AzureURLGenerator implements URLGenerator {
    */
   private Date getStartDate() {
     val now = LocalDateTime.now();
-    val result = Date.from(now.minusMinutes(15).atZone(ZoneId.systemDefault()).toInstant());
-    log.debug(String.format("URL valid from: %s", df.format(result.getTime())));
-    return result;
+    val result = now.minusMinutes(15).atZone(ZoneId.systemDefault()).toInstant();
+    log.debug(String.format("URL valid from: %s", df.format(result)));
+    return Date.from(result);
   }
 
   private Date getExpirationDate() {
     val now = LocalDateTime.now();
-    val result = Date.from(now.plusDays(expiration).atZone(ZoneId.systemDefault()).toInstant());
-    log.debug(String.format("URL valid until: %s", df.format(result.getTime())));
-    return result;
+    val result = now.plusDays(expiration).atZone(ZoneId.systemDefault()).toInstant();
+    log.debug(String.format("URL valid until: %s", df.format(result)));
+    return Date.from(result);
   }
 
 }

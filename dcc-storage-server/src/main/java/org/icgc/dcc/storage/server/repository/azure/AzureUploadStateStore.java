@@ -17,6 +17,8 @@
  */
 package org.icgc.dcc.storage.server.repository.azure;
 
+import lombok.Setter;
+
 import java.util.List;
 import java.util.Map;
 
@@ -25,13 +27,10 @@ import org.icgc.dcc.storage.core.model.Part;
 import org.icgc.dcc.storage.server.repository.UploadPartDetail;
 import org.icgc.dcc.storage.server.repository.UploadStateStore;
 
-import lombok.Setter;
-import lombok.extern.slf4j.Slf4j;
-
 /**
- * Stores and retrieves the state of a upload's progress.
+ * The Azure upload logic currently does not make use of a State Store
+ * 
  */
-@Slf4j
 @Setter
 public class AzureUploadStateStore implements UploadStateStore {
 

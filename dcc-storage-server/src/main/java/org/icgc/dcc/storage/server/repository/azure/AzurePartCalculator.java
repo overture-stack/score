@@ -17,6 +17,9 @@
  */
 package org.icgc.dcc.storage.server.repository.azure;
 
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
+
 import java.util.List;
 
 import org.icgc.dcc.storage.core.model.Part;
@@ -25,12 +28,11 @@ import org.icgc.dcc.storage.server.repository.PartCalculator;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
 
-import lombok.extern.slf4j.Slf4j;
-
 @Slf4j
 public class AzurePartCalculator implements PartCalculator {
 
-  private static final int MAX_NUM_PART = 50000;
+  // Note: Azure has a MAX_NUM_PART = 50000; constraint, but that only applies to uploads
+  // which we are currently delegating entirely to the Azure Java SDK.
   private static final int MAX_PART_SIZE = 4 * 1024 * 1024; // 4 MB
 
   private int partSize = MAX_PART_SIZE;
@@ -57,7 +59,7 @@ public class AzurePartCalculator implements PartCalculator {
     Builder<Part> parts = ImmutableList.builder();
     long currentTotalLength = 0;
     for (int i = 1; currentTotalLength < objectLength; ++i) {
-      int size = (int) Math.min(partSize, objectLength - currentTotalLength);
+      val size = (int) Math.min(partSize, objectLength - currentTotalLength);
       parts.add(new Part(i, size, offset + currentTotalLength, null, null, null));
       currentTotalLength += size;
     }

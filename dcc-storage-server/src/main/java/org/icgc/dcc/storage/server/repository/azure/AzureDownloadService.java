@@ -19,6 +19,10 @@ package org.icgc.dcc.storage.server.repository.azure;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+import lombok.Setter;
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
+
 import java.net.URISyntaxException;
 import java.util.List;
 
@@ -41,10 +45,6 @@ import org.springframework.stereotype.Service;
 import com.microsoft.azure.storage.StorageException;
 import com.microsoft.azure.storage.blob.CloudBlobContainer;
 import com.microsoft.azure.storage.blob.CloudBlockBlob;
-
-import lombok.Setter;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Setter
@@ -75,7 +75,7 @@ public class AzureDownloadService implements DownloadService {
       checkArgument(offset >= 0L);
 
       val blob = getBlobReference(objectId); // checks for existence
-      long blobSize = blob.getProperties().getLength();
+      val blobSize = blob.getProperties().getLength();
 
       // Calculate range values
       // To retrieve to the end of the file
@@ -143,7 +143,7 @@ public class AzureDownloadService implements DownloadService {
     if ((sentinelObjectId == null) || (sentinelObjectId.isEmpty())) {
       throw new NotRetryableException(new IllegalArgumentException("Sentinel object id not defined"));
     }
-    String result = urlGenerator.getDownloadUrl(
+    val result = urlGenerator.getDownloadUrl(
         null,
         ObjectKeys.getObjectKey("", sentinelObjectId),
         null);

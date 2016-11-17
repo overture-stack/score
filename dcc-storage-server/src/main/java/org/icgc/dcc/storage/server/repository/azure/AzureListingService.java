@@ -19,6 +19,10 @@ package org.icgc.dcc.storage.server.repository.azure;
 
 import static org.icgc.dcc.storage.core.util.UUIDs.isUUID;
 
+import lombok.Setter;
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
+
 import java.io.File;
 import java.util.List;
 
@@ -34,10 +38,6 @@ import com.microsoft.azure.storage.blob.CloudBlob;
 import com.microsoft.azure.storage.blob.CloudBlobContainer;
 import com.microsoft.azure.storage.blob.ListBlobItem;
 
-import lombok.Setter;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
-
 @Slf4j
 @Setter
 @Service
@@ -50,12 +50,13 @@ public class AzureListingService implements ListingService {
   @Override
   @Cacheable("listing")
   public List<ObjectInfo> getListing() {
+    log.info(String.format("Mounting to '%s' (%s)", container.getName(), container.getUri().toString()));
     val listing = Lists.<ObjectInfo> newArrayList();
 
     // read from fallback bucket - any files from prior to bucket partitioning
     for (ListBlobItem blobItem : container.listBlobs()) {
       try {
-        CloudBlob blob = (CloudBlob) blobItem;
+        val blob = (CloudBlob) blobItem;
         val objInfo = createInfo(blob);
         if (objInfo.getId() != null) {
           listing.add(objInfo);
