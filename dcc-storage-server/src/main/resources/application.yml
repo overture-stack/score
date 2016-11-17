@@ -186,3 +186,47 @@ s3:
   secured: false
   # Sinai Center
   endpoint: http://www.cancercollaboratory.org:9081
+
+---
+
+###############################################################################
+# Profile - "redwood"
+###############################################################################
+
+spring:
+  profiles: redwood
+
+server:
+  port: 5431
+  ssl:
+    key-store: ../cert/storage.ucsc-cgl.org.jks
+    key-store-password: password
+    key-store-type: JKS
+
+auth:
+  server:
+    url: https://ucsc-auth-server:8443/oauth/check_token
+    clientId: storage
+    clientSecret: pass
+    uploadScope: s3.upload
+    downloadScope: s3.download
+
+metadata:
+  url: https://ucsc-metadata-server:8444
+
+bucket:
+  name:
+    object: redwood-storage-dev
+    state: redwood-storage-dev
+
+s3:
+  secured: true
+  masterEncryptionKeyId: 0aaad33b-7ead-44be-a56e-3d00c8777042
+  endpoint: s3-external-1.amazonaws.com
+
+clean.cron: "0 0 0 * * ?"
+clean.enabled: true
+
+endpoints:
+  jmx:
+    domain: storage
