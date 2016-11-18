@@ -2,6 +2,9 @@
 
 Change log for the ICGC storage system
 
+1.0.22
+--
+ - Added support for Azure
 
 1.0.14
 --
