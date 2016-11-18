@@ -31,4 +31,5 @@ public class AzureConfig {
   public UploadService uploadService() {
     return new AzureUploadService();
   }
+
 }

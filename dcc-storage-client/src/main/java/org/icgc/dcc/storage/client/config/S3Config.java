@@ -31,4 +31,5 @@ public class S3Config {
   public UploadService uploadService() {
     return new S3UploadService();
   }
+
 }

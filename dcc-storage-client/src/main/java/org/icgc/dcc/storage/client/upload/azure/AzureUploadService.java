@@ -17,6 +17,9 @@
  */
 package org.icgc.dcc.storage.client.upload.azure;
 
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
@@ -40,9 +43,6 @@ import com.microsoft.azure.storage.StorageEvent;
 import com.microsoft.azure.storage.StorageException;
 import com.microsoft.azure.storage.blob.BlobRequestOptions;
 import com.microsoft.azure.storage.blob.CloudBlockBlob;
-
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class AzureUploadService implements UploadService {
@@ -71,12 +71,12 @@ public class AzureUploadService implements UploadService {
       throw new NotRetryableException(new Exception("Did not get an Upload Part definition from service"));
     }
 
-    // get SAS URL from Part
+    // Get SAS URL from Part
     URI sasUrl;
     try {
       sasUrl = new URI(spec.getParts().get(0).getUrl());
     } catch (URISyntaxException e) {
-      // unrecognizable SAS URL
+      // Unrecognizable SAS URL
       throw new NotRetryableException(e);
     }
 

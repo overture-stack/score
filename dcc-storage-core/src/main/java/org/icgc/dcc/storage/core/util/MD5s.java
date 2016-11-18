@@ -17,45 +17,46 @@
  */
 package org.icgc.dcc.storage.core.util;
 
-import java.io.UnsupportedEncodingException;
-import java.nio.charset.StandardCharsets;
-
-import org.apache.commons.codec.DecoderException;
-import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.codec.binary.Hex;
+import com.google.common.io.BaseEncoding;
 
 /*
  * Using Commons Codec because Java's Integer.parseInt() wasn't behaving as expected. Codec also already a transitive dependency.
  */
 public class MD5s {
 
-  public static String toBase64(String hexMd5) throws DecoderException, UnsupportedEncodingException {
-    byte[] decodedHex = Hex.decodeHex(hexMd5.toCharArray());
-    // byte[] test = Integer.toString((Integer.parseInt(hexMd5))).getBytes();
-    byte[] encodedHexB64 = Base64.encodeBase64(decodedHex);
-    return new String(encodedHexB64, StandardCharsets.UTF_8);
+  public static String toBase64(String hexMd5) {
+    byte[] decodedHex = BaseEncoding.base16().lowerCase().decode(hexMd5);
+    return BaseEncoding.base64().encode(decodedHex);
   }
 
   public static String toHex(String base64Md5) {
-    byte[] decodedHexB64 = Base64.decodeBase64(base64Md5.getBytes());
-    char[] encodedHex = Hex.encodeHex(decodedHexB64);
-    return String.valueOf(encodedHex);
+    byte[] decodedHexB64 = BaseEncoding.base64().decode(base64Md5);
+    return BaseEncoding.base16().lowerCase().encode(decodedHexB64);
   }
 
   public static boolean isBase64(String value) {
     // Azure returns MD5's padded out to 24 characters
-    return (value.length() == 24) && (Base64.isBase64(value.getBytes()));
+    try {
+      BaseEncoding.base64().decode(value);
+      return (value.length() == 24);
+    } catch (IllegalArgumentException e) {
+      return false;
+    }
   }
 
   public static boolean isHex(String value) {
-    return value.matches("[a-fA-F0-9]{32}");
+    try {
+      BaseEncoding.base16().lowerCase().decode(value);
+      return true;
+    } catch (IllegalArgumentException e) {
+      return false;
+    }
   }
 
-  public static boolean isEqual(String firstMD5, String secondMD5) throws UnsupportedEncodingException,
-      DecoderException {
+  public static boolean isEqual(String firstMD5, String secondMD5) {
     // convert all MD5's to Base64
     String left = isHex(firstMD5) ? toBase64(firstMD5) : firstMD5;
     String right = isHex(secondMD5) ? toBase64(secondMD5) : secondMD5;
-    return left.equals(right);
+    return left.equalsIgnoreCase(right);
   }
 }

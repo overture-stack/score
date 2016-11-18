@@ -55,12 +55,12 @@ public class MD5sTest {
   }
 
   @Test
-  public void test_to_base64() throws UnsupportedEncodingException, DecoderException {
-    assertThat(MD5s.toBase64(MD5_HEX_1)).isEqualTo(MD5_BASE64_1);
+  public void test_to_base64() {
+    assertThat(MD5s.toBase64(MD5_HEX_1)).isEqualToIgnoringCase(MD5_BASE64_1);
   }
 
-  @Test(expected = DecoderException.class)
-  public void test_to_base64_non_hex() throws UnsupportedEncodingException, DecoderException {
+  @Test(expected = IllegalArgumentException.class)
+  public void test_to_base64_non_hex() {
     // assertj 3 has some nice syntactic sugar for this:
     // assertThatExceptionOfType(DecoderException.class).isThrownBy(() -> { MD5s.toBase64(GARBAGE); });
     MD5s.toBase64(GARBAGE);
@@ -68,12 +68,12 @@ public class MD5sTest {
 
   @Test
   public void test_to_hex() {
-    assertThat(MD5s.toHex(MD5_BASE64_2)).isEqualTo(MD5_HEX_2);
+    assertThat(MD5s.toHex(MD5_BASE64_2)).isEqualToIgnoringCase(MD5_HEX_2);
   }
 
   @Test
   public void test_to_hex_non_base64() {
-    assertThat(MD5s.toHex(MD5_BASE64_2)).isEqualTo(MD5_HEX_2);
+    assertThat(MD5s.toHex(MD5_BASE64_2)).isEqualToIgnoringCase(MD5_HEX_2);
   }
 
   @Test

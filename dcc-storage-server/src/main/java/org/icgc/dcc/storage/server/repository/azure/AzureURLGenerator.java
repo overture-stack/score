@@ -104,7 +104,7 @@ public class AzureURLGenerator implements URLGenerator {
   }
 
   /*
-   * applicable as of 15 minutes ago
+   * Applicable as of 15 minutes ago
    */
   private Date getStartDate() {
     val now = LocalDateTime.now();
