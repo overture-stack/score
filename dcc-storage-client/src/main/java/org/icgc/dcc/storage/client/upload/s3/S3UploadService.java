@@ -17,6 +17,10 @@
  */
 package org.icgc.dcc.storage.client.upload.s3;
 
+import lombok.SneakyThrows;
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
@@ -38,10 +42,6 @@ import org.icgc.dcc.storage.core.model.Part;
 import org.icgc.dcc.storage.core.model.UploadProgress;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-
-import lombok.SneakyThrows;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * main class to handle uploading objects
@@ -81,11 +81,12 @@ public class S3UploadService implements UploadService {
    * @throws IOException
    */
   @Override
-  public void upload(File file, String objectId, String md5, boolean redo) throws IOException {
+  public void upload(File file, String objectId, String md5, final boolean redo) throws IOException {
+    boolean flag = redo;
     for (int retry = 0; retry < retryNumber; retry++)
       try {
-        if (redo) {
-          startUpload(file, objectId, md5, redo);
+        if (flag) {
+          startUpload(file, objectId, md5, flag);
         } else {
           // only perform checksum the first time of the resume
           resumeIfPossible(file, objectId, md5, retry == 0 ? true : false);
@@ -94,7 +95,7 @@ public class S3UploadService implements UploadService {
       } catch (NotRetryableException e) {
         log.warn(
             "Upload was not completed successfully in the last execution. Checking data integrity. Please wait...");
-        redo = !storageService.isUploadDataRecoverable(objectId, file.length());
+        flag = !storageService.isUploadDataRecoverable(objectId, file.length());
       }
   }
 
@@ -154,9 +155,7 @@ public class S3UploadService implements UploadService {
 
     // Compare upload id's
     if (uploadId.isPresent() && progress != null) {
-      if (uploadId.get().equalsIgnoreCase(progress.getUploadId())) {
-        // Can continue; upload id's match
-      } else {
+      if (!uploadId.get().equalsIgnoreCase(progress.getUploadId())) {
         // Can't continue; upload id's don't match
         val msg =
             String.format(
