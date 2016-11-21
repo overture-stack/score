@@ -32,6 +32,7 @@ import org.icgc.dcc.storage.client.exception.NotRetryableException;
 import org.icgc.dcc.storage.client.progress.Progress;
 import org.icgc.dcc.storage.client.transport.StorageService;
 import org.icgc.dcc.storage.client.upload.UploadService;
+import org.icgc.dcc.storage.core.model.ObjectSpecification;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
@@ -64,32 +65,43 @@ public class AzureUploadService implements UploadService {
     val spec = storageService.initiateUpload(objectId, file.length(), redo, md5);
 
     // Calculate expected number of parts to track progress against
-    Pair<Integer, Long> partInfo = this.calculateNumBlocks(file.length(), BLOCK_SIZE);
+    val partInfo = calculateNumBlocks(file.length(), BLOCK_SIZE);
 
-    // Will contain one Part as far as Storage Service is concerned
+    // Will contain one Part as far as Storage Service is concerned. There is no need for more than one SAS to be
+    // generated for an entire file; each Part does not require its own pre-signed URL.
     if (spec.getParts().isEmpty()) {
-      throw new NotRetryableException(new Exception("Did not get an Upload Part definition from service"));
+      throw new NotRetryableException(new Exception(
+          "Did not get a valid ObjectSpecification from service: missing Part definition."));
     }
 
-    // Get SAS URL from Part
-    URI sasUrl;
-    try {
-      sasUrl = new URI(spec.getParts().get(0).getUrl());
-    } catch (URISyntaxException e) {
-      // Unrecognizable SAS URL
-      throw new NotRetryableException(e);
-    }
+    val sasUrl = extractSAS(spec);
 
     try {
       val blob = new CloudBlockBlob(sasUrl);
       val progress = new Progress(terminal, false, Math.toIntExact(partInfo.getLeft()), 0);
-      OperationContext ctx = new OperationContext();
+      val ctx = new OperationContext();
 
       // Keep track of number of parts completed - we're also going to get an event for the finalize block list call
-      AtomicInteger completedParts = new AtomicInteger();
+      val completedParts = new AtomicInteger();
 
       // Add listener for every completed call to Azure Blob Storage
       // This is how we track progress
+      ctx.getResponseReceivedEventHandler().addListener(new StorageEvent<ResponseReceivedEvent>() {
+
+        @Override
+        public void eventOccurred(ResponseReceivedEvent eventArg) {
+          long bytesSent = BLOCK_SIZE;
+          int partCount = completedParts.incrementAndGet();
+
+          if (partCount <= partInfo.getLeft()) {
+            progress.incrementParts(1);
+            progress.incrementBytesWritten(partCount == partInfo.getLeft() ? bytesSent = partInfo.getRight() : bytesSent);
+          }
+          // Don't increment if all parts have been accounted for (this is the Put Block List call)
+          // This would result in progress bar reporting "Parts: 42/41"
+        }
+      });
+
       ctx.getResponseReceivedEventHandler().addListener(new StorageEvent<ResponseReceivedEvent>() {
 
         @Override
@@ -115,7 +127,7 @@ public class AzureUploadService implements UploadService {
         }
       });
 
-      BlobRequestOptions options = new BlobRequestOptions();
+      val options = new BlobRequestOptions();
       options.setConcurrentRequestCount(parallelUploads);
 
       progress.start();
@@ -142,4 +154,17 @@ public class AzureUploadService implements UploadService {
     return Pair.of(partCount, rem);
   }
 
+  /**
+   * Get SAS URL from an ObjectSpecification
+   * @param spec - ObjectSpecification with a Parts collection containing only a single part.
+   * @return
+   */
+  protected URI extractSAS(ObjectSpecification spec) {
+    try {
+      return new URI(spec.getParts().get(0).getUrl());
+    } catch (URISyntaxException e) {
+      // Unrecognizable SAS URL
+      throw new NotRetryableException(e);
+    }
+  }
 }

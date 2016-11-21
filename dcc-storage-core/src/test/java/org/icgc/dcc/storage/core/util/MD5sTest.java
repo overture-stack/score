@@ -19,9 +19,6 @@ package org.icgc.dcc.storage.core.util;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.io.UnsupportedEncodingException;
-
-import org.apache.commons.codec.DecoderException;
 import org.junit.Test;
 
 public class MD5sTest {
@@ -77,7 +74,7 @@ public class MD5sTest {
   }
 
   @Test
-  public void test_is_equal() throws UnsupportedEncodingException, DecoderException {
+  public void test_is_equal() {
     assertThat(MD5s.isEqual(MD5_HEX_1, MD5_BASE64_1)).isTrue();
     assertThat(MD5s.isEqual(MD5_BASE64_2, MD5_HEX_2)).isTrue();
   }

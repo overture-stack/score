@@ -24,7 +24,6 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
-import java.util.function.Predicate;
 
 import javax.annotation.PostConstruct;
 
@@ -184,19 +183,17 @@ public class S3UploadService implements UploadService {
   private void resume(File file, UploadProgress uploadProgress, String objectId, boolean checksum) throws IOException {
     log.info("Resume from the previous upload...");
 
-    List<Part> parts = uploadProgress.getParts();
+    val parts = uploadProgress.getParts();
     int completedParts = numCompletedParts(parts);
     int totalParts = parts.size();
 
     // Remove completed parts if don't require checksum-ing
     if (!checksum) {
-      parts.removeIf(new Predicate<Part>() {
+      parts.removeIf((Part part) -> part.isCompleted());
+    }
 
-        @Override
-        public boolean test(Part part) {
-          return part.isCompleted();
-        }
-      });
+    if (!checksum) {
+      parts.removeIf((Part part) -> part.isCompleted());
     }
 
     val progress = new Progress(terminal, quiet, totalParts, completedParts);
@@ -209,7 +206,7 @@ public class S3UploadService implements UploadService {
    */
   private int numCompletedParts(List<Part> parts) {
     int completedTotal = 0;
-    for (Part part : parts) {
+    for (val part : parts) {
       if (part.getMd5() != null) completedTotal++;
     }
     return completedTotal;
