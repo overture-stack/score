@@ -17,6 +17,10 @@
  */
 package org.icgc.dcc.storage.server.repository.azure;
 
+import lombok.Setter;
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
+
 import java.net.URISyntaxException;
 import java.util.Collections;
 import java.util.List;
@@ -38,10 +42,6 @@ import com.amazonaws.services.s3.model.MultipartUpload;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.microsoft.azure.storage.StorageException;
 import com.microsoft.azure.storage.blob.CloudBlobContainer;
-
-import lombok.Setter;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Setter
@@ -76,12 +76,12 @@ public class AzureUploadService implements UploadService {
       val parts = partCalculator.specify(0, fileSize);
       val part = parts.get(0);
 
-      // container name pre-determined by AzureURLGenerator
+      // Container name pre-determined by AzureURLGenerator
       val presignedUrl = urlGenerator.getUploadPartUrl("", objectKey, "", part, null);
       part.setMd5(md5);
       part.setUrl(presignedUrl);
 
-      // construct SAS and wrap it up in an ObjectSpecification
+      // Construct SAS and wrap it up in an ObjectSpecification
       result = new ObjectSpecification(objectKey.getKey(), objectId, objectId, parts, fileSize, md5, false);
       System.out.println();
     } catch (URISyntaxException e) {
@@ -106,51 +106,65 @@ public class AzureUploadService implements UploadService {
 
   @Override
   public void finalizeUploadPart(String objectId, String uploadId, int partNumber, String md5, String eTag) {
-
+    // Empty implementation - not applicable for Azure Upload since we're using the Upload implementation supplied by
+    // SDK
   }
 
   @Override
   public void finalizeUpload(String objectId, String uploadId) {
-
+    // Empty implementation - not applicable for Azure Upload since we're using the Upload implementation supplied by
+    // SDK
   }
 
   @Override
   public String getUploadId(String objectId) {
+    // Empty implementation - not applicable for Azure Upload since we're using the Upload implementation supplied by
+    // SDK
     return "";
   }
 
   @Override
   public ObjectMetadata getObjectMetadata(String objectId) {
+    // Empty implementation - not applicable for Azure Upload since we're using the Upload implementation supplied by
+    // SDK
     return null;
   }
 
   @Override
   public UploadProgress getUploadStatus(String objectId, String uploadId, long fileSize) {
+    // Empty implementation - not applicable for Azure Upload since we're using the Upload implementation supplied by
+    // SDK
     return null;
   }
 
   @Override
   public void cancelUploads() {
-
+    // Empty implementation - not applicable for Azure Upload since we're using the Upload implementation supplied by
+    // SDK
   }
 
   @Override
   public void cancelUpload(String objectId, String uploadId) {
-
+    // Empty implementation - not applicable for Azure Upload since we're using the Upload implementation supplied by
+    // SDK
   }
 
   @Override
   public void recover(String objectId, long fileSize) {
-
+    // Empty implementation - not applicable for Azure Upload since we're using the Upload implementation supplied by
+    // SDK
   }
 
   @Override
   public void deletePart(String objectId, String uploadId, int partNumber) {
-
+    // Empty implementation - not applicable for Azure Upload since we're using the Upload implementation supplied by
+    // SDK
   }
 
   @Override
   public List<MultipartUpload> listUploads() {
+    // Empty implementation - not applicable for Azure Upload since we're using the Upload implementation supplied by
+    // SDK
     return Collections.<MultipartUpload> emptyList();
   }
 }
