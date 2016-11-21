@@ -67,4 +67,5 @@ public class AzureServerConfig {
   public BucketNamingService bucketNamingService() {
     return new AzureBucketNamingService();
   }
+
 }

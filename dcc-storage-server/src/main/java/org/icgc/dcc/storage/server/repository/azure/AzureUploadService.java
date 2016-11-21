@@ -63,12 +63,10 @@ public class AzureUploadService implements UploadService {
     try {
       val blob = container.getBlockBlobReference(objectId);
 
-      if (!overwrite) {
-        if (blob.exists()) {
-          val message = String.format("Attempted to overwrite object id %s", objectId);
-          log.error(message); // Log overwrite attempt occurrence to audit log file
-          throw new InternalUnrecoverableError(message);
-        }
+      if ((!overwrite) && blob.exists()) {
+        val message = String.format("Attempted to overwrite object id %s", objectId);
+        log.error(message); // Log overwrite attempt occurrence to audit log file
+        throw new InternalUnrecoverableError(message);
       }
 
       val objectKey = ObjectKeys.getObjectKey("", objectId);

@@ -81,11 +81,11 @@ public class S3UploadService implements UploadService {
    */
   @Override
   public void upload(File file, String objectId, String md5, final boolean redo) throws IOException {
-    boolean flag = redo;
+    boolean tryAgain = redo;
     for (int retry = 0; retry < retryNumber; retry++)
       try {
-        if (flag) {
-          startUpload(file, objectId, md5, flag);
+        if (tryAgain) {
+          startUpload(file, objectId, md5, tryAgain);
         } else {
           // only perform checksum the first time of the resume
           resumeIfPossible(file, objectId, md5, retry == 0 ? true : false);
@@ -94,7 +94,7 @@ public class S3UploadService implements UploadService {
       } catch (NotRetryableException e) {
         log.warn(
             "Upload was not completed successfully in the last execution. Checking data integrity. Please wait...");
-        flag = !storageService.isUploadDataRecoverable(objectId, file.length());
+        tryAgain = !storageService.isUploadDataRecoverable(objectId, file.length());
       }
   }
 
@@ -130,9 +130,9 @@ public class S3UploadService implements UploadService {
    */
   @SneakyThrows
   private void resumeIfPossible(File uploadFile, String objectId, String md5, boolean checksum) {
-    UploadProgress progress = null;
     try {
-      progress = checkProgress(uploadFile, objectId);
+      val progress = checkProgress(uploadFile, objectId);
+      resume(uploadFile, progress, objectId, checksum);
     } catch (NotRetryableException e) {
       // org.icgc.dcc.storage.client.exception.ServiceRetryableResponseErrorHandler translates the 404 received from
       // server into a NotRetryableException
@@ -140,7 +140,6 @@ public class S3UploadService implements UploadService {
       startUpload(uploadFile, objectId, md5, true);
       return;
     }
-    resume(uploadFile, progress, objectId, checksum);
   }
 
   @SneakyThrows
@@ -149,8 +148,7 @@ public class S3UploadService implements UploadService {
     // See if there is already an upload in progress for this object id. Fetch upload id and send if present. If
     // missing, send null
     val uploadId = UploadStateStore.fetchUploadId(uploadFile, objectId);
-    UploadProgress progress = null;
-    progress = storageService.getProgress(objectId, uploadFile.length());
+    val progress = storageService.getProgress(objectId, uploadFile.length());
 
     // Compare upload id's
     if (uploadId.isPresent() && progress != null) {
@@ -207,7 +205,9 @@ public class S3UploadService implements UploadService {
   private int numCompletedParts(List<Part> parts) {
     int completedTotal = 0;
     for (val part : parts) {
-      if (part.getMd5() != null) completedTotal++;
+      if (part.getMd5() != null) {
+        completedTotal++;
+      }
     }
     return completedTotal;
   }
@@ -217,13 +217,15 @@ public class S3UploadService implements UploadService {
    */
   @SneakyThrows
   private void uploadParts(List<Part> parts, File file, String objectId, String uploadId, Progress progressBar) {
-    transportBuilder.withProxy(storageService)
+    val transport = transportBuilder
+        .withProxy(storageService)
         .withProgressBar(progressBar)
         .withParts(parts)
         .withObjectId(objectId)
         .withTransportMode(Mode.UPLOAD)
-        .withSessionId(uploadId);
-    transportBuilder.build().send(file);
+        .withSessionId(uploadId).build();
+
+    transport.send(file);
   }
 
   @Override
@@ -234,4 +236,5 @@ public class S3UploadService implements UploadService {
   private void cleanupState(File uploadFile, String objectId) throws IOException {
     UploadStateStore.close(UploadStateStore.getContainingDir(uploadFile), objectId);
   }
+
 }
