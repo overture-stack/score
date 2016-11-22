@@ -41,7 +41,7 @@ import com.microsoft.azure.storage.blob.ListBlobItem;
 @Slf4j
 @Setter
 @Service
-@Profile({ "azure" })
+@Profile("azure")
 public class AzureListingService implements ListingService {
 
   @Autowired

@@ -35,7 +35,7 @@ import org.springframework.context.annotation.Profile;
  * Server level configuration
  */
 @Configuration
-@Profile({ "azure" })
+@Profile("azure")
 public class AzureServerConfig {
 
   @Value("${upload.partsize}")

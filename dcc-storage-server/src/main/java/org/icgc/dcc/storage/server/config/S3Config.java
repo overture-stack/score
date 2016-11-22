@@ -97,4 +97,5 @@ public class S3Config {
   private boolean isEncryptionEnabled() {
     return masterEncryptionKeyId != null && !masterEncryptionKeyId.isEmpty();
   }
+
 }
