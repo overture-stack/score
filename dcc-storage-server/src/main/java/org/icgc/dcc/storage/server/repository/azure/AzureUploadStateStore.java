@@ -15,94 +15,76 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.client.progress;
+package org.icgc.dcc.storage.server.repository.azure;
 
-import lombok.NonNull;
-import lombok.val;
+import lombok.Setter;
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
+import java.util.List;
+import java.util.Map;
 
-import org.icgc.dcc.storage.core.util.ForwardingFileChannel;
+import org.icgc.dcc.storage.core.model.ObjectSpecification;
+import org.icgc.dcc.storage.core.model.Part;
+import org.icgc.dcc.storage.server.repository.UploadPartDetail;
+import org.icgc.dcc.storage.server.repository.UploadStateStore;
 
-public class ProgressFileChannel extends ForwardingFileChannel {
+/**
+ * The Azure upload logic currently does not make use of a State Store
+ * 
+ */
+@Setter
+public class AzureUploadStateStore implements UploadStateStore {
 
-  private final Progress progress;
+  @Override
+  public void create(ObjectSpecification spec) {
+    // TODO Auto-generated method stub
 
-  public ProgressFileChannel(@NonNull FileChannel delegate, @NonNull Progress progress) {
-    super(delegate);
-    this.progress = progress;
   }
 
   @Override
-  public int read(ByteBuffer dst) throws IOException {
-    val value = super.read(dst);
-    if (value > 0) {
-      progress.incrementBytesRead(value);
-    }
-
-    return value;
+  public ObjectSpecification read(String objectId, String uploadId) {
+    // TODO Auto-generated method stub
+    return null;
   }
 
   @Override
-  public long read(ByteBuffer[] dsts, int offset, int length) throws IOException {
-    val value = super.read(dsts, offset, length);
-    if (value > 0) {
-      progress.incrementBytesRead(value);
-    }
+  public void delete(String objectId, String uploadId) {
+    // TODO Auto-generated method stub
 
-    return value;
   }
 
   @Override
-  public int read(ByteBuffer dst, long position) throws IOException {
-    val value = super.read(dst, position);
-    if (value > 0) {
-      progress.incrementBytesRead(value);
-    }
+  public void deletePart(String objectId, String uploadId, int partNumber) {
+    // TODO Auto-generated method stub
 
-    return value;
   }
 
   @Override
-  public int write(ByteBuffer src) throws IOException {
-    val value = super.write(src);
-    if (value > 0) {
-      progress.incrementBytesWritten(value);
-    }
+  public void markCompletedParts(String objectId, String uploadId, List<Part> parts) {
+    // TODO Auto-generated method stub
 
-    return value;
   }
 
   @Override
-  public long write(ByteBuffer[] srcs, int offset, int length) throws IOException {
-    val value = super.write(srcs, offset, length);
-    if (value > 0) {
-      progress.incrementBytesWritten(value);
-    }
-
-    return value;
+  public boolean isCompleted(String objectId, String uploadId) {
+    // TODO Auto-generated method stub
+    return false;
   }
 
   @Override
-  public int write(ByteBuffer src, long position) throws IOException {
-    val value = super.write(src, position);
-    if (value > 0) {
-      progress.incrementBytesWritten(value);
-    }
+  public void finalizeUploadPart(String objectId, String uploadId, int partNumber, String md5, String eTag) {
+    // TODO Auto-generated method stub
 
-    return value;
   }
 
   @Override
-  public int hashCode() {
-    return super.hashCode();
+  public Map<Integer, UploadPartDetail> getUploadStatePartDetails(String objectId, String uploadId) {
+    // TODO Auto-generated method stub
+    return null;
   }
 
   @Override
-  public boolean equals(Object obj) {
-    return super.equals(obj);
+  public String getUploadId(String objectId) {
+    // TODO Auto-generated method stub
+    return null;
   }
-
 }

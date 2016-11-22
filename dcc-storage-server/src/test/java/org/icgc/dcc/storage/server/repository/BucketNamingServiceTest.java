@@ -19,7 +19,7 @@ package org.icgc.dcc.storage.server.repository;
 
 import static org.junit.Assert.assertEquals;
 
-import org.icgc.dcc.storage.server.repository.BucketNamingService;
+import org.icgc.dcc.storage.server.repository.s3.S3BucketNamingService;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -31,12 +31,12 @@ public class BucketNamingServiceTest {
   public static final String OBJECT_BASE_BUCKET = "oicr.icgc";
   public static final String STATE_BASE_BUCKET = "oicr.icgc.state";
 
-  BucketNamingService sut;
+  S3BucketNamingService sut;
 
   @Before
   public void setUp() {
     // Configure
-    sut = new BucketNamingService();
+    sut = new S3BucketNamingService();
     sut.setObjectBucketName(OBJECT_BASE_BUCKET);
     sut.setStateBucketName(STATE_BASE_BUCKET);
   }
@@ -151,7 +151,7 @@ public class BucketNamingServiceTest {
   @Test
   public void key_length_max_pool_smaller() {
     sut.setBucketPoolSize(10);
-    sut.setBucketKeySize(BucketNamingService.MAX_KEY_LENGTH);
+    sut.setBucketKeySize(S3BucketNamingService.MAX_KEY_LENGTH);
     String value = sut.getObjectBucketName("56f3cb04-38b4-574c-bffb-af1426113194"); // 91176112
     String expected = String.format("%s.2", OBJECT_BASE_BUCKET);
     assertEquals(expected, value);
@@ -160,7 +160,7 @@ public class BucketNamingServiceTest {
   @Test
   public void key_length_max_pool_larger() {
     sut.setBucketPoolSize(99999999);
-    sut.setBucketKeySize(BucketNamingService.MAX_KEY_LENGTH);
+    sut.setBucketKeySize(S3BucketNamingService.MAX_KEY_LENGTH);
     String value = sut.getObjectBucketName("56f3cb04-38b4-574c-bffb-af1426113194"); // 91176112
     String expected = String.format("%s.91176112", OBJECT_BASE_BUCKET);
     assertEquals(expected, value);
@@ -209,7 +209,7 @@ public class BucketNamingServiceTest {
   }
 
   public static void main(String[] arg) {
-    BucketNamingService sut = new BucketNamingService();
+    S3BucketNamingService sut = new S3BucketNamingService();
     sut.setObjectBucketName(OBJECT_BASE_BUCKET);
     sut.setStateBucketName(STATE_BASE_BUCKET);
     sut.setBucketKeySize(3);

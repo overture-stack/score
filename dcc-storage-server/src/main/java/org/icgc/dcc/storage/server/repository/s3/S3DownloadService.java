@@ -19,6 +19,11 @@ package org.icgc.dcc.storage.server.repository.s3;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+import lombok.Cleanup;
+import lombok.Setter;
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
+
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -39,6 +44,7 @@ import org.icgc.dcc.storage.server.repository.PartCalculator;
 import org.icgc.dcc.storage.server.repository.URLGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -50,17 +56,13 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import lombok.Cleanup;
-import lombok.Setter;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
-
 /**
  * service responsible for object download (full or partial)
  */
 @Slf4j
 @Setter
 @Service
+@Profile({ "aws", "collaboratory", "default" })
 public class S3DownloadService implements DownloadService {
 
   /**
@@ -90,11 +92,6 @@ public class S3DownloadService implements DownloadService {
   @Autowired
   private PartCalculator partCalculator;
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see org.icgc.dcc.storage.server.service.download.DownloadService#download(java.lang.String, long, long, boolean)
-   */
   @Override
   public ObjectSpecification download(String objectId, long offset, long length, boolean forExternalUse) {
     try {

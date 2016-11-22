@@ -17,12 +17,12 @@
  */
 package org.icgc.dcc.storage.client.progress;
 
+import lombok.NonNull;
+
 import java.io.IOException;
 import java.io.OutputStream;
 
 import org.icgc.dcc.storage.core.util.ForwardingOutputStream;
-
-import lombok.NonNull;
 
 public class ProgressOutputStream extends ForwardingOutputStream {
 
@@ -49,6 +49,16 @@ public class ProgressOutputStream extends ForwardingOutputStream {
   public void write(byte[] b, int off, int len) throws IOException {
     super.write(b, off, len);
     progress.incrementBytesWritten(len);
+  }
+
+  @Override
+  public int hashCode() {
+    return super.hashCode();
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    return super.equals(obj);
   }
 
 }

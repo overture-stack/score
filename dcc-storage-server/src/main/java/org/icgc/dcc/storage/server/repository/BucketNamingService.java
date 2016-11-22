@@ -17,116 +17,19 @@
  */
 package org.icgc.dcc.storage.server.repository;
 
-import java.util.regex.Pattern;
+/**
+ * 
+ */
+public interface BucketNamingService {
 
-import lombok.Data;
-import lombok.extern.slf4j.Slf4j;
+  public String getBaseStateBucketName();
 
-import org.apache.commons.lang.StringUtils;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
+  public String getStateBucketName(String objectId);
 
-import com.google.common.base.Preconditions;
+  public String getObjectBucketName(String objectId, boolean bypass);
 
-@Slf4j
-@Service
-@Data
-public class BucketNamingService {
+  public String getObjectBucketName(String objectId);
 
-  @Value("${bucket.name.object}")
-  private String objectBucketName;
-  @Value("${bucket.name.state}")
-  private String stateBucketName;
+  public boolean isPartitioned();
 
-  @Value("${bucket.size.pool}")
-  private int bucketPoolSize;
-  @Value("${bucket.size.key}")
-  private int bucketKeySize;
-
-  public final static int MAX_KEY_LENGTH = 7;
-  private static Pattern P = Pattern.compile(".+\\.\\d+$");
-
-  int doStrategyCalculation(String objectId) {
-    Preconditions.checkArgument(bucketKeySize > 0);
-    String piece = String.format("0x%s", scrubObjectKey(objectId).substring(0, bucketKeySize));
-    return Integer.decode(piece);
-  }
-
-  int calculateIndex(String objectId) {
-    int keyValue = doStrategyCalculation(objectId);
-    return keyValue % bucketPoolSize;
-  }
-
-  public String getBaseObjectBucketName() {
-    return objectBucketName;
-  }
-
-  public String getBaseStateBucketName() {
-    return stateBucketName;
-  }
-
-  public String getObjectBucketName(String objectId, boolean bypass) {
-    return bypass ? objectBucketName : getObjectBucketName(objectId);
-  }
-
-  public String getObjectBucketName(String objectId) {
-    return getBucketName(objectId, objectBucketName);
-  }
-
-  public String getStateBucketName(String objectId) {
-    return getBucketName(objectId, stateBucketName);
-  }
-
-  String getBucketName(String objectId, String baseName) {
-    String result = baseName; // default case where bucket pool size is 0
-
-    if (isPartitioned()) {
-      int bucketIndex = calculateIndex(objectId);
-      result = constructBucketName(baseName, bucketIndex);
-    } else {
-      log.trace("Bucket partitioning disabled: bucketPoolSize = {}", bucketKeySize, bucketPoolSize);
-    }
-    return result;
-  }
-
-  public String scrubObjectKey(String objectKey) {
-    String[] parts = objectKey.split("/");
-    if (parts.length > 1) {
-      return parts[parts.length - 1];
-    } else {
-      return objectKey;
-    }
-  }
-
-  public String constructBucketName(String baseName, int bucketIndex) {
-    // deliberately does not pad single digits with leading 0's
-    return String.format("%s.%d", baseName, bucketIndex);
-  }
-
-  public boolean isPartitionBucket(String bucketName) {
-    if (bucketName == null) {
-      return false;
-    }
-    return P.matcher(bucketName).matches();
-  }
-
-  public boolean isPartitioned() {
-    return bucketPoolSize > 0;
-  }
-
-  public boolean validate() {
-    if (StringUtils.isNotBlank(objectBucketName)) {
-      throw new IllegalArgumentException("Missing Object Bucket Name configuration");
-    }
-
-    if (StringUtils.isNotBlank(stateBucketName)) {
-      throw new IllegalArgumentException("Missing State Bucket Name configuration");
-    }
-
-    if (isPartitioned() && bucketKeySize <= 0) {
-      throw new IllegalArgumentException("Invalid Bucket Partitioning Configuration: negative key size: "
-          + bucketKeySize);
-    }
-    return true;
-  }
 }

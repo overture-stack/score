@@ -2,6 +2,12 @@ package org.icgc.dcc.storage.server.repository.s3;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+import lombok.NonNull;
+import lombok.Setter;
+import lombok.SneakyThrows;
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -22,7 +28,6 @@ import org.icgc.dcc.storage.server.exception.InternalUnrecoverableError;
 import org.icgc.dcc.storage.server.exception.NotRetryableException;
 import org.icgc.dcc.storage.server.exception.RetryableException;
 import org.icgc.dcc.storage.server.metadata.MetadataService;
-import org.icgc.dcc.storage.server.repository.BucketNamingService;
 import org.icgc.dcc.storage.server.repository.PartCalculator;
 import org.icgc.dcc.storage.server.repository.URLGenerator;
 import org.icgc.dcc.storage.server.repository.UploadPartDetail;
@@ -30,6 +35,7 @@ import org.icgc.dcc.storage.server.repository.UploadService;
 import org.icgc.dcc.storage.server.repository.UploadStateStore;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
@@ -51,18 +57,13 @@ import com.amazonaws.services.s3.model.PartSummary;
 import com.amazonaws.services.s3.model.transform.Unmarshallers.ListPartsResultUnmarshaller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import lombok.NonNull;
-import lombok.Setter;
-import lombok.SneakyThrows;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
-
 /**
  * A service for object upload.
  */
 @Slf4j
 @Setter
 @Service
+@Profile({ "aws", "collaboratory", "default" })
 public class S3UploadService implements UploadService {
 
   /**
@@ -89,7 +90,7 @@ public class S3UploadService implements UploadService {
   @Autowired
   private MetadataService metadataClient;
   @Autowired
-  private BucketNamingService bucketNamingService;
+  private S3BucketNamingService bucketNamingService;
   @Autowired
   private UploadStateStore stateStore;
   @Autowired
@@ -97,12 +98,6 @@ public class S3UploadService implements UploadService {
   @Autowired
   private PartCalculator partCalculator;
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see org.icgc.dcc.storage.server.service.upload.UploadService#initiateUpload(java.lang.String, long,
-   * java.lang.String, boolean)
-   */
   @Override
   public ObjectSpecification initiateUpload(String objectId, long fileSize, String md5, boolean overwrite) {
     // First ensure that the system is aware of the requested object
@@ -164,11 +159,6 @@ public class S3UploadService implements UploadService {
     }
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see org.icgc.dcc.storage.server.service.upload.UploadService#exists(java.lang.String)
-   */
   @Override
   public boolean exists(@NonNull String objectId) {
     val objectKey = ObjectKeys.getObjectKey(dataDir, objectId);
@@ -257,12 +247,6 @@ public class S3UploadService implements UploadService {
     return false;
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see org.icgc.dcc.storage.server.service.upload.UploadService#finalizeUploadPart(java.lang.String,
-   * java.lang.String, int, java.lang.String, java.lang.String)
-   */
   @Override
   @SneakyThrows
   public void finalizeUploadPart(String objectId, String uploadId, int partNumber, String md5, String eTag) {
@@ -283,11 +267,6 @@ public class S3UploadService implements UploadService {
     }
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see org.icgc.dcc.storage.server.service.upload.UploadService#finalizeUpload(java.lang.String, java.lang.String)
-   */
   @Override
   public void finalizeUpload(String objectId, String uploadId) {
     log.info("finalizing object id {} with upload id: {}", objectId, uploadId);
@@ -335,21 +314,11 @@ public class S3UploadService implements UploadService {
     }
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see org.icgc.dcc.storage.server.service.upload.UploadService#getUploadId(java.lang.String)
-   */
   @Override
   public String getUploadId(String objectId) {
     return stateStore.getUploadId(objectId);
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see org.icgc.dcc.storage.server.service.upload.UploadService#getObjectMetadata(java.lang.String)
-   */
   @Override
   public ObjectMetadata getObjectMetadata(String objectId) {
     try {
@@ -361,12 +330,6 @@ public class S3UploadService implements UploadService {
     }
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see org.icgc.dcc.storage.server.service.upload.UploadService#getUploadStatus(java.lang.String, java.lang.String,
-   * long)
-   */
   @Override
   public UploadProgress getUploadStatus(String objectId, String uploadId, long fileSize) {
     val spec = stateStore.read(objectId, uploadId);
@@ -385,11 +348,6 @@ public class S3UploadService implements UploadService {
     throw new NotRetryableException(new IllegalStateException(msg));
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see org.icgc.dcc.storage.server.service.upload.UploadService#cancelUploads()
-   */
   @Override
   public void cancelUploads() {
     try {
@@ -408,11 +366,6 @@ public class S3UploadService implements UploadService {
     }
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see org.icgc.dcc.storage.server.service.upload.UploadService#cancelUpload(java.lang.String, java.lang.String)
-   */
   @Override
   public void cancelUpload(String objectId, String uploadId) {
     try {
@@ -429,11 +382,6 @@ public class S3UploadService implements UploadService {
     }
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see org.icgc.dcc.storage.server.service.upload.UploadService#recover(java.lang.String, long)
-   */
   @Override
   public void recover(String objectId, long fileSize) {
     val uploadId = getUploadId(objectId);
@@ -447,11 +395,6 @@ public class S3UploadService implements UploadService {
     }
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see org.icgc.dcc.storage.server.service.upload.UploadService#deletePart(java.lang.String, java.lang.String, int)
-   */
   @Override
   public void deletePart(String objectId, String uploadId, int partNumber) {
     log.info("Deleting part with number {} for objectId: {}, uploadId: {}", partNumber, objectId, uploadId);

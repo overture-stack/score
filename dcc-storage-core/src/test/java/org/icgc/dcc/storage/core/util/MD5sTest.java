@@ -15,48 +15,68 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.server.config;
+package org.icgc.dcc.storage.core.util;
 
-import org.icgc.dcc.storage.server.repository.BucketNamingService;
-import org.icgc.dcc.storage.server.repository.PartCalculator;
-import org.icgc.dcc.storage.server.repository.SimplePartCalculator;
-import org.icgc.dcc.storage.server.repository.URLGenerator;
-import org.icgc.dcc.storage.server.repository.UploadStateStore;
-import org.icgc.dcc.storage.server.repository.s3.S3BucketNamingService;
-import org.icgc.dcc.storage.server.repository.s3.S3URLGenerator;
-import org.icgc.dcc.storage.server.repository.s3.S3UploadStateStore;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
+import static org.assertj.core.api.Assertions.assertThat;
 
-/**
- * Server level configuration
- */
-@Configuration
-@Profile({ "aws", "collaboratory", "default" })
-public class ServerConfig {
+import org.junit.Test;
 
-  @Value("${upload.partsize}")
-  private int partSize;
+public class MD5sTest {
 
-  @Bean
-  public UploadStateStore stateStore() {
-    return new S3UploadStateStore();
+  public static final String MD5_HEX_1 = "2bdf4f6127a6971262c023a492e6fb27";
+  public static final String MD5_BASE64_1 = "K99PYSemlxJiwCOkkub7Jw==";
+
+  public static final String MD5_HEX_2 = "cebdd6af9b12933da261f0464acfd808";
+  public static final String MD5_BASE64_2 = "zr3Wr5sSkz2iYfBGSs/YCA==";
+
+  public static final String GARBAGE = "data%2F040c742c-b160-5661";
+
+  @Test
+  public void is_hex() {
+    assertThat(MD5s.isHex(MD5_HEX_1)).isTrue();
   }
 
-  @Bean
-  public PartCalculator calculator() {
-    return new SimplePartCalculator(partSize);
+  @Test
+  public void is_not_hex() {
+    assertThat(MD5s.isHex(MD5_BASE64_1)).isFalse();
   }
 
-  @Bean
-  public URLGenerator url() {
-    return new S3URLGenerator();
+  @Test
+  public void is_base64() {
+    assertThat(MD5s.isBase64(MD5_BASE64_2)).isTrue();
   }
 
-  @Bean
-  public BucketNamingService bucketNamingService() {
-    return new S3BucketNamingService();
+  @Test
+  public void is_not_base64() {
+    assertThat(MD5s.isBase64(MD5_HEX_2)).isFalse();
   }
+
+  @Test
+  public void test_to_base64() {
+    assertThat(MD5s.toBase64(MD5_HEX_1)).isEqualToIgnoringCase(MD5_BASE64_1);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void test_to_base64_non_hex() {
+    // assertj 3 has some nice syntactic sugar for this:
+    // assertThatExceptionOfType(DecoderException.class).isThrownBy(() -> { MD5s.toBase64(GARBAGE); });
+    MD5s.toBase64(GARBAGE);
+  }
+
+  @Test
+  public void test_to_hex() {
+    assertThat(MD5s.toHex(MD5_BASE64_2)).isEqualToIgnoringCase(MD5_HEX_2);
+  }
+
+  @Test
+  public void test_to_hex_non_base64() {
+    assertThat(MD5s.toHex(MD5_BASE64_2)).isEqualToIgnoringCase(MD5_HEX_2);
+  }
+
+  @Test
+  public void test_is_equal() {
+    assertThat(MD5s.isEqual(MD5_HEX_1, MD5_BASE64_1)).isTrue();
+    assertThat(MD5s.isEqual(MD5_BASE64_2, MD5_HEX_2)).isTrue();
+  }
+
 }

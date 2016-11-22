@@ -26,12 +26,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.icgc.dcc.storage.test.util.Assertions.assertDirectories;
 import static org.icgc.dcc.storage.test.util.SpringBootProcess.bootRun;
 
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
+
 import java.io.File;
 import java.util.List;
 import java.util.function.Consumer;
-
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
 
 import org.icgc.dcc.storage.test.auth.AuthClient;
 import org.icgc.dcc.storage.test.fs.FileSystem;

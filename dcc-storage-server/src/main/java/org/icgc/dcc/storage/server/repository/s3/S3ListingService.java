@@ -19,19 +19,20 @@ package org.icgc.dcc.storage.server.repository.s3;
 
 import static org.icgc.dcc.storage.core.util.UUIDs.isUUID;
 
+import lombok.Setter;
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
+
 import java.io.File;
 import java.util.List;
 import java.util.function.Consumer;
 
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
-
 import org.icgc.dcc.storage.core.model.ObjectInfo;
-import org.icgc.dcc.storage.server.repository.BucketNamingService;
 import org.icgc.dcc.storage.server.repository.ListingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -43,7 +44,9 @@ import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.google.common.collect.Lists;
 
 @Slf4j
+@Setter
 @Service
+@Profile({ "aws", "collaboratory", "default" })
 public class S3ListingService implements ListingService {
 
   /**
@@ -64,9 +67,11 @@ public class S3ListingService implements ListingService {
   @Autowired
   private AmazonS3 s3;
   @Autowired
-  private BucketNamingService bucketNamingService;
+  private S3BucketNamingService bucketNamingService;
 
-  /* (non-Javadoc)
+  /*
+   * (non-Javadoc)
+   * 
    * @see org.icgc.dcc.storage.server.service.ListingService#getListing()
    */
   @Override
