@@ -46,7 +46,7 @@ import com.microsoft.azure.storage.blob.CloudBlobContainer;
 @Slf4j
 @Setter
 @Service
-@Profile({ "azure" })
+@Profile("azure")
 public class AzureUploadService implements UploadService {
 
   @Autowired

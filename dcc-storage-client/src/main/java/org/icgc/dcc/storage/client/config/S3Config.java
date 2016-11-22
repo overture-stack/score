@@ -19,6 +19,8 @@ package org.icgc.dcc.storage.client.config;
 
 import org.icgc.dcc.storage.client.upload.UploadService;
 import org.icgc.dcc.storage.client.upload.s3.S3UploadService;
+import org.icgc.dcc.storage.client.util.PresignedUrlValidator;
+import org.icgc.dcc.storage.client.util.S3PresignedUrlValidator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -30,6 +32,11 @@ public class S3Config {
   @Bean
   public UploadService uploadService() {
     return new S3UploadService();
+  }
+
+  @Bean
+  public PresignedUrlValidator urlValidator() {
+    return new S3PresignedUrlValidator();
   }
 
 }

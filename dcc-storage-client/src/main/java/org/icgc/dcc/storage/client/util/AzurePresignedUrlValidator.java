@@ -15,57 +15,41 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.storage.server.config;
+package org.icgc.dcc.storage.client.util;
 
-import org.icgc.dcc.storage.server.repository.BucketNamingService;
-import org.icgc.dcc.storage.server.repository.PartCalculator;
-import org.icgc.dcc.storage.server.repository.URLGenerator;
-import org.icgc.dcc.storage.server.repository.UploadStateStore;
-import org.icgc.dcc.storage.server.repository.azure.AzureBucketNamingService;
-import org.icgc.dcc.storage.server.repository.azure.AzurePartCalculator;
-import org.icgc.dcc.storage.server.repository.azure.AzureURLGenerator;
-import org.icgc.dcc.storage.server.repository.azure.AzureUploadStateStore;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
-/**
- * Server level configuration
- */
-@Configuration
-@Profile("azure")
-public class AzureServerConfig {
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Map;
 
-  @Value("${upload.partsize}")
-  private int partSize;
+@Slf4j
+public class AzurePresignedUrlValidator extends PresignedUrlValidator {
 
-  @Bean
-  public UploadStateStore stateStore() {
-    return new AzureUploadStateStore();
+  /**
+   * Return expiry date of presigned URL in the local time zone (system default). Distinguished between V2 and V4 AWS
+   * signatures
+   * @param args - URL query arguments
+   * @return expiry date translated to specified time zone
+   */
+  @Override
+  LocalDateTime extractExpiryDate(Map<String, String> args, ZoneId effectiveTimeZone) {
+    if (args.containsKey("se")) {
+      val se = args.get("se");
+
+      // This is the expected date format from Azure
+      val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssX");
+      val zdt = ZonedDateTime.parse(se, formatter);
+
+      return zdt.withZoneSameInstant(ZoneId.systemDefault()).toLocalDateTime();
+    } else {
+      log.error("Could not identify expected date parameters in request: {}", flattenMap(args));
+      // missing expected query arguments
+      throw new IllegalArgumentException(
+          String.format("Could not parse presigned URL - missing expected expiry date parameters"));
+    }
   }
-
-  @Bean
-  @Qualifier("download")
-  public PartCalculator downloadCalculator() {
-    return new AzurePartCalculator(partSize);
-  }
-
-  @Bean
-  @Qualifier("upload")
-  public PartCalculator uploadCalculator() {
-    return new AzurePartCalculator();
-  }
-
-  @Bean
-  public URLGenerator url() {
-    return new AzureURLGenerator();
-  }
-
-  @Bean
-  public BucketNamingService bucketNamingService() {
-    return new AzureBucketNamingService();
-  }
-
 }
