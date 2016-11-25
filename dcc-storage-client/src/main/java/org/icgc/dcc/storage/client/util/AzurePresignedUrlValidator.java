@@ -30,8 +30,7 @@ import java.util.Map;
 public class AzurePresignedUrlValidator extends PresignedUrlValidator {
 
   /**
-   * Return expiry date of presigned URL in the local time zone (system default). Distinguished between V2 and V4 AWS
-   * signatures
+   * Return expiry date of presigned URL in the local time zone (system default).
    * @param args - URL query arguments
    * @return expiry date translated to specified time zone
    */
@@ -52,4 +51,5 @@ public class AzurePresignedUrlValidator extends PresignedUrlValidator {
           String.format("Could not parse presigned URL - missing expected expiry date parameters"));
     }
   }
+
 }
