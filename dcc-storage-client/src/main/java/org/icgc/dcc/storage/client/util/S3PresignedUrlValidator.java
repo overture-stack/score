@@ -59,7 +59,7 @@ public class S3PresignedUrlValidator extends PresignedUrlValidator {
       throw new IllegalArgumentException(
           String.format("Could not parse presigned URL - missing expected expiry date parameters"));
     }
-    System.out.printf("Expiry DateTime (Local): %s%n", expiry);
+    log.debug("Expiry DateTime (Local): {}\n", expiry);
     return expiry;
   }
 
@@ -86,14 +86,14 @@ public class S3PresignedUrlValidator extends PresignedUrlValidator {
     try {
       ts = args.get(SignerConstants.X_AMZ_DATE.toLowerCase()); // Basic format ISO 8601 string in UTC
       val reqDate = ZonedDateTime.parse(ts, formatter);
-      log.trace("Request DateTime (Zoned): %s%n", reqDate);
+      log.trace("Request DateTime (Zoned): {}", reqDate);
 
       val expSeconds = Integer.parseInt(args.get(SignerConstants.X_AMZ_EXPIRES.toLowerCase()));
 
       // Translate to effective timezone (and increment with expiry period)
       return reqDate.withZoneSameInstant(effectiveTimeZone).toLocalDateTime().plusSeconds(expSeconds);
     } catch (DateTimeParseException pe) {
-      log.error("%s is not parsable!%n", ts);
+      log.error("%s is not parsable!", ts);
       throw pe; // Rethrow the exception.
     }
   }
