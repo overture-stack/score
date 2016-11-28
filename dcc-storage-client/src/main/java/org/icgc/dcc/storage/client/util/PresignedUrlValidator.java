@@ -82,7 +82,7 @@ public abstract class PresignedUrlValidator {
   Map<String, String> collectQuery(List<NameValuePair> args) {
     val result = new ImmutableMap.Builder<String, String>();
     for (val pair : args) {
-      // store keys as lower case by convention
+      // Store keys as lower case by convention
       result.put(pair.getName().toLowerCase(), pair.getValue());
     }
     return result.build();

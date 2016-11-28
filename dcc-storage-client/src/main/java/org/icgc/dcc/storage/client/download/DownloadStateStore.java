@@ -89,13 +89,11 @@ public class DownloadStateStore extends TransferState {
         // Copy download md5 into ObjectSpecification
         part.setMd5(completedPart.getMd5());
       } else {
-        // part is not complete - check if it has expired
-        // if (PresignedUrlValidator.isUrlExpired(part.getUrl())) {
+        // Part is not complete - check if it has expired
         if (urlValidator.isUrlExpired(part.getUrl())) {
-          val expiredMsg =
-              String
-                  .format("Presigned URL's have expired because download was not completed in allotted period. Restarting.");
-          val ise = new IllegalStateException(expiredMsg);
+          val ise =
+              new IllegalStateException(
+                  "Presigned URL's have expired because download was not completed in allotted period. Restarting.");
           throw new NotRetryableException(ise);
         }
       }

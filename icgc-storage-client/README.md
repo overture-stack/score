@@ -31,7 +31,7 @@ The Storage Client running the ``azure`` profile works the same way as ``aws`` a
 
 1. the number of parallel upload/download threads needs to be set very high (to offset the fact that blocks are so small). Settings like:
 
-	```
+	```yaml
 transport.memory = 8
 transport.parallel = 24 # or 32 (assuming 250 MB blocks is defined on server) 
 ```

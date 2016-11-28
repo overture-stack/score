@@ -45,7 +45,7 @@ import com.microsoft.azure.storage.blob.SharedAccessBlobPolicy;
 public class AzureURLGenerator implements URLGenerator {
 
   // Formatter just for local logging/display
-  private static DateTimeFormatter df = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSZ").withZone(
+  private static final DateTimeFormatter df = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSZ").withZone(
       ZoneId.systemDefault());
 
   @Value("${bucket.policy.upload}")

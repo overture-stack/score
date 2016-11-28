@@ -26,29 +26,30 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
 
+import com.microsoft.azure.storage.Constants.QueryConstants;
+
 @Slf4j
 public class AzurePresignedUrlValidator extends PresignedUrlValidator {
 
+  // This is the expected date format from Azure
+  private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssX");
+
   /**
    * Return expiry date of presigned URL in the local time zone (system default).
-   * @param args - URL query arguments
+   * @param args - URL query arguments - looking for 'se'
    * @return expiry date translated to specified time zone
    */
   @Override
   LocalDateTime extractExpiryDate(Map<String, String> args, ZoneId effectiveTimeZone) {
-    if (args.containsKey("se")) {
-      val se = args.get("se");
-
-      // This is the expected date format from Azure
-      val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssX");
+    if (args.containsKey(QueryConstants.SIGNED_EXPIRY)) {
+      val se = args.get(QueryConstants.SIGNED_EXPIRY);
       val zdt = ZonedDateTime.parse(se, formatter);
 
       return zdt.withZoneSameInstant(ZoneId.systemDefault()).toLocalDateTime();
     } else {
       log.error("Could not identify expected date parameters in request: {}", flattenMap(args));
-      // missing expected query arguments
-      throw new IllegalArgumentException(
-          String.format("Could not parse presigned URL - missing expected expiry date parameters"));
+      // Missing expected query arguments
+      throw new IllegalArgumentException("Could not parse presigned URL - missing expected expiry date parameters");
     }
   }
 

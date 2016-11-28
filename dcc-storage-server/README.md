@@ -33,7 +33,7 @@ Spring profile: ``azure``
 
 New configuration parameters include:
 
-```
+```yaml
 azure:
   accountName: 
   accountKey: 
@@ -48,7 +48,7 @@ download:
 ```
 At this time, only a single Azure Blob Storage account (and container) is used. However, since Azure Storage can only store 500 TB per account, the Storage Server will need to manage multiple account/key credentials in the near future.  It may also make sense to have multiple containers per account as well. There are suggestions that having many objects in a single container can impose a performance penalty on some operations.
 
-The Storage Server no longer uses ``.meta`` files to track state in the repository. Object Specifications are dynamically generated on the fly for use on the client (to allow downloads to be resumed). Otherwise, the block upload implementation supplied by Microsoft in the Azure Java SDK supercedes this. 
+The Storage Server no longer uses ``.meta`` files to track state in the repository. Object Specifications are dynamically generated on the fly for use on the client (to allow downloads to be resumed). Also, the block upload implementation supplied by Microsoft in the Azure Java SDK supercedes the use of this file. 
 
 For Azure downloads, the ``download.partsize`` property is used to determine the size of individual parts to download. Currently, this is 250 MB.
 

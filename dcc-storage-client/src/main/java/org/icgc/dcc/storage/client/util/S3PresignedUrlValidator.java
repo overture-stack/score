@@ -28,8 +28,16 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.Map;
 
+import org.springframework.http.HttpHeaders;
+
+import com.amazonaws.auth.internal.SignerConstants;
+
 @Slf4j
 public class S3PresignedUrlValidator extends PresignedUrlValidator {
+
+  // Extended format uses hyphens. Named formatters in Java 8 (like ISO_INSTANT) are extended format only
+  // So, we have to define formatter with explicit ISO 8601 basic format
+  private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmssX");
 
   /**
    * Return expiry date of presigned URL in the local time zone (system default). Distinguished between V2 and V4 AWS
@@ -40,27 +48,22 @@ public class S3PresignedUrlValidator extends PresignedUrlValidator {
   @Override
   LocalDateTime extractExpiryDate(Map<String, String> args, ZoneId effectiveTimeZone) {
     LocalDateTime expiry = null;
-    if (args.containsKey("Expires".toLowerCase())) {
-      val ts = args.get("Expires".toLowerCase());
+    if (args.containsKey(HttpHeaders.EXPIRES.toLowerCase())) {
+      val ts = args.get(HttpHeaders.EXPIRES.toLowerCase());
       val explicit = Instant.ofEpochMilli(Long.parseLong(ts) * 1000);
       expiry = LocalDateTime.ofInstant(explicit, effectiveTimeZone);
-    } else if (args.containsKey("X-Amz-Expires".toLowerCase()) && (args.containsKey("X-Amz-Date".toLowerCase()))) {
+
+    } else if (args.containsKey(SignerConstants.X_AMZ_EXPIRES.toLowerCase())
+        && (args.containsKey(SignerConstants.X_AMZ_DATE.toLowerCase()))) {
       String ts = "";
       try {
-        // using string literals for query parameter names because the values found here:
-        // http://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/constant-values.html
-        // don't appear consistent: all lower case, no X-Amz-Expired constant at all.
-
-        ts = args.get("X-Amz-Date".toLowerCase()); // basic format ISO 8601 string in UTC
-        // extended format uses hyphens. Named formatters in Java 8 (like ISO_INSTANT) are extended format only
-        // So, we have to define formatter with explicit ISO 8601 basic format
-        val formatter = DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmssX");
+        ts = args.get(SignerConstants.X_AMZ_DATE.toLowerCase()); // Basic format ISO 8601 string in UTC
         val reqDate = ZonedDateTime.parse(ts, formatter);
         log.trace("Request DateTime (Zoned): %s%n", reqDate);
 
-        val expSeconds = Integer.parseInt(args.get("X-Amz-Expires".toLowerCase()));
+        val expSeconds = Integer.parseInt(args.get(SignerConstants.X_AMZ_EXPIRES.toLowerCase()));
 
-        // translate to effective timezone (and increment with expiry period)
+        // Translate to effective timezone (and increment with expiry period)
         expiry = reqDate.withZoneSameInstant(effectiveTimeZone).toLocalDateTime().plusSeconds(expSeconds);
         System.out.printf("Expiry DateTime (Local): %s%n", expiry);
 
@@ -69,7 +72,7 @@ public class S3PresignedUrlValidator extends PresignedUrlValidator {
         throw pe; // Rethrow the exception.
       }
     } else {
-      // missing expected query arguments
+      // Missing expected query arguments
       log.error("Could not identify expected date parameters in request: {}", flattenMap(args));
       throw new IllegalArgumentException(
           String.format("Could not parse presigned URL - missing expected expiry date parameters"));
