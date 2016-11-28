@@ -49,7 +49,7 @@ import com.microsoft.azure.storage.blob.CloudBlockBlob;
 @Slf4j
 @Setter
 @Service
-@Profile({ "azure" })
+@Profile("azure")
 public class AzureDownloadService implements DownloadService {
 
   /**

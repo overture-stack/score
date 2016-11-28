@@ -37,7 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 @Configuration
 @Data
 @Slf4j
-@Profile({ "azure" })
+@Profile("azure")
 @ConfigurationProperties(prefix = "azure")
 public class AzureConfig {
 

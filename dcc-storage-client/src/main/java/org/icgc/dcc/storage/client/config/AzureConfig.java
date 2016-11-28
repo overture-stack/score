@@ -19,6 +19,8 @@ package org.icgc.dcc.storage.client.config;
 
 import org.icgc.dcc.storage.client.upload.UploadService;
 import org.icgc.dcc.storage.client.upload.azure.AzureUploadService;
+import org.icgc.dcc.storage.client.util.AzurePresignedUrlValidator;
+import org.icgc.dcc.storage.client.util.PresignedUrlValidator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -30,6 +32,11 @@ public class AzureConfig {
   @Bean
   public UploadService uploadService() {
     return new AzureUploadService();
+  }
+
+  @Bean
+  public PresignedUrlValidator urlValidator() {
+    return new AzurePresignedUrlValidator();
   }
 
 }
