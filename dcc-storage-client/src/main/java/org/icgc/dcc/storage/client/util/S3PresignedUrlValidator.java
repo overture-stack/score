@@ -49,35 +49,51 @@ public class S3PresignedUrlValidator extends PresignedUrlValidator {
   LocalDateTime extractExpiryDate(Map<String, String> args, ZoneId effectiveTimeZone) {
     LocalDateTime expiry = null;
     if (args.containsKey(HttpHeaders.EXPIRES.toLowerCase())) {
-      val ts = args.get(HttpHeaders.EXPIRES.toLowerCase());
-      val explicit = Instant.ofEpochMilli(Long.parseLong(ts) * 1000);
-      expiry = LocalDateTime.ofInstant(explicit, effectiveTimeZone);
-
+      expiry = extractV2ExpiryDate(args, effectiveTimeZone);
     } else if (args.containsKey(SignerConstants.X_AMZ_EXPIRES.toLowerCase())
         && (args.containsKey(SignerConstants.X_AMZ_DATE.toLowerCase()))) {
-      String ts = "";
-      try {
-        ts = args.get(SignerConstants.X_AMZ_DATE.toLowerCase()); // Basic format ISO 8601 string in UTC
-        val reqDate = ZonedDateTime.parse(ts, formatter);
-        log.trace("Request DateTime (Zoned): %s%n", reqDate);
-
-        val expSeconds = Integer.parseInt(args.get(SignerConstants.X_AMZ_EXPIRES.toLowerCase()));
-
-        // Translate to effective timezone (and increment with expiry period)
-        expiry = reqDate.withZoneSameInstant(effectiveTimeZone).toLocalDateTime().plusSeconds(expSeconds);
-        System.out.printf("Expiry DateTime (Local): %s%n", expiry);
-
-      } catch (DateTimeParseException pe) {
-        log.error("%s is not parsable!%n", ts);
-        throw pe; // Rethrow the exception.
-      }
+      expiry = extractV4ExpiryDate(args, effectiveTimeZone);
     } else {
       // Missing expected query arguments
       log.error("Could not identify expected date parameters in request: {}", flattenMap(args));
-      throw new IllegalArgumentException(
-          String.format("Could not parse presigned URL - missing expected expiry date parameters"));
+      throw new IllegalArgumentException("Could not parse presigned URL - missing expected expiry date parameters");
     }
+    log.debug("Expiry DateTime (Local): {}\n", expiry);
     return expiry;
   }
 
+  /**
+   * V2 Signature uses 'Expires' HTTP Header
+   * @param args
+   * @param effectiveTimeZone
+   * @return timestamp from header
+   */
+  LocalDateTime extractV2ExpiryDate(Map<String, String> args, ZoneId effectiveTimeZone) {
+    val ts = args.get(HttpHeaders.EXPIRES.toLowerCase());
+    val explicit = Instant.ofEpochMilli(Long.parseLong(ts) * 1000);
+    return LocalDateTime.ofInstant(explicit, effectiveTimeZone);
+  }
+
+  /**
+   * V4 Signature uses 'X-Amz-Expires' and 'X-Amz-Date' headers
+   * @param args
+   * @param effectiveTimeZone
+   * @return timestamp from header
+   */
+  LocalDateTime extractV4ExpiryDate(Map<String, String> args, ZoneId effectiveTimeZone) {
+    String ts = "";
+    try {
+      ts = args.get(SignerConstants.X_AMZ_DATE.toLowerCase()); // Basic format ISO 8601 string in UTC
+      val reqDate = ZonedDateTime.parse(ts, formatter);
+      log.trace("Request DateTime (Zoned): {}", reqDate);
+
+      val expSeconds = Integer.parseInt(args.get(SignerConstants.X_AMZ_EXPIRES.toLowerCase()));
+
+      // Translate to effective timezone (and increment with expiry period)
+      return reqDate.withZoneSameInstant(effectiveTimeZone).toLocalDateTime().plusSeconds(expSeconds);
+    } catch (DateTimeParseException pe) {
+      log.error("{} is not parsable!", ts);
+      throw pe; // Rethrow the exception.
+    }
+  }
 }
