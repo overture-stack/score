@@ -56,8 +56,7 @@ public class S3PresignedUrlValidator extends PresignedUrlValidator {
     } else {
       // Missing expected query arguments
       log.error("Could not identify expected date parameters in request: {}", flattenMap(args));
-      throw new IllegalArgumentException(
-          String.format("Could not parse presigned URL - missing expected expiry date parameters"));
+      throw new IllegalArgumentException("Could not parse presigned URL - missing expected expiry date parameters");
     }
     log.debug("Expiry DateTime (Local): {}\n", expiry);
     return expiry;
@@ -93,7 +92,7 @@ public class S3PresignedUrlValidator extends PresignedUrlValidator {
       // Translate to effective timezone (and increment with expiry period)
       return reqDate.withZoneSameInstant(effectiveTimeZone).toLocalDateTime().plusSeconds(expSeconds);
     } catch (DateTimeParseException pe) {
-      log.error("%s is not parsable!", ts);
+      log.error("{} is not parsable!", ts);
       throw pe; // Rethrow the exception.
     }
   }
