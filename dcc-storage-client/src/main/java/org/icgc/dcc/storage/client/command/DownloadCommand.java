@@ -25,6 +25,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -42,7 +43,7 @@ import org.springframework.stereotype.Component;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Multimaps;
 import com.google.common.io.Files;
 
 import lombok.SneakyThrows;
@@ -98,6 +99,7 @@ public class DownloadCommand extends RepositoryAccessCommand {
     if (verifyConnection) {
       verifyRepoConnection();
     }
+    validateOutputDirectory();
 
     terminal.printStatus("Downloading...");
 
@@ -132,7 +134,6 @@ public class DownloadCommand extends RepositoryAccessCommand {
   private int downloadObjects(List<String> objectIds) throws IOException {
     // Entities are defined in Meta service
     val entities = resolveEntities(objectIds);
-    prepareLayout(entities);
 
     if (!verifyLocalAvailableSpace(entities)) {
       return FAILURE_STATUS;
@@ -140,7 +141,16 @@ public class DownloadCommand extends RepositoryAccessCommand {
 
     int i = 1;
     terminal.println("");
-    for (val entity : filterEntities(entities)) {
+
+    // filtering based on file name only applies to FILENAME and BUNDLE layouts
+    Set<Entity> entitySet = entities;
+    if (layout != OutputLayout.ID) {
+      entitySet = filterEntities(entities);
+    }
+
+    // sweepExisting(entitySet);
+
+    for (val entity : entitySet) {
       terminal
           .printLine()
           .printf("[%s/%s] Downloading object: %s (%s)%n", i++, entities.size(), terminal.value(entity.getId()),
@@ -148,12 +158,12 @@ public class DownloadCommand extends RepositoryAccessCommand {
           .printLine();
 
       val builder = DownloadRequest.builder();
-      val request =
-          builder.outputDir(outputDir).entity(entity).objectId(entity.getId()).offset(offset).length(length)
-              .validate(validate).build();
+      val request = builder.outputDir(outputDir).entity(entity).objectId(entity.getId()).offset(offset).length(length)
+          .validate(validate).build();
 
       downloadService.download(request, force);
-      layoutFile(entity);
+      finalizeDownload(entity);
+
       terminal.println("Done.");
     }
 
@@ -161,10 +171,10 @@ public class DownloadCommand extends RepositoryAccessCommand {
   }
 
   /**
-   * Prepares the local file system for moving files into after they have completed downloading.
+   * Checks local output directory for pre-existing files (before downloading them). Modifies the collection passed in.
    */
   @SneakyThrows
-  private void prepareLayout(Set<Entity> entities) {
+  private void sweepExisting(Set<Entity> entities) {
     for (val entity : entities) {
       val file = getLayoutTarget(entity);
       if (file.exists()) {
@@ -173,6 +183,7 @@ public class DownloadCommand extends RepositoryAccessCommand {
           checkParameter(file.delete(), "Could not delete '%s'", file.getCanonicalPath());
         } else {
           terminal.printWarn("File '%s' exists and --force not specified. Skipping...", file.getCanonicalPath());
+          entities.remove(entity);
           continue;
         }
       }
@@ -180,19 +191,22 @@ public class DownloadCommand extends RepositoryAccessCommand {
   }
 
   /**
-   * Move the entity into its final destination.
+   * Move the entity into its final destination. File is initially downloaded into file named with object id. To
+   * complete download, it is renamed to filename stored in Metadata record
    */
-  private void layoutFile(Entity entity) throws IOException {
+  private void finalizeDownload(Entity entity) throws IOException {
     val source = getLayoutSource(entity);
     val target = getLayoutTarget(entity);
     if (target.equals(source)) {
       return;
     }
 
+    // for cases like layout = bundle, make sure sub-directory exists
     val targetDir = target.getParentFile();
-    checkParameter(targetDir.exists() || targetDir.mkdirs(), "Could not create layout target directory %s", targetDir);
+    checkParameter(targetDir.exists() || targetDir.mkdirs(), "Could not create target sub-directory '%s'", targetDir);
+
     checkParameter(!target.exists() || force && target.delete(),
-        "Layout target '%s' already exists and --force was not specified", target);
+        "Download file '%s' already exists and --force was not specified", target);
 
     Files.move(source, target);
   }
@@ -216,8 +230,7 @@ public class DownloadCommand extends RepositoryAccessCommand {
       return target;
     } else if (layout == OutputLayout.FILENAME) {
       // "filename/id"
-      val fileDir = new File(outputDir, entity.getFileName());
-      val target = new File(fileDir, entity.getId());
+      val target = new File(outputDir, entity.getFileName());
 
       return target;
     } else if (layout == OutputLayout.ID) {
@@ -235,7 +248,8 @@ public class DownloadCommand extends RepositoryAccessCommand {
    */
   private Set<Entity> resolveEntities(List<String> objectIds) {
     // Set to remove duplicates
-    val entities = ImmutableSet.<Entity> builder();
+    // we don't want it to be immutable (there's going to be subsequent filtering)
+    val entities = new HashSet<Entity>();
     for (val objectId : objectIds) {
       val entity = metadataService.getEntity(objectId);
       entities.add(entity);
@@ -248,26 +262,43 @@ public class DownloadCommand extends RepositoryAccessCommand {
       }
     }
 
-    return entities.build();
+    return entities;
   }
 
   /**
-   * Filters downloadable entities.
+   * Filters downloadable entities. Strips out duplicate file names. This removes duplicates at source rather than
+   * trying to resolve filenames when trying to finalize download.
    */
-  @SneakyThrows
   private Set<Entity> filterEntities(Set<Entity> entities) {
-    val filtered = ImmutableSet.<Entity> builder();
-    for (val entity : entities) {
-      val file = getLayoutTarget(entity);
-      val skip = file.exists() && !force;
-      if (skip) {
-        continue;
-      }
 
-      filtered.add(entity);
+    // ImmutableListMultimap preserves insert order
+    val groupEntities = Multimaps.index(entities, Entity::getFileName);
+
+    val normalizedEntities = new HashSet<Entity>();
+    for (val fileName : groupEntities.keySet()) {
+      // we only process first entity encountered for each file name
+      // contract for Multimap states if we have a key (file name), we have a collection with at least one member
+      val entityCollection = groupEntities.get(fileName);
+      normalizedEntities.add(entityCollection.get(0));
+
+      if (entityCollection.size() > 1) {
+        val firstObjectId = entityCollection.get(0).getId();
+        // inform user about every additional entity with the same file name
+        for (int i = 1; i < entityCollection.size(); i++) {
+          val e = entityCollection.get(i);
+          terminal.printWarn(
+              "File '%s' (with object id '%s') already scheduled for download. Omitting file with duplicate name (and object id '%s')",
+              e.getFileName(), firstObjectId, e.getId());
+        }
+      }
     }
 
-    return filtered.build();
+    return normalizedEntities;
+  }
+
+  @SneakyThrows
+  private void validateOutputDirectory() {
+    checkParameter(outputDir.exists() || outputDir.mkdirs(), "Could not create output directory %s", outputDir);
   }
 
   @SneakyThrows
