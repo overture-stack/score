@@ -24,6 +24,11 @@ import static com.google.common.base.Strings.repeat;
 import static org.icgc.dcc.common.core.util.Joiners.WHITESPACE;
 import static org.icgc.dcc.common.core.util.VersionUtils.getScmInfo;
 
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
+
 import java.io.File;
 import java.lang.management.ManagementFactory;
 import java.util.Arrays;
@@ -31,11 +36,6 @@ import java.util.List;
 import java.util.Map;
 
 import javax.annotation.PostConstruct;
-
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.config.RandomValuePropertySource;
@@ -97,9 +97,7 @@ public class ClientBanner {
       if (source instanceof EnumerablePropertySource) {
         val enumerable = (EnumerablePropertySource<?>) source;
         for (val propertyName : Sets.newTreeSet(ImmutableSet.copyOf(enumerable.getPropertyNames()))) {
-          if (propertyName.equalsIgnoreCase("accessToken")) {
-			// suppress output
-          } else {
+          if (!propertyName.equalsIgnoreCase("accessToken")) {
             log.info("            - {}: {}", propertyName, enumerable.getProperty(propertyName));
           }
         }

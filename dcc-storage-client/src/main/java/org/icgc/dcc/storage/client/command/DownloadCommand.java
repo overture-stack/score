@@ -142,13 +142,11 @@ public class DownloadCommand extends RepositoryAccessCommand {
     int i = 1;
     terminal.println("");
 
-    // filtering based on file name only applies to FILENAME and BUNDLE layouts
+    // Filtering based on file name only applies to FILENAME and BUNDLE layouts
     Set<Entity> entitySet = entities;
     if (layout != OutputLayout.ID) {
       entitySet = filterEntities(entities);
     }
-
-    // sweepExisting(entitySet);
 
     for (val entity : entitySet) {
       terminal
@@ -171,26 +169,6 @@ public class DownloadCommand extends RepositoryAccessCommand {
   }
 
   /**
-   * Checks local output directory for pre-existing files (before downloading them). Modifies the collection passed in.
-   */
-  @SneakyThrows
-  private void sweepExisting(Set<Entity> entities) {
-    for (val entity : entities) {
-      val file = getLayoutTarget(entity);
-      if (file.exists()) {
-        if (force) {
-          terminal.printWarn("File '%s' exists and --force specified. Removing...", file.getCanonicalPath());
-          checkParameter(file.delete(), "Could not delete '%s'", file.getCanonicalPath());
-        } else {
-          terminal.printWarn("File '%s' exists and --force not specified. Skipping...", file.getCanonicalPath());
-          entities.remove(entity);
-          continue;
-        }
-      }
-    }
-  }
-
-  /**
    * Move the entity into its final destination. File is initially downloaded into file named with object id. To
    * complete download, it is renamed to filename stored in Metadata record
    */
@@ -201,7 +179,7 @@ public class DownloadCommand extends RepositoryAccessCommand {
       return;
     }
 
-    // for cases like layout = bundle, make sure sub-directory exists
+    // For cases like layout = bundle, make sure sub-directory exists
     val targetDir = target.getParentFile();
     checkParameter(targetDir.exists() || targetDir.mkdirs(), "Could not create target sub-directory '%s'", targetDir);
 
@@ -248,7 +226,7 @@ public class DownloadCommand extends RepositoryAccessCommand {
    */
   private Set<Entity> resolveEntities(List<String> objectIds) {
     // Set to remove duplicates
-    // we don't want it to be immutable (there's going to be subsequent filtering)
+    // We don't want it to be immutable (there's going to be subsequent filtering)
     val entities = new HashSet<Entity>();
     for (val objectId : objectIds) {
       val entity = metadataService.getEntity(objectId);
@@ -276,14 +254,14 @@ public class DownloadCommand extends RepositoryAccessCommand {
 
     val normalizedEntities = new HashSet<Entity>();
     for (val fileName : groupEntities.keySet()) {
-      // we only process first entity encountered for each file name
-      // contract for Multimap states if we have a key (file name), we have a collection with at least one member
+      // We only process first entity encountered for each file name
+      // Contract for Multimap states if we have a key (file name), we have a collection with at least one member
       val entityCollection = groupEntities.get(fileName);
       normalizedEntities.add(entityCollection.get(0));
 
       if (entityCollection.size() > 1) {
         val firstObjectId = entityCollection.get(0).getId();
-        // inform user about every additional entity with the same file name
+        // Inform user about every additional entity with the same file name
         for (int i = 1; i < entityCollection.size(); i++) {
           val e = entityCollection.get(i);
           terminal
@@ -312,7 +290,7 @@ public class DownloadCommand extends RepositoryAccessCommand {
   private boolean verifyLocalAvailableSpace(Set<Entity> entities) {
     val spaceRequired = downloadService.getSpaceRequired(entities);
     val spaceAvailable = getLocalAvailableSpace();
-    log.warn("space required: {} ({})  space available: {} ({})",
+    log.warn("Space required: {} ({})  Space available: {} ({})",
         formatBytes(spaceRequired), spaceRequired, formatBytes(spaceAvailable), spaceAvailable);
 
     if (spaceRequired > spaceAvailable) {
