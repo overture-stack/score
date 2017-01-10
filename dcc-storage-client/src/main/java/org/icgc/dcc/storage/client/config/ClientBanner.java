@@ -97,7 +97,11 @@ public class ClientBanner {
       if (source instanceof EnumerablePropertySource) {
         val enumerable = (EnumerablePropertySource<?>) source;
         for (val propertyName : Sets.newTreeSet(ImmutableSet.copyOf(enumerable.getPropertyNames()))) {
-          log.info("            - {}: {}", propertyName, enumerable.getProperty(propertyName));
+          if (propertyName.equalsIgnoreCase("accessToken")) {
+			// suppress output
+          } else {
+            log.info("            - {}: {}", propertyName, enumerable.getProperty(propertyName));
+          }
         }
       }
     }

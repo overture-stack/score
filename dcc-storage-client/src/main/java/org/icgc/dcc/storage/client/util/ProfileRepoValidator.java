@@ -24,9 +24,11 @@ public class ProfileRepoValidator {
    */
   public final static String COLLABORATORY_REPO = "collaboratory";
   public final static String AWS_VIRGINIA_REPO = "aws-virginia";
+  public final static String AZURE_REPO = "azure";
 
   public final static String COLLABORATORY_PROFILE = "collab";
   public final static String AWS_PROFILE = "aws";
+  public final static String AZURE_PROFILE = "azure";
 
   public static boolean validateRepoAgainstProfile(String profile, String repoCode) {
     if (profile.equalsIgnoreCase(COLLABORATORY_PROFILE)) {
@@ -37,6 +39,10 @@ public class ProfileRepoValidator {
       return repoCode.equalsIgnoreCase(AWS_VIRGINIA_REPO);
     }
 
+    if (profile.equalsIgnoreCase(AZURE_PROFILE)) {
+      return repoCode.equalsIgnoreCase(AZURE_REPO);
+    }
+    
     throw new IllegalArgumentException(String.format(
         "Didn't recognize Client Profile/Repository combination '%s'/'%s'", profile, repoCode));
   }

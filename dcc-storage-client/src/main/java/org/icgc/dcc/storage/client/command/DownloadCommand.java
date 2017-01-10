@@ -21,6 +21,10 @@ import static java.util.stream.Collectors.toList;
 import static org.icgc.dcc.common.core.util.Formats.formatBytes;
 import static org.icgc.dcc.storage.client.cli.Parameters.checkParameter;
 
+import lombok.SneakyThrows;
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
@@ -46,10 +50,6 @@ import com.beust.jcommander.Parameters;
 import com.google.common.collect.Multimaps;
 import com.google.common.io.Files;
 
-import lombok.SneakyThrows;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
-
 @Slf4j
 @Component
 @Parameters(separators = "=", commandDescription = "Retrieve file object(s) from the remote storage repository")
@@ -64,7 +64,7 @@ public class DownloadCommand extends RepositoryAccessCommand {
    */
   @Parameter(names = "--output-dir", description = "Path to output directory", required = true, validateValueWith = CreatableDirectoryValidator.class)
   private File outputDir;
-  @Parameter(names = "--output-layout", description = "Layout of the output-dir. One of 'bundle' (nest files in bundle directory), 'filename' (nest files in filename directory), or 'id' (flat list of files named by their associated object id)", converter = OutputLayoutConverter.class)
+  @Parameter(names = "--output-layout", description = "Layout of the output-dir. One of 'bundle' (saved according to filename under GNOS bundle id directory), 'filename' (saved according to filename in output directory), or 'id' (saved according to object id in output directory)", converter = OutputLayoutConverter.class)
   private OutputLayout layout = OutputLayout.FILENAME;
   @Parameter(names = "--force", description = "Force re-download (override local file)")
   private boolean force = false;
@@ -229,7 +229,7 @@ public class DownloadCommand extends RepositoryAccessCommand {
 
       return target;
     } else if (layout == OutputLayout.FILENAME) {
-      // "filename/id"
+      // "filename"
       val target = new File(outputDir, entity.getFileName());
 
       return target;
@@ -286,9 +286,10 @@ public class DownloadCommand extends RepositoryAccessCommand {
         // inform user about every additional entity with the same file name
         for (int i = 1; i < entityCollection.size(); i++) {
           val e = entityCollection.get(i);
-          terminal.printWarn(
-              "File '%s' (with object id '%s') already scheduled for download. Omitting file with duplicate name (and object id '%s')",
-              e.getFileName(), firstObjectId, e.getId());
+          terminal
+              .printWarn(
+                  "File '%s' (with object id '%s') already scheduled for download. Omitting file with duplicate name (and object id '%s')",
+                  e.getFileName(), firstObjectId, e.getId());
         }
       }
     }

@@ -90,7 +90,11 @@ public class InfoCommand extends AbstractClientCommand {
       if (source instanceof EnumerablePropertySource) {
         val enumerable = (EnumerablePropertySource<?>) source;
         for (val propertyName : Sets.newTreeSet(ImmutableSet.copyOf(enumerable.getPropertyNames()))) {
-          terminal.println("      - " + propertyName + ": " + enumerable.getProperty(propertyName));
+          if (propertyName.equalsIgnoreCase("accessToken")) {
+            // suppress output
+          } else {
+            terminal.println("      - " + propertyName + ": " + enumerable.getProperty(propertyName));
+          }
         }
       }
     }
