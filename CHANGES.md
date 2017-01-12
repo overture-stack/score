@@ -2,6 +2,24 @@
 
 Change log for the ICGC storage system
 
+1.0.23
+--
+ - Updated FILENAME output layout. Files are no longer written as:
+
+   output-dir
+    ├── filename-1
+    │   └── object-id
+    └── filename-2
+        └── object-id
+
+   but now:
+
+   output-dir
+    ├── filename-1
+    └── filename-2
+
+   if duplicate filenames are encountered, warning messages will be displayed/logged
+
 1.0.22
 --
  - Added support for Azure
