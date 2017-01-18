@@ -9,7 +9,7 @@ Storage and transfer system for ICGC cloud based projects.
 To compile, test and package the system, execute the following from the root of the repository:
 
 ```shell
-mvn
+./mvnw
 ```
 
 ## Run
