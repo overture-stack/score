@@ -1,4 +1,4 @@
-FROM ubuntu:latest
+FROM ubuntu:16.04
 MAINTAINER Benjamin Ran <benjaminran@ucsc.edu>
 
 # install oracle java
@@ -19,11 +19,10 @@ COPY ./conf ${DCC_HOME}/conf
 COPY ./lib ${DCC_HOME}/lib
 COPY ./logs ${DCC_HOME}/logs
 
-# development truststore password
-ENV REDWOOD_TRUSTSTORE_PASSWORD password
-
 ENV PATH $PATH:${DCC_HOME}/bin
 RUN dcc-storage-server install
+
+ENV SPRING_PROFILES_ACTIVE=secure,default,redwood,ucsc
 
 EXPOSE 5431
 
