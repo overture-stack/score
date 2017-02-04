@@ -12,6 +12,12 @@ To compile, test and package the system, execute the following from the root of 
 ./mvnw
 ```
 
+To build a docker image:
+
+```shell
+./mvnw && tar xvf dcc-storage-server/target/*-dist.tar.gz && docker build -t quay.io/ucsc_cgl/redwood-storage-server:dev dcc-storage-server-*-SNAPSHOT; rm -r dcc-storage-*-SNAPSHOT
+```
+
 ## Run
 
 See module-specific documentation below.

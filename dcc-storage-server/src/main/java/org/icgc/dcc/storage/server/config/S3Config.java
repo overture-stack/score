@@ -12,7 +12,6 @@ import com.amazonaws.ClientConfiguration;
 import com.amazonaws.Protocol;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.auth.SignerFactory;
-import com.amazonaws.auth.profile.ProfileCredentialsProvider;
 import com.amazonaws.retry.PredefinedRetryPolicies;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
@@ -49,7 +48,7 @@ public class S3Config {
     if (accessKey != null && secretKey != null) {
       s3Client = new AmazonS3Client(new BasicAWSCredentials(accessKey, secretKey), clientConfiguration());
     } else {
-      s3Client = new AmazonS3Client(new ProfileCredentialsProvider(), clientConfiguration());
+      s3Client = new AmazonS3Client(clientConfiguration());
     }
 
     log.debug("Endpoint: {}", endpoint);
