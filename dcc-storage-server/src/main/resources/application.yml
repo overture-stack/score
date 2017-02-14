@@ -207,9 +207,6 @@ auth:
 metadata:
   url: http://redwood-metadata-server:8444
 
-s3:
-  secured: true
-
 clean.cron: "0 0 0 * * ?"
 clean.enabled: true
 
@@ -217,21 +214,23 @@ endpoints:
   jmx:
     domain: storage
 
----
-
-###############################################################################
-# Profile - "ucsc"
-###############################################################################
-
-spring:
-  profiles: ucsc
-
 bucket:
   name:
-    object: redwood-storage-dev
-    state: redwood-storage-dev
+    object: ${REDWOOD_BUCKET}
+    state: ${REDWOOD_BUCKET}
 
 s3:
   secured: true
-  masterEncryptionKeyId: 0aaad33b-7ead-44be-a56e-3d00c8777042
-  endpoint: s3-external-1.amazonaws.com
+  masterEncryptionKeyId: ${REDWOOD_KMS_KEY}
+  endpoint: ${REDWOOD_S3_ENDPOINT}
+
+---
+
+###############################################################################
+# Profile - "external"
+###############################################################################
+
+spring:
+  profiles: external
+
+# primarily for external configuration

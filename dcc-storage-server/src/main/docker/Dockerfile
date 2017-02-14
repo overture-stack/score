@@ -22,7 +22,7 @@ COPY ./logs ${DCC_HOME}/logs
 ENV PATH $PATH:${DCC_HOME}/bin
 RUN dcc-storage-server install
 
-ENV SPRING_PROFILES_ACTIVE=secure,default,redwood,ucsc
+ENV SPRING_PROFILES_ACTIVE=secure,default,redwood,external
 
 EXPOSE 5431
 
