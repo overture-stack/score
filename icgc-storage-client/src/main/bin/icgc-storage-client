@@ -56,7 +56,7 @@ BASE_DIR=`dirname $0`/..; export BASE_DIR
 # Installation directory
 CLIENT_DIR="$(cd ${BASE_DIR} && pwd -P)"
 
-exec java -Xmx3G \
+exec java ${JAVA_OPTS} -Xmx3G \
 	-Dlogging.path=${BASE_DIR}/logs \
 	-Dspring.config.location=${CLIENT_DIR}/conf/ \
 	-Dlogging.config=${CLIENT_DIR}/conf/logback.xml \
