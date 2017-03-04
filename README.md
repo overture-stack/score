@@ -1,6 +1,6 @@
 # ICGC DCC - Storage
 
-Storage and transfer system for ICGC cloud based projects. 
+Storage and transfer system for ICGC cloud based projects against S3 and Azure backends.
 
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/201ae314ab3842baad25bc820069e90a)](https://www.codacy.com/app/icgc-dcc/dcc-storage?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=icgc-dcc/dcc-storage&amp;utm_campaign=Badge_Grade)
 

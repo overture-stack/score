@@ -136,7 +136,7 @@ public class StorageService {
               });
 
           part.setMd5(md5);
-          checkState(!part.hasFailedChecksum(), "Checksum failed for Part# %d: %s", part.getPartNumber(),
+          checkState(!part.hasFailedChecksum(), "Checksum failed for Part# %s: %s", part.getPartNumber(),
               part.getMd5());
 
           // TODO: try catch here for commit

@@ -17,24 +17,28 @@
  */
 package org.icgc.dcc.storage.client.download;
 
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
+
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
 
 import org.icgc.dcc.storage.client.exception.NotRetryableException;
 import org.icgc.dcc.storage.client.state.TransferState;
 import org.icgc.dcc.storage.client.util.PresignedUrlValidator;
 import org.icgc.dcc.storage.core.model.ObjectSpecification;
 import org.icgc.dcc.storage.core.model.Part;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Slf4j
 public class DownloadStateStore extends TransferState {
+
+  @Autowired
+  private PresignedUrlValidator urlValidator;
 
   private static final ObjectMapper MAPPER = new ObjectMapper();
 
@@ -85,12 +89,11 @@ public class DownloadStateStore extends TransferState {
         // Copy download md5 into ObjectSpecification
         part.setMd5(completedPart.getMd5());
       } else {
-        // part is not complete - check if it has expired
-        if (PresignedUrlValidator.isUrlExpired(part.getUrl())) {
-          val expiredMsg =
-              String
-                  .format("Presigned URL's have expired because download was not completed in alloted period. Restarting.");
-          val ise = new IllegalStateException(expiredMsg);
+        // Part is not complete - check if it has expired
+        if (urlValidator.isUrlExpired(part.getUrl())) {
+          val ise =
+              new IllegalStateException(
+                  "Presigned URL's have expired because download was not completed in allotted period. Restarting.");
           throw new NotRetryableException(ise);
         }
       }

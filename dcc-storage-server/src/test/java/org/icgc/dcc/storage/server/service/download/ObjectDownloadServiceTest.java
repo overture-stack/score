@@ -29,9 +29,10 @@ import java.util.regex.Pattern;
 import org.icgc.dcc.storage.core.util.ObjectKeys;
 import org.icgc.dcc.storage.server.config.ServerConfig;
 import org.icgc.dcc.storage.server.exception.IdNotFoundException;
-import org.icgc.dcc.storage.server.service.upload.AmazonURLGenerator;
-import org.icgc.dcc.storage.server.service.upload.SimplePartCalculator;
-import org.icgc.dcc.storage.server.util.BucketNamingService;
+import org.icgc.dcc.storage.server.repository.SimplePartCalculator;
+import org.icgc.dcc.storage.server.repository.s3.S3BucketNamingService;
+import org.icgc.dcc.storage.server.repository.s3.S3DownloadService;
+import org.icgc.dcc.storage.server.repository.s3.S3URLGenerator;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -51,7 +52,7 @@ import lombok.val;
 
 @RunWith(MockitoJUnitRunner.class)
 @ContextConfiguration(classes = ServerConfig.class)
-public class ObjectDownloadServiceTest extends ObjectDownloadService {
+public class ObjectDownloadServiceTest extends S3DownloadService {
 
   private String endpointUrl = "https://storage.icgctest.org";
   private String objectBucketName = "oicr.icgc";
@@ -69,9 +70,9 @@ public class ObjectDownloadServiceTest extends ObjectDownloadService {
    * SUT
    */
   @InjectMocks
-  ObjectDownloadService service;
+  S3DownloadService service;
 
-  BucketNamingService namingService = new BucketNamingService();
+  S3BucketNamingService namingService = new S3BucketNamingService();
 
   @Before
   public void setUp() {
@@ -88,7 +89,7 @@ public class ObjectDownloadServiceTest extends ObjectDownloadService {
     // ReflectionTestUtils.setField(service, "bucketKeySize", 2);
     ReflectionTestUtils.setField(service, "expiration", 7);
 
-    ReflectionTestUtils.setField(service, "urlGenerator", new AmazonURLGenerator());
+    ReflectionTestUtils.setField(service, "urlGenerator", new S3URLGenerator());
     ReflectionTestUtils.setField(service, "partCalculator", new SimplePartCalculator(20000));
   }
 
@@ -115,7 +116,7 @@ public class ObjectDownloadServiceTest extends ObjectDownloadService {
     namingService.setBucketKeySize(bucketKeySize);
 
     // Have to stub out half the universe:
-    val urlGen = new AmazonURLGenerator();
+    val urlGen = new S3URLGenerator();
     ReflectionTestUtils.setField(urlGen, "s3Client",
         ObjectDownloadServiceStubFactory.createS3ClientForRadosGW(endpointUrl));
     ReflectionTestUtils.setField(service, "urlGenerator", urlGen);
@@ -161,7 +162,7 @@ public class ObjectDownloadServiceTest extends ObjectDownloadService {
     namingService.setBucketKeySize(bucketKeySize);
 
     // Have to stub out half the universe:
-    val urlGen = new AmazonURLGenerator();
+    val urlGen = new S3URLGenerator();
     ReflectionTestUtils.setField(urlGen, "s3Client",
         ObjectDownloadServiceStubFactory.createS3ClientForRadosGW(endpointUrl));
     ReflectionTestUtils.setField(service, "urlGenerator", urlGen);

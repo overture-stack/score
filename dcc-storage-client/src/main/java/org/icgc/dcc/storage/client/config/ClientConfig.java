@@ -229,7 +229,7 @@ public class ClientConfig {
 
     val defined = (accessToken != null) && (!accessToken.isEmpty());
     if (defined) {
-      log.debug("Setting access token: {}", accessToken);
+      log.trace("Setting access token: {}", accessToken);
       client.setDefaultHeaders(singletonList(new BasicHeader(AUTHORIZATION, format("Bearer %s", accessToken))));
     } else {
       // Omit header if access token is null/empty in configuration (application.yml and conf/properties file

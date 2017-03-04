@@ -23,6 +23,7 @@ import java.io.File;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import lombok.Getter;
 import lombok.val;
 import sirius.kernel.Setup;
 import sirius.kernel.Sirius;
@@ -30,6 +31,12 @@ import sirius.kernel.di.Injector;
 import sirius.web.controller.Controller;
 
 public class S3 {
+
+  @Getter
+  private File bucketDir;
+
+  @Getter
+  private File multipartDir;
 
   public void start(File s3Root) {
     val setup = createSetup(s3Root);
@@ -61,15 +68,15 @@ public class S3 {
   }
 
   private Setup createSetup(File s3Root) {
-    val baseDir = new File(s3Root, "buckets");
-    checkState(baseDir.mkdir(), "Could not create dir: %s", baseDir);
+    bucketDir = new File(s3Root, "buckets");
+    checkState(bucketDir.mkdir(), "Could not create dir: %s", bucketDir);
 
-    val multipartDir = new File(s3Root, "multipart");
+    multipartDir = new File(s3Root, "multipart");
     checkState(multipartDir.mkdir(), "Could not create dir: %s", multipartDir);
 
     return new S3Setup(ClassLoader.getSystemClassLoader())
         .withAutoCreateBuckets(true)
-        .withBaseDir(baseDir)
+        .withBaseDir(bucketDir)
         .withMultipartDir(multipartDir)
         .withLogToFile(true)
         .withLogToConsole(true);

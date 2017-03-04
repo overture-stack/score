@@ -20,7 +20,7 @@ package org.icgc.dcc.storage.client.util;
 public class Formats {
 
   public static String formatBytes(long bytes) {
-    int unit = 1000;
+    int unit = 1024;
     if (bytes < unit) return Long.toString(bytes);
 
     int exp = (int) (Math.log(bytes) / Math.log(unit));
@@ -29,7 +29,7 @@ public class Formats {
   }
 
   public static String formatBytesUnits(long bytes) {
-    int unit = 1000;
+    int unit = 1024;
     if (bytes < unit) return "B";
 
     int exp = (int) (Math.log(bytes) / Math.log(unit));

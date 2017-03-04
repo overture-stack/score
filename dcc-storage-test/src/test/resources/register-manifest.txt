@@ -1,0 +1,4 @@
+gnos-id	project-code	filename	md5sum	access
+9cedfd57-1ef4-43c0-871c-709bdc87586e	GUMBY-POKEY	src/test/resources/fixtures/9cedfd57-1ef4-43c0-871c-709bdc87586e/9cedfd57-1ef4-43c0-871c-709bdc87586e.xml	fad796f6be6a628f85e259200477c9a5	controlled
+9cedfd57-1ef4-43c0-871c-709bdc87586e	GUMBY-POKEY	src/test/resources/fixtures/9cedfd57-1ef4-43c0-871c-709bdc87586e/file.bam	bf0c540277364147c0aa38c0ade8ab1a	controlled
+9cedfd57-1ef4-43c0-871c-709bdc87586e	GUMBY-POKEY	src/test/resources/fixtures/9cedfd57-1ef4-43c0-871c-709bdc87586e/file.bam.bai	110961a2840bc971f8ab2f1a4e2be9d1	controlled
