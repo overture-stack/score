@@ -22,16 +22,19 @@ import static com.google.common.base.StandardSystemProperty.JAVA_CLASS_PATH;
 
 import java.io.File;
 
+import lombok.SneakyThrows;
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
+
+import org.icgc.dcc.common.core.util.Joiners;
 import org.icgc.dcc.common.core.util.Splitters;
 
 import com.google.common.collect.ImmutableList;
 
-import lombok.SneakyThrows;
-import lombok.val;
-
 /**
  * Spring boot process wrapper.
  */
+@Slf4j
 public class SpringBootProcess {
 
   public static Process bootRun(String artifactId, int debugPort, String[] args, String... systemProperties) {
@@ -72,7 +75,7 @@ public class SpringBootProcess {
         .add("-Ds3ninja=true", "-jar", jarFile.getCanonicalPath())
         .add(args).build()
         .toArray(new String[args.length + 1]);
-
+    log.info(Joiners.WHITESPACE.join(args));
     val process = new ProcessBuilder(args).inheritIO().start();
     Runtime.getRuntime().addShutdownHook(new Thread(() -> process.destroyForcibly()));
     return process;
@@ -97,8 +100,7 @@ public class SpringBootProcess {
       return localFiles[0];
     }
 
-    checkArgument(false, "Could not find artifact %s in %s or %s",
-        artifactId, targetDir, paths);
+    checkArgument(false, "Could not find artifact %s in %s or %s", artifactId, targetDir, paths);
 
     return null;
   }

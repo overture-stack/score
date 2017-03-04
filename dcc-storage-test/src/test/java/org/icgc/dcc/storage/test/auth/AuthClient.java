@@ -17,22 +17,28 @@
  */
 package org.icgc.dcc.storage.test.auth;
 
+import static com.google.common.net.HttpHeaders.ACCEPT;
+import static com.google.common.net.HttpHeaders.AUTHORIZATION;
+import static com.google.common.net.HttpHeaders.CONTENT_LENGTH;
+import static com.google.common.net.HttpHeaders.CONTENT_TYPE;
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import java.io.DataOutputStream;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 
 import javax.net.ssl.HttpsURLConnection;
 
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
-import lombok.val;
-
 import org.icgc.dcc.common.core.security.SSLCertificateValidation;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.io.BaseEncoding;
+
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
+import lombok.val;
 
 @RequiredArgsConstructor
 public class AuthClient {
@@ -53,15 +59,15 @@ public class AuthClient {
     val basicAuth =
         "Basic " + new String(BaseEncoding.base64().encode(userCredentials.getBytes(StandardCharsets.UTF_8)));
     byte[] data =
-        "grant_type=password&username=workflow&scope=s3.upload%20s3.download".getBytes(StandardCharsets.UTF_8);
+        "grant_type=password&username=workflow&scope=aws.upload%20aws.download".getBytes(StandardCharsets.UTF_8);
     connection.setDoOutput(true);
     connection.setUseCaches(false);
     connection.setRequestMethod("POST");
-    connection.setRequestProperty("charset", "utf-8");
-    connection.setRequestProperty("Authorization", basicAuth);
-    connection.setRequestProperty("Accept", "application/json");
-    connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-    connection.setRequestProperty("Content-Length", Integer.toString(data.length));
+    connection.setRequestProperty("charset", UTF_8.name());
+    connection.setRequestProperty(AUTHORIZATION, basicAuth);
+    connection.setRequestProperty(ACCEPT, "application/json");
+    connection.setRequestProperty(CONTENT_TYPE, "application/x-www-form-urlencoded");
+    connection.setRequestProperty(CONTENT_LENGTH, Integer.toString(data.length));
 
     try (DataOutputStream wr = new DataOutputStream(connection.getOutputStream())) {
       wr.write(data);

@@ -17,14 +17,14 @@
  */
 package org.icgc.dcc.storage.client.progress;
 
+import lombok.NonNull;
+import lombok.val;
+
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 
 import org.icgc.dcc.storage.core.util.ForwardingFileChannel;
-
-import lombok.NonNull;
-import lombok.val;
 
 public class ProgressFileChannel extends ForwardingFileChannel {
 
@@ -93,6 +93,16 @@ public class ProgressFileChannel extends ForwardingFileChannel {
     }
 
     return value;
+  }
+
+  @Override
+  public int hashCode() {
+    return super.hashCode();
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    return super.equals(obj);
   }
 
 }

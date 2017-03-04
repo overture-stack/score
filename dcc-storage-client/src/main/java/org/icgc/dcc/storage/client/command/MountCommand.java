@@ -33,6 +33,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
+import lombok.SneakyThrows;
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
+
 import org.icgc.dcc.storage.client.cli.ConverterFactory.MountOptionsConverter;
 import org.icgc.dcc.storage.client.cli.ConverterFactory.StorageFileLayoutConverter;
 import org.icgc.dcc.storage.client.cli.DirectoryValidator;
@@ -59,9 +63,7 @@ import com.google.common.base.Supplier;
 import com.sun.akuma.Daemon;
 import com.sun.akuma.JavaVMArguments;
 
-import lombok.SneakyThrows;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 @Slf4j
 @Component
@@ -110,6 +112,7 @@ public class MountCommand extends RepositoryAccessCommand {
   private static final ObjectMapper MAPPER = new ObjectMapper();
 
   @Override
+  @SuppressFBWarnings(value = "NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE", justification = "JCommander parameter ensures File is valid")
   public int execute() throws Exception {
     checkParameter(mountPoint.canExecute(),
         "Cannot mount to '%s'. Please check directory permissions and try again", mountPoint);

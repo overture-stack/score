@@ -17,17 +17,19 @@
  */
 package org.icgc.dcc.storage.client.upload;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.Optional;
-
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
+import java.util.Optional;
 
 import org.icgc.dcc.storage.client.exception.NotRetryableException;
 import org.icgc.dcc.storage.client.state.TransferState;
@@ -68,12 +70,12 @@ public class UploadStateStore extends TransferState {
     val filePath = getContainingDir(uploadFile);
 
     try {
-      File uploadStateDir = getObjectStateDir(filePath, spec.getObjectId());
+      val uploadStateDir = getObjectStateDir(filePath, spec.getObjectId());
 
       removeDir(uploadStateDir, true);
 
-      File uploadIdFile = new File(uploadStateDir, getStateName());
-      try (PrintWriter out = new PrintWriter(uploadIdFile.getCanonicalPath())) {
+      val uploadIdFile = new File(uploadStateDir, getStateName());
+      try (PrintWriter out = new PrintWriter(uploadIdFile, StandardCharsets.UTF_8.name())) {
         out.println(spec.getUploadId());
       }
     } catch (IOException e) {
@@ -88,11 +90,12 @@ public class UploadStateStore extends TransferState {
 
   public static Optional<String> fetchUploadId(@NonNull File uploadFile, @NonNull String objectId) {
     Optional<String> result = Optional.ofNullable(null);
-    File uploadStateDir = getObjectStateDir(getContainingDir(uploadFile), objectId);
-    File uploadIdFile = new File(uploadStateDir, getStateName());
+    val uploadStateDir = getObjectStateDir(getContainingDir(uploadFile), objectId);
+    val uploadIdFile = new File(uploadStateDir, getStateName());
 
     if (uploadIdFile.exists()) {
-      try (BufferedReader reader = new BufferedReader(new FileReader(uploadIdFile))) {
+      try (val reader =
+          new BufferedReader(new InputStreamReader(new FileInputStream(uploadIdFile), StandardCharsets.UTF_8))) {
         result = Optional.ofNullable(reader.readLine());
         if (result.isPresent()) {
           // ...but is actually empty...

@@ -17,6 +17,8 @@
  */
 package org.icgc.dcc.storage.client.command;
 
+import lombok.val;
+
 import org.icgc.dcc.storage.client.config.ClientProperties;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -30,8 +32,6 @@ import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
-
-import lombok.val;
 
 @Component
 @Parameters(separators = "=", commandDescription = "Display application configuration information")
@@ -90,7 +90,9 @@ public class InfoCommand extends AbstractClientCommand {
       if (source instanceof EnumerablePropertySource) {
         val enumerable = (EnumerablePropertySource<?>) source;
         for (val propertyName : Sets.newTreeSet(ImmutableSet.copyOf(enumerable.getPropertyNames()))) {
-          terminal.println("      - " + propertyName + ": " + enumerable.getProperty(propertyName));
+          if (!propertyName.equalsIgnoreCase("accessToken")) {
+            terminal.println("      - " + propertyName + ": " + enumerable.getProperty(propertyName));
+          }
         }
       }
     }

@@ -17,8 +17,8 @@
  */
 package org.icgc.dcc.storage.server.config;
 
-import org.icgc.dcc.storage.server.authorize.BasicScopeAuthorizationStrategy;
-import org.icgc.dcc.storage.server.authorize.ProjectScopeStrategy;
+import org.icgc.dcc.storage.server.security.BasicScopeAuthorizationStrategy;
+import org.icgc.dcc.storage.server.security.ProjectScopeStrategy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.SecurityProperties;
 import org.springframework.context.ApplicationContext;
@@ -36,12 +36,16 @@ import org.springframework.security.oauth2.provider.expression.OAuth2MethodSecur
 @Order(SecurityProperties.ACCESS_OVERRIDE_ORDER)
 public class MethodSecurityConfig extends GlobalMethodSecurityConfiguration {
 
-  // http://stackoverflow.com/questions/29328124/no-bean-resolver-registered-in-the-context-to-resolve-access-to-bean
-
-  // the following lines are a workaround suggested here:
-  // https://github.com/spring-projects/spring-security-oauth/issues/730
-  // apparently a bug in Spring's OAuth2 stuff - BeanResolver is not being set in the Application Context, so attempting
-  // to evaluate a bean lookup @beanName blows up
+  /**
+   * Refer:
+   * http://stackoverflow.com/questions/29328124/no-bean-resolver-registered-in-the-context-to-resolve-access-to-bean
+   *
+   * The following lines are a workaround suggested here:
+   * https://github.com/spring-projects/spring-security-oauth/issues/730
+   * 
+   * Apparently a bug in Spring's OAuth2 stuff - BeanResolver is not being set in the Application Context, so attempting
+   * to evaluate a bean lookup @beanName blows up
+   */
   @Autowired
   private ApplicationContext context;
 

@@ -17,11 +17,12 @@
  */
 package org.icgc.dcc.storage.server.config;
 
-import org.icgc.dcc.storage.server.service.upload.BenchmarkURLGenerator;
-import org.icgc.dcc.storage.server.service.upload.ObjectPartCalculator;
-import org.icgc.dcc.storage.server.service.upload.ObjectURLGenerator;
-import org.icgc.dcc.storage.server.service.upload.SimplePartCalculator;
-import org.icgc.dcc.storage.server.service.upload.UploadStateStore;
+import org.icgc.dcc.storage.server.repository.BenchmarkURLGenerator;
+import org.icgc.dcc.storage.server.repository.PartCalculator;
+import org.icgc.dcc.storage.server.repository.SimplePartCalculator;
+import org.icgc.dcc.storage.server.repository.URLGenerator;
+import org.icgc.dcc.storage.server.repository.UploadStateStore;
+import org.icgc.dcc.storage.server.repository.s3.S3UploadStateStore;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -39,17 +40,17 @@ public class BenchmarkConfig {
 
   @Bean
   public UploadStateStore stateStore() {
-    return new UploadStateStore();
+    return new S3UploadStateStore();
   }
 
   @Bean
-  public ObjectPartCalculator calculator() {
+  public PartCalculator calculator() {
     return new SimplePartCalculator(partSize);
 
   }
 
   @Bean
-  public ObjectURLGenerator url() {
+  public URLGenerator url() {
     return new BenchmarkURLGenerator();
   }
 }

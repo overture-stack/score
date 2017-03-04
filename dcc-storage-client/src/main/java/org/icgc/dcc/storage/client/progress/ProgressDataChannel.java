@@ -21,10 +21,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import lombok.NonNull;
+
 import org.icgc.dcc.storage.core.model.DataChannel;
 import org.icgc.dcc.storage.core.util.ForwardingDataChannel;
-
-import lombok.NonNull;
 
 public class ProgressDataChannel extends ForwardingDataChannel {
 
@@ -43,6 +43,16 @@ public class ProgressDataChannel extends ForwardingDataChannel {
   @Override
   public void writeTo(OutputStream outputStream) throws IOException {
     super.writeTo(new ProgressOutputStream(outputStream, progress));
+  }
+
+  @Override
+  public int hashCode() {
+    return super.hashCode();
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    return super.equals(obj);
   }
 
 }

@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.Protocol;
@@ -24,9 +25,10 @@ import com.amazonaws.services.s3.model.SSEAlgorithm;
 /**
  * S3/Ceph Object Gateway configuration.
  */
-@Configuration
 @Data
 @Slf4j
+@Configuration
+@Profile({ "aws", "collaboratory", "default" })
 @ConfigurationProperties(prefix = "s3")
 public class S3Config {
 
@@ -94,4 +96,5 @@ public class S3Config {
   private boolean isEncryptionEnabled() {
     return masterEncryptionKeyId != null && !masterEncryptionKeyId.isEmpty();
   }
+
 }

@@ -24,6 +24,9 @@
 
 server:
   port: 5431
+  compression:
+    enabled: true
+    mime-types: application/json
   
 s3:
   secured: true
@@ -109,6 +112,28 @@ s3:
 ---
 
 ###############################################################################
+# Profile - "azure"
+###############################################################################
+
+spring:
+  profiles: azure
+
+azure:
+  endpointProtocol: https 
+  accountName: oicricgc
+  accountKey: 
+
+bucket:
+  name.object: data
+  policy.upload: UploadPolicy
+  policy.download: DownloadPolicy
+  
+download:
+  partsize: 250000000
+  
+---
+
+###############################################################################
 # Profile - "prod"
 ###############################################################################
 
@@ -140,11 +165,13 @@ auth:
     url: https://localhost:8443/oauth/check_token
     clientId: resource
     clientSecret: pass
-    uploadScope: s3.upload
-    downloadScope: s3.download
+    uploadScope: aws.upload
+    downloadScope: aws.download
     #uploadScope=collab.upload
     #downloadScope=collab.download
-
+    #uploadScope=azure.upload
+    #downloadScope=azure.download
+    
 ---
 
 ###############################################################################

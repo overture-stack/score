@@ -55,15 +55,19 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
     </encoder>
   </appender>
   
-  <logger name="org.icgc.dcc.storage.server.service.upload.ObjectUploadService" level="ERROR" additivity="false">
+  <logger name="org.icgc.dcc.storage.server.repository.s3.S3UploadService" level="ERROR" additivity="false">
+    <appender-ref ref="AUDIT"/>
+  </logger>
+
+  <logger name="org.icgc.dcc.storage.server.repository.azure.AzureUploadService" level="ERROR" additivity="false">
     <appender-ref ref="AUDIT"/>
   </logger>
   
-  <logger name="org.icgc.dcc.storage.server.controller.ObjectUploadController" level="INFO" additivity="false">
+  <logger name="org.icgc.dcc.storage.server.controller.UploadController" level="INFO" additivity="false">
     <appender-ref ref="AUDIT"/>
   </logger>
   
-  <logger name="org.icgc.dcc.storage.server.controller.ObjectDownloadController" level="INFO" additivity="false">
+  <logger name="org.icgc.dcc.storage.server.controller.DownloadController" level="INFO" additivity="false">
     <appender-ref ref="AUDIT"/>
   </logger>
 

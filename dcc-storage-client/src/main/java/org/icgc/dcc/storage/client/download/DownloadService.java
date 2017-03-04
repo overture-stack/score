@@ -20,6 +20,11 @@ package org.icgc.dcc.storage.client.download;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Iterables.getOnlyElement;
 
+import lombok.NonNull;
+import lombok.SneakyThrows;
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -34,11 +39,6 @@ import java.util.Set;
 
 import javax.annotation.PostConstruct;
 
-import lombok.NonNull;
-import lombok.SneakyThrows;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
-
 import org.icgc.dcc.storage.client.cli.Terminal;
 import org.icgc.dcc.storage.client.exception.NotResumableException;
 import org.icgc.dcc.storage.client.exception.NotRetryableException;
@@ -50,6 +50,7 @@ import org.icgc.dcc.storage.client.transport.Transport;
 import org.icgc.dcc.storage.client.transport.Transport.Mode;
 import org.icgc.dcc.storage.core.model.ObjectSpecification;
 import org.icgc.dcc.storage.core.model.Part;
+import org.icgc.dcc.storage.core.util.MD5s;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -90,11 +91,6 @@ public class DownloadService {
     return getUrl(objectId, 0, -1);
   }
 
-  @SneakyThrows
-  public String getUrlAsString(@NonNull String objectId) {
-    return getUrlAsString(objectId, 0, -1);
-  }
-
   /**
    * This method returns a pre-signed URL for downloading the blob associated with the objectId S3 key.
    * @param objectId
@@ -108,14 +104,6 @@ public class DownloadService {
     val file = getOnlyElement(spec.getParts()); // Throws IllegalArgumentException if more than one part
 
     return new URL(file.getUrl());
-  }
-
-  @SneakyThrows
-  public String getUrlAsString(@NonNull String objectId, long offset, long length) {
-    val spec = storageService.getExternalDownloadSpecification(objectId, offset, length);
-    val file = getOnlyElement(spec.getParts()); // Throws IllegalArgumentException if more than one part
-
-    return file.getUrl();
   }
 
   /**
@@ -311,7 +299,16 @@ public class DownloadService {
     }
     val outputFile = req.getOutputFilePath();
     val downloadedMd5 = calculateChecksum(outputFile);
-    val check = downloadedMd5.equals(spec.getObjectMd5());
+
+    boolean check;
+    try {
+      check = MD5s.isEqual(downloadedMd5, spec.getObjectMd5());
+    } catch (IllegalArgumentException e) {
+      log.error("MD5's not recognized as either HEX or BASE64: of downloaded file: {}, spec file: {}", downloadedMd5,
+          spec.getObjectMd5());
+      throw new NotRetryableException(e);
+    }
+
     if (check) {
       log.info("MD5 for {} validated correctly", outputFile.getAbsolutePath());
     } else {
@@ -355,4 +352,5 @@ public class DownloadService {
   private String decodeDigest(byte[] digest) {
     return BaseEncoding.base16().lowerCase().encode(digest);
   }
+
 }
