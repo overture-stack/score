@@ -68,7 +68,7 @@ public class DownloadController {
     return downloadService.getSentinelObject();
   }
 
-  @PreAuthorize("@accessSecurity.authorize(authentication,#objectId)")
+  @PreAuthorize("@projectSecurity.authorize(authentication,#objectId)")
   @RequestMapping(method = RequestMethod.GET, value = "/{object-id}")
   public @ResponseBody ObjectSpecification downloadPartialObject(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) final String accessToken,

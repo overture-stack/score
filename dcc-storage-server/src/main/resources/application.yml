@@ -228,8 +228,8 @@ auth:
     url: http://redwood-auth-server:8443/oauth/check_token
     clientId: storage
     clientSecret: pass
-    uploadScope: s3.upload
-    downloadScope: s3.download
+    uploadScope: aws.upload
+    downloadScope: aws.download
 
 metadata:
   url: http://redwood-metadata-server:8444
