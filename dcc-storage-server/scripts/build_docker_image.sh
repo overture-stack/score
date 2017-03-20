@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -e
+set -x
 version=${1}
 
 tar xf target/dcc-storage-server-${version}-dist.tar.gz
