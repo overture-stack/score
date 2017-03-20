@@ -1,0 +1,123 @@
+#!/bin/bash
+#
+# Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.
+#
+# This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
+# You should have received a copy of the GNU General Public License along with
+# this program. If not, see <http://www.gnu.org/licenses/>.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
+# EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+# OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT
+# SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+# TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+# OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+# IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+# ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+# Description:
+#   Downloads either a specified release version or the latest snapshot from
+#   artifactory, establishes the correct symlinks, clears the varnish cache and
+#   restarts the application.
+#
+# Usage:
+#  ./install -v 2.0.0 # installs the specified released version
+#  ./install -l       # installs the latest release version
+#  ./install -s       # installs the latest snapshot version
+
+usage(){
+cat << EOF
+usage: $0 options
+
+This script installs the dcc-storage-server from Artifactory, relinks the jar and restarts the daemon.
+
+OPTIONS:
+   -h      Show this message
+   -r      Install release number (e.g. 1.8)
+   -l      Install latest release
+   -s      Install latest snapshot
+EOF
+}
+
+log(){
+  echo `date` -  $1 | tee -a $logdir/install.log
+}
+
+release=
+latest=
+snapshot=
+while getopts “hr:ls” OPTION
+do
+  case $OPTION in
+         h)
+             usage
+             exit 1
+             ;;
+         r)
+             release=$OPTARG
+             ;;
+         l)
+             latest=1
+             ;;
+         s)
+             snapshot=1
+             ;;
+         ?)
+             usage
+             exit
+             ;;
+     esac
+done
+
+if [[ -z $release ]] && [[ -z $latest ]] && [[ -z $snapshot ]]
+then
+  usage
+  exit 1
+fi
+
+# Output location
+basedir=$(dirname $(readlink -m $(dirname $0i)))
+bindir="$basedir/bin"
+libdir="$basedir/lib"
+logdir="$basedir/logs"
+
+# Maven artifact location
+name="dcc-storage-server"
+server="https://artifacts.oicr.on.ca/artifactory"
+artifact="org/icgc/dcc/$name"
+
+if [[ -n $release ]]
+then
+  repo="dcc-release"
+  path="$server/$repo/$artifact"
+  version=$release
+  build=$release
+fi
+if [[ -n $latest ]]
+then
+  repo="dcc-release"
+  path="$server/$repo/$artifact"
+  version=`curl -s "$path/maven-metadata.xml" | grep latest | sed "s/.*<latest>\([^<]*\)<\/latest>.*/\1/"`
+  build=$version
+fi
+if [[ -n $snapshot ]]
+then
+  repo="dcc-snapshot"
+  path="$server/$repo/$artifact"
+  version=`curl -s "$path/maven-metadata.xml" | grep latest | sed "s/.*<latest>\([^<]*\)<\/latest>.*/\1/"`
+  build=`curl -s "$path/$version/maven-metadata.xml" | grep '<value>' | head -1 | sed "s/.*<value>\([^<]*\)<\/value>.*/\1/"`
+fi
+
+# Download and install application
+jar="$name-$build.jar"
+url="$path/$version/$jar"
+log "Downloading jar $url..."
+wget -q -N $url -P $libdir
+rm -f $libdir/$name.jar
+ln -s "$jar" "$libdir/$name.jar"
+
+# Restart application
+log 'Restarting application...'
+$bindir/dcc-storage-server restart > /dev/null
+log 'Finished'

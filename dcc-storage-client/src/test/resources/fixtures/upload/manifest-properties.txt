@@ -1,0 +1,1 @@
+00000000-00000000-00000000-00000000=src/test/resources/fixtures/data/upload.bam
