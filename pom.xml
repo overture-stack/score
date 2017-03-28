@@ -25,7 +25,7 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
   </parent>
 
   <artifactId>dcc-storage</artifactId>
-  <version>r1.0.25</version>
+  <version>r1.0.26-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>${project.artifactId}</name>
