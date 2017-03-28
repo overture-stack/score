@@ -227,7 +227,7 @@ auth:
   server:
     url: http://redwood-auth-server:8443/oauth/check_token
     clientId: storage
-    clientSecret: pass
+    clientSecret: ${STORAGE_CLIENT_SECRET}
     uploadScope: aws.upload
     downloadScope: aws.download
 
