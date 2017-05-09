@@ -18,7 +18,7 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
 -->
 <configuration debug="false">
 
-  <property name="log.dir" value="${logging.path:-/tmp/icgc-storage-client/logs}" />
+  <property name="log.dir" value="${REDWOOD_LOG_DIR:-${logging.path:-/tmp/icgc-storage-client/logs}}" />
   <property name="log.name" value="client" />
   <property name="pattern" value="%date{ISO8601} [%thread] %-5level %logger{20} - %msg%n" />
 
