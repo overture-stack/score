@@ -41,13 +41,13 @@ public class AuthScope {
    * @param scopeParts
    */
   public AuthScope(String[] scopeParts) {
-    system = scopeParts[0].toLowerCase();
+    system = scopeParts[0];
 
     if (scopeParts.length == 3) {
-      project = scopeParts[1].toUpperCase();
-      operation = scopeParts[2].toLowerCase();
+      project = scopeParts[1];
+      operation = scopeParts[2];
     } else {
-      operation = scopeParts[1].toLowerCase();
+      operation = scopeParts[1];
       project = ALL_PROJECTS; // internal representation for "all projects"
     }
   }
