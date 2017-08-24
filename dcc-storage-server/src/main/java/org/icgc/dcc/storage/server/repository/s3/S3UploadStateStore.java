@@ -162,11 +162,12 @@ public class S3UploadStateStore implements UploadStateStore {
   public void delete(String objectId, String uploadId) {
     val uploadStateKey = getUploadStateKey(objectId, uploadId, META);
     try {
+
       // Delete the meta file
       val spec = read(objectId, uploadId);
       log.debug("About to delete (bucket) {} / (uploadStateKey) {}", bucketNamingService.getStateBucketName(objectId),
           uploadStateKey);
-      s3Client.deleteObject(bucketNamingService.getStateBucketName(objectId), uploadStateKey);
+      deleteObject(objectId, uploadStateKey);
 
       // Delete the part files
       for (val part : spec.getParts()) {
@@ -198,8 +199,25 @@ public class S3UploadStateStore implements UploadStateStore {
     eachObjectSummary(
         objectId,
         uploadStateKey,
-        objectSummary -> s3Client.deleteObject(bucketNamingService.getStateBucketName(objectId),
-            objectSummary.getKey()));
+        objectSummary -> deleteObject(objectId,objectSummary.getKey()));
+  }
+
+
+  /* Deletes object only if it is available
+     A connection reset might cause this request to be re-issued from the client and object might actually be
+     deleted as a result of the original request
+     DCC-5673: https://jira.oicr.on.ca/browse/DCC-5673
+     */
+  void deleteObject(String objectId, String objectKey){
+
+    // if object keys don't exist - it means it is already deleted, no need to delete again
+    // it does add an additional step before deletion of every part;
+    // an alternative way would be to directly catch a "NOT FOUND" exception from s3Client.deleteObject
+    // but that also throws a null pointer exception and we cannot assume all Null pointer exceptions
+    // mean that object has already been deleted.
+    if(!isPartAvailable(objectId,objectKey)) return;
+    // delete object if still available
+    s3Client.deleteObject(bucketNamingService.getStateBucketName(objectId),objectKey);
   }
 
   /*
@@ -438,6 +456,13 @@ public class S3UploadStateStore implements UploadStateStore {
     // key for the .meta file
     val uploadStateKey = getUploadStateKey(objectId, uploadId, META);
 
+    return isPartAvailable(objectId,uploadStateKey);
+  }
+
+  /*
+  * Is the part file actually there for the upload id?
+  */
+  boolean isPartAvailable(String objectId, String uploadStateKey) {
     try {
       // This is actually how you are supposed to test for existence of a file
       s3Client.getObjectMetadata(bucketNamingService.getStateBucketName(objectId), uploadStateKey);
@@ -446,7 +471,7 @@ public class S3UploadStateStore implements UploadStateStore {
         return false;
       }
 
-      log.error("Error checking for .meta file for objectId {} and uploadId {}", objectId, uploadId);
+      log.error("Error checking for part for objectId {} and uploadstatekey {}", objectId, uploadStateKey);
       throw new RetryableException(e);
     }
 
