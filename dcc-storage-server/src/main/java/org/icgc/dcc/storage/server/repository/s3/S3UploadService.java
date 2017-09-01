@@ -277,8 +277,13 @@ public class S3UploadService implements UploadService {
           s3Client.completeMultipartUpload(request);
         } catch (AmazonS3Exception e) {
           if (e.getStatusCode() == HttpStatus.NOT_FOUND.value()) {
+            log.warn("Object keys don't exist for completing requested Multipart upload." +
+                    "Assuming it is completed as part of an earlier request.");
             return; // if object keys don't exist - it means it is already finalized, no need to proceed further
           }
+
+          log.error("Error completing multipart upload for for objectId {} and uploadId {}", objectId, uploadId);
+          throw e;
         }
 
 
