@@ -39,6 +39,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
@@ -306,6 +307,10 @@ public class S3UploadService implements UploadService {
         stateStore.delete(objectId, uploadId);
         log.debug("Upload for {} (upload id {}) finalized", objectId, uploadId);
       } catch (AmazonServiceException e) {
+        if (e.getStatusCode() == HttpStatus.NOT_FOUND.value()) {
+          log.warn("Key doesn't exist. Assuming it was deleted.");
+          return; // if object keys not found during any step in finalization - assume it is deleted and ignore the error
+        }
         log.error("Service problem with objectId: {}, uploadId: {}", objectId, uploadId, e);
         throw new RetryableException(e);
       } catch (IOException e) {
