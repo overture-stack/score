@@ -63,7 +63,7 @@ public class AzureConfig {
   public CloudBlobContainer azureContainer() throws URISyntaxException, StorageException, InvalidKeyException {
     CloudBlobContainer result = azureClient().getContainerReference(containerName);
     if (!result.exists()) {
-      log.error(String.format("What the? No '%s' container found", containerName));
+      log.error(String.format("No '%s' container found", containerName));
       throw new IllegalStateException(String.format("Container '%s' not found for Azure Blob Storage account '%s'",
           containerName, accountName));
     }

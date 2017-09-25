@@ -76,7 +76,7 @@ public class StorageService {
    * Configuration.
    */
   @Value("${storage.url}")
-  private String endpoint;
+  protected String endpoint;
 
   /**
    * Dependencies.
@@ -85,15 +85,15 @@ public class StorageService {
   private DownloadStateStore downloadStateStore;
   @Autowired
   @Qualifier("serviceTemplate")
-  private RestTemplate serviceTemplate;
+  protected RestTemplate serviceTemplate;
   @Autowired
   @Qualifier("dataTemplate")
-  private RestTemplate dataTemplate;
+  protected RestTemplate dataTemplate;
   @Autowired
   @Qualifier("pingTemplate")
-  private RestTemplate pingTemplate;
+  protected RestTemplate pingTemplate;
   @Autowired
-  private RetryTemplate retry;
+  protected RetryTemplate retry;
   @Autowired
   @Qualifier("clientVersion")
   private String clientVersion;
@@ -372,7 +372,7 @@ public class StorageService {
     }
   }
 
-  private HttpEntity<Object> defaultEntity() {
+  protected HttpEntity<Object> defaultEntity() {
     return new HttpEntity<Object>(defaultHeaders());
   }
 
