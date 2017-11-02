@@ -2,6 +2,7 @@ package org.icgc.dcc.storage.server.repository.s3;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+import com.amazonaws.services.s3.model.*;
 import lombok.NonNull;
 import lombok.Setter;
 import lombok.SneakyThrows;
@@ -45,15 +46,6 @@ import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.HttpMethod;
 import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.AbortMultipartUploadRequest;
-import com.amazonaws.services.s3.model.CompleteMultipartUploadRequest;
-import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest;
-import com.amazonaws.services.s3.model.InitiateMultipartUploadRequest;
-import com.amazonaws.services.s3.model.ListMultipartUploadsRequest;
-import com.amazonaws.services.s3.model.ListPartsRequest;
-import com.amazonaws.services.s3.model.MultipartUpload;
-import com.amazonaws.services.s3.model.ObjectMetadata;
-import com.amazonaws.services.s3.model.PartSummary;
 import com.amazonaws.services.s3.model.transform.Unmarshallers.ListPartsResultUnmarshaller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -263,7 +255,19 @@ public class S3UploadService implements UploadService {
         val objectKey = ObjectKeys.getObjectKey(dataDir, objectId);
         val request = new CompleteMultipartUploadRequest(actualBucketName, objectKey.getKey(), uploadId, etags);
 
-        s3Client.completeMultipartUpload(request);
+        try {
+          s3Client.completeMultipartUpload(request);
+        } catch (AmazonS3Exception e) {
+          if (e.getStatusCode() == HttpStatus.NOT_FOUND.value()) {
+            log.warn("Object keys don't exist for completing requested Multipart upload." +
+                    "Assuming it is completed as part of an earlier request.");
+            return; // if object keys don't exist - it means it is already finalized, no need to proceed further
+          }
+
+          log.error("Error completing multipart upload for for objectId {} and uploadId {}", objectId, uploadId);
+          throw e;
+        }
+
 
         val spec = stateStore.read(objectId, uploadId);
         // Update meta with md5's
@@ -284,6 +288,10 @@ public class S3UploadService implements UploadService {
         stateStore.delete(objectId, uploadId);
         log.debug("Upload for {} (upload id {}) finalized", objectId, uploadId);
       } catch (AmazonServiceException e) {
+        if (e.getStatusCode() == HttpStatus.NOT_FOUND.value()) {
+          log.warn("Key doesn't exist. Assuming it was deleted.");
+          return; // if object keys not found during any step in finalization - assume it is deleted and ignore the error
+        }
         log.error("Service problem with objectId: {}, uploadId: {}", objectId, uploadId, e);
         throw new RetryableException(e);
       } catch (IOException e) {
