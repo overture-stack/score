@@ -19,6 +19,7 @@ package org.icgc.dcc.storage.client.transport;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.icgc.dcc.storage.client.exception.NotResumableException;
@@ -35,6 +36,7 @@ import org.springframework.retry.RetryContext;
 import org.springframework.web.client.RequestCallback;
 import org.springframework.web.client.ResponseExtractor;
 
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
@@ -62,11 +64,23 @@ public class GCStorageService extends StorageService {
                 RequestCallback callback = req -> {
                     HttpHeaders requestHeader = req.getHeaders();
                     log.info("Uploading part# {}, length: {}", part.getPartNumber(), channel.getLength());
-                    requestHeader.setContentLength(channel.getLength());
+                    requestHeader.set("content-length", channel.getLength() + "");
                     // set content-range header as per google spec; i.e. 'content-range:bytes 0-524287/*'
+                    if(part.getPartNumber() == 2) try {
+                        Thread.sleep(6000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    //test incorrect order of uploads
+                    if(part.getPartNumber() == 3) try {
+                        Thread.sleep(3000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                     requestHeader.set("content-range",
-                            "bytes "+ part.getOffset() + "-" + (channel.getLength() - 1) + "/*");
+                            "bytes "+ part.getOffset() + "-" + (part.getOffset() + channel.getLength() - 1) + "/1083952");
                     try (OutputStream os = req.getBody()) {
+                        //channel.writeTo(new FileOutputStream("/Users/rverma/gcs-curl-test/part" + part.getPartNumber()));
                         channel.writeTo(os);
                     }
                 };
@@ -108,6 +122,7 @@ public class GCStorageService extends StorageService {
     }
 
 
+    @SneakyThrows
     private String getResumableUploadURL(ObjectSpecification spec){
         if(spec.getParts() == null || spec.getParts().size() == 0) {
             log.error("Could not proceed. No parts information available in ObjectSpecification");
@@ -126,7 +141,8 @@ public class GCStorageService extends StorageService {
 
         try {
             // encode everything after the object id in the URL
-            signedURL = signedURLParts.get(0) + URLEncoder.encode("?" + signedURLParts.get(1), "UTF-8");
+            signedURL = Joiner.on("?").join(signedURLParts.get(0),
+                    URLEncoder.encode( signedURLParts.get(1), "UTF-8"));
         } catch (UnsupportedEncodingException ueex){
             log.error("Encoding not supported");
         }
@@ -136,11 +152,11 @@ public class GCStorageService extends StorageService {
                     pingTemplate.execute(signedURL, HttpMethod.POST, callback, headersExtractor);
            val resumableURLLocation = responseHeaders.get("Location").get(0);
            // generate the resumable upload URL from the blob path in Signed URL and the returned upload id
-                val resumableURL = Joiner.on("?uploadid=").join(
-                        signedURLParts.get(0),
-                        Splitter.on("?upload_id=").trimResults().splitToList(resumableURLLocation).get(1)
-                );
-                return resumableURL;
+            val resumableURL = Joiner.on("?upload_id=").join(
+                    signedURLParts.get(0),
+                    Splitter.on("upload_id=").trimResults().splitToList(resumableURLLocation).get(1)
+            );
+            return resumableURL;
         } catch (NotResumableException | NotRetryableException e) {
             log.error("Could not proceed. Failed to send init resumable upload: {}", e);
             throw e;
