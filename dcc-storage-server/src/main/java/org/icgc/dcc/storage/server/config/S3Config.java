@@ -1,14 +1,5 @@
 package org.icgc.dcc.storage.server.config;
 
-import lombok.Data;
-import lombok.extern.slf4j.Slf4j;
-
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
-
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.Protocol;
 import com.amazonaws.auth.BasicAWSCredentials;
@@ -22,6 +13,13 @@ import com.amazonaws.services.s3.S3ClientOptions;
 import com.amazonaws.services.s3.internal.S3Signer;
 import com.amazonaws.services.s3.model.InitiateMultipartUploadRequest;
 import com.amazonaws.services.s3.model.SSEAlgorithm;
+import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 
 /**
  * S3/Ceph Object Gateway configuration.
@@ -40,6 +38,7 @@ public class S3Config {
   private String secretKey;
   private String endpoint;
   private boolean isSecured;
+  private boolean sigV4Enabled;
   private String masterEncryptionKeyId;
 
   @Value("${upload.connection.timeout}")
@@ -67,7 +66,7 @@ public class S3Config {
     ClientConfiguration clientConfiguration = new ClientConfiguration();
 
     log.info("master key id : '{}'", masterEncryptionKeyId);
-    if (isEncryptionEnabled()) {
+    if (isEncryptionEnabled() || isSigV4Enabled()) {
       clientConfiguration.setSignerOverride("AWSS3V4SignerType");
       log.info("Using AWSS3V4SignerType");
     } else {

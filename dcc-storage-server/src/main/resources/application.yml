@@ -30,6 +30,7 @@ server:
   
 s3:
   secured: true
+  sigV4Enabled: true
   
   #amazon
   endpoint: s3-external-1.amazonaws.com
@@ -45,7 +46,7 @@ object:
   
 collaboratory:
   upload.directory: upload
-  upload.expiration: 7
+  upload.expiration: 6
   data.directory: data
     
   # COL-131: Change pre-signed URLs TTL to 1 day max

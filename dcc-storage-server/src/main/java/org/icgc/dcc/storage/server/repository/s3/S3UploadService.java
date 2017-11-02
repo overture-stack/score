@@ -203,29 +203,11 @@ public class S3UploadService implements UploadService {
     val objectId = objectKey.getObjectId();
     val actualBucketName = bucketNamingService.getObjectBucketName(objectId);
     try {
-      if (s3Conf.getEndpoint() == null) {
         val req = new ListPartsRequest(actualBucketName, objectKey.getKey(), uploadId);
         req.setPartNumberMarker(partNumber - 1);
         req.setMaxParts(1);
         parts = s3Client.listParts(req).getParts();
-      } else {
-        // HACK: Incompatible API. Serialization issue at the XML
-        val request = new RestTemplate();
-        val signed = new GeneratePresignedUrlRequest(actualBucketName, objectKey.getKey(), HttpMethod.GET);
-        signed.addRequestParameter("uploadId", uploadId);
-        signed.addRequestParameter("max-parts", String.valueOf(1));
-        signed.addRequestParameter("part-number-marker", String.valueOf(partNumber - 1));
-
-        val presignedUrl = s3Client.generatePresignedUrl(signed);
-        val xml = request.getForObject(presignedUrl.toURI(), String.class);
-        val correctXml = xml.replaceAll("ListMultipartUploadResult", "ListPartsResult");
-        log.debug("xml: {}", correctXml);
-
-        // TODO: make this better by rewriting ListPartsResultUnmarshaller
-        val data = new ByteArrayInputStream(correctXml.getBytes(UTF_8));
-        parts = new ListPartsResultUnmarshaller().unmarshall(data).getParts();
-      }
-    } catch (RestClientException | AmazonClientException | URISyntaxException e) {
+    } catch (RestClientException | AmazonClientException e) {
       log.error(
           "Request failure checking for part existence with objectKey: {}, uploadId: {}, partNumber: {}, eTag: {}: ",
           objectKey, uploadId, partNumber, eTag, e);
