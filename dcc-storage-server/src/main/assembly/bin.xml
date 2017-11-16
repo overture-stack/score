@@ -51,6 +51,10 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
   </fileSets>
   <files>
     <file>
+      <source>src/main/docker/Dockerfile</source>
+      <outputDirectory>.</outputDirectory>
+    </file>
+    <file>
       <source>${project.build.directory}/${artifactId}-${version}.jar</source>
       <outputDirectory>lib</outputDirectory>
       <destName>${artifactId}.jar</destName>

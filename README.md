@@ -9,8 +9,10 @@ Storage and transfer system for ICGC cloud based projects against S3 and Azure b
 To compile, test and package the system, execute the following from the root of the repository:
 
 ```shell
-mvn
+./mvnw
 ```
+
+This builds a storage-server docker image too.
 
 ## Run
 

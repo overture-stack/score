@@ -214,3 +214,51 @@ s3:
   secured: false
   # Sinai Center
   endpoint: http://www.cancercollaboratory.org:9081
+
+---
+
+###############################################################################
+# Profile - "redwood"
+###############################################################################
+
+spring:
+  profiles: redwood
+
+auth:
+  server:
+    url: http://redwood-auth-server:8443/oauth/check_token
+    clientId: storage
+    clientSecret: ${STORAGE_CLIENT_SECRET}
+    uploadScope: aws.upload
+    downloadScope: aws.download
+
+metadata:
+  url: http://redwood-metadata-server:8444
+
+clean.cron: "0 0 0 * * ?"
+clean.enabled: true
+
+endpoints:
+  jmx:
+    domain: storage
+
+bucket:
+  name:
+    object: ${REDWOOD_BUCKET}
+    state: ${REDWOOD_BUCKET}
+
+s3:
+  secured: true
+  masterEncryptionKeyId: ${REDWOOD_KMS_KEY}
+  endpoint: ${REDWOOD_S3_ENDPOINT}
+
+---
+
+###############################################################################
+# Profile - "external"
+###############################################################################
+
+spring:
+  profiles: external
+
+# primarily for external configuration

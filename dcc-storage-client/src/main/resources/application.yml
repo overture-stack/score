@@ -113,3 +113,25 @@ logging:
     springframework.retry: DEBUG
     springframework.web: DEBUG
     com.amazonaws.services: DEBUG
+
+---
+
+###############################################################################
+# Profile - "redwood"
+###############################################################################
+
+spring:
+  profiles: redwood
+
+storage:
+  url: https://storage.${REDWOOD_ENDPOINT}
+
+metadata:
+  url: https://metadata.${REDWOOD_ENDPOINT}
+  ssl.enabled: true
+
+client:
+  ssl:
+  custom: false
+
+accessToken: ${ACCESS_TOKEN}
