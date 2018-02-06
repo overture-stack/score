@@ -6,7 +6,7 @@
 #                                                    /____/                                    
 # Banner @ http://goo.gl/VCY0tD
 
-FROM       ubuntu:14.04
+FROM       ubuntu:16.04
 MAINTAINER ICGC <dcc-support@icgc.org>
 
 #
