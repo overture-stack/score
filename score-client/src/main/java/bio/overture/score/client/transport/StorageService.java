@@ -97,6 +97,9 @@ public class StorageService {
   @Autowired
   @Qualifier("clientVersion")
   private String clientVersion;
+  @Autowired
+  private ClientProperties properties;
+
 
   @SneakyThrows
   public List<ObjectInfo> listObjects() {
@@ -126,7 +129,11 @@ public class StorageService {
           log.debug("performing GET {}", part.getUrl());
           String md5 = dataTemplate.execute(new URI(part.getUrl()), HttpMethod.GET,
 
-              request -> request.getHeaders().set(HttpHeaders.RANGE, Parts.getHttpRangeValue(part)),
+              request ->
+              {
+                    request.getHeaders().set(HttpHeaders.RANGE, Parts.getHttpRangeValue(part));
+                    request.getHeaders().set("X-ICGC-TOKEN", properties.getAccessToken().substring(0,18));
+              },
 
               response -> {
                 try (HashingInputStream his = new HashingInputStream(Hashing.md5(), response.getBody())) {
