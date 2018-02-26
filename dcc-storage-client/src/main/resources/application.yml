@@ -44,7 +44,7 @@ storage:
   retryTimeout: 1	
 
 metadata:
-  url: https://meta.icgc.org
+  url: https://song.cancercollaboratory.org
   ssl:
     enabled: true
     
