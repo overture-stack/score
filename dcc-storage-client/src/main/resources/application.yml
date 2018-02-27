@@ -67,6 +67,11 @@ spring.profiles: aws
 
 storage:
   url: https://virginia.cloud.icgc.org
+  
+metadata:
+  url: https://virginia.song.icgc.org
+  ssl:
+    enabled: true
 
 client:
   ssl:
@@ -83,6 +88,7 @@ spring.profiles: collab
 # Storage server
 storage:
   url: https://storage.cancercollaboratory.org
+  
 
 client:    
   ssl:
