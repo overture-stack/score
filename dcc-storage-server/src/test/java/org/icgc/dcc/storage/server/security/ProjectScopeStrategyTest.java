@@ -32,7 +32,9 @@ import org.icgc.dcc.storage.server.security.AuthScope;
 import org.icgc.dcc.storage.server.security.ProjectScopeStrategy;
 import org.junit.Before;
 import org.junit.Test;
+import org.springframework.test.context.ActiveProfiles;
 
+@ActiveProfiles("legacy")
 public class ProjectScopeStrategyTest {
 
   public static final String TEST_SCOPE = "test.upload";
