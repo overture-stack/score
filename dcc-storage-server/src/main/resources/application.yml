@@ -159,7 +159,18 @@ metadata:
 ###############################################################################
 
 spring.profiles: secure
-  
+spring:
+  profiles:
+    include: [legacy] # temporarily include legacy as default until we switch to EGO jwt
+
+---
+
+###############################################################################
+# Profile - "legacy"
+###############################################################################
+
+spring.profiles: legacy
+
 # OAuth authentication server
 auth:
   server:

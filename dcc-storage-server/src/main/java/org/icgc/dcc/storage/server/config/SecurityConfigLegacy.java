@@ -51,10 +51,10 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @Configuration
-@Profile("secure")
+@Profile("legacy")
 @EnableWebSecurity
 @EnableResourceServer
-public class SecurityConfig extends ResourceServerConfigurerAdapter {
+public class SecurityConfigLegacy extends ResourceServerConfigurerAdapter {
 
   private TokenExtractor tokenExtractor = new BearerTokenExtractor();
 
