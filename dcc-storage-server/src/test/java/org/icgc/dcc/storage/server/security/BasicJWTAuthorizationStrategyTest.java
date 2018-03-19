@@ -168,7 +168,7 @@ public class BasicJWTAuthorizationStrategyTest {
     }
 
     @Test
-    public void testJWTUserWithAccess() throws Exception {
+    public void test_jwt_user_with_access() throws Exception {
         val openEntity = entity("123", "abc", "something.bam", "PROJ-CD", "controlled");
         when(metadataService.getEntity("123")).thenReturn(openEntity);
 
@@ -179,7 +179,7 @@ public class BasicJWTAuthorizationStrategyTest {
     }
 
     @Test
-    public void testJWTUserWithoutAccess() throws Exception {
+    public void test_jwt_user_without_access() throws Exception {
         val openEntity = entity("123", "abc", "something.bam", "PROJ-CD", "controlled");
         when(metadataService.getEntity("123")).thenReturn(openEntity);
 
