@@ -37,20 +37,20 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
-@ActiveProfiles("legacy")
+@ActiveProfiles("jwt")
 public class BasicJWTAuthorizationStrategyTest {
 
   @Mock
   private MetadataService metadataService;
 
-  private BasicScopeAuthorizationStrategy sut;
+  private BasicJWTAuthorizationStrategy sut;
 
   public static final String TEST_SCOPE = "test.download";
   public static final AuthScope testScope = AuthScope.from(TEST_SCOPE);
 
   @Before
   public void init() {
-    sut = new BasicScopeAuthorizationStrategy(TEST_SCOPE);
+    sut = new BasicJWTAuthorizationStrategy(TEST_SCOPE);
     sut.setMetadataService(metadataService);
   }
 

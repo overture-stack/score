@@ -28,10 +28,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.security.oauth2.provider.authentication.OAuth2AuthenticationDetails;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -82,14 +79,14 @@ public abstract class AbstractJWTAuthorizationStrategy {
      */
     protected List<AuthScope> getScopes(@NonNull OAuth2AuthenticationDetails authDetails) {
         val user = (JWTUser) authDetails.getDecodedDetails();
-        val roles = user.getRoles();
+        val roles = new HashSet<String>(user.getRoles());
         return extractScopes(roles);
     }
 
     /**
      * Filters out any AuthScope instances that don't match the active system/operation.
      */
-    protected List<AuthScope> extractScopes(@NonNull List<String> scopeStrs) {
+    protected List<AuthScope> extractScopes(@NonNull Set<String> scopeStrs) {
         return scopeStrs.stream().map(s -> AuthScope.from(s))
                 .filter(p -> p.matches(scope))
                 .collect(Collectors.toList());
