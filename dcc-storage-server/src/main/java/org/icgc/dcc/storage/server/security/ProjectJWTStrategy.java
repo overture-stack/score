@@ -28,7 +28,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class ProjectJWTStrategy extends AbstractScopeAuthorizationStrategy {
+public class ProjectJWTStrategy extends AbstractJWTAuthorizationStrategy {
 
   @Value("${auth.server.uploadScope}")
   protected String uploadScope;
@@ -52,8 +52,8 @@ public class ProjectJWTStrategy extends AbstractScopeAuthorizationStrategy {
   }
 
   @Override
-  protected boolean verify(@NonNull List<AuthScope> grantedScopes, @NonNull final String objectId) {
-    return verifyProjectAccess(grantedScopes, objectId);
+  protected boolean verify( @NonNull List<AuthScope> grantedScopes,  @NonNull final String objectId) {
+      return verifyProjectAccess(grantedScopes, objectId);
   }
 
   protected boolean verifyProjectAccess(@NonNull List<AuthScope> grantedScopes, @NonNull final String objectId) {
@@ -77,21 +77,21 @@ public class ProjectJWTStrategy extends AbstractScopeAuthorizationStrategy {
   }
 
   /**
-   * Extracts project codes (strings) from list of AuthScopes. This method broken out from getAuthorizedProjectCodes()
+   * Extracts project codes (strings) from roles. This method broken out from getAuthorizedProjectCodes()
    * to isolate actual mapping logic from organizing inputs; facilitating unit testing.
    * 
    * @param uploadScope - the expected project/operation to evaluate scope for i.e., collab.upload, aws.upload
-   * @param scopes - list of scopes following convention of the form {system}.{project-code}.{operation} i.e.,
+   * @param scopes - list of roles following convention of the form {system}.{project-code}.{operation} i.e.,
    * collab.BRCA-US.upload
    * @return list of project codes
    */
   protected List<String> extractProjects(@NonNull final AuthScope uploadScope,
-      @NonNull final Collection<AuthScope> scopes) {
-    val result = scopes.stream().filter(s -> s.matches(uploadScope))
-        .map(s -> s.getProject())
-        .collect(Collectors.toList());
+                                         @NonNull final Collection<AuthScope> scopes) {
+      val result = scopes.stream().filter(s -> s.matches(uploadScope))
+              .map(s -> s.getProject())
+              .collect(Collectors.toList());
 
-    return result;
+      return result;
   }
 
   /**
