@@ -161,7 +161,7 @@ metadata:
 spring.profiles: secure
 spring:
   profiles:
-    include: [legacy] # temporarily include legacy as default until we switch to EGO jwt
+    include: [jwt] # temporarily include legacy as default until we switch to jwt (EGO)
 
 ---
 
@@ -184,6 +184,18 @@ auth:
     #uploadScope=azure.upload
     #downloadScope=azure.download
     
+---
+
+###############################################################################
+# Profile - "jwt"
+###############################################################################
+
+spring.profiles: jwt
+
+auth:
+  jwt:
+    publicKeyUrl: "https://demo.ego.kfdrc.org/oauth/token/public_key"
+
 ---
 
 ###############################################################################

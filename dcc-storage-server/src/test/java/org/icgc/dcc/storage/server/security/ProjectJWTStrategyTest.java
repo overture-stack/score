@@ -52,6 +52,7 @@ public class ProjectJWTStrategyTest {
     private JWTUser unapprovedUser;
     private JWTUser approvedWithAccessUser;
     private JWTUser approvedWithoutAccessUser;
+    private JWTUser approvedWithUploadAccessUser;
 
     public MetadataEntity entity(String id, String gnosId, String fileName, String projectCode, String accessType) {
         val entity = new MetadataEntity();
@@ -83,11 +84,13 @@ public class ProjectJWTStrategyTest {
         unapprovedUser = userBuilder.build();
         approvedWithAccessUser = userBuilder.build();
         approvedWithoutAccessUser = userBuilder.build();
+        approvedWithUploadAccessUser = userBuilder.build();
 
         // Careful with underlying references
         unapprovedUser.setStatus("Not Approved");
         approvedWithAccessUser.setRoles(Arrays.asList("test.PROJ-CD.upload"));
         approvedWithoutAccessUser.setRoles(Arrays.asList("test.PROJ-NO.upload"));
+        approvedWithUploadAccessUser.setRoles(Arrays.asList("test.upload"));
     }
 
     @Test
@@ -183,5 +186,16 @@ public class ProjectJWTStrategyTest {
         val scopes = _sut.extractScopes(roles);
         val isVerified = _sut.verify(scopes, "123");
         assertThat(isVerified).isFalse();
+    }
+
+    @Test
+    public void test_jwt_user_with_upload_access() throws Exception {
+        val openEntity = entity("123", "abc", "something.bam", "PROJ-CD", "controlled");
+        when(metadataService.getEntity("123")).thenReturn(openEntity);
+
+        val roles = new HashSet<String>(approvedWithUploadAccessUser.getRoles());
+        val scopes = _sut.extractScopes(roles);
+        val isVerified = _sut.verify(scopes, "123");
+        assertThat(isVerified).isTrue();
     }
 }
