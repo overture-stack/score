@@ -80,3 +80,6 @@ service.jks
 application-prod.properties
 
 dcc-storage-client/deploy/
+
+# aws
+application-aws.properties
