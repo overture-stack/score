@@ -155,17 +155,6 @@ metadata:
 ---
 
 ###############################################################################
-# Profile - "secure"
-###############################################################################
-
-spring.profiles: secure
-spring:
-  profiles:
-    include: [jwt] # temporarily include legacy as default until we switch to jwt (EGO)
-
----
-
-###############################################################################
 # Profile - "legacy"
 ###############################################################################
 
@@ -195,6 +184,16 @@ spring.profiles: jwt
 auth:
   jwt:
     publicKeyUrl: "https://demo.ego.kfdrc.org/oauth/token/public_key"
+
+---
+
+###############################################################################
+# Profile - "secure"
+###############################################################################
+
+spring:
+  profiles: secure
+  profiles.include: legacy # temporarily include legacy as default until we switch to jwt (EGO)
 
 ---
 
