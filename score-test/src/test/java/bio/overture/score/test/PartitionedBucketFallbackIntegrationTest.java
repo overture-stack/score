@@ -17,6 +17,7 @@
  */
 package bio.overture.score.test;
 
+import static bio.overture.score.test.util.Assertions.assertDirectories;
 import static com.google.common.base.Objects.firstNonNull;
 import static com.google.common.base.Strings.repeat;
 import static java.util.concurrent.TimeUnit.MINUTES;
@@ -33,8 +34,6 @@ import bio.overture.score.test.meta.MetadataClient;
 import bio.overture.score.test.mongo.Mongo;
 import bio.overture.score.test.s3.S3;
 import bio.overture.score.test.util.Port;
-import bio.overture.score.test.util.SpringBootProcess;
-import org.assertj.core.api.Assertions;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -138,7 +137,7 @@ public class PartitionedBucketFallbackIntegrationTest {
   Process storageServer() {
     int debugPort = Integer.parseInt(firstNonNull(System.getProperty("storage.server.debugPort"), "-1"));
 
-    return SpringBootProcess.bootRun(
+    return bootRun(
         resolveJarFile("dcc-storage-server"),
         debugPort,
         "-Dspring.profiles.active=dev,secure,default", // Secure
@@ -158,7 +157,7 @@ public class PartitionedBucketFallbackIntegrationTest {
   Process storageClient(String accessToken, String... args) {
     int debugPort = Integer.parseInt(firstNonNull(System.getProperty("storage.client.debugPort"), "-1"));
 
-    return SpringBootProcess.bootRun(
+    return bootRun(
         resolveJarFile("dcc-storage-client"),
         debugPort,
         args,
@@ -243,7 +242,7 @@ public class PartitionedBucketFallbackIntegrationTest {
     //
 
     val entities = findEntities(gnosId);
-    Assertions.assertThat(entities).isNotEmpty();
+    assertThat(entities).isNotEmpty();
 
     //
     // URL
@@ -277,7 +276,7 @@ public class PartitionedBucketFallbackIntegrationTest {
       assertThat(download.exitValue()).isEqualTo(0);
     }
 
-    bio.overture.score.test.util.Assertions.assertDirectories(fs.getDownloadsDir(), fs.getUploadsDir());
+    assertDirectories(fs.getDownloadsDir(), fs.getUploadsDir());
 
     //
     // View
@@ -298,7 +297,7 @@ public class PartitionedBucketFallbackIntegrationTest {
   Process authServer() {
     int debugPort = Integer.parseInt(firstNonNull(System.getProperty("auth.server.debugPort"), "-1"));
 
-    return SpringBootProcess.bootRun(
+    return bootRun(
         org.icgc.dcc.auth.server.ServerMain.class,
         debugPort,
         "-Dspring.profiles.active=dev,no_scope_validation", // Don't validate if user has scopes
@@ -311,7 +310,7 @@ public class PartitionedBucketFallbackIntegrationTest {
   Process metadataServer() {
     int debugPort = Integer.parseInt(firstNonNull(System.getProperty("meta.server.debugPort"), "-1"));
 
-    return SpringBootProcess.bootRun(
+    return bootRun(
         "dcc-metadata-server",
         debugPort,
         "-Dspring.profiles.active=development,secure", // Secure
@@ -328,7 +327,7 @@ public class PartitionedBucketFallbackIntegrationTest {
   private Process metadataClient(String accessToken, String... args) {
     int debugPort = Integer.parseInt(firstNonNull(System.getProperty("meta.client.debugPort"), "-1"));
 
-    return SpringBootProcess.bootRun(
+    return bootRun(
         "dcc-metadata-client",
         debugPort,
         args,

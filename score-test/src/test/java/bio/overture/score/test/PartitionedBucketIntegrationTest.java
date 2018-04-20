@@ -17,11 +17,11 @@
  */
 package bio.overture.score.test;
 
+import static bio.overture.score.test.util.Assertions.assertDirectories;
 import static com.google.common.base.Objects.firstNonNull;
 import static com.google.common.base.Strings.repeat;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static org.assertj.core.api.Assertions.assertThat;
-import static bio.overture.score.test.util.SpringBootProcess.bootRun;
 
 import java.io.File;
 import java.util.List;
@@ -34,7 +34,6 @@ import bio.overture.score.test.mongo.Mongo;
 import bio.overture.score.test.s3.S3;
 import bio.overture.score.test.util.Port;
 import bio.overture.score.test.util.SpringBootProcess;
-import org.assertj.core.api.Assertions;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -242,7 +241,7 @@ public class PartitionedBucketIntegrationTest {
     //
 
     val entities = findEntities(gnosId);
-    Assertions.assertThat(entities).isNotEmpty();
+    assertThat(entities).isNotEmpty();
 
     //
     // URL
@@ -276,7 +275,7 @@ public class PartitionedBucketIntegrationTest {
       assertThat(download.exitValue()).isEqualTo(0);
     }
 
-    bio.overture.score.test.util.Assertions.assertDirectories(fs.getDownloadsDir(), fs.getUploadsDir());
+    assertDirectories(fs.getDownloadsDir(), fs.getUploadsDir());
 
     //
     // View

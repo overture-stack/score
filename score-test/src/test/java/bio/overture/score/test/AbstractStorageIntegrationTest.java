@@ -17,6 +17,7 @@
  */
 package bio.overture.score.test;
 
+import static bio.overture.score.test.util.Assertions.assertDirectories;
 import static com.google.common.base.Objects.firstNonNull;
 import static com.google.common.base.Strings.repeat;
 import static com.google.common.util.concurrent.Uninterruptibles.sleepUninterruptibly;
@@ -35,13 +36,11 @@ import java.io.File;
 import java.util.List;
 import java.util.function.Consumer;
 
-import org.assertj.core.api.Assertions;
 import bio.overture.score.test.auth.AuthClient;
 import bio.overture.score.test.meta.Entity;
 import bio.overture.score.test.meta.MetadataClient;
 import bio.overture.score.test.mongo.Mongo;
 import bio.overture.score.test.util.Port;
-import bio.overture.score.test.util.SpringBootProcess;
 import org.junit.Rule;
 import org.junit.rules.TemporaryFolder;
 
@@ -169,7 +168,7 @@ public abstract class AbstractStorageIntegrationTest {
     //
 
     val entities = findEntities(gnosId);
-    Assertions.assertThat(entities).isNotEmpty();
+    assertThat(entities).isNotEmpty();
 
     //
     // URL
@@ -206,7 +205,7 @@ public abstract class AbstractStorageIntegrationTest {
       assertThat(download.exitValue()).isEqualTo(0);
     }
 
-    bio.overture.score.test.util.Assertions.assertDirectories(fs.getDownloadsDir(), fs.getUploadsDir());
+    assertDirectories(fs.getDownloadsDir(), fs.getUploadsDir());
 
     //
     // View
@@ -232,7 +231,7 @@ public abstract class AbstractStorageIntegrationTest {
   Process authServer() {
     int debugPort = Integer.parseInt(firstNonNull(System.getProperty("auth.server.debugPort"), "-1"));
 
-    return SpringBootProcess.bootRun(
+    return bootRun(
         "dcc-auth-server",
         debugPort,
         "-Dspring.profiles.active=dev,no_scope_validation", // Don't validate if user has scopes
@@ -249,7 +248,7 @@ public abstract class AbstractStorageIntegrationTest {
   Process metadataServer() {
     int debugPort = Integer.parseInt(firstNonNull(System.getProperty("meta.server.debugPort"), "-1"));
 
-    return SpringBootProcess.bootRun(
+    return bootRun(
         "dcc-metadata-server",
         debugPort,
         "-Dspring.profiles.active=development,secure", // Secure
@@ -266,7 +265,7 @@ public abstract class AbstractStorageIntegrationTest {
   private Process metadataClient(String accessToken, String... args) {
     int debugPort = Integer.parseInt(firstNonNull(System.getProperty("meta.client.debugPort"), "-1"));
 
-    return SpringBootProcess.bootRun(
+    return bootRun(
         "dcc-metadata-client",
         debugPort,
         args,
