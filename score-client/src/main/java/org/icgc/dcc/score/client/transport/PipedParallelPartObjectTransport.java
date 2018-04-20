@@ -27,8 +27,8 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import org.icgc.dcc.score.client.progress.ProgressDataChannel;
-import org.icgc.dcc.score.core.model.DataChannel;
-import org.icgc.dcc.score.core.model.Part;
+import bio.overture.score.core.model.DataChannel;
+import bio.overture.score.core.model.Part;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteSource;

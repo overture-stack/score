@@ -23,8 +23,8 @@ import java.io.OutputStream;
 
 import lombok.NonNull;
 
-import org.icgc.dcc.score.core.model.DataChannel;
-import org.icgc.dcc.score.core.util.ForwardingDataChannel;
+import bio.overture.score.core.model.DataChannel;
+import bio.overture.score.core.util.ForwardingDataChannel;
 
 public class ProgressDataChannel extends ForwardingDataChannel {
 

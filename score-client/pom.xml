@@ -19,7 +19,7 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>org.icgc.dcc</groupId>
+    <groupId>bio.overture</groupId>
     <artifactId>score</artifactId>
     <version>1.0.24-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
@@ -70,7 +70,7 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
 
     <!-- DCC - Common -->
     <dependency>
-      <groupId>${project.groupId}</groupId>
+      <groupId>org.icgc.dcc</groupId>
       <artifactId>dcc-common-core</artifactId>
       <version>${dcc-common.version}</version>
     </dependency>
@@ -99,6 +99,7 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
     <dependency>
       <groupId>com.beust</groupId>
       <artifactId>jcommander</artifactId>
+      <version>${jcommander.version}</version>
     </dependency>
     <dependency>
       <groupId>org.fusesource.jansi</groupId>
@@ -136,6 +137,7 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
     <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
+      <version>${guava.version}</version>
     </dependency>
 
     <!-- SSL -->
@@ -192,6 +194,9 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
   </build>
 
   <properties>
+    <guava.version>19.0</guava.version>
+    <jcommander.version>1.35</jcommander.version>
+
     <!-- Versions - DCC -->
     <dcc-common.version>4.0.9</dcc-common.version>
 

@@ -24,7 +24,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 
-import org.icgc.dcc.score.core.util.ForwardingFileChannel;
+import bio.overture.score.core.util.ForwardingFileChannel;
 
 public class ProgressFileChannel extends ForwardingFileChannel {
 

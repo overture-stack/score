@@ -20,7 +20,7 @@ package org.icgc.dcc.score.client.download;
 import java.io.File;
 import java.util.List;
 
-import org.icgc.dcc.score.core.model.Part;
+import bio.overture.score.core.model.Part;
 
 public class Downloads {
 

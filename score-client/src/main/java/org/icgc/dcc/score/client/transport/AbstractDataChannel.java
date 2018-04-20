@@ -21,7 +21,7 @@ package org.icgc.dcc.score.client.transport;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.icgc.dcc.score.core.model.DataChannel;
+import bio.overture.score.core.model.DataChannel;
 
 import com.google.common.io.ByteStreams;
 

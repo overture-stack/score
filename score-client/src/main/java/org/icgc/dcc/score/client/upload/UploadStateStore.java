@@ -32,9 +32,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
 import org.icgc.dcc.score.client.exception.NotRetryableException;
-import org.icgc.dcc.score.client.exception.NotRetryableException;
 import org.icgc.dcc.score.client.state.TransferState;
-import org.icgc.dcc.score.core.model.ObjectSpecification;
+import bio.overture.score.core.model.ObjectSpecification;
 
 /**
  * This really shouldn't have 'Store' in the class name - it has no state, so it's not storing anything. It's a

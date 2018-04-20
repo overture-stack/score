@@ -31,11 +31,8 @@ import org.icgc.dcc.score.client.exception.NotRetryableException;
 import org.icgc.dcc.score.client.progress.Progress;
 import org.icgc.dcc.score.client.transport.StorageService;
 import org.icgc.dcc.score.client.cli.Terminal;
-import org.icgc.dcc.score.client.exception.NotRetryableException;
-import org.icgc.dcc.score.client.progress.Progress;
-import org.icgc.dcc.score.client.transport.StorageService;
 import org.icgc.dcc.score.client.upload.UploadService;
-import org.icgc.dcc.score.core.model.ObjectSpecification;
+import bio.overture.score.core.model.ObjectSpecification;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 

@@ -26,11 +26,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 
 import org.icgc.dcc.score.client.exception.NotRetryableException;
-import org.icgc.dcc.score.client.exception.NotRetryableException;
 import org.icgc.dcc.score.client.state.TransferState;
 import org.icgc.dcc.score.client.util.PresignedUrlValidator;
-import org.icgc.dcc.score.core.model.ObjectSpecification;
-import org.icgc.dcc.score.core.model.Part;
+import bio.overture.score.core.model.ObjectSpecification;
+import bio.overture.score.core.model.Part;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.fasterxml.jackson.databind.ObjectMapper;

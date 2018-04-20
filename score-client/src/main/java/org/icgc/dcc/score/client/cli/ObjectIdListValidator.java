@@ -18,7 +18,7 @@
 package org.icgc.dcc.score.client.cli;
 
 import static java.lang.String.format;
-import static org.icgc.dcc.score.core.util.UUIDs.tryParse;
+import static bio.overture.score.core.util.UUIDs.tryParse;
 
 import java.util.List;
 

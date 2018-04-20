@@ -24,8 +24,8 @@ import java.util.List;
 
 import org.icgc.dcc.score.client.progress.Progress;
 import org.icgc.dcc.score.client.progress.ProgressDataChannel;
-import org.icgc.dcc.score.core.model.DataChannel;
-import org.icgc.dcc.score.core.model.Part;
+import bio.overture.score.core.model.DataChannel;
+import bio.overture.score.core.model.Part;
 
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;

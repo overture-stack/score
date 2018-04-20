@@ -19,7 +19,7 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>org.icgc.dcc</groupId>
+    <groupId>bio.overture</groupId>
     <artifactId>score</artifactId>
     <version>1.0.24-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
@@ -52,7 +52,7 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
   <dependencies>
     <!-- DCC - Common -->
     <dependency>
-      <groupId>${project.groupId}</groupId>
+      <groupId>org.icgc.dcc</groupId>
       <artifactId>dcc-common-core</artifactId>
       <version>${dcc-common.version}</version>
     </dependency>
@@ -93,6 +93,7 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
     <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
+      <version>${guava.version}</version>
     </dependency>
     
     <!-- Test -->
@@ -121,6 +122,9 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
   </dependencies>
   
   <properties>
+    <guava.version>19.0</guava.version>
+    <package.attach>false</package.attach>
+
     <!-- Versions - DCC -->
     <dcc-common.version>3.8.17.2</dcc-common.version>
     <jackson.version>2.8.3</jackson.version>

@@ -22,7 +22,7 @@ import static com.google.common.collect.Maps.uniqueIndex;
 import static com.google.common.collect.Multimaps.index;
 import static java.util.concurrent.TimeUnit.HOURS;
 import static lombok.AccessLevel.PRIVATE;
-import static org.icgc.dcc.score.fs.StorageFile.storageFile;
+import static bio.overture.score.fs.StorageFile.storageFile;
 
 import java.io.IOException;
 import java.net.URL;
@@ -34,13 +34,11 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.icgc.dcc.score.client.download.DownloadService;
 import org.icgc.dcc.score.client.metadata.Entity;
-import org.icgc.dcc.score.client.download.DownloadService;
-import org.icgc.dcc.score.client.metadata.Entity;
-import org.icgc.dcc.score.core.model.IndexFileType;
-import org.icgc.dcc.score.core.model.ObjectInfo;
-import org.icgc.dcc.score.fs.StorageContext;
-import org.icgc.dcc.score.fs.StorageFile;
-import org.icgc.dcc.score.fs.StorageFileLayout;
+import bio.overture.score.core.model.IndexFileType;
+import bio.overture.score.core.model.ObjectInfo;
+import bio.overture.score.fs.StorageContext;
+import bio.overture.score.fs.StorageFile;
+import bio.overture.score.fs.StorageFileLayout;
 
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;

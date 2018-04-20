@@ -23,7 +23,7 @@ import lombok.val;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.icgc.dcc.score.core.util.ForwardingInputStream;
+import bio.overture.score.core.util.ForwardingInputStream;
 
 public class ProgressInputStream extends ForwardingInputStream {
 

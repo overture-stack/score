@@ -17,7 +17,7 @@
  */
 package org.icgc.dcc.score.client.manifest;
 
-import static org.icgc.dcc.score.core.util.UUIDs.isUUID;
+import static bio.overture.score.core.util.UUIDs.isUUID;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.val;

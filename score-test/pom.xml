@@ -19,7 +19,7 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>org.icgc.dcc</groupId>
+    <groupId>bio.overture</groupId>
     <artifactId>score</artifactId>
     <version>1.0.24-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
@@ -48,12 +48,12 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
 
     <!-- Test - DCC Storage -->
     <dependency>
-      <groupId>org.icgc.dcc</groupId>
+      <groupId>bio.overture</groupId>
       <artifactId>score-client</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.icgc.dcc</groupId>
+      <groupId>bio.overture</groupId>
       <artifactId>score-server</artifactId>
       <scope>test</scope>
     </dependency>
@@ -91,11 +91,13 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
       <groupId>de.flapdoodle.embed</groupId>
       <artifactId>de.flapdoodle.embed.mongo</artifactId>
       <scope>test</scope>
+      <version>${embed-mongo.version}</version>
     </dependency>
 
   </dependencies>
 
   <properties>
+    <embed-mongo.version>1.45</embed-mongo.version>
     <!-- Versions - S3 -->
     <s3ninja.version>2.7</s3ninja.version>
   </properties>

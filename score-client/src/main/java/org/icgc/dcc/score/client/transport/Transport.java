@@ -21,7 +21,7 @@ import java.io.File;
 import java.util.List;
 
 import org.icgc.dcc.score.client.progress.Progress;
-import org.icgc.dcc.score.core.model.Part;
+import bio.overture.score.core.model.Part;
 
 /**
  * A transport for data upload.

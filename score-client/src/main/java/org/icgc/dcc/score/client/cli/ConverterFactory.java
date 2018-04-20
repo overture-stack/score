@@ -23,12 +23,7 @@ import org.icgc.dcc.score.client.command.DownloadCommand;
 import org.icgc.dcc.score.client.command.ViewCommand;
 import org.icgc.dcc.score.client.manifest.ManifestResource;
 import org.icgc.dcc.score.client.mount.MountOptions;
-import org.icgc.dcc.score.client.command.DownloadCommand.OutputLayout;
-import org.icgc.dcc.score.client.command.ViewCommand.OutputFormat;
-import org.icgc.dcc.score.client.command.ViewCommand.OutputType;
-import org.icgc.dcc.score.client.manifest.ManifestResource;
-import org.icgc.dcc.score.client.mount.MountOptions;
-import org.icgc.dcc.score.fs.StorageFileLayout;
+import bio.overture.score.fs.StorageFileLayout;
 
 import com.beust.jcommander.IStringConverter;
 import com.beust.jcommander.IStringConverterFactory;
