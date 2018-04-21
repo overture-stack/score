@@ -18,6 +18,7 @@
 package bio.overture.score.test;
 
 import static bio.overture.score.test.util.Assertions.assertDirectories;
+import static bio.overture.score.test.util.SpringBootProcess.bootRun;
 import static com.google.common.base.Objects.firstNonNull;
 import static com.google.common.base.Strings.repeat;
 import static java.util.concurrent.TimeUnit.MINUTES;
@@ -137,7 +138,7 @@ public class PartitionedBucketIntegrationTest {
   Process storageServer() {
     int debugPort = Integer.parseInt(firstNonNull(System.getProperty("storage.server.debugPort"), "-1"));
 
-    return SpringBootProcess.bootRun(
+    return bootRun(
         resolveJarFile("dcc-storage-server"),
         debugPort,
         "-Dspring.profiles.active=dev,secure,default", // Secure
@@ -157,7 +158,7 @@ public class PartitionedBucketIntegrationTest {
   Process storageClient(String accessToken, String... args) {
     int debugPort = Integer.parseInt(firstNonNull(System.getProperty("storage.client.debugPort"), "-1"));
 
-    return SpringBootProcess.bootRun(
+    return bootRun(
         resolveJarFile("dcc-storage-client"),
         debugPort,
         args,
@@ -296,7 +297,7 @@ public class PartitionedBucketIntegrationTest {
   Process authServer() {
     int debugPort = Integer.parseInt(firstNonNull(System.getProperty("auth.server.debugPort"), "-1"));
 
-    return SpringBootProcess.bootRun(
+    return bootRun(
         org.icgc.dcc.auth.server.ServerMain.class,
         debugPort,
         "-Dspring.profiles.active=dev,no_scope_validation", // Don't validate if user has scopes
@@ -309,7 +310,7 @@ public class PartitionedBucketIntegrationTest {
   Process metadataServer() {
     int debugPort = Integer.parseInt(firstNonNull(System.getProperty("meta.server.debugPort"), "-1"));
 
-    return SpringBootProcess.bootRun(
+    return bootRun(
         "dcc-metadata-server",
         debugPort,
         "-Dspring.profiles.active=development,secure", // Secure
@@ -326,7 +327,7 @@ public class PartitionedBucketIntegrationTest {
   private Process metadataClient(String accessToken, String... args) {
     int debugPort = Integer.parseInt(firstNonNull(System.getProperty("meta.client.debugPort"), "-1"));
 
-    return SpringBootProcess.bootRun(
+    return bootRun(
         "dcc-metadata-client",
         debugPort,
         args,

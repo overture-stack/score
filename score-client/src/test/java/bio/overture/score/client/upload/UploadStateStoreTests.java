@@ -8,7 +8,6 @@ import java.util.Optional;
 
 import lombok.val;
 
-import org.assertj.core.api.Assertions;
 import org.junit.Test;
 
 public class UploadStateStoreTests {
