@@ -34,7 +34,6 @@ import bio.overture.score.test.meta.MetadataClient;
 import bio.overture.score.test.mongo.Mongo;
 import bio.overture.score.test.s3.S3;
 import bio.overture.score.test.util.Port;
-import bio.overture.score.test.util.SpringBootProcess;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
