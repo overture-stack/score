@@ -79,4 +79,4 @@ DownloadPartRequest.java
 service.jks
 application-prod.properties
 
-dcc-storage-client/deploy/
+score-client/deploy/

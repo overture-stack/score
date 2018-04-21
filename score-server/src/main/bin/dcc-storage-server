@@ -19,7 +19,7 @@
 # Optimized for use with version 3.5.19 of the Wrapper.
 
 # Application
-APP_NAME="dcc-storage-server"
+APP_NAME="score-server"
 APP_LONG_NAME="DCC Storage Server"
 
 # Wrapper
@@ -100,7 +100,7 @@ PLIST_DOMAIN=org.tanukisoftware.wrapper
 # Initialization block for the install_initd and remove_initd scripts used by
 #  SUSE linux distributions.
 ### BEGIN INIT INFO
-# Provides: dcc-storage-server
+# Provides: score-server
 # Required-Start: $local_fs $network $syslog
 # Should-Start: 
 # Required-Stop:

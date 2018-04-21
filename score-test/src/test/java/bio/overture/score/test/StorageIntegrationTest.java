@@ -51,10 +51,10 @@ public class StorageIntegrationTest extends AbstractStorageIntegrationTest {
     int debugPort = Integer.parseInt(System.getProperty("storage.server.debugPort", "-1"));
 
     return bootRun(
-        "dcc-storage-server",
+        "score-server",
         debugPort,
         "-Dspring.profiles.active=dev,secure,default", // Secure
-        "-Dlogging.file=" + fs.getLogsDir() + "/dcc-storage-server.log",
+        "-Dlogging.file=" + fs.getLogsDir() + "/score-server.log",
         "-Dserver.port=" + storagePort,
         "-Dbucket.name.object=oicr.icgc.dev",
         "-Dbucket.name.state=oicr.icgc.dev.state",
@@ -70,10 +70,10 @@ public class StorageIntegrationTest extends AbstractStorageIntegrationTest {
     int debugPort = Integer.parseInt(firstNonNull(System.getProperty("storage.client.debugPort"), "-1"));
 
     return bootRun(
-        "dcc-storage-client",
+        "score-client",
         debugPort,
         args,
-        "-Dlogging.file=" + fs.getLogsDir() + "/dcc-storage-client.log",
+        "-Dlogging.file=" + fs.getLogsDir() + "/score-client.log",
         "-Dmetadata.url=https://localhost:" + metadataPort,
         "-Dmetadata.ssl.enabled=false",
         "-Dstorage.url=http://localhost:" + storagePort,

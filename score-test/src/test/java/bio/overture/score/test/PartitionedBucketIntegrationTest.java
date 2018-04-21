@@ -106,7 +106,7 @@ public class PartitionedBucketIntegrationTest {
     banner("Starting dcc-metadata-server...");
     metaServer = metadataServer();
 
-    banner("Starting dcc-storage-server...");
+    banner("Starting score-server...");
     storageServer = storageServer();
 
     banner("Waiting for service ports...");
@@ -139,10 +139,10 @@ public class PartitionedBucketIntegrationTest {
     int debugPort = Integer.parseInt(firstNonNull(System.getProperty("storage.server.debugPort"), "-1"));
 
     return bootRun(
-        resolveJarFile("dcc-storage-server"),
+        resolveJarFile("score-server"),
         debugPort,
         "-Dspring.profiles.active=dev,secure,default", // Secure
-        "-Dlogging.file=" + fs.getLogsDir() + "/dcc-storage-server.log",
+        "-Dlogging.file=" + fs.getLogsDir() + "/score-server.log",
         "-Dserver.port=" + storagePort,
         "-Dbucket.name.object=" + objectBucketBase,
         "-Dbucket.size.pool=" + numBucketPartitions,
@@ -159,10 +159,10 @@ public class PartitionedBucketIntegrationTest {
     int debugPort = Integer.parseInt(firstNonNull(System.getProperty("storage.client.debugPort"), "-1"));
 
     return bootRun(
-        resolveJarFile("dcc-storage-client"),
+        resolveJarFile("score-client"),
         debugPort,
         args,
-        "-Dlogging.file=" + fs.getLogsDir() + "/dcc-storage-client.log",
+        "-Dlogging.file=" + fs.getLogsDir() + "/score-client.log",
         "-Dmetadata.url=https://localhost:" + metadataPort,
         "-Dmetadata.ssl.enabled=false",
         "-Dstorage.url=http://localhost:" + storagePort,

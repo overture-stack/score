@@ -8,7 +8,7 @@ ICGC storage file system for the ICGC storage system.
 To compile, test and package the module, execute the following from the root of the repository:
 
 ```shell
-mvn -am -pl dcc-storage/dcc-storage-fs
+mvn -am -pl score/score-fs
 ```
 
 ## Prerequisites

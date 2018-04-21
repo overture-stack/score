@@ -18,13 +18,13 @@ The storage client is comprised of the following components:
 To compile, test and package the module, execute the following from the root of the repository:
 
 ```shell
-mvn -am -pl dcc-storage/dcc-storage-core
+mvn -am -pl score/score-core
 ```
 
 ## Run
 
 ```shell
-bin/icgc-storage-client upload —manifest manifest.txt
+bin/score-client upload —manifest manifest.txt
 ```
 
 ## Develop
@@ -34,7 +34,7 @@ The following will allow a developer to hit against production from the Eclipse 
 ### Entry Point
 
 ```shell
-org.icgc.dcc.storage.client.ClientMain
+bio.overture.score.client.ClientMain
 ```
 
 ### VM Arguments
@@ -50,7 +50,7 @@ org.icgc.dcc.storage.client.ClientMain
 ### Program Arguments
 
 ```
-icgc-storage-client upload --manifest src/test/resources/fixtures/upload/manifest.txt
+score-client upload --manifest src/test/resources/fixtures/upload/manifest.txt
 ```
 
 ## HTTP Logging

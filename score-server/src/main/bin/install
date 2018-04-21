@@ -83,7 +83,7 @@ libdir="$basedir/lib"
 logdir="$basedir/logs"
 
 # Maven artifact location
-name="dcc-storage-server"
+name="score-server"
 server="https://artifacts.oicr.on.ca/artifactory"
 artifact="org/icgc/dcc/$name"
 
@@ -119,5 +119,5 @@ ln -s "$jar" "$libdir/$name.jar"
 
 # Restart application
 log 'Restarting application...'
-$bindir/dcc-storage-server restart > /dev/null
+$bindir/score-server restart > /dev/null
 log 'Finished'

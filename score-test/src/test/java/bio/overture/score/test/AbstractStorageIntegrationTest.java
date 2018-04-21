@@ -103,7 +103,7 @@ public abstract class AbstractStorageIntegrationTest {
     banner("Starting dcc-metadata-server...");
     metadataServer();
 
-    banner("Starting dcc-storage-server...");
+    banner("Starting score-server...");
     storageServer();
 
     banner("Waiting for service ports...");

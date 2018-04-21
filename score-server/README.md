@@ -16,7 +16,7 @@ The storage server is comprised of the following components:
 To compile, test and package the module, execute the following from the root of the repository:
 
 ```shell
-mvn -am -pl dcc-storage/dcc-storage-server
+mvn -am -pl score/score-server
 ```
 
 ## Logging

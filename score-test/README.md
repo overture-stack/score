@@ -14,5 +14,5 @@ The test relies on the following components:
 To compile, test and package the module, execute the following from the root of the repository:
 
 ```shell
-mvn -am -pl dcc-storage/dcc-storage-test
+mvn -am -pl score/score-test
 ```

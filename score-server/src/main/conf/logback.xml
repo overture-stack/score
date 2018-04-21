@@ -18,9 +18,9 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
 -->
 <configuration debug="false">
 
-  <property name="log.dir" value="${log.path:-/tmp/dcc-storage/logs}"/>
-  <property name="log.name" value="dcc-storage" />
-  <property name="log.audit.name" value="dcc-storage.audit" />
+  <property name="log.dir" value="${log.path:-/tmp/score/logs}"/>
+  <property name="log.name" value="score" />
+  <property name="log.audit.name" value="score.audit" />
   <property name="pattern" value="%date{ISO8601} [%thread] %-5level %logger{20} - %msg%n" />
 
   <contextListener class="ch.qos.logback.classic.jul.LevelChangePropagator">

@@ -3,7 +3,7 @@ Secure Cloud Object Repository
 
 Formerly known as ICGC Storage and currently used as the storage and transfer system for ICGC cloud based projects against S3 and Azure backends.
 
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/201ae314ab3842baad25bc820069e90a)](https://www.codacy.com/app/icgc-dcc/dcc-storage?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=icgc-dcc/dcc-storage&amp;utm_campaign=Badge_Grade)
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/201ae314ab3842baad25bc820069e90a)](https://www.codacy.com/app/overture-stack/score?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=overture-stack/score&amp;utm_campaign=Badge_Grade)
 [![CircleCI](https://circleci.com/gh/overture-stack/score/tree/develop.svg?style=svg)](https://circleci.com/gh/overture-stack/score/tree/develop)
 
 ## Build
@@ -21,11 +21,11 @@ See module-specific documentation below.
 ## Modules
 Top level system modules:
 
-- [Core](dcc-storage-core/README.md)
-- [Client](dcc-storage-client/README.md)
-- [File System](dcc-storage-fs/README.md)
-- [Server](dcc-storage-server/README.md)
-- [Test](dcc-storage-test/README.md)
+- [Core](score-core/README.md)
+- [Client](score-client/README.md)
+- [File System](score-fs/README.md)
+- [Server](score-server/README.md)
+- [Test](score-test/README.md)
 
 Rebranding packaging:
 
