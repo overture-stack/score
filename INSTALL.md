@@ -19,7 +19,7 @@ Each component is a Spring Boot java application packaged in a JAR. Look in src/
 This guide describes setting up the ICGC Storage System on a single Ubuntu EC2 instance.
 
 Before getting started:
-- Ensure you have access to the dcc-auth, dcc-metadata, and dcc-storage source
+- Ensure you have access to the dcc-auth, Song, and Score source
 - Make an S3 bucket to hold the storage system data
 - Make a KMS Master Key to encrypt data stored in S3 using the web console (http://docs.aws.amazon.com/kms/latest/developerguide/create-keys.html).
 - Make an IAM role with permission to write to s3 (AmazonS3FullAccess).
@@ -107,7 +107,7 @@ Pull in and build the storage system source, linking to the ssl certificate whil
 ```
 # clone storage system source
 cd $DCC_HOME
-git clone git@github.com:BD2KGenomics/dcc-storage.git
+git clone git@github.com:overture-stack/score.git
 git clone git@github.com:BD2KGenomics/dcc-auth.git
 git clone git@github.com:BD2KGenomics/dcc-metadata.git
 # link mvnvm.properties and ssl certificate then build
@@ -121,6 +121,6 @@ cd $DCC_HOME/dcc-auth/dcc-auth-server/ && java -Dspring.profiles.active=dev,no_s
 # run the metadata-server
 cd $DCC_HOME/dcc-metadata/dcc-metadata-server && java -Djavax.net.ssl.trustStore=$DCC_HOME/conf/ssl/cacerts -Djavax.net.ssl.trustStorePassword=changeit -Dspring.profiles.active=development,secure -Dserver.port=8444 -Dmanagement.port=8544 -Dlogging.file=/var/log/dcc/metadata-server/metadata-server.log -Dauth.server.url=https://storage.ucsc-cgl.org:8443/oauth/check_token -Dauth.server.clientId=metadata -Dauth.server.clientsecret=pass -Dspring.data.mongodb.uri=mongodb://localhost:27017/dcc-metadata -Dserver.ssl.key-store=ucsc-storage.jks -Dserver.ssl.key-store-password=password -Dserver.ssl.key-store-type=JKS -jar target/dcc-metadata-server-0.0.16-SNAPSHOT.jar
 # run the storage-server
-cd $DCC_HOME/dcc-storage/dcc-storage-server && java -Djavax.net.ssl.trustStore=$DCC_HOME/conf/ssl/cacerts -Djavax.net.ssl.trustStorePassword=changeit -Dspring.profiles.active=secure,default -Dlogging.file=/var/log/dcc/storage-server/storage-server.log -Dserver.port=5431 -Dbucket.name.object=<s3-bucket-name> -Dbucket.name.state=<s3-bucket-name> -Dauth.server.url=https://storage.ucsc-cgl.org:8443/oauth/check_token -Dauth.server.clientId=storage -Dauth.server.clientsecret=pass -Dmetadata.url=https://storage.ucsc-cgl.org:8444 -Dendpoints.jmx.domain=storage -Ds3.endpoint=https://s3.amazonaws.com -Ds3.accessKey=foo -Ds3.secretKey=bar -Ds3.masterEncryptionKeyId=baz -Ds3.secured=true -Dupload.clean.enabled=false -Dserver.ssl.key-store=ucsc-storage.jks -Dserver.ssl.key-store-password=password -Dserver.ssl.key-store-type=JKS -jar target/dcc-storage-server-1.0.14-SNAPSHOT.jar
+cd $DCC_HOME/score/score-server && java -Djavax.net.ssl.trustStore=$DCC_HOME/conf/ssl/cacerts -Djavax.net.ssl.trustStorePassword=changeit -Dspring.profiles.active=secure,default -Dlogging.file=/var/log/dcc/storage-server/storage-server.log -Dserver.port=5431 -Dbucket.name.object=<s3-bucket-name> -Dbucket.name.state=<s3-bucket-name> -Dauth.server.url=https://storage.ucsc-cgl.org:8443/oauth/check_token -Dauth.server.clientId=storage -Dauth.server.clientsecret=pass -Dmetadata.url=https://storage.ucsc-cgl.org:8444 -Dendpoints.jmx.domain=storage -Ds3.endpoint=https://s3.amazonaws.com -Ds3.accessKey=foo -Ds3.secretKey=bar -Ds3.masterEncryptionKeyId=baz -Ds3.secured=true -Dupload.clean.enabled=false -Dserver.ssl.key-store=ucsc-storage.jks -Dserver.ssl.key-store-password=password -Dserver.ssl.key-store-type=JKS -jar target/score-server-1.0.14-SNAPSHOT.jar
 ```
 Note: passwords (and ideally all configuration) should be specified in configuration files in production systems.
