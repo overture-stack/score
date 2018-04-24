@@ -281,7 +281,7 @@ public class ViewCommand extends RepositoryAccessCommand {
   }
 
   private Optional<Entity> getEntity(String oid) {
-    // if objectId is present, get gnos id associated with it
+    // if objectId is present, get analysis id associated with it
     return Optional
         .ofNullable(oid != null && !oid.trim().isEmpty() ? metadataService.getEntity(oid) : null);
   }

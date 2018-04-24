@@ -54,7 +54,7 @@ public class PartitionedBucketFallbackIntegrationTest {
   protected final int metadataPort = 8444;
   protected final int storagePort = 5431;
 
-  final String gnosId = "70b07570-0571-11e5-a6c0-1697f925ec7b";
+  final String analysisId = "70b07570-0571-11e5-a6c0-1697f925ec7b";
 
   final String objectBucketBase = "oicr.icgc.dev";
   final String stateBucketBase = "oicr.icgc.dev.state";
@@ -66,7 +66,7 @@ public class PartitionedBucketFallbackIntegrationTest {
    */
   final Mongo mongo = new Mongo();
   final S3 s3 = new S3();
-  protected final FileSystem fs = new FileSystem(new File("target/test"), gnosId);
+  protected final FileSystem fs = new FileSystem(new File("target/test"), analysisId);
 
   Process authServer;
   Process metaServer;
@@ -216,7 +216,7 @@ public class PartitionedBucketFallbackIntegrationTest {
 
     banner("Registering...");
     val register = metadataClient(accessToken,
-        "-i", fs.getUploadsDir() + "/" + gnosId,
+        "-i", fs.getUploadsDir() + "/" + analysisId,
         "-m", "manifest.txt",
         "-o", fs.getRootDir().toString());
     register.waitFor(1, MINUTES);
@@ -241,7 +241,7 @@ public class PartitionedBucketFallbackIntegrationTest {
     // Find
     //
 
-    val entities = findEntities(gnosId);
+    val entities = findEntities(analysisId);
     assertThat(entities).isNotEmpty();
 
     //
@@ -288,7 +288,7 @@ public class PartitionedBucketFallbackIntegrationTest {
         "view",
         "--header-only",
         "--input-file",
-        new File(new File(fs.getDownloadsDir(), bamFile.getGnosId()), bamFile.getFileName()).toString(),
+        new File(new File(fs.getDownloadsDir(), bamFile.getAnalysisId()), bamFile.getFileName()).toString(),
         "--output-format", "sam");
     view.waitFor(1, MINUTES);
     assertThat(view.exitValue()).isEqualTo(0);
@@ -337,9 +337,9 @@ public class PartitionedBucketFallbackIntegrationTest {
         "-DaccessToken=" + accessToken);
   }
 
-  List<Entity> findEntities(String gnosId) {
+  List<Entity> findEntities(String analysisId) {
     val metadataClient = new MetadataClient("https://localhost:" + metadataPort, false);
-    return metadataClient.findEntitiesByGnosId(gnosId);
+    return metadataClient.findEntitiesByAnalysisId(analysisId);
   }
 
   private static Entity getBamFile(List<Entity> entities) {

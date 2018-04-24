@@ -1,6 +1,6 @@
-# ICGC DCC - Storage Core
+# Score Core
 
-Core library / shared classes for ICGC storage system.
+Core library / shared classes for Score 
 
 ## Build
 

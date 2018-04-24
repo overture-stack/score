@@ -82,12 +82,12 @@ public class MetadataClient {
     return readAll("/" + (fields.length > 0 ? "?" + resolveFields(fields) : ""));
   }
 
-  public List<Entity> findEntitiesByGnosId(@NonNull String gnosId) throws EntityNotFoundException {
-    return findEntitiesByGnosId(gnosId, new String[] {});
+  public List<Entity> findEntitiesByAnalysisId(@NonNull String analysisId) throws EntityNotFoundException {
+    return findEntitiesByAnalysisId(analysisId, new String[] {});
   }
 
-  public List<Entity> findEntitiesByGnosId(@NonNull String gnosId, String... fields) throws EntityNotFoundException {
-    return readAll("?gnosId=" + gnosId + (fields.length > 0 ? "&" + resolveFields(fields) : ""));
+  public List<Entity> findEntitiesByAnalysisId(@NonNull String analysisId, String... fields) throws EntityNotFoundException {
+    return readAll("?analysisId=" + analysisId + (fields.length > 0 ? "&" + resolveFields(fields) : ""));
   }
 
   @SneakyThrows

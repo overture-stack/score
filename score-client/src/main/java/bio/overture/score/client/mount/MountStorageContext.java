@@ -79,7 +79,7 @@ public class MountStorageContext implements StorageContext {
   @Getter(lazy = true, value = PRIVATE)
   private final Map<String, StorageFile> fileObjectIdIndex = resolveFileObjectIdIndex();
   @Getter(lazy = true, value = PRIVATE)
-  private final Multimap<String, StorageFile> fileGnosIdIndex = resolveFileGnosIdIndex();
+  private final Multimap<String, StorageFile> fileAnalysisIdIndex = resolveFileAnalysisIdIndex();
   @Getter(lazy = true, value = PRIVATE)
   private final LoadingCache<String, URL> urlCache = createURLCache();
   @Getter(lazy = true)
@@ -125,15 +125,15 @@ public class MountStorageContext implements StorageContext {
       return Optional.empty();
     }
 
-    val gnosId = file.getGnosId();
-    val stream = getFilesByGnosId(gnosId).stream();
+    val analysisId = file.getAnalysisId();
+    val stream = getFilesByAnalysisId(analysisId).stream();
     return stream.filter(f -> f.getFileName().contains(file.getFileName() + '.' + indexFileType.getExtension()))
         .findFirst();
   }
 
   @Override
-  public Collection<StorageFile> getFilesByGnosId(String gnosId) {
-    return getFileGnosIdIndex().get(gnosId);
+  public Collection<StorageFile> getFilesByAnalysisId(String analysisId) {
+    return getFileAnalysisIdIndex().get(analysisId);
   }
 
   @Override
@@ -160,7 +160,7 @@ public class MountStorageContext implements StorageContext {
           storageFile()
               .objectId(objectId)
               .fileName(entity.getFileName())
-              .gnosId(entity.getGnosId())
+              .analysisId(entity.getAnalysisId())
               .lastModified(object.getLastModified())
               .size(object.getSize())
               .build());
@@ -173,8 +173,8 @@ public class MountStorageContext implements StorageContext {
     return uniqueIndex(getFiles(), StorageFile::getObjectId);
   }
 
-  private Multimap<String, StorageFile> resolveFileGnosIdIndex() {
-    return index(getFiles(), StorageFile::getGnosId);
+  private Multimap<String, StorageFile> resolveFileAnalysisIdIndex() {
+    return index(getFiles(), StorageFile::getAnalysisId);
   }
 
   private LoadingCache<String, URL> createURLCache() {

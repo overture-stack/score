@@ -180,7 +180,7 @@ public class StorageFileSystemProvider extends ReadOnlyFileSystemProvider {
 
     Comparator<StorageFile> comparison = null;
     if (context.getLayout() == StorageFileLayout.BUNDLE) {
-      comparison = comparing(file -> file.getGnosId());
+      comparison = comparing(file -> file.getAnalysisId());
       comparison = comparison.thenComparing(file -> file.getFileName());
     } else if (context.getLayout() == StorageFileLayout.OBJECT_ID) {
       comparison = comparing(file -> file.getObjectId());

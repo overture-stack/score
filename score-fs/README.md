@@ -1,7 +1,6 @@
-ICGC DCC - Storage File System
+Score File System
 ===
-
-ICGC storage file system for the ICGC storage system.
+Remote Filesystem for Score
 
 ## Build
 

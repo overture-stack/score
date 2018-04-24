@@ -243,7 +243,7 @@ public class MountCommand extends RepositoryAccessCommand {
 
   private void reportManifest(MountStorageContext context) {
     terminal.printLine();
-    terminal.println(terminal.ansi("@|bold <object id>: <gnos id>/<file name> @ <file size>|@"));
+    terminal.println(terminal.ansi("@|bold <object id>: <analysis id>/<file name> @ <file size>|@"));
     terminal.printLine();
 
     long totalSize = 0;
@@ -253,7 +253,7 @@ public class MountCommand extends RepositoryAccessCommand {
     for (val file : files) {
       terminal.printf(" - %s: %s/%s %s %s %s%n",
           terminal.ansi("@|blue " + file.getObjectId() + "|@"),
-          terminal.ansi("@|green " + file.getGnosId() + "|@"),
+          terminal.ansi("@|green " + file.getAnalysisId() + "|@"),
           terminal.ansi("@|green " + file.getFileName() + "|@"),
           terminal.ansi("@|bold @|@"),
           formatBytes(file.getSize()),
@@ -297,7 +297,7 @@ public class MountCommand extends RepositoryAccessCommand {
   }
 
   private List<Entity> resolveEntities() throws IOException {
-    return resolveList("entities", () -> metadataServices.getEntities("id", "fileName", "gnosId"),
+    return resolveList("entities", () -> metadataServices.getEntities("id", "fileName", "analysisId"),
         new TypeReference<List<Entity>>() {});
   }
 

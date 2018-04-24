@@ -44,7 +44,7 @@ public class MetadataService {
   }
 
   public Optional<Entity> getIndexEntity(Entity entity) {
-    val entities = metadataClient.findEntitiesByGnosId(entity.getGnosId());
+    val entities = metadataClient.findEntitiesByAnalysisId(entity.getAnalysisId());
     return entities
         .stream()
         .filter(e -> isIndexFile(e, entity.getFileName()))

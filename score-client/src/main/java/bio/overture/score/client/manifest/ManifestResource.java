@@ -54,7 +54,7 @@ public class ManifestResource {
     return manifestSpec.startsWith("http:/") || manifestSpec.startsWith("https:/");
   }
 
-  public boolean isGnosManifest() {
+  public boolean isAnalysisManifest() {
     val isFile = resolveType(value).equals(Type.FILE);
     val isXml = value.toLowerCase().contains(".xml");
     return isFile && isXml;

@@ -54,7 +54,7 @@ public abstract class AbstractStorageIntegrationTest {
   protected final int metadataPort = 8444;
   protected final int storagePort = 5431;
 
-  final String gnosId = "9cedfd57-1ef4-43c0-871c-709bdc87586e";
+  final String analysisId = "9cedfd57-1ef4-43c0-871c-709bdc87586e";
 
   /**
    * State.
@@ -83,7 +83,7 @@ public abstract class AbstractStorageIntegrationTest {
     log.info("starting up");
 
     banner("Starting file system...");
-    fs = new FileSystem(s3Root.getRoot(), gnosId);
+    fs = new FileSystem(s3Root.getRoot(), analysisId);
     fs.start();
 
     banner("Starting Mongo...");
@@ -141,7 +141,7 @@ public abstract class AbstractStorageIntegrationTest {
 
     banner("Registering...");
     val register = metadataClient(accessToken,
-        "-i", fs.getUploadsDir() + "/" + gnosId,
+        "-i", fs.getUploadsDir() + "/" + analysisId,
         "-m", "src/test/resources/register-manifest.txt",
         "-o", fs.getRootDir().toString());
     register.waitFor(1, MINUTES);
@@ -158,7 +158,7 @@ public abstract class AbstractStorageIntegrationTest {
           "upload",
           "--verify-connection",
           "false",
-          "--manifest", fs.getRootDir() + "/" + gnosId); // GNOS id from manifest file
+          "--manifest", fs.getRootDir() + "/" + analysisId); // ANALYSIS id from manifest file
       upload.waitFor(3, MINUTES);
       assertThat(upload.exitValue()).isEqualTo(status); // First time 0, second time 1 since no --force
     }
@@ -167,7 +167,7 @@ public abstract class AbstractStorageIntegrationTest {
     // Find
     //
 
-    val entities = findEntities(gnosId);
+    val entities = findEntities(analysisId);
     assertThat(entities).isNotEmpty();
 
     //
@@ -219,7 +219,7 @@ public abstract class AbstractStorageIntegrationTest {
         "false",
         "--header-only",
         "--input-file",
-        new File(new File(fs.getDownloadsDir(), bamFile.getGnosId()), bamFile.getFileName()).toString(),
+        new File(new File(fs.getDownloadsDir(), bamFile.getAnalysisId()), bamFile.getFileName()).toString(),
         "--output-format", "sam");
     view.waitFor(1, MINUTES);
     assertThat(view.exitValue()).isEqualTo(0);
@@ -275,9 +275,9 @@ public abstract class AbstractStorageIntegrationTest {
         "-DaccessToken=" + accessToken);
   }
 
-  List<Entity> findEntities(String gnosId) {
+  List<Entity> findEntities(String analysisId) {
     val metadataClient = new MetadataClient("https://localhost:" + metadataPort, false);
-    return metadataClient.findEntitiesByGnosId(gnosId);
+    return metadataClient.findEntitiesByAnalysisId(analysisId);
   }
 
   static Entity getBamFile(List<Entity> entities) {

@@ -1,4 +1,4 @@
-# ICGC DCC - Storage Test
+# Score Test
 
 Module used for integration testing.
 

@@ -36,7 +36,7 @@ public class Entity {
    * Metadata.
    */
   String fileName;
-  String gnosId;
+  String analysisId;
   long createdTime;
   String projectCode;
   String access;

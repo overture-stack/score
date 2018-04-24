@@ -57,10 +57,10 @@ public class StoragePath extends GenericPath<StorageFileSystem> {
         return Optional.empty();
       }
 
-      val gnosId = getGnosId();
+      val analysisId = getAnalysisId();
       val fileName = getFilename();
 
-      return context.getFilesByGnosId(gnosId).stream()
+      return context.getFilesByAnalysisId(analysisId).stream()
           .filter(file -> file.getFileName().equals(fileName))
           .findFirst();
     } else if (layout == StorageFileLayout.OBJECT_ID) {
@@ -82,7 +82,7 @@ public class StoragePath extends GenericPath<StorageFileSystem> {
     return Optional.empty();
   }
 
-  public String getGnosId() {
+  public String getAnalysisId() {
     if (layout == StorageFileLayout.BUNDLE) {
       if (parts.length < 1) {
         return null;
@@ -97,7 +97,7 @@ public class StoragePath extends GenericPath<StorageFileSystem> {
   @Override
   public Path getFileName() {
     if (layout == StorageFileLayout.BUNDLE) {
-      if (parts.length == 0 || getGnosId().isEmpty()) {
+      if (parts.length == 0 || getAnalysisId().isEmpty()) {
         return null;
       } else {
         return new StoragePath(fileSystem, parts[parts.length - 1]);
@@ -116,7 +116,7 @@ public class StoragePath extends GenericPath<StorageFileSystem> {
   @Override
   public Path getParent() {
     if (layout == StorageFileLayout.BUNDLE) {
-      if (parts.length <= 1 || getGnosId().isEmpty()) {
+      if (parts.length <= 1 || getAnalysisId().isEmpty()) {
         if (absolute) {
           return getRoot();
         } else {
@@ -143,7 +143,7 @@ public class StoragePath extends GenericPath<StorageFileSystem> {
   @Override
   public int getNameCount() {
     if (layout == StorageFileLayout.BUNDLE) {
-      if (parts.length <= 1 && getGnosId().isEmpty()) {
+      if (parts.length <= 1 && getAnalysisId().isEmpty()) {
         if (absolute) {
           return 0;
         } else {
@@ -170,7 +170,7 @@ public class StoragePath extends GenericPath<StorageFileSystem> {
   @Override
   public Path getName(int i) {
     if (i < 0 || i >= parts.length
-        || (0 == i && parts.length <= 1 && layout == StorageFileLayout.BUNDLE && getGnosId().isEmpty())) {
+        || (0 == i && parts.length <= 1 && layout == StorageFileLayout.BUNDLE && getAnalysisId().isEmpty())) {
       throw new IllegalArgumentException("Invalid name index");
     }
     return createPath(fileSystem, Arrays.copyOfRange(parts, 0, i + 1), absolute);
@@ -178,7 +178,7 @@ public class StoragePath extends GenericPath<StorageFileSystem> {
 
   @Override
   public Path subpath(int i, int i2) {
-    if ((0 == i && parts.length <= 1 && layout == StorageFileLayout.BUNDLE && getGnosId().isEmpty())
+    if ((0 == i && parts.length <= 1 && layout == StorageFileLayout.BUNDLE && getAnalysisId().isEmpty())
         || i < 0 || i2 < 0
         || i >= parts.length || i2 > parts.length
         || i > i2) {
@@ -194,7 +194,7 @@ public class StoragePath extends GenericPath<StorageFileSystem> {
       throw new IllegalArgumentException("Can not resolve other path because it's on a different filesystem");
     }
 
-    if (otherPath.isAbsolute() || (absolute && parts.length == 1 && getGnosId().isEmpty())) {
+    if (otherPath.isAbsolute() || (absolute && parts.length == 1 && getAnalysisId().isEmpty())) {
       return new StoragePath(fileSystem, otherPath.getParts(), true);
     }
 
@@ -210,7 +210,7 @@ public class StoragePath extends GenericPath<StorageFileSystem> {
   @Override
   public Iterator<Path> iterator() {
     List<Path> list = new ArrayList<>(parts.length);
-    if (parts.length >= 1 && layout == StorageFileLayout.BUNDLE && !getGnosId().isEmpty()) {
+    if (parts.length >= 1 && layout == StorageFileLayout.BUNDLE && !getAnalysisId().isEmpty()) {
       for (String p : parts) {
         list.add(createPath(fileSystem, p));
       }
