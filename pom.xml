@@ -144,6 +144,44 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
     </pluginManagement>
   </build>
 
+  <profiles>
+    <!-- Profile that enables static code analysis -->
+    <profile>
+      <id>code-analysis</id>
+      <properties>
+        <install.skipFindbugs>false</install.skipFindbugs>
+      </properties>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-pmd-plugin</artifactId>
+          </plugin>
+          <plugin>
+            <artifactId>maven-resources-plugin</artifactId>
+            <inherited>false</inherited>
+            <executions>
+              <execution>
+                <phase>compile</phase>
+                <goals>
+                  <goal>copy-resources</goal>
+                </goals>
+                <configuration>
+                  <outputDirectory>${pmd.targetdir}</outputDirectory>
+                  <resources>
+                    <resource>
+                      <directory>${pmd.sourcedir}/config/style</directory>
+                    </resource>
+                  </resources>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+
   <properties>
     <jdk.version>1.8</jdk.version>
 
@@ -181,6 +219,10 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
     <maven-enforcer-plugin.versionRange>[1.0.0,)</maven-enforcer-plugin.versionRange>
     <maven-enforcer-plugin.requireMavenVersion>[3.0.0,)</maven-enforcer-plugin.requireMavenVersion>
     <maven-enforcer-plugin.requireJavaVersion>[1.8,)</maven-enforcer-plugin.requireJavaVersion>
+
+    <!-- PMD -->
+    <pmd.sourcedir>${basedir}/src/main/pmd</pmd.sourcedir>
+    <pmd.targetdir>${project.build.directory}</pmd.targetdir>
 
   </properties>
 
