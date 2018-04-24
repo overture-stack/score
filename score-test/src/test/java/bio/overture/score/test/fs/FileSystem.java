@@ -35,7 +35,7 @@ public class FileSystem {
 
   @Getter
   private final File rootDir;
-  private final String analysisId;
+  private final String gnosId;
 
   @SneakyThrows
   public void start() {
@@ -48,7 +48,7 @@ public class FileSystem {
       forceMkdir(dir);
     }
 
-    copyDirectory(new File("src/test/resources/fixtures/" + analysisId), new File(rootDir + "/uploads/" + analysisId));
+    copyDirectory(new File("src/test/resources/fixtures/" + gnosId), new File(rootDir + "/uploads/" + gnosId));
   }
 
   public File getUploadsDir() {

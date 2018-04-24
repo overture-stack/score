@@ -73,8 +73,8 @@ public class MetadataClient {
     return readAll("/");
   }
 
-  public List<Entity> findEntitiesByAnalysisId(@NonNull String analysisId) {
-    return readAll("?analysisId=" + analysisId);
+  public List<Entity> findEntitiesByGnosId(@NonNull String gnosId) {
+    return readAll("?gnosId=" + gnosId);
   }
 
   @SneakyThrows

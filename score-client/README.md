@@ -1,6 +1,6 @@
-# Score Client
+# ICGC DCC - Storage Client
 
-Score client for the Score system.
+ICGC storage client for the ICGC storage system.
 
 ## Libraries
 

@@ -27,7 +27,7 @@ public class StorageFile {
 
   String objectId;
   String fileName;
-  String analysisId;
+  String gnosId;
 
   long lastModified;
   long size;
@@ -38,7 +38,7 @@ public class StorageFile {
 
   @Override
   public String toString() {
-    return String.format("%s: %s/%s @ %s %s", objectId, analysisId, fileName, Formats.formatBytes(size), Formats.formatBytesUnits(size));
+    return String.format("%s: %s/%s @ %s %s", objectId, gnosId, fileName, Formats.formatBytes(size), Formats.formatBytesUnits(size));
   }
 
 }

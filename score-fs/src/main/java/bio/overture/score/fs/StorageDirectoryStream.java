@@ -51,10 +51,10 @@ public class StorageDirectoryStream implements DirectoryStream<Path> {
   public Iterator<Path> iterator() {
     if (layout == StorageFileLayout.BUNDLE) {
       if (isRoot()) {
-        return listAnalysisDirs();
+        return listGnosDirs();
       } else {
-        val analysisId = getAnalysisId();
-        return listAnalysisDir(analysisId);
+        val gnosId = getGnosId();
+        return listGnosDir(gnosId);
       }
     } else if (layout == StorageFileLayout.OBJECT_ID) {
       return listRoot();
@@ -68,7 +68,7 @@ public class StorageDirectoryStream implements DirectoryStream<Path> {
     // Stateless
   }
 
-  private String getAnalysisId() {
+  private String getGnosId() {
     return path.getParts()[0];
   }
 
@@ -77,17 +77,17 @@ public class StorageDirectoryStream implements DirectoryStream<Path> {
     return path.toAbsolutePath().toString().equals("/");
   }
 
-  private Iterator<Path> listAnalysisDirs() {
+  private Iterator<Path> listGnosDirs() {
     return files.stream()
-        .map(file -> file.getAnalysisId())
+        .map(file -> file.getGnosId())
         .distinct()
-        .map(this::analysisIdPath)
+        .map(this::gnosIdPath)
         .filter(this::filterPath).iterator();
   }
 
-  private Iterator<Path> listAnalysisDir(String analysisId) {
+  private Iterator<Path> listGnosDir(String gnosId) {
     val objectFiles = files.stream()
-        .filter(entity -> entity.getAnalysisId().equals(analysisId))
+        .filter(entity -> entity.getGnosId().equals(gnosId))
         .map(this::filePath)
         .filter(this::filterPath).iterator();
 
@@ -100,13 +100,13 @@ public class StorageDirectoryStream implements DirectoryStream<Path> {
         .filter(this::filterPath).iterator();
   }
 
-  private Path analysisIdPath(String analysisId) {
-    return absolutePath(analysisId);
+  private Path gnosIdPath(String gnosId) {
+    return absolutePath(gnosId);
   }
 
   private Path filePath(StorageFile file) {
     if (layout == StorageFileLayout.BUNDLE) {
-      return absolutePath(file.getAnalysisId(), file.getFileName());
+      return absolutePath(file.getGnosId(), file.getFileName());
     } else if (layout == StorageFileLayout.OBJECT_ID) {
       return absolutePath(file.getObjectId());
     }

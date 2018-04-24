@@ -35,7 +35,7 @@ public interface StorageContext {
 
   Optional<StorageFile> getIndexFile(String objectId, IndexFileType indexFileType);
 
-  Collection<StorageFile> getFilesByAnalysisId(String analysisId);
+  Collection<StorageFile> getFilesByGnosId(String gnosId);
 
   URL getUrl(String objectId);
 

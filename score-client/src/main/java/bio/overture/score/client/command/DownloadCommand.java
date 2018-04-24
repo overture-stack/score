@@ -76,7 +76,7 @@ public class DownloadCommand extends RepositoryAccessCommand {
    */
   @Parameter(names = "--output-dir", description = "Path to output directory", required = true, validateValueWith = CreatableDirectoryValidator.class)
   private File outputDir;
-  @Parameter(names = "--output-layout", description = "Layout of the output-dir. One of 'bundle' (saved according to filename under ANALYSIS bundle id directory), 'filename' (saved according to filename in output directory), or 'id' (saved according to object id in output directory)", converter = OutputLayoutConverter.class)
+  @Parameter(names = "--output-layout", description = "Layout of the output-dir. One of 'bundle' (saved according to filename under GNOS bundle id directory), 'filename' (saved according to filename in output directory), or 'id' (saved according to object id in output directory)", converter = OutputLayoutConverter.class)
   private OutputLayout layout = OutputLayout.FILENAME;
   @Parameter(names = "--force", description = "Force re-download (override local file)")
   private boolean force = false;
@@ -121,10 +121,10 @@ public class DownloadCommand extends RepositoryAccessCommand {
       return downloadObjects(objectId);
     } else {
       // Manifest based
-      if (manifestResource.isAnalysisManifest()) {
+      if (manifestResource.isGnosManifest()) {
         terminal
             .printError(
-                "Manifest '%s' looks like a ANALYSIS-format manifest file. Please ensure you are using a tab-delimited text file"
+                "Manifest '%s' looks like a GNOS-format manifest file. Please ensure you are using a tab-delimited text file"
                     + " manifest from https://dcc.icgc.org/repositories",
                 manifestResource.getValue());
         return FAILURE_STATUS;
@@ -214,7 +214,7 @@ public class DownloadCommand extends RepositoryAccessCommand {
   private File getLayoutTarget(Entity entity) {
     if (layout == OutputLayout.BUNDLE) {
       // "bundle/filename"
-      val bundleDir = new File(outputDir, entity.getAnalysisId());
+      val bundleDir = new File(outputDir, entity.getGnosId());
       val target = new File(bundleDir, entity.getFileName());
 
       return target;

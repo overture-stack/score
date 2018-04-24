@@ -26,7 +26,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 public class MetadataEntity {
 
   private String id;
-  private String analysisId;
+  private String gnosId;
   private String fileName;
   private String projectCode;
   private String access;

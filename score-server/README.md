@@ -1,10 +1,10 @@
-# Score Server
+# ICGC DCC - Storage Server
 
-Server for Score 
+Storage server for ICGC storage system. 
 
 ## Libraries
 
-The Score server is comprised of the following components:
+The storage server is comprised of the following components:
 
 - [Spring Boot](http://projects.spring.io/spring-boot/)
 - [Spring Security](http://projects.spring.io/spring-security/)

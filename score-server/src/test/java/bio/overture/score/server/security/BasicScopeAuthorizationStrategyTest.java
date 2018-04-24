@@ -53,10 +53,10 @@ public class BasicScopeAuthorizationStrategyTest {
     sut.setMetadataService(metadataService);
   }
 
-  public MetadataEntity entity(String id, String analysisId, String fileName, String projectCode, String accessType) {
+  public MetadataEntity entity(String id, String gnosId, String fileName, String projectCode, String accessType) {
     val entity = new MetadataEntity();
     entity.setId(id);
-    entity.setAnalysisId(analysisId);
+    entity.setGnosId(gnosId);
     entity.setFileName(fileName);
     entity.setProjectCode(projectCode);
     entity.setAccess(accessType);
