@@ -147,6 +147,25 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
   <profiles>
     <!-- Profile that enables static code analysis -->
     <profile>
+      <id>delombok</id>
+      <properties>
+        <generateSources.skipDelombok>false</generateSources.skipDelombok>
+      </properties>
+    </profile>
+    <profile>
+      <id>jenkins</id>
+      <properties>
+        <test.redirectTestOutputToFile>false</test.redirectTestOutputToFile>
+        <test.useFile>false</test.useFile>
+      </properties>
+    </profile>
+    <profile>
+      <id>release</id>
+      <properties>
+        <package.attach>true</package.attach>
+      </properties>
+    </profile>
+    <profile>
       <id>code-analysis</id>
       <properties>
         <install.skipFindbugs>false</install.skipFindbugs>
