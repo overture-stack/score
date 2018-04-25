@@ -31,6 +31,7 @@ import lombok.val;
 @RequiredArgsConstructor(access = PRIVATE)
 public enum IndexFileType {
   BAI(FileType.BAM, "bai"),
+  CRAI(FileType.CRAM,"crai"),
   TBI(FileType.VCF, "tbi"),
   IDX(FileType.VCF, "idx");
 
@@ -45,15 +46,13 @@ public enum IndexFileType {
 
   public static Optional<IndexFileType> fromPath(@NonNull String path) {
     val ext = getFileExtension(path);
-    if (BAI.extension.equalsIgnoreCase(ext)) {
-      return Optional.of(BAI);
-    } else if (TBI.extension.equalsIgnoreCase(ext)) {
-      return Optional.of(TBI);
-    } else if (IDX.extension.equalsIgnoreCase(ext)) {
-      return Optional.of(IDX);
-    } else {
-      return Optional.empty();
+
+    for (val type : IndexFileType.values() ) {
+      if (type.extension.equalsIgnoreCase(ext)) {
+        return Optional.of(type);
+      }
     }
+    return Optional.empty();
   }
 
   public static String getFileName(@NonNull String path) {

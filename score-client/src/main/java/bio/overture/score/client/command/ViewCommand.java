@@ -26,6 +26,7 @@ import com.beust.jcommander.Parameters;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import htsjdk.samtools.SamInputResource;
+import htsjdk.samtools.cram.ref.ReferenceSource;
 import htsjdk.tribble.AbstractFeatureReader;
 import htsjdk.tribble.Feature;
 import htsjdk.tribble.bed.BEDCodec;
@@ -65,7 +66,7 @@ import static bio.overture.score.client.cli.Parameters.checkParameter;
 public class ViewCommand extends RepositoryAccessCommand {
 
   public enum OutputFormat {
-    BAM, SAM
+    BAM, SAM, CRAM
   }
 
   public enum OutputType {
@@ -75,7 +76,7 @@ public class ViewCommand extends RepositoryAccessCommand {
   // arbitrary limit - accounting for pathname as well
   public final static int MAX_FILENAME_LENGTH = 120;
 
-  public final static String ICGC_STORAGE_CLIENT = "ICGC Storage Client";
+  public final static String PROGRAM_NAME = "Score Client";
   public final static String ICGC = "ICGC";
 
   /**
@@ -99,6 +100,8 @@ public class ViewCommand extends RepositoryAccessCommand {
   private File bamFile = null;
   @Parameter(names = "--input-file-index", description = "Explicit local path to index file (requires --input-file)", validateValueWith = FileValidator.class)
   private File baiFile = null;
+  @Parameter(names = "--reference-file", description = "Explicit local path to the fasta file that a cram file was encoded with(requires --input-file)", validateValueWith = FileValidator.class)
+  private File referenceFile = null;
   @Parameter(names = "--query", description = "Query to define extract from BAM file (coordinate format 'sequence:start-end'). Multiple"
       + " ranges separated by space", variableArity = true)
   private List<String> query = new ArrayList<>();
@@ -152,8 +155,14 @@ public class ViewCommand extends RepositoryAccessCommand {
       handleBedFile();
     }
 
-    val single = objectId != null;
-    if (single) {
+    if (bamFile != null) {
+        val resource = getFileResource(bamFile, baiFile);
+        val entity = new Entity();
+        entity.setFileName(bamFile.toString());
+        val reference=new ReferenceSource(referenceFile);
+        SamFileBuilder builder = createBuilder(resource).entity(entity).cramReferenceSource(reference);
+        build(builder);
+    } else if (objectId != null) {
       // Ad-hoc single - supercedes --manifest
       if (manifestResource != null) {
         terminal.println("Ignoring --manifest argument; --object-id supercedes");
@@ -233,6 +242,16 @@ public class ViewCommand extends RepositoryAccessCommand {
     return SUCCESS_STATUS;
   }
 
+  SamFileBuilder createBuilder(SamInputResource resource) {
+    val builder = new SamFileBuilder().programName(PROGRAM_NAME)
+      .version(VersionUtils.getScmInfo().get("git.commit.id.describe")).programId(ICGC).commandLine(getCommandLine())
+      .containedOnly(containedOnly).useOriginalHeader(useOriginalHeader).outputFormat(outputFormat).queries(query)
+      .outputDir(outputDir).bedFile(bedFile).outputIndex(outputIndex).stdout(stdout)
+      .samInput(resource);
+    log.info("Constructed SamFileBuilder: " + builder.toString());
+    return builder;
+  }
+
   /**
    * Main sequence of steps to construct a SAM/BAM file via htsjdk.
    * @param oid Object id of sample to query against
@@ -240,7 +259,6 @@ public class ViewCommand extends RepositoryAccessCommand {
    */
   @SneakyThrows
   int process(String oid) {
-
     val entity = getEntity(oid);
     if (!entity.isPresent()) {
       val msg = String.format("Metadata not found for object id %s", oid);
@@ -249,26 +267,21 @@ public class ViewCommand extends RepositoryAccessCommand {
       throw new RuntimeException(msg);
     }
 
-    // Line up bam and index file (encapsulated in a SamInputResource)
-    val resource = createInputResource(entity);
+    val resource = getRemoteResource(entity.get());
+    val builder = createBuilder(resource).entity(entity.get());
+    return build(builder);
+    }
 
-    val bob = new SamFileBuilder().programName(ICGC_STORAGE_CLIENT)
-        .version(VersionUtils.getScmInfo().get("git.commit.id.describe")).programId(ICGC).commandLine(getCommandLine())
-        .containedOnly(containedOnly).useOriginalHeader(useOriginalHeader).outputFormat(outputFormat).queries(query)
-        .outputDir(outputDir).bedFile(bedFile).outputIndex(outputIndex).entity(entity.get()).stdout(stdout)
-        .samInput(resource);
-
-    log.info("Constructed SamFileBuilder: " + bob.toString());
-
+  @SneakyThrows
+  int build(SamFileBuilder builder) {
     if (headerOnly) {
-      bob.buildHeaderOnly();
+      builder.buildHeaderOnly();
     } else {
       switch (outputType) {
       case TRIMMED:
-        bob.buildTrimmed();
+        builder.buildTrimmed();
         break;
       case MERGED:
-        // bob.buildMerged();
         terminal.printError("Output type '%s' not implemented", outputType.toString());
         break;
       case CROSS:
@@ -276,7 +289,6 @@ public class ViewCommand extends RepositoryAccessCommand {
         break;
       }
     }
-
     return SUCCESS_STATUS;
   }
 
@@ -286,22 +298,18 @@ public class ViewCommand extends RepositoryAccessCommand {
         .ofNullable(oid != null && !oid.trim().isEmpty() ? metadataService.getEntity(oid) : null);
   }
 
-  private SamInputResource createInputResource(Optional<Entity> entity) {
-    if (entity.isPresent()) {
-      return getRemoteResource(entity.get());
-    } else {
-      if (baiFile == null) {
+  private SamInputResource createInputResource() {
+    if (baiFile == null) {
         // Use samtools convention
         baiFile = new File(bamFile.getAbsolutePath() + ".bai");
         checkParameter(baiFile.exists(), "The implied BAI file '%s' does not exist", baiFile.getAbsolutePath());
         checkParameter(baiFile.canRead(), "The implied BAI file '%s' is not readable", baiFile.getAbsolutePath());
-      }
-      return getFileResource(bamFile, baiFile);
     }
+    return getFileResource(bamFile, baiFile);
   }
 
   private SamInputResource getFileResource(File bamFile, File baiFile) {
-    if (outputFormat == OutputFormat.BAM) {
+    if (baiFile != null) {
       return SamInputResource.of(bamFile).index(baiFile);
     } else {
       return SamInputResource.of(bamFile);

@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Set;
 
 import bio.overture.score.client.metadata.Entity;
+import htsjdk.samtools.cram.ref.ReferenceSource;
 import org.apache.commons.lang.StringUtils;
 import bio.overture.score.client.command.ViewCommand.OutputFormat;
 import org.slf4j.Logger;
@@ -87,6 +88,7 @@ public class SamFileBuilder {
    */
   private Entity entity;
   private SamInputResource samInputResource;
+  private ReferenceSource referenceSource;
 
   private boolean queryCompiledFlag = false;
 
@@ -140,6 +142,11 @@ public class SamFileBuilder {
     return this;
   }
 
+  public SamFileBuilder cramReferenceSource(ReferenceSource source) {
+    referenceSource = source;
+    return this;
+  }
+
   public SamFileBuilder programId(String id) {
     programId = id;
     return this;
@@ -183,7 +190,8 @@ public class SamFileBuilder {
   protected SamReader createSamReader() {
     try {
       // Need to use non-STRICT due to header date formats in the wild.
-      return SamReaderFactory.makeDefault().validationStringency(ValidationStringency.LENIENT).open(samInputResource);
+      return SamReaderFactory.makeDefault().validationStringency(ValidationStringency.LENIENT).
+        referenceSource(referenceSource).open(samInputResource);
     } catch (RuntimeIOException e) {
       log.error("Error opening SamReader: ", e);
       val rootCause = Throwables.getRootCause(e);
@@ -446,6 +454,8 @@ public class SamFileBuilder {
       return OutputFormat.BAM;
     } else if (ent.getFileName().contains(getExtension(OutputFormat.SAM))) {
       return OutputFormat.SAM;
+    } else if (ent.getFileName().contains(getExtension(OutputFormat.CRAM))) {
+      return OutputFormat.CRAM;
     } else {
       val msg = String.format("%s could not be identified as SAM or BAM", ent.getFileName());
       throw new IllegalArgumentException(msg);
