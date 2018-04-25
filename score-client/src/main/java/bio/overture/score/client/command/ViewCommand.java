@@ -298,16 +298,6 @@ public class ViewCommand extends RepositoryAccessCommand {
         .ofNullable(oid != null && !oid.trim().isEmpty() ? metadataService.getEntity(oid) : null);
   }
 
-  private SamInputResource createInputResource() {
-    if (baiFile == null) {
-        // Use samtools convention
-        baiFile = new File(bamFile.getAbsolutePath() + ".bai");
-        checkParameter(baiFile.exists(), "The implied BAI file '%s' does not exist", baiFile.getAbsolutePath());
-        checkParameter(baiFile.canRead(), "The implied BAI file '%s' is not readable", baiFile.getAbsolutePath());
-    }
-    return getFileResource(bamFile, baiFile);
-  }
-
   private SamInputResource getFileResource(File bamFile, File baiFile) {
     if (baiFile != null) {
       return SamInputResource.of(bamFile).index(baiFile);
