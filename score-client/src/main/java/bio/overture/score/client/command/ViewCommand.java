@@ -97,9 +97,9 @@ public class ViewCommand extends RepositoryAccessCommand {
   @Parameter(names = "--object-id", description = "Object id of BAM file to download slice from. Will supercede --manifest", validateValueWith = ObjectIdValidator.class)
   private String objectId;
   @Parameter(names = "--input-file", description = "Local path to BAM file. Will supercede specification of --object-id", validateValueWith = FileValidator.class)
-  private File bamFile = null;
+  private File sequenceFile = null;
   @Parameter(names = "--input-file-index", description = "Explicit local path to index file (requires --input-file)", validateValueWith = FileValidator.class)
-  private File baiFile = null;
+  private File indexFile = null;
   @Parameter(names = "--reference-file", description = "Explicit local path to the fasta file that a cram file was encoded with(requires --input-file)", validateValueWith = FileValidator.class)
   private File referenceFile = null;
   @Parameter(names = "--query", description = "Query to define extract from BAM file (coordinate format 'sequence:start-end'). Multiple"
@@ -155,10 +155,10 @@ public class ViewCommand extends RepositoryAccessCommand {
       handleBedFile();
     }
 
-    if (bamFile != null) {
-        val resource = getFileResource(bamFile, baiFile);
+    if (sequenceFile != null) {
+        val resource = getFileResource(sequenceFile, indexFile);
         val entity = new Entity();
-        entity.setFileName(bamFile.toString());
+        entity.setFileName(sequenceFile.toString());
         val reference=new ReferenceSource(referenceFile);
         SamFileBuilder builder = createBuilder(resource).entity(entity).cramReferenceSource(reference);
         build(builder);
@@ -218,10 +218,10 @@ public class ViewCommand extends RepositoryAccessCommand {
       }
     }
 
-    checkParameter(objectId != null || bamFile != null || manifestResource != null,
+    checkParameter(objectId != null || sequenceFile != null || manifestResource != null,
         "One of --object-id, --input-file or --manifest must be specified");
 
-    if (objectId == null && bamFile == null) {
+    if (objectId == null && sequenceFile == null) {
       checkParameter(manifestResource != null && outputDir != null,
           "--output-dir must be specified when using --manifest");
     }

@@ -25,7 +25,7 @@ public interface ClientCommand {
   /**
    * The name of the application.
    */
-  static final String APPLICATION_NAME = "icgc-storage-client";
+  static final String APPLICATION_NAME = "score-client";
 
   /**
    * Status code returned when a command is successful.
