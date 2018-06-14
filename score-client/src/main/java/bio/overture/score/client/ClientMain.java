@@ -32,6 +32,7 @@ import bio.overture.score.client.cli.ConverterFactory;
 import bio.overture.score.client.cli.Terminal;
 import bio.overture.score.client.command.ClientCommand;
 import bio.overture.score.client.metadata.EntityNotFoundException;
+import lombok.Getter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.Banner.Mode;
 import org.springframework.boot.CommandLineRunner;
@@ -67,10 +68,13 @@ public class ClientMain implements CommandLineRunner {
   /**
    * Options.
    */
+  @Getter
   @Parameter(names = "--profile", description = "Define environment profile used to resolve configuration properties", required = false, help = true)
   private String profile = getDefaultProfile();
+  @Getter
   @Parameter(names = "--quiet", description = "Reduce output for non-interactive usage", required = false, help = true)
   private boolean quiet = false;
+  @Getter
   @Parameter(names = "--silent", description = "Do not produce any informational messages", required = false, help = true)
   private boolean silent = false;
   @Parameter(names = "--version", description = "Show version information", required = false, help = true)
@@ -213,17 +217,17 @@ public class ClientMain implements CommandLineRunner {
     cli.parse(args);
 
     // Establish stdout / stdin handling going forward
-    if (options.silent) {
+    if (options.isSilent()) {
       err.close();
       out.close();
     }
 
     // Pass to spring
-    System.setProperty("client.silent", Boolean.toString(options.silent));
-    System.setProperty("client.quiet", Boolean.toString(options.quiet));
-    System.setProperty("storage.profile", options.profile);
+    System.setProperty("client.silent", Boolean.toString(options.isSilent()));
+    System.setProperty("client.quiet", Boolean.toString(options.isQuiet()));
+    System.setProperty("storage.profile", options.getProfile());
 
-    return options.profile == null ? new String[] {} : new String[] { options.profile };
+    return options.getProfile() == null ? new String[] {} : new String[] { options.getProfile() };
   }
 
   private ClientCommand getCommand(String commandName) {

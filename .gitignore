@@ -80,3 +80,4 @@ service.jks
 application-prod.properties
 
 score-client/deploy/
+.factorypath

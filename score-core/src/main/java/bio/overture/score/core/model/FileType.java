@@ -19,5 +19,6 @@ package bio.overture.score.core.model;
 
 public enum FileType {
   BAM,
+  CRAM,
   VCF
 }
