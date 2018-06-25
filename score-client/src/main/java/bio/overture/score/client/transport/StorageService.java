@@ -30,7 +30,9 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
 
+import bio.overture.score.client.config.ClientProperties;
 import bio.overture.score.client.download.DownloadStateStore;
+import bio.overture.score.client.encryption.TokenEncryptionService;
 import bio.overture.score.client.exception.NotResumableException;
 import bio.overture.score.client.exception.NotRetryableException;
 import bio.overture.score.client.exception.RetryableException;
@@ -40,6 +42,7 @@ import bio.overture.score.core.model.ObjectSpecification;
 import bio.overture.score.core.model.Part;
 import bio.overture.score.core.model.UploadProgress;
 import bio.overture.score.core.util.Parts;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;

@@ -16,7 +16,7 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.icgc.dcc.storage.client.encryption;
+package bio.overture.score.client.encryption;
 
 import lombok.NonNull;
 import lombok.SneakyThrows;
