@@ -30,8 +30,10 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
 
+import org.apache.commons.lang.StringUtils;
 import org.icgc.dcc.storage.client.config.ClientProperties;
 import org.icgc.dcc.storage.client.download.DownloadStateStore;
+import org.icgc.dcc.storage.client.encryption.TokenEncryptionService;
 import org.icgc.dcc.storage.client.exception.NotResumableException;
 import org.icgc.dcc.storage.client.exception.NotRetryableException;
 import org.icgc.dcc.storage.client.exception.RetryableException;
@@ -100,6 +102,8 @@ public class StorageService {
   private String clientVersion;
   @Autowired
   private ClientProperties properties;
+  @Autowired
+  private TokenEncryptionService tokenEncryptionService;
 
 
   @SneakyThrows
@@ -124,6 +128,10 @@ public class StorageService {
       @Override
       public Void doWithRetry(RetryContext ctx) throws IOException {
         log.debug("Download Part URL: {}", part.getUrl());
+        // set encrypted access token if not already set
+        if(StringUtils.isEmpty(properties.getEncryptedAccessToken())){
+          setEncryptedAccessToken();
+        }
 
         try {
           // the actual GET operation
@@ -133,7 +141,7 @@ public class StorageService {
               request ->
               {
                     request.getHeaders().set(HttpHeaders.RANGE, Parts.getHttpRangeValue(part));
-                    request.getHeaders().set("X-ICGC-TOKEN", properties.getAccessToken().substring(0,18));
+                    request.getHeaders().set("X-ICGC-TOKEN", properties.getEncryptedAccessToken());
               },
 
               response -> {
@@ -380,6 +388,11 @@ public class StorageService {
     }
   }
 
+  private void setEncryptedAccessToken() {
+    val encryptedToken = tokenEncryptionService.encryptAccessToken(properties.getAccessToken());
+    val tokenValue = encryptedToken.isPresent() ? encryptedToken.get() : "";
+    properties.setEncryptedAccessToken(tokenValue);
+  }
   private HttpEntity<Object> defaultEntity() {
     return new HttpEntity<Object>(defaultHeaders());
   }

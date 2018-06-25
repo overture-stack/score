@@ -21,6 +21,7 @@ public class ClientProperties {
 
   /** OAuth2 access token for ICGC authorization server */
   private String accessToken;
+  private String encryptedAccessToken;
 
   private String home;
   private int retryLimit = DEFAULT_LIMIT;
