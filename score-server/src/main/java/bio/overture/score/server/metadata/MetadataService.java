@@ -45,7 +45,7 @@ public class MetadataService {
 
   public MetadataEntity getEntity(@NonNull String id) {
     log.debug("using " + metadataUrl + " for MetaData server");
-    try{
+    try {
       return restTemplate.getForEntity(metadataUrl + "/entities/" + id, MetadataEntity.class).getBody();
     } catch (HttpClientErrorException e) {
       if (e.getStatusCode() == NOT_FOUND) {

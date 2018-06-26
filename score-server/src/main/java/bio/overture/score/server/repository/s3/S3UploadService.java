@@ -100,7 +100,7 @@ public class S3UploadService implements UploadService {
   @Override
   public ObjectSpecification initiateUpload(String objectId, long fileSize, String md5, boolean overwrite) {
     // First ensure that the system is aware of the requested object
-    checkMetadataRegistered(objectId);
+    checkRegistered(objectId);
 
     val objectKey = ObjectKeys.getObjectKey(dataDir, objectId);
     log.debug("Initiating upload for object key: {}, overwrite: {}", objectKey, overwrite);
@@ -398,7 +398,7 @@ public class S3UploadService implements UploadService {
     stateStore.deletePart(objectId, uploadId, partNumber);
   }
 
-  void checkMetadataRegistered(String objectId) {
+  void checkRegistered(String objectId) {
     val entity = metadataClient.getEntity(objectId);
     if (!entity.getId().equals(objectId)) {
       val message = String.format("Critical Error: checked for objectId %s and metadata server returned %s as match",
@@ -422,7 +422,7 @@ public class S3UploadService implements UploadService {
               + "Can only upload objects that have the analysisState '%s'.",
           objectId, analysisState, getAnalysisId(entity), UNPUBLISHED_ANALYSIS_STATE);
       log.error(message); // Log to audit log file
-      throw new InternalUnrecoverableError(message);
+      throw new NotRetryableException(new IllegalStateException(message));
     }
   }
 
