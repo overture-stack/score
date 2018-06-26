@@ -51,7 +51,7 @@ public abstract class AbstractClientCommand implements ClientCommand {
         if (!ProfileRepoValidator.validateRepoAgainstProfile(storageProfile, entry.getRepoCode())) {
           terminal
               .printWarn(
-                  "Manifest entry %s - %s (%s) exists in the '%s' repository. However, this ICGC Storage Client instance is using the '%s' profile.",
+                  "Manifest entry %s - %s (%s) exists in the '%s' repository. However, this SCORe Client instance is using the '%s' profile.",
                   entry.getFileId(), entry.getFileName(), entry.getFileUuid(), entry.getRepoCode(), storageProfile);
         }
       } catch (IllegalArgumentException iae) {
