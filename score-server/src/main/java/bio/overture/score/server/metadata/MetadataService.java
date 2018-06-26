@@ -17,17 +17,22 @@
  */
 package bio.overture.score.server.metadata;
 
-import static java.lang.String.format;
-import static org.springframework.http.HttpStatus.NOT_FOUND;
-
 import bio.overture.score.server.exception.IdNotFoundException;
+import bio.overture.score.server.exception.NotRetryableException;
+import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import org.icgc.dcc.song.server.model.enums.AnalysisStates;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
-import lombok.NonNull;
-import lombok.extern.slf4j.Slf4j;
+import java.util.function.Supplier;
+
+import static java.lang.String.format;
+import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @Slf4j
 @Service
@@ -37,6 +42,9 @@ public class MetadataService {
 
   @Value("${metadata.url}")
   private String metadataUrl;
+
+  @Autowired
+  private SongService songService;
 
   public MetadataEntity getEntity(@NonNull String id) {
     log.debug("using " + metadataUrl + " for MetaData server");
@@ -51,7 +59,28 @@ public class MetadataService {
 
       throw e;
     }
+  }
 
+  public AnalysisStates getAnalysisStateForMetadata(@NonNull MetadataEntity metadataEntity){
+    val studyId = getStudyId(metadataEntity);
+    val analysisId = getAnalysisId(metadataEntity);
+    return trySongCall(() -> songService.readAnalysisState(studyId, analysisId));
+  }
+
+  public static String getAnalysisId(MetadataEntity metadataEntity){
+    return metadataEntity.getGnosId();
+  }
+
+  private static String getStudyId(MetadataEntity metadataEntity){
+    return metadataEntity.getProjectCode();
+  }
+
+  private static <R> R trySongCall(Supplier<R> callback){
+    try{
+      return callback.get();
+    } catch (Throwable e){
+      throw new NotRetryableException(e);
+    }
   }
 
 }

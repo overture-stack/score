@@ -1,6 +1,7 @@
 package bio.overture.score.server.repository.s3;
 
 import bio.overture.score.server.config.S3Config;
+import bio.overture.score.server.metadata.MetadataEntity;
 import com.amazonaws.services.s3.model.*;
 import lombok.NonNull;
 import lombok.Setter;
@@ -21,7 +22,6 @@ import bio.overture.score.core.model.ObjectKey;
 import bio.overture.score.core.model.ObjectSpecification;
 import bio.overture.score.core.model.UploadProgress;
 import bio.overture.score.core.util.ObjectKeys;
-import bio.overture.score.server.config.S3Config;
 import bio.overture.score.server.exception.IdNotFoundException;
 import bio.overture.score.server.exception.InternalUnrecoverableError;
 import bio.overture.score.server.exception.NotRetryableException;
@@ -43,6 +43,8 @@ import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.s3.AmazonS3;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import static org.icgc.dcc.song.server.model.enums.AnalysisStates.UNPUBLISHED;
 
 /**
  * A service for object upload.
@@ -66,6 +68,9 @@ public class S3UploadService implements UploadService {
   @Value("${collaboratory.upload.expiration}")
   private int expiration;
 
+  @Value("${metadata.useLegacyMode:false}")
+  private boolean useLegacyMode;
+
   @Autowired
   private S3Config s3Conf;
 
@@ -88,7 +93,7 @@ public class S3UploadService implements UploadService {
   @Override
   public ObjectSpecification initiateUpload(String objectId, long fileSize, String md5, boolean overwrite) {
     // First ensure that the system is aware of the requested object
-    checkRegistered(objectId);
+    checkMetadataRegistered(objectId);
 
     val objectKey = ObjectKeys.getObjectKey(dataDir, objectId);
     log.debug("Initiating upload for object key: {}, overwrite: {}", objectKey, overwrite);
@@ -386,12 +391,29 @@ public class S3UploadService implements UploadService {
     stateStore.deletePart(objectId, uploadId, partNumber);
   }
 
-  void checkRegistered(String objectId) {
+  void checkMetadataRegistered(String objectId) {
     val entity = metadataClient.getEntity(objectId);
     if (!entity.getId().equals(objectId)) {
       val message = String.format("Critical Error: checked for objectId %s and metadata server returned %s as match",
           objectId, entity.getId());
 
+      log.error(message); // Log to audit log file
+      throw new InternalUnrecoverableError(message);
+    }
+
+    if (!useLegacyMode){
+      checkAnalysisState(entity);
+    }
+  }
+
+  void checkAnalysisState(MetadataEntity entity){
+    val objectId = entity.getId();
+    val analysisState = metadataClient.getAnalysisStateForMetadata(entity);
+    if (analysisState != UNPUBLISHED){
+      val message = String.format("Critical Error: cannot complete upload for objectId '%s' with "
+              + "analysisState '%s' and analysisId '%s'. "
+              + "Can only upload objects that have the analysisState '%s'.",
+          objectId, analysisState, MetadataService.getAnalysisId(entity), UNPUBLISHED);
       log.error(message); // Log to audit log file
       throw new InternalUnrecoverableError(message);
     }

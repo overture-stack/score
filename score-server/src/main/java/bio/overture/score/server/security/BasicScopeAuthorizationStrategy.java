@@ -25,7 +25,6 @@ import lombok.NonNull;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
-import bio.overture.score.server.exception.NotRetryableException;
 import org.springframework.beans.factory.annotation.Value;
 
 @Slf4j

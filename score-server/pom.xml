@@ -57,6 +57,18 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
       <version>${dcc-common.version}</version>
     </dependency>
 
+    <!-- SONG -->
+    <dependency>
+      <groupId>org.icgc.dcc</groupId>
+      <artifactId>song-client</artifactId>
+      <version>${song.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.icgc.dcc</groupId>
+      <artifactId>song-server</artifactId>
+      <version>${song.version}</version>
+    </dependency>
+
     <!-- DCC - Storage -->
     <dependency>
       <groupId>${project.groupId}</groupId>
@@ -128,6 +140,7 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
     <dcc-common.version>3.8.17.2</dcc-common.version>
     <jackson.version>2.8.3</jackson.version>
     <azure-storage.version>4.4.0</azure-storage.version>
+    <song.version>1.0.3</song.version>
   </properties>
 
   <build>
