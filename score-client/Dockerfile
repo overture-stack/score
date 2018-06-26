@@ -18,7 +18,7 @@ RUN \
   apt-get update && \
   apt-get -y upgrade && \
   apt-get install -y libfuse-dev fuse curl wget software-properties-common
-
+  
 #
 # Install Oracle JDK 8
 #
@@ -36,7 +36,7 @@ RUN apt-get install -y \
 # Define commonly used JAVA_HOME variable
 ENV JAVA_HOME /usr/lib/jvm/java-8-oracle
 
-#
+# 
 # Install latest version of storage client distribution
 #
 

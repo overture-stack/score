@@ -28,10 +28,6 @@ Top level system modules:
 - [Server](score-server/README.md)
 - [Test](score-test/README.md)
 
-Rebranding packaging:
-
-- [ICGC Storage Client](icgc-storage-client/README.md) 
-
 ## Changes
 
 Change log for the user-facing system modules may be found in [CHANGES.md](CHANGES.md).
