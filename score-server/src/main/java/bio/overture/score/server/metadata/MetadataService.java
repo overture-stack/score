@@ -18,20 +18,17 @@
 package bio.overture.score.server.metadata;
 
 import bio.overture.score.server.exception.IdNotFoundException;
-import bio.overture.score.server.exception.NotRetryableException;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.icgc.dcc.song.server.model.enums.AnalysisStates;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.function.Supplier;
-
 import static java.lang.String.format;
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @Slf4j
@@ -48,7 +45,7 @@ public class MetadataService {
 
   public MetadataEntity getEntity(@NonNull String id) {
     log.debug("using " + metadataUrl + " for MetaData server");
-    try {
+    try{
       return restTemplate.getForEntity(metadataUrl + "/entities/" + id, MetadataEntity.class).getBody();
     } catch (HttpClientErrorException e) {
       if (e.getStatusCode() == NOT_FOUND) {
@@ -61,10 +58,21 @@ public class MetadataService {
     }
   }
 
-  public AnalysisStates getAnalysisStateForMetadata(@NonNull MetadataEntity metadataEntity){
+  public String getAnalysisStateForMetadata(@NonNull MetadataEntity metadataEntity){
     val studyId = getStudyId(metadataEntity);
     val analysisId = getAnalysisId(metadataEntity);
-    return trySongCall(() -> songService.readAnalysisState(studyId, analysisId));
+    try{
+      return songService.readAnalysisState(studyId, analysisId);
+    } catch (HttpClientErrorException e) {
+      if (e.getStatusCode() == NOT_FOUND || e.getStatusCode() == BAD_REQUEST) {
+        throw new IdNotFoundException(
+            format("The analysis '%s' with studyId '%s' is not registered on the metadata server. Message: %s",
+            analysisId, studyId, e.getResponseBodyAsString()));
+      }
+      log.error("Unexpected response code {} while getting AnalysisId {} for StudyId {}",
+          e.getStatusCode(), analysisId, studyId);
+      throw e;
+    }
   }
 
   public static String getAnalysisId(MetadataEntity metadataEntity){
@@ -75,12 +83,5 @@ public class MetadataService {
     return metadataEntity.getProjectCode();
   }
 
-  private static <R> R trySongCall(Supplier<R> callback){
-    try{
-      return callback.get();
-    } catch (Throwable e){
-      throw new NotRetryableException(e);
-    }
-  }
 
 }

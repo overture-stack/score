@@ -57,17 +57,6 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
       <version>${dcc-common.version}</version>
     </dependency>
 
-    <!-- SONG -->
-    <dependency>
-      <groupId>org.icgc.dcc</groupId>
-      <artifactId>song-client</artifactId>
-      <version>${song.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.icgc.dcc</groupId>
-      <artifactId>song-server</artifactId>
-      <version>${song.version}</version>
-    </dependency>
 
     <!-- DCC - Storage -->
     <dependency>

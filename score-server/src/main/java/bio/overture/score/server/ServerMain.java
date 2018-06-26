@@ -12,7 +12,14 @@ import org.springframework.boot.autoconfigure.security.SecurityAutoConfiguration
 /**
  * Application entry point.
  */
-@SpringBootApplication(exclude = { SecurityAutoConfiguration.class, ManagementWebSecurityAutoConfiguration.class, ManagementContextConfiguration.class, DataSourceAutoConfiguration.class, DataSourceTransactionManagerAutoConfiguration.class, HibernateJpaAutoConfiguration.class})
+@SpringBootApplication(exclude = {
+    SecurityAutoConfiguration.class,
+    ManagementWebSecurityAutoConfiguration.class,
+    ManagementContextConfiguration.class,
+    DataSourceAutoConfiguration.class,
+    DataSourceTransactionManagerAutoConfiguration.class,
+    HibernateJpaAutoConfiguration.class
+})
 public class ServerMain {
 
   public static void main(String... args) {
