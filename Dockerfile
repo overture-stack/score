@@ -7,8 +7,8 @@
 #
 # Banner @ https://goo.gl/Yyoc6R
 
-FROM       ubuntu:14.04
-MAINTAINER Overture Team <contact@overture.bio>
+FROM       ubuntu:16.04
+MAINTAINER ICGC <dcc-support@icgc.org>
 
 #
 # Update apt, add FUSE support and basic command line tools
@@ -25,19 +25,14 @@ RUN \
 
 RUN add-apt-repository ppa:webupd8team/java
 RUN apt-get update && apt-get upgrade -y
-RUN dpkg -r --force-all oracle-java8-installer
 RUN echo oracle-java8-installer shared/accepted-oracle-license-v1-1 select true | /usr/bin/debconf-set-selections
 RUN apt-get install -y \
     oracle-java8-installer \
-    oracle-java8-set-default && \
-    rm -rf /var/lib/apt/lists/* && \
-    rm -rf /var/cache/oracle-jdk8-installer
-
-# Define commonly used JAVA_HOME variable
+    oracle-java8-set-default
 ENV JAVA_HOME /usr/lib/jvm/java-8-oracle
 
 #
-# Install latest version of storage client distribution
+# Install latest version of score client distribution
 #
 
 RUN mkdir -p /score-client && \
