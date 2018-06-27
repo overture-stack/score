@@ -419,7 +419,7 @@ public class S3UploadService implements UploadService {
     if (!analysisState.equals(UNPUBLISHED_ANALYSIS_STATE)){
       val message = String.format("Critical Error: cannot complete upload for objectId '%s' with "
               + "analysisState '%s' and analysisId '%s'. "
-              + "Can only upload objects that have the analysisState '%s'.",
+              + "Can only upload objects that have the analysisState '%s'. Update the file metadata and retry.",
           objectId, analysisState, getAnalysisId(entity), UNPUBLISHED_ANALYSIS_STATE);
       log.error(message); // Log to audit log file
       throw new NotRetryableException(new IllegalStateException(message));
