@@ -34,6 +34,9 @@ s3:
   
   #amazon
   endpoint: s3-external-1.amazonaws.com
+
+metadata:
+  useLegacyMode: false
  
 bucket:
   name.object: oicr.icgc
@@ -97,6 +100,10 @@ bucket:
   name.object: oicr.icgc
   name.state: oicr.icgc
 
+metadata:
+  url: https://virginia.song.icgc.org
+  useLegacyMode: false
+
 ---
 
 ###############################################################################
@@ -109,6 +116,10 @@ spring:
 s3:
   endpoint: https://object.cancercollaboratory.org:9080
   masterEncryptionKeyId: 
+
+metadata:
+  url: https://song.cancercollaboratory.org
+  useLegacyMode: false
 
 ---
 

@@ -17,16 +17,15 @@
  */
 package bio.overture.score.server.security;
 
+import bio.overture.score.server.exception.NotRetryableException;
+import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import org.springframework.beans.factory.annotation.Value;
+
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
-
-import lombok.NonNull;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
-
-import bio.overture.score.server.exception.NotRetryableException;
-import org.springframework.beans.factory.annotation.Value;
 
 @Slf4j
 public class ProjectScopeStrategy extends AbstractScopeAuthorizationStrategy {
