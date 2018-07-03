@@ -20,7 +20,7 @@
 
 # Application
 APP_NAME="score-server"
-APP_LONG_NAME="DCC Storage Server"
+APP_LONG_NAME="SCORe Server"
 
 # Wrapper
 WRAPPER_CMD="./wrapper"
@@ -95,7 +95,7 @@ PLIST_DOMAIN=org.tanukisoftware.wrapper
 # The following two lines are used by the chkconfig command. Change as is
 #  appropriate for your application.  They should remain commented.
 # chkconfig: 2345 20 80
-# description:  DCC Storage Server
+# description:  SCORe Server
  
 # Initialization block for the install_initd and remove_initd scripts used by
 #  SUSE linux distributions.
@@ -106,8 +106,8 @@ PLIST_DOMAIN=org.tanukisoftware.wrapper
 # Required-Stop:
 # Default-Start: 2 3 4 5
 # Default-Stop: 0 1 6
-# Short-Description: DCC Storage Server
-# Description: DCC Storage Server
+# Short-Description: SCORe Server
+# Description: SCORe Server
 ### END INIT INFO
 
 # Do not modify anything beyond this point
