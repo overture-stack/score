@@ -19,6 +19,7 @@ package bio.overture.score.client.transport;
 
 import bio.overture.score.client.progress.Progress;
 import bio.overture.score.client.progress.ProgressDataChannel;
+import bio.overture.score.client.storage.StorageServiceInterface;
 import bio.overture.score.core.model.DataChannel;
 import bio.overture.score.core.model.Part;
 import lombok.SneakyThrows;

@@ -19,7 +19,7 @@ package bio.overture.score.client.upload.azure;
 
 import bio.overture.score.client.exception.NotRetryableException;
 import bio.overture.score.client.progress.Progress;
-import bio.overture.score.client.transport.StorageService;
+import bio.overture.score.client.storage.StorageService;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 

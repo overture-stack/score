@@ -1,4 +1,4 @@
-package bio.overture.score.client.transport;
+package bio.overture.score.client.storage;
 
 import bio.overture.score.core.model.DataChannel;
 import bio.overture.score.core.model.ObjectInfo;

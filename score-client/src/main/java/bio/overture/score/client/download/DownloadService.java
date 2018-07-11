@@ -23,7 +23,7 @@ import bio.overture.score.client.exception.NotRetryableException;
 import bio.overture.score.client.exception.RetryableException;
 import bio.overture.score.client.metadata.Entity;
 import bio.overture.score.client.progress.Progress;
-import bio.overture.score.client.transport.StorageServiceInterface;
+import bio.overture.score.client.storage.StorageServiceInterface;
 import bio.overture.score.client.transport.Transport;
 import bio.overture.score.core.model.ObjectSpecification;
 import bio.overture.score.core.model.Part;

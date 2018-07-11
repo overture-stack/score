@@ -21,7 +21,7 @@ import bio.overture.score.client.transport.MemoryMappedParallelPartObjectTranspo
 import bio.overture.score.client.transport.ParallelPartObjectTransport;
 import bio.overture.score.client.transport.PipedParallelPartObjectTransport;
 import bio.overture.score.client.transport.SequentialPartObjectTransport;
-import bio.overture.score.client.transport.StorageService;
+import bio.overture.score.client.storage.StorageService;
 import bio.overture.score.client.transport.Transport;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
