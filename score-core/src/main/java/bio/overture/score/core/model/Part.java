@@ -18,6 +18,7 @@
 package bio.overture.score.core.model;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -30,6 +31,7 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
  * An entity to represent a part that the client will be uploaded
  */
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)

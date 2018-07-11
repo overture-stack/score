@@ -25,7 +25,7 @@ import bio.overture.score.server.exception.InternalUnrecoverableError;
 import bio.overture.score.server.exception.NotRetryableException;
 import bio.overture.score.server.repository.BucketNamingService;
 import bio.overture.score.server.repository.DownloadService;
-import bio.overture.score.server.repository.PartCalculator;
+import bio.overture.score.core.util.PartCalculator;
 import bio.overture.score.server.repository.URLGenerator;
 import com.microsoft.azure.storage.StorageException;
 import com.microsoft.azure.storage.blob.CloudBlobContainer;

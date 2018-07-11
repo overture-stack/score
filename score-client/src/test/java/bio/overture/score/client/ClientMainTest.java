@@ -17,6 +17,9 @@
  */
 package bio.overture.score.client;
 
+import bio.overture.score.client.storage.Gen3StorageService;
+import bio.overture.score.core.model.Part;
+import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -29,6 +32,7 @@ import java.util.UUID;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+@Slf4j
 public class ClientMainTest extends AbstractClientMainTest {
 
   @Rule
@@ -43,6 +47,21 @@ public class ClientMainTest extends AbstractClientMainTest {
         "Bad parameter(s): \"--output-format\": couldn't convert \"xxx\" to a value in [bam, sam, cram]"));
   }
 
+  @Test
+  public void testRr(){
+    val url = "https://kf-study-us-east-1-prd-sd-bhjxbdqk.s3.amazonaws.com/source/fastq/RNA_468928_7316-1778.fq.gz?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAIZAHWHQWDB7XV4RA%2F20180711%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20180711T214803Z&X-Amz-Expires=3600&X-Amz-SignedHeaders=host&user_id=93&username=RTISMA&X-Amz-Signature=16f782cdc50a87abafbddd1f930c929f96133d7563eac50d82b53d33fb18dddf";
+    val offset = 0;
+    val length = 30*1024*1024*1024L;
+    val part = Part.builder()
+        .partNumber(0)
+        .partSize(length)
+        .offset(offset)
+        .url(url)
+        .build();
+    val md5 = Gen3StorageService.getPartMd5(part);
+    log.info("sdf");
+
+  }
   @Test
   public void testRob() throws Exception {
     executeMain("--profile",  "gen3", "info");

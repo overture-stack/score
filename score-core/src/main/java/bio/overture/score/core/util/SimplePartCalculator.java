@@ -15,21 +15,51 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package bio.overture.score.server.repository;
+package bio.overture.score.core.util;
+
+import bio.overture.score.core.model.Part;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableList.Builder;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 
-import bio.overture.score.core.model.Part;
-
 /**
- * An interface to represent a way to calculate the part size given the file size
+ * a simple way to divide an object into multi parts
  */
-public interface PartCalculator {
+@Slf4j
+public class SimplePartCalculator implements PartCalculator {
 
-  public List<Part> divide(long offset, long fileSize);
+  private static final int MAX_NUM_PART = 10000;
+  private static final int MIN_PART_SIZE = 20 * 1024 * 1024; // 20MB
 
-  public List<Part> divide(long fileSize);
+  private final int minPartSize;
 
-  public List<Part> specify(long offset, long length);
+  public SimplePartCalculator(int minPartSize) {
+    this.minPartSize = Math.max(minPartSize, MIN_PART_SIZE);
+  }
 
+  @Override
+  public List<Part> divide(long fileSize) {
+    return divide(0, fileSize);
+  }
+
+  @Override
+  public List<Part> divide(long offset, long objectLength) {
+    int defaultPartSize = Math.max(minPartSize, (int) (objectLength / MAX_NUM_PART) + 1);
+    log.debug("Part Size: {}", defaultPartSize);
+    Builder<Part> parts = ImmutableList.builder();
+    long currentTotalLength = 0;
+    for (int i = 1; currentTotalLength < objectLength; ++i) {
+      int partSize = (int) Math.min(defaultPartSize, objectLength - currentTotalLength);
+      parts.add(new Part(i, partSize, offset + currentTotalLength, null, null, null));
+      currentTotalLength += partSize;
+    }
+    return parts.build();
+  }
+
+  @Override
+  public List<Part> specify(long offset, long length) {
+    return ImmutableList.of(new Part(1, length, offset, null, null, null));
+  }
 }

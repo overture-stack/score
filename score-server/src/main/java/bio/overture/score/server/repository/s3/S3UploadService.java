@@ -11,7 +11,7 @@ import bio.overture.score.server.exception.NotRetryableException;
 import bio.overture.score.server.exception.RetryableException;
 import bio.overture.score.server.metadata.MetadataEntity;
 import bio.overture.score.server.metadata.MetadataService;
-import bio.overture.score.server.repository.PartCalculator;
+import bio.overture.score.core.util.PartCalculator;
 import bio.overture.score.server.repository.URLGenerator;
 import bio.overture.score.server.repository.UploadPartDetail;
 import bio.overture.score.server.repository.UploadService;

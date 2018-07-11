@@ -29,7 +29,7 @@ import java.util.regex.Pattern;
 import bio.overture.score.core.util.ObjectKeys;
 import bio.overture.score.server.config.ServerConfig;
 import bio.overture.score.server.exception.IdNotFoundException;
-import bio.overture.score.server.repository.SimplePartCalculator;
+import bio.overture.score.core.util.SimplePartCalculator;
 import bio.overture.score.server.repository.s3.S3BucketNamingService;
 import bio.overture.score.server.repository.s3.S3DownloadService;
 import bio.overture.score.server.repository.s3.S3URLGenerator;

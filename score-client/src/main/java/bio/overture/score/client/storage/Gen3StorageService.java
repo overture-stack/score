@@ -1,13 +1,18 @@
 package bio.overture.score.client.storage;
 
 import bio.overture.score.client.download.DownloadStateStore;
+import bio.overture.score.client.storage.Gen3Client.PresignedUrl;
 import bio.overture.score.core.model.DataChannel;
 import bio.overture.score.core.model.ObjectInfo;
 import bio.overture.score.core.model.ObjectSpecification;
 import bio.overture.score.core.model.Part;
 import bio.overture.score.core.model.UploadProgress;
+import bio.overture.score.core.util.SimplePartCalculator;
+import com.google.common.collect.ImmutableList;
 import lombok.NonNull;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,6 +25,8 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 @Slf4j
 @Service
 @Profile("gen3")
@@ -28,45 +35,69 @@ public class Gen3StorageService extends AbstractStorageService{
   private static final  String NOT_IMPLEMENTED_MESSAGE = "Not implemented for Gen3 Storage";
 
   /**
-   * Configuration.
-   */
-  private String endpoint;
-
-  /**
    * Dependencies.
    */
-  private DownloadStateStore downloadStateStore;
-  private RestTemplate dataTemplate;
-  private RetryTemplate retry;
+  private final Gen3Client gen3Client;
+  private final SimplePartCalculator partCalculator;
+
 
   @Autowired
   public Gen3StorageService(
       @Value("${storage.url}") @NonNull String endpoint,
-      @Autowired @NonNull DownloadStateStore downloadStateStore,
+      @NonNull DownloadStateStore downloadStateStore,
       @Qualifier("pingTemplate") @NonNull RestTemplate dataTemplate,
-      @NonNull RetryTemplate retry) {
+      @NonNull RetryTemplate retry,
+      SimplePartCalculator partCalculator,
+      @NonNull Gen3Client gen3Client
+  ) {
     super(endpoint, downloadStateStore, dataTemplate, retry);
-    this.downloadStateStore = downloadStateStore;
-    this.dataTemplate = dataTemplate;
-    this.retry = retry;
-    this.endpoint = endpoint;
+    this.gen3Client = gen3Client;
+    this.partCalculator = partCalculator;
     log.info("*****************LOADED GEN3 STORAGE SERVICE");
   }
+
+
+  @Override
+  public ObjectSpecification getDownloadSpecification(String objectId, long offset, long length)
+      throws IOException {
+    val presignedUrl = gen3Client.generatePresignedUrl(objectId);
+    val parts = generateParts(presignedUrl, offset, length);
+    return ObjectSpecification.builder()
+        .objectId(objectId)
+        .objectMd5(null) // useless, since we do not have the md5 values of the initial part uploads
+        .objectSize(presignedUrl.getSize())
+        .parts(parts)
+        .objectKey(null)
+        .relocated(false)
+        .build();
+  }
+
+  @Override
+  public ObjectSpecification getExternalDownloadSpecification(String objectId, long offset, long length)
+      throws IOException {
+    return getDownloadSpecification(objectId);
+  }
+
 
   @Override protected Optional<String> getEncryptedAccessToken() {
     return Optional.empty();
   }
 
-  @Override public ObjectSpecification getDownloadSpecification(String objectId, long offset, long length)
-      throws IOException {
-    return null;
+  @SneakyThrows
+  private List<Part> generateParts(PresignedUrl presignedUrl, long offset, long length){
+    val url = presignedUrl.getUrl();
+    val totalSize = presignedUrl.getSize();
+    checkArgument(offset + length < totalSize,
+        "The sum of: offset(%s) + length(%s) = %s must be less than the total size (%s)",
+        offset, length, offset+length, totalSize );
+    val parts = partCalculator.divide(offset, length);
+    parts.forEach(x -> {
+      x.setMd5(null); // Unobtainable
+      x.setSourceMd5(null); // useless, since we do not have the md5 values of the initial part uploads
+      x.setUrl(url);
+    } );
+    return ImmutableList.copyOf(parts);
   }
-
-  @Override public ObjectSpecification getExternalDownloadSpecification(String objectId, long offset, long length)
-      throws IOException {
-    return null;
-  }
-
 
   /**
    *  Not implemented for Gen3
