@@ -17,7 +17,20 @@
  */
 package bio.overture.score.client.transport;
 
-import static com.google.common.base.Preconditions.checkState;
+import bio.overture.score.client.download.Downloads;
+import bio.overture.score.client.progress.Progress;
+import bio.overture.score.client.progress.ProgressDataChannel;
+import bio.overture.score.core.model.DataChannel;
+import bio.overture.score.core.model.Part;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Ordering;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -35,22 +48,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
-import bio.overture.score.client.progress.Progress;
-import bio.overture.score.client.download.Downloads;
-import bio.overture.score.client.progress.ProgressDataChannel;
-import bio.overture.score.core.model.DataChannel;
-import bio.overture.score.core.model.Part;
-
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Ordering;
-
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.SneakyThrows;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
+import static com.google.common.base.Preconditions.checkState;
 
 /**
  * The default transport for parallel upload
@@ -62,7 +60,7 @@ public class ParallelPartObjectTransport implements Transport {
   private static final int MIN_WORKER = 1;
   private static final long MIN_MEMORY = 1024L * 1024L;
 
-  final protected StorageService proxy;
+  final protected StorageServiceInterface proxy;
   final protected int nThreads;
   final protected int queueSize;
   final protected Progress progress;

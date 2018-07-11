@@ -17,11 +17,11 @@
  */
 package bio.overture.score.client.transport;
 
-import java.io.File;
-import java.util.List;
-
 import bio.overture.score.client.progress.Progress;
 import bio.overture.score.core.model.Part;
+
+import java.io.File;
+import java.util.List;
 
 /**
  * A transport for data upload.
@@ -57,7 +57,7 @@ public interface Transport {
 
     Builder withSessionId(String uploadId);
 
-    Builder withProxy(StorageService proxy);
+    Builder withProxy(StorageServiceInterface proxy);
 
     Builder withTransportMode(Mode mode);
 
@@ -66,7 +66,7 @@ public interface Transport {
 
   abstract class AbstractBuilder implements Builder {
 
-    protected StorageService proxy;
+    protected StorageServiceInterface proxy;
     protected Progress progressBar;
     protected List<Part> parts;
     protected String objectId;
@@ -105,7 +105,7 @@ public interface Transport {
     }
 
     @Override
-    public Builder withProxy(StorageService proxy) {
+    public Builder withProxy(StorageServiceInterface proxy) {
       this.proxy = proxy;
       return this;
     }

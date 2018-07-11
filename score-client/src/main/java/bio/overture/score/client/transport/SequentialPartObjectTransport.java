@@ -17,18 +17,17 @@
  */
 package bio.overture.score.client.transport;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
-import java.io.File;
-import java.util.List;
-
 import bio.overture.score.client.progress.Progress;
 import bio.overture.score.client.progress.ProgressDataChannel;
 import bio.overture.score.core.model.DataChannel;
 import bio.overture.score.core.model.Part;
-
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+
+import java.io.File;
+import java.util.List;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * A data transport for sequential upload
@@ -36,7 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class SequentialPartObjectTransport implements Transport {
 
-  final private StorageService proxy;
+  final private StorageServiceInterface proxy;
   final private Progress progress;
   final private List<Part> parts;
   final private String objectId;

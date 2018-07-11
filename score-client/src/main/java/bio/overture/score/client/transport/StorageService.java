@@ -17,19 +17,6 @@
  */
 package bio.overture.score.client.transport;
 
-import static com.google.common.base.Preconditions.checkState;
-import static org.springframework.http.HttpMethod.DELETE;
-import static org.springframework.http.HttpMethod.GET;
-import static org.springframework.http.HttpMethod.POST;
-
-import java.io.File;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.net.SocketTimeoutException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.List;
-
 import bio.overture.score.client.config.ClientProperties;
 import bio.overture.score.client.download.DownloadStateStore;
 import bio.overture.score.client.encryption.TokenEncryptionService;
@@ -42,6 +29,13 @@ import bio.overture.score.core.model.ObjectSpecification;
 import bio.overture.score.core.model.Part;
 import bio.overture.score.core.model.UploadProgress;
 import bio.overture.score.core.util.Parts;
+import com.amazonaws.services.s3.Headers;
+import com.amazonaws.services.s3.model.SSEAlgorithm;
+import com.google.common.hash.Hashing;
+import com.google.common.hash.HashingInputStream;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -59,21 +53,25 @@ import org.springframework.web.client.ResponseExtractor;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
-import com.amazonaws.services.s3.Headers;
-import com.amazonaws.services.s3.model.SSEAlgorithm;
-import com.google.common.hash.Hashing;
-import com.google.common.hash.HashingInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.net.SocketTimeoutException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.List;
 
-import lombok.SneakyThrows;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
+import static com.google.common.base.Preconditions.checkState;
+import static org.springframework.http.HttpMethod.DELETE;
+import static org.springframework.http.HttpMethod.GET;
+import static org.springframework.http.HttpMethod.POST;
 
 /**
  * Service responsible for interacting with the remote upload service.
  */
 @Slf4j
 @Service
-public class StorageService {
+public class StorageService implements StorageServiceInterface {
 
   /**
    * Configuration.
@@ -106,7 +104,7 @@ public class StorageService {
   private TokenEncryptionService tokenEncryptionService;
 
 
-  @SneakyThrows
+  @Override @SneakyThrows
   public List<ObjectInfo> listObjects() {
     log.debug("Listing objects...");
     return retry.execute(
@@ -115,13 +113,14 @@ public class StorageService {
             new ParameterizedTypeReference<List<ObjectInfo>>() {}).getBody());
   }
 
-  public UploadProgress getProgress(String objectId, long fileSize) throws IOException {
+  @Override public UploadProgress getProgress(String objectId, long fileSize) throws IOException {
     return retry.execute(
         ctx -> serviceTemplate.exchange(endpoint + "/upload/{object-id}/status?fileSize={file-size}", GET,
             defaultEntity(),
             UploadProgress.class, objectId, fileSize).getBody());
   }
 
+  @Override
   public void downloadPart(DataChannel channel, Part part, String objectId, File outputDir) throws IOException {
     retry.execute(new RetryCallback<Void, IOException>() {
 
@@ -176,7 +175,7 @@ public class StorageService {
     return eTag.replaceAll("^\"|\"$", "");
   }
 
-  public void uploadPart(DataChannel channel, Part part, String objectId, String uploadId) throws IOException {
+  @Override public void uploadPart(DataChannel channel, Part part, String objectId, String uploadId) throws IOException {
     retry.execute(new RetryCallback<Void, IOException>() {
 
       @Override
@@ -226,7 +225,7 @@ public class StorageService {
     });
   }
 
-  public ObjectSpecification initiateUpload(String objectId, long length, boolean overwrite, String md5)
+  @Override public ObjectSpecification initiateUpload(String objectId, long length, boolean overwrite, String md5)
       throws IOException {
     log.debug("Initiating upload, object-id: {} overwrite: {}", objectId, overwrite);
     return retry.execute(ctx -> serviceTemplate.exchange(
@@ -236,6 +235,7 @@ public class StorageService {
         ObjectSpecification.class, objectId, length, overwrite, md5).getBody());
   }
 
+  @Override
   public void finalizeDownload(File outDir, String objectId) throws IOException {
     log.debug("finalizing download, object-id: {}", objectId);
     if (downloadStateStore.canFinalize(outDir, objectId)) {
@@ -245,7 +245,7 @@ public class StorageService {
     }
   }
 
-  public void finalizeUpload(String objectId, String uploadId) throws IOException {
+  @Override public void finalizeUpload(String objectId, String uploadId) throws IOException {
     log.debug("finalizing upload, object-id: {}, upload-id: {}", objectId, uploadId);
     retry.execute(ctx -> {
       serviceTemplate.exchange(endpoint + "/upload/{object-id}?uploadId={upload-id}", HttpMethod.POST, defaultEntity(),
@@ -255,7 +255,7 @@ public class StorageService {
     log.debug("finalizing upload returned");
   }
 
-  public void finalizeUploadPart(String objectId, String uploadId, int partNumber, String md5, String etag,
+  @Override public void finalizeUploadPart(String objectId, String uploadId, int partNumber, String md5, String etag,
       boolean disableChecksum)
       throws IOException {
     log.debug("Finalizing upload part, object-id: {}, upload-id: {}, part-number: {}", objectId, uploadId, partNumber);
@@ -273,7 +273,7 @@ public class StorageService {
     });
   }
 
-  public boolean isObjectExist(String objectId) throws IOException {
+  @Override public boolean isObjectExist(String objectId) throws IOException {
     log.debug("Checking existence on Storage server for object-id: {}", objectId);
     return retry.execute(ctx -> {
       boolean result = serviceTemplate.exchange(endpoint + "/upload/{object-id}",
@@ -284,11 +284,12 @@ public class StorageService {
 
   }
 
+  @Override
   public ObjectSpecification getDownloadSpecification(String objectId) throws IOException {
     return getDownloadSpecification(objectId, 0, -1L);
   }
 
-  public ObjectSpecification getDownloadSpecification(String objectId, long offset, long length) throws IOException {
+  @Override public ObjectSpecification getDownloadSpecification(String objectId, long offset, long length) throws IOException {
     log.debug("Endpoint: {}", endpoint);
     return retry.execute(ctx -> {
       return serviceTemplate.exchange(endpoint + "/download/{object-id}?offset={offset}&length={length}",
@@ -303,6 +304,7 @@ public class StorageService {
    * external clients can use (i.e., curl - something that doesn't understand our parts). The external query parameter
    * is set to true.
    */
+  @Override
   public ObjectSpecification getExternalDownloadSpecification(String objectId, long offset, long length)
       throws IOException {
     log.debug("Endpoint: {}", endpoint);
@@ -313,12 +315,13 @@ public class StorageService {
         ObjectSpecification.class, objectId, offset, length).getBody());
   }
 
+  @Override
   public void deleteDownloadPart(File stateDir, String objectId, Part part) {
     downloadStateStore.deletePart(stateDir, objectId, part);
 
   }
 
-  public void deleteUploadPart(String objectId, String uploadId, Part part) throws IOException {
+  @Override public void deleteUploadPart(String objectId, String uploadId, Part part) throws IOException {
     log.debug("Deleting part for object-id: {}, upload-id: {}, part: {}", objectId, uploadId, part);
     retry.execute(ctx -> {
       serviceTemplate.exchange(
@@ -329,6 +332,7 @@ public class StorageService {
     });
   }
 
+  @Override
   public boolean isDownloadDataRecoverable(File stateDir, String objectId, long fileSize) throws IOException {
     try {
       return (fileSize == downloadStateStore.getObjectSize(stateDir, objectId));
@@ -339,7 +343,7 @@ public class StorageService {
 
   }
 
-  public boolean isUploadDataRecoverable(String objectId, long fileSize) throws IOException {
+  @Override public boolean isUploadDataRecoverable(String objectId, long fileSize) throws IOException {
     log.debug("Recovering upload, object-id: {}", objectId);
     return retry.execute(ctx -> {
       try {
@@ -354,7 +358,7 @@ public class StorageService {
     });
   }
 
-  public String ping() {
+  @Override public String ping() {
     // Get pre-signed URL to retrieve sentinel object from bucket
     try {
       val signedUrl =
