@@ -33,6 +33,10 @@ client:
   ssl:
     custom: false
 
+gen3:
+  keystoreUrl: https://g9xs4f0xy8.execute-api.us-east-1.amazonaws.com/prod/key-store?service=gen3
+  apiUrl: https://data.kidsfirstdrc.org
+
 transport:
   fileFrom: memory
   memory: 1
