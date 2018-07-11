@@ -20,7 +20,7 @@ package bio.overture.score.client.transport;
 import bio.overture.score.client.download.Downloads;
 import bio.overture.score.client.progress.Progress;
 import bio.overture.score.client.progress.ProgressDataChannel;
-import bio.overture.score.client.storage.StorageServiceInterface;
+import bio.overture.score.client.storage.StorageService;
 import bio.overture.score.core.model.DataChannel;
 import bio.overture.score.core.model.Part;
 import com.google.common.base.Preconditions;
@@ -61,7 +61,7 @@ public class ParallelPartObjectTransport implements Transport {
   private static final int MIN_WORKER = 1;
   private static final long MIN_MEMORY = 1024L * 1024L;
 
-  final protected StorageServiceInterface proxy;
+  final protected StorageService proxy;
   final protected int nThreads;
   final protected int queueSize;
   final protected Progress progress;

@@ -17,17 +17,16 @@
  */
 package bio.overture.score.client.config;
 
+import bio.overture.score.client.storage.StorageService;
 import bio.overture.score.client.transport.MemoryMappedParallelPartObjectTransport;
 import bio.overture.score.client.transport.ParallelPartObjectTransport;
 import bio.overture.score.client.transport.PipedParallelPartObjectTransport;
 import bio.overture.score.client.transport.SequentialPartObjectTransport;
-import bio.overture.score.client.storage.StorageService;
 import bio.overture.score.client.transport.Transport;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * Configurations for data transport
