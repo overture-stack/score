@@ -17,6 +17,15 @@
  */
 package bio.overture.score.client.command;
 
+import bio.overture.score.client.cli.ConverterFactory.OutputFormatConverter;
+import bio.overture.score.client.cli.ConverterFactory.OutputTypeConverter;
+import bio.overture.score.client.cli.CreatableDirectoryValidator;
+import bio.overture.score.client.cli.FileValidator;
+import bio.overture.score.client.cli.ObjectIdValidator;
+import bio.overture.score.client.download.DownloadService;
+import bio.overture.score.client.manifest.DownloadManifest;
+import bio.overture.score.client.manifest.ManifestResource;
+import bio.overture.score.client.manifest.ManifestService;
 import bio.overture.score.client.metadata.Entity;
 import bio.overture.score.client.metadata.MetadataService;
 import bio.overture.score.client.slicing.SamFileBuilder;
@@ -36,19 +45,11 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.icgc.dcc.common.core.util.VersionUtils;
-import bio.overture.score.client.cli.ConverterFactory.OutputFormatConverter;
-import bio.overture.score.client.cli.ConverterFactory.OutputTypeConverter;
-import bio.overture.score.client.cli.CreatableDirectoryValidator;
-import bio.overture.score.client.cli.FileValidator;
-import bio.overture.score.client.cli.ObjectIdValidator;
-import bio.overture.score.client.download.DownloadService;
-import bio.overture.score.client.manifest.DownloadManifest;
-import bio.overture.score.client.manifest.ManifestResource;
-import bio.overture.score.client.manifest.ManifestService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
@@ -57,12 +58,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static java.util.stream.Collectors.toList;
 import static bio.overture.score.client.cli.Parameters.checkParameter;
+import static java.util.stream.Collectors.toList;
 
 @Slf4j
 @Component
 @Parameters(separators = "=", commandDescription = "Locally store/display some or all of a remote SAM/BAM file object")
+@Profile("!gen3")
 public class ViewCommand extends RepositoryAccessCommand {
 
   public enum OutputFormat {
