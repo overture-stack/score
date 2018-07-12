@@ -34,9 +34,12 @@ client:
     custom: false
 
 gen3:
-  keystoreUrl: https://g9xs4f0xy8.execute-api.us-east-1.amazonaws.com/prod/key-store?service=gen3
-  apiUrl: https://data.kidsfirstdrc.org
-  minPartSize: 1048576
+  keystore:
+    url: https://g9xs4f0xy8.execute-api.us-east-1.amazonaws.com/prod/key-store?service=gen3
+  download:
+    url: https://data.kidsfirstdrc.org
+    partSize: 1073741824
+    expiration: 86400
 
 transport:
   fileFrom: memory

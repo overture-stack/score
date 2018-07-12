@@ -18,8 +18,8 @@ public class StorageConfig {
   @Value("${storage.url}")
   private String endpoint;
 
-  @Value("${gen3.minPartSize}")
-  private int minPartSize;
+  @Value("${gen3.download.partSize}")
+  private int partSize;
 
   @Autowired
   private DownloadStateStore downloadStateStore;
@@ -33,7 +33,7 @@ public class StorageConfig {
 
   @Bean
   public SimplePartCalculator partCalculator(){
-    return  new SimplePartCalculator(minPartSize);
+    return  new SimplePartCalculator(partSize);
   }
 
 }

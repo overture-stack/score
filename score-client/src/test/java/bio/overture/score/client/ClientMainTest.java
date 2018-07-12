@@ -17,8 +17,6 @@
  */
 package bio.overture.score.client;
 
-import bio.overture.score.client.storage.Gen3StorageService;
-import bio.overture.score.core.model.Part;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.junit.Ignore;
@@ -48,25 +46,12 @@ public class ClientMainTest extends AbstractClientMainTest {
   }
 
   @Test
-  public void testRr(){
-    val url = "https://kf-study-us-east-1-prd-sd-bhjxbdqk.s3.amazonaws.com/source/fastq/RNA_468928_7316-1778.fq.gz?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAIZAHWHQWDB7XV4RA%2F20180711%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20180711T214803Z&X-Amz-Expires=3600&X-Amz-SignedHeaders=host&user_id=93&username=RTISMA&X-Amz-Signature=16f782cdc50a87abafbddd1f930c929f96133d7563eac50d82b53d33fb18dddf";
-    val offset = 0;
-    val length = 30*1024*1024*1024L;
-    val part = Part.builder()
-        .partNumber(0)
-        .partSize(length)
-        .offset(offset)
-        .url(url)
-        .build();
-    val md5 = Gen3StorageService.getPartMd5(part);
-    log.info("sdf");
-
-  }
-  @Test
   public void testRob() throws Exception {
-    executeMain("--profile",  "gen3", "info");
+    val objectId= "06736a0b-9158-43c9-8c75-01f52bde5d14";//"6bfde0ad-6780-4bee-a313-194239759400";
+    executeMain("--profile",  "gen3", "download", "--object-id", objectId, "--output-dir", "something", "--verify-connection=false", "--force");
+//    executeMain("--profile",  "gen3", "help", "download");
 
-    assertTrue(getExitCode() == 0);
+    assertTrue(getExitCode() == 1);
 
 //    assertTrue(getOutput().contains("One of --object-id, --input-file or --manifest must be specified"));
   }

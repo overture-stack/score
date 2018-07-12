@@ -98,7 +98,7 @@ public class ScoreStorageService extends AbstractStorageService {
       @Qualifier("clientVersion") @NonNull String clientVersion,
       @NonNull ClientProperties properties,
       @NonNull TokenEncryptionService tokenEncryptionService ) {
-    super(endpoint, downloadStateStore, dataTemplate, retry);
+    super(downloadStateStore, dataTemplate, retry);
     this.dataTemplate = dataTemplate;
     this.retry = retry;
     this.serviceTemplate = serviceTemplate;

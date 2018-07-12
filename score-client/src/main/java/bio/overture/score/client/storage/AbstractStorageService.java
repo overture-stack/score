@@ -30,7 +30,6 @@ import static com.google.common.base.Preconditions.checkState;
 public abstract class AbstractStorageService implements StorageService {
 
   private static final String ICGC_TOKEN_KEY = "X-ICGC-TOKEN";
-  private final String endpoint;
   private final DownloadStateStore downloadStateStore;
   private final RestTemplate dataTemplate;
   private final RetryTemplate retry;

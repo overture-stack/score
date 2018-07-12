@@ -8,14 +8,18 @@ import lombok.SneakyThrows;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.retry.support.RetryTemplate;
+import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
+import java.net.HttpURLConnection;
 import java.net.URI;
+import java.net.URL;
 
 import static com.google.common.base.Preconditions.checkState;
 import static java.util.Objects.isNull;
@@ -23,21 +27,27 @@ import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 import static org.springframework.http.HttpHeaders.CONTENT_LENGTH;
 
 @Builder
+@Component
+@Profile("gen3")
 public class Gen3Client {
 
+  private static final long MIN_EXPIRATION = 3600;
   private final String jwt;
   private final String keyStoreUrl;
   private final String apiUrl;
+  private final long urlExpiration;
   private final RetryTemplate retry;
 
   public Gen3Client(
       @Value("${client.accessToken}") @NonNull String jwt,
-    @Value("${gen3.keystoreUrl}") @NonNull String keyStoreUrl,
-    @Value("gen3.apiUrl") @NonNull String apiUrl,
+      @Value("${gen3.keystore.url}") @NonNull String keyStoreUrl,
+      @Value("${gen3.download.url}") @NonNull String apiUrl,
+      @Value("${gen3.download.expiration}") long urlExpiration,
       @Autowired RetryTemplate retry ){
     this.jwt = jwt;
     this.apiUrl = apiUrl;
     this.keyStoreUrl = keyStoreUrl;
+    this.urlExpiration = Math.max(urlExpiration, MIN_EXPIRATION);
     this.retry = retry;
   }
 
@@ -48,26 +58,28 @@ public class Gen3Client {
     return getGen3AccessToken(key).getAccessToken();
   }
 
+  @SneakyThrows
+  private static long peekResponseContentSize(String url){
+    val u = new URL(url);
+    val conn = (HttpURLConnection)u.openConnection();
+    val contentLength = conn.getContentLengthLong();
+    checkState(contentLength != -1,
+        "The following response does not contain the '%s' header: %s",
+        CONTENT_LENGTH, conn.getHeaderFields());
+    checkState(contentLength > 0,
+        "The following response contains a content length of 0: %s", conn.getHeaderFields());
+    return contentLength;
+  }
+
   public PresignedUrl generatePresignedUrl(@NonNull String objectId){
     val accessToken = generateAccessToken();
     val response = getResponse(UrlResponse.class, accessToken, getGen3DownloadEndpoint(objectId));
     val url = response.getBody().getUrl();
-    val size = parseContentLength(response);
+    val size = peekResponseContentSize(url);
     return PresignedUrl.builder()
         .size(size)
         .url(url)
         .build();
-  }
-
-
-  private static long parseContentLength(ResponseEntity<?> response){
-    val contentLength = response.getHeaders().getContentLength();
-    checkState(contentLength != -1,
-        "The following response does not contain the '%s' header: %s",
-        CONTENT_LENGTH, response );
-    checkState(contentLength > 0,
-        "The following response contains a content length of 0: %s", response);
-    return contentLength;
   }
 
   private AccessTokenResponse getGen3AccessToken(Gen3ApiKeyResponse gen3ApiKeyResponse){
@@ -76,7 +88,7 @@ public class Gen3Client {
 
   //`curl -XGET -H "Authorization: Bearer $ACCESS_TOKEN" "$GEN3_API_ROOT/user/data/download/$LATEST_DID"`
   private String getGen3DownloadEndpoint(String objectId){
-    return String.format("%s/user/data/download/%s", apiUrl, objectId );
+    return String.format("%s/user/data/download/%s?expires_in=%s", apiUrl, objectId, urlExpiration);
   }
 
   private String getGen3AccessTokenEndpoint(){

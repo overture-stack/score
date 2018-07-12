@@ -17,34 +17,6 @@
  */
 package bio.overture.score.client.command;
 
-import static java.util.stream.Collectors.toList;
-import static org.icgc.dcc.common.core.util.Formats.formatBytes;
-import static bio.overture.score.client.cli.Parameters.checkParameter;
-
-import bio.overture.score.client.download.DownloadRequest;
-import bio.overture.score.client.download.DownloadService;
-import bio.overture.score.client.manifest.ManifestResource;
-import bio.overture.score.client.manifest.ManifestService;
-import bio.overture.score.client.metadata.Entity;
-import bio.overture.score.client.metadata.MetadataService;
-import lombok.SneakyThrows;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
-
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
-import bio.overture.score.client.download.DownloadRequest;
-import bio.overture.score.client.download.DownloadService;
-import bio.overture.score.client.manifest.ManifestResource;
-import bio.overture.score.client.manifest.ManifestService;
-import bio.overture.score.client.metadata.Entity;
-import bio.overture.score.client.metadata.MetadataService;
 import bio.overture.score.client.cli.ConverterFactory.OutputLayoutConverter;
 import bio.overture.score.client.cli.CreatableDirectoryValidator;
 import bio.overture.score.client.cli.ObjectIdListValidator;
@@ -54,13 +26,27 @@ import bio.overture.score.client.manifest.ManifestResource;
 import bio.overture.score.client.manifest.ManifestService;
 import bio.overture.score.client.metadata.Entity;
 import bio.overture.score.client.metadata.MetadataService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import com.google.common.collect.Multimaps;
 import com.google.common.io.Files;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import static bio.overture.score.client.cli.Parameters.checkParameter;
+import static java.util.stream.Collectors.toList;
+import static org.icgc.dcc.common.core.util.Formats.formatBytes;
 
 @Slf4j
 @Component
@@ -146,6 +132,19 @@ public class DownloadCommand extends RepositoryAccessCommand {
   private int downloadObjects(List<String> objectIds) throws IOException {
     // Entities are defined in Meta service
     val entities = resolveEntities(objectIds);
+
+    // Hack for  testing GEN3 downloading without metadata service
+//    val entities = objectIds.stream()
+//        .map(x -> {
+//          Entity entity = new Entity();
+//          entity.setId(x);
+//          entity.setFileName(x+".bam");
+//          entity.setGnosId(x);
+//          entity.setAccess("controlled");
+//          entity.setProjectCode(x+"proj");
+//          return entity;
+//        })
+//        .collect(toImmutableSet());
 
     if (!verifyLocalAvailableSpace(entities)) {
       return FAILURE_STATUS;

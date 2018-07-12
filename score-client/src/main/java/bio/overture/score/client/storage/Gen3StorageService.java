@@ -15,7 +15,6 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.retry.support.RetryTemplate;
 import org.springframework.stereotype.Service;
@@ -43,14 +42,13 @@ public class Gen3StorageService extends AbstractStorageService{
 
   @Autowired
   public Gen3StorageService(
-      @Value("${storage.url}") @NonNull String endpoint,
       @NonNull DownloadStateStore downloadStateStore,
       @Qualifier("pingTemplate") @NonNull RestTemplate dataTemplate,
       @NonNull RetryTemplate retry,
       SimplePartCalculator partCalculator,
       @NonNull Gen3Client gen3Client
   ) {
-    super(endpoint, downloadStateStore, dataTemplate, retry);
+    super(downloadStateStore, dataTemplate, retry);
     this.gen3Client = gen3Client;
     this.partCalculator = partCalculator;
     log.info("*****************LOADED GEN3 STORAGE SERVICE");
@@ -90,7 +88,12 @@ public class Gen3StorageService extends AbstractStorageService{
     checkArgument(offset + length < totalSize,
         "The sum of: offset(%s) + length(%s) = %s must be less than the total size (%s)",
         offset, length, offset+length, totalSize );
-    val parts = partCalculator.divide(offset, length);
+    List<Part> parts;
+    if (offset == 0 && length < 0){
+      parts = partCalculator.divide(totalSize);
+    } else {
+      parts = partCalculator.divide(offset, length);
+    }
     parts.forEach(x -> {
       x.setMd5(null); // Unobtainable
       x.setSourceMd5(null); // useless, since we do not have the md5 values of the initial part uploads
