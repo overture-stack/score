@@ -86,7 +86,6 @@ public class Gen3Client {
     return post(AccessTokenResponse.class, jwt, getGen3AccessTokenEndpoint(), gen3ApiKeyResponse);
   }
 
-  //`curl -XGET -H "Authorization: Bearer $ACCESS_TOKEN" "$GEN3_API_ROOT/user/data/download/$LATEST_DID"`
   private String getGen3DownloadEndpoint(String objectId){
     return String.format("%s/user/data/download/%s?expires_in=%s", apiUrl, objectId, urlExpiration);
   }

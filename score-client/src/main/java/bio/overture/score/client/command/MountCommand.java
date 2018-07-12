@@ -44,6 +44,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
@@ -65,6 +66,7 @@ import static java.util.stream.Collectors.toSet;
 @Slf4j
 @Component
 @Parameters(separators = "=", commandDescription = "Mount a read-only FUSE file system view of the remote storage repository")
+@Profile("!gen3")
 public class MountCommand extends RepositoryAccessCommand {
 
   /**

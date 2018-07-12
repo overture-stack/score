@@ -17,34 +17,55 @@
  */
 package bio.overture.score.client.metadata;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.val;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Profile;
+import org.springframework.stereotype.Service;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import lombok.NoArgsConstructor;
+import java.util.List;
+import java.util.Optional;
 
-@Data
-@Builder
-@AllArgsConstructor
-@NoArgsConstructor
-@JsonIgnoreProperties(ignoreUnknown = true)
-@EqualsAndHashCode(of = "id")
-public class Entity {
+@Service
+@Profile("!gen3")
+public class LegacyMetadataService implements MetadataService {
 
-  /**
-   * Uniqueness.
-   */
-  String id;
+  @Autowired
+  private LegacyMetadataClient legacyMetadataClient;
 
-  /**
-   * Metadata.
-   */
-  String fileName;
-  String gnosId;
-  long createdTime;
-  String projectCode;
-  String access;
+  public List<Entity> getEntities(String... fields) {
+    return legacyMetadataClient.findEntities(fields);
+  }
+
+  public Entity getEntity(String objectId) {
+    return legacyMetadataClient.findEntity(objectId);
+  }
+
+  public Optional<Entity> getIndexEntity(Entity entity) {
+    val entities = legacyMetadataClient.findEntitiesByGnosId(entity.getGnosId());
+    return entities
+        .stream()
+        .filter(e -> isIndexFile(e, entity.getFileName()))
+        .findFirst();
+  }
+
+  private static boolean isIndexFile(Entity e, String fileName) {
+    return isBaiFile(e, fileName) || isTbiFile(e, fileName) || isIdxFile(e, fileName);
+  }
+
+  private static boolean isTbiFile(Entity e, String fileName) {
+    return isMatch(e, fileName + ".tbi");
+  }
+
+  private static boolean isIdxFile(Entity e, String fileName) {
+    return isMatch(e, fileName + ".idx");
+  }
+
+  private static boolean isBaiFile(Entity e, String fileName) {
+    return isMatch(e, fileName + ".bai");
+  }
+
+  private static boolean isMatch(Entity e, String indexFileName) {
+    return e.getFileName().compareToIgnoreCase(indexFileName) == 0;
+  }
 
 }

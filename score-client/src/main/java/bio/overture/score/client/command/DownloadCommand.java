@@ -133,19 +133,6 @@ public class DownloadCommand extends RepositoryAccessCommand {
     // Entities are defined in Meta service
     val entities = resolveEntities(objectIds);
 
-    // Hack for  testing GEN3 downloading without metadata service
-//    val entities = objectIds.stream()
-//        .map(x -> {
-//          Entity entity = new Entity();
-//          entity.setId(x);
-//          entity.setFileName(x+".bam");
-//          entity.setGnosId(x);
-//          entity.setAccess("controlled");
-//          entity.setProjectCode(x+"proj");
-//          return entity;
-//        })
-//        .collect(toImmutableSet());
-
     if (!verifyLocalAvailableSpace(entities)) {
       return FAILURE_STATUS;
     }
