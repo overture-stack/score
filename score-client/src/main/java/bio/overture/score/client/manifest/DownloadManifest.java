@@ -19,7 +19,6 @@ package bio.overture.score.client.manifest;
 
 import lombok.Builder;
 import lombok.NonNull;
-import lombok.Singular;
 import lombok.Value;
 
 import java.util.List;
@@ -29,11 +28,9 @@ import java.util.List;
  * UniformmetadataJSONdocumentforICGCDataRepositories-Manifestfileformatfordownloader
  */
 @Value
-@Builder
 public class DownloadManifest {
 
   @NonNull
-  @Singular
   private final List<ManifestEntry> entries;
 
   @Value

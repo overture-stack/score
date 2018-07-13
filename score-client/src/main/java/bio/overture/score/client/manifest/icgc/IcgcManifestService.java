@@ -15,8 +15,12 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package bio.overture.score.client.manifest;
+package bio.overture.score.client.manifest.icgc;
 
+import bio.overture.score.client.manifest.DownloadManifest;
+import bio.overture.score.client.manifest.ManifestResource;
+import bio.overture.score.client.manifest.ManifestService;
+import bio.overture.score.client.manifest.UploadManifest;
 import com.google.common.io.Resources;
 import lombok.SneakyThrows;
 import lombok.val;

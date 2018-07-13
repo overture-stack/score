@@ -52,7 +52,7 @@ public class ClientMainTest extends AbstractClientMainTest {
 //    executeMain("--profile",  "gen3", "download", "--object-id", objectId, "--output-dir", "something", "--verify-connection=false");
 //    executeMain("--profile",  "gen3", "manifest" ,"--manifest", manifestId);
 //    executeMain("--profile",  "gen3", "download" ,"--manifest", manifestId, "--output-dir", "something2", "--verify-connection=false");
-        executeMain("--profile",  "gen3", "download" ,"--manifest", manifestId, "--output-dir", "something2", "--verify-connection=false", "--output-layout", "id");
+        executeMain("--profile",  "gen3", "download" ,"--manifest", manifestId, "--output-dir", "something2", "--verify-connection=false", "--output-layout", "filename");
 //    To do: change template query to include all columns include studyCode and filename
 //        executeMain("--profile",  "gen3", "help" ,"download");
 

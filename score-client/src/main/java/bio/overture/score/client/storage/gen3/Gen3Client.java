@@ -1,4 +1,4 @@
-package bio.overture.score.client.storage;
+package bio.overture.score.client.storage.gen3;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;

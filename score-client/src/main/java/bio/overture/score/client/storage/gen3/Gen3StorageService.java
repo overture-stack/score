@@ -1,7 +1,8 @@
-package bio.overture.score.client.storage;
+package bio.overture.score.client.storage.gen3;
 
 import bio.overture.score.client.download.DownloadStateStore;
-import bio.overture.score.client.storage.Gen3Client.PresignedUrl;
+import bio.overture.score.client.storage.AbstractStorageService;
+import bio.overture.score.client.storage.gen3.Gen3Client.PresignedUrl;
 import bio.overture.score.core.model.DataChannel;
 import bio.overture.score.core.model.ObjectInfo;
 import bio.overture.score.core.model.ObjectSpecification;
@@ -29,7 +30,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 @Service
 @Profile("gen3")
-public class Gen3StorageService extends AbstractStorageService{
+public class Gen3StorageService extends AbstractStorageService {
 
   private static final  String NOT_IMPLEMENTED_MESSAGE = "Not implemented for Gen3 Storage";
 

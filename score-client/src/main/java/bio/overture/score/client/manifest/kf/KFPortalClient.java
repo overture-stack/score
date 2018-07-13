@@ -1,6 +1,6 @@
-package bio.overture.score.client.manifest;
+package bio.overture.score.client.manifest.kf;
 
-import bio.overture.score.client.manifest.KFParser.KFEntity;
+import bio.overture.score.client.manifest.kf.KFParser.KFEntity;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Data;
 import lombok.NonNull;
@@ -22,7 +22,7 @@ import java.net.URI;
 import java.util.Optional;
 import java.util.Set;
 
-import static bio.overture.score.client.manifest.KFParser.readEntries;
+import static bio.overture.score.client.manifest.kf.KFParser.readEntries;
 import static com.google.common.base.Preconditions.checkState;
 import static org.springframework.http.HttpMethod.POST;
 

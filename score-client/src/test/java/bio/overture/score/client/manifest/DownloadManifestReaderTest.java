@@ -24,6 +24,7 @@ import static org.junit.Assert.assertThat;
 import java.io.File;
 
 import bio.overture.score.client.manifest.DownloadManifest.ManifestEntry;
+import bio.overture.score.client.manifest.icgc.DownloadManifestReader;
 import org.junit.Test;
 
 import lombok.val;

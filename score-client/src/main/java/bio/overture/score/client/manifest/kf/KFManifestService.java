@@ -1,7 +1,11 @@
-package bio.overture.score.client.manifest;
+package bio.overture.score.client.manifest.kf;
 
+import bio.overture.score.client.manifest.DownloadManifest;
 import bio.overture.score.client.manifest.DownloadManifest.ManifestEntry;
-import bio.overture.score.client.manifest.KFParser.KFEntity;
+import bio.overture.score.client.manifest.ManifestResource;
+import bio.overture.score.client.manifest.ManifestService;
+import bio.overture.score.client.manifest.UploadManifest;
+import bio.overture.score.client.manifest.kf.KFParser.KFEntity;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
@@ -14,12 +18,12 @@ import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 
 @Service
 @Profile("gen3")
-public class Gen3ManifestService implements ManifestService{
+public class KFManifestService implements ManifestService {
 
   private final KFPortalClient kfPortalClient;
 
   @Autowired
-  public Gen3ManifestService(KFPortalClient kfPortalClient) {
+  public KFManifestService(KFPortalClient kfPortalClient) {
     this.kfPortalClient = kfPortalClient;
   }
 
@@ -50,9 +54,7 @@ public class Gen3ManifestService implements ManifestService{
    val manifestEntries =  entities.stream()
         .map(this::convertToManifestEntry)
         .collect(toImmutableList());
-    return DownloadManifest.builder()
-        .entries(manifestEntries)
-        .build();
+    return new DownloadManifest(manifestEntries);
   }
 
   private ManifestEntry convertToManifestEntry(KFEntity entity){

@@ -1,4 +1,4 @@
-package bio.overture.score.client.manifest;
+package bio.overture.score.client.manifest.kf;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.collect.ImmutableSet;
@@ -12,10 +12,13 @@ import java.util.Optional;
 import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static lombok.AccessLevel.PRIVATE;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableSet;
 import static org.icgc.dcc.common.core.util.stream.Streams.stream;
 
+@NoArgsConstructor(access = PRIVATE)
 public class KFParser {
+
   private static final String DATA = "data";
   private static final String FILE= "file";
   private static final String HITS = "hits";
@@ -159,6 +162,7 @@ public class KFParser {
         )
         .collect(toImmutableSet());
   }
+
   private static Optional<JsonNode> optionalGet(JsonNode root, String key){
     if (!root.has(key) || root.path(key).isNull() ){
       return Optional.empty();
@@ -197,6 +201,5 @@ public class KFParser {
     private String studyShortName;
     private String studyId;
   }
-
 
 }

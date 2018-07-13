@@ -15,7 +15,7 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package bio.overture.score.client.storage;
+package bio.overture.score.client.storage.score;
 
 import bio.overture.score.client.config.ClientProperties;
 import bio.overture.score.client.download.DownloadStateStore;
@@ -23,6 +23,7 @@ import bio.overture.score.client.encryption.TokenEncryptionService;
 import bio.overture.score.client.exception.NotResumableException;
 import bio.overture.score.client.exception.NotRetryableException;
 import bio.overture.score.client.exception.RetryableException;
+import bio.overture.score.client.storage.AbstractStorageService;
 import bio.overture.score.core.model.DataChannel;
 import bio.overture.score.core.model.ObjectInfo;
 import bio.overture.score.core.model.ObjectSpecification;
@@ -68,7 +69,7 @@ import static org.springframework.http.HttpMethod.POST;
  */
 @Slf4j
 @Service
-@Profile({"dev", "collab", "aws", "default"})
+@Profile({"dev", "collab", "aws", "default", "!gen3"})
 public class ScoreStorageService extends AbstractStorageService {
 
   /**

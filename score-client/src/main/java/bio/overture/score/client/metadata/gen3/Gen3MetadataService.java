@@ -1,8 +1,11 @@
-package bio.overture.score.client.metadata;
+package bio.overture.score.client.metadata.gen3;
 
-import bio.overture.score.client.manifest.KFParser.KFEntity;
-import bio.overture.score.client.manifest.KFParser.KFParticipant;
-import bio.overture.score.client.manifest.KFPortalClient;
+import bio.overture.score.client.manifest.kf.KFParser.KFEntity;
+import bio.overture.score.client.manifest.kf.KFParser.KFParticipant;
+import bio.overture.score.client.manifest.kf.KFPortalClient;
+import bio.overture.score.client.metadata.Entity;
+import bio.overture.score.client.metadata.EntityNotFoundException;
+import bio.overture.score.client.metadata.MetadataService;
 import com.google.common.collect.ImmutableList;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
