@@ -1,6 +1,7 @@
 package bio.overture.score.client.manifest;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.google.common.collect.ImmutableSet;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -31,22 +32,33 @@ public class KFParser {
   private static final String STUDY = "study";
   private static final String SHORT_NAME= "short_name";
   private static final String CONTROLLED_ACCESS = "controlled_access";
+  private static final String EXTERNAL_ID = "external_id";
+  private static final String FILE_NAME = "file_name";
+  private static final String TOTAL = "total";
+  private static final Set<KFEntity> EMPTY_KF_ENTITY_SET = ImmutableSet.of();
 
   public static Set<KFEntity> readEntries(JsonNode root){
-    val edgesNode = getEdgesNode(getHitsNode(getFileNode(getDataNode(root))));
-    return stream(edgesNode)
-        .map(KFParser::getNodeNode)
-        .map(x -> KFEntity.builder()
-            .controlledAccess(isControlledAccess(x))
-            .participants(readParticipants(getParticipantsNode(x)))
-            .fileId(readFileId(x))
-            .dataType(readDataType(x))
-            .fileFormat(readFileFormat(x))
-            .size(readSize(x))
-            .latestDid(readLatestDid(x))
-            .id(readId(x))
-            .build()
-        ).collect(toImmutableSet());
+    val fileNode = getFileNode(getDataNode(root));
+    val totalHits = readFileTotal(fileNode);
+    if (totalHits > 0){
+      val edgesNode = getEdgesNode(getHitsNode(fileNode));
+      return stream(edgesNode)
+          .map(KFParser::getNodeNode)
+          .map(x -> KFEntity.builder()
+              .controlledAccess(isControlledAccess(x))
+              .participants(readParticipants(getParticipantsNode(x)))
+              .fileId(readFileId(x))
+              .fileName(readFileName(x))
+              .dataType(readDataType(x))
+              .fileFormat(readFileFormat(x))
+              .size(readSize(x))
+              .latestDid(readLatestDid(x))
+              .id(readId(x))
+              .build()
+          ).collect(toImmutableSet());
+    } else {
+      return EMPTY_KF_ENTITY_SET;
+    }
   }
 
   private static JsonNode getDataNode(JsonNode root){
@@ -60,6 +72,11 @@ public class KFParser {
   private static JsonNode getHitsNode(JsonNode root){
     return requiredGet(root, HITS);
   }
+
+  private static JsonNode getHitsTotal(JsonNode hits) {
+    return requiredGet(hits, TOTAL);
+  }
+
 
   private static JsonNode getEdgesNode(JsonNode root){
     return requiredGet(root, EDGES);
@@ -75,6 +92,14 @@ public class KFParser {
 
   private static String readFileId(JsonNode node){
     return requiredGet(node, KF_ID).textValue();
+  }
+
+  private static long readFileTotal(JsonNode file){
+    return getHitsTotal(getHitsNode(file)).longValue();
+  }
+
+  private static String readFileName(JsonNode node){
+    return requiredGet(node, FILE_NAME).textValue();
   }
 
   private static String readDataType(JsonNode node){
@@ -105,8 +130,16 @@ public class KFParser {
     return requiredGet(node, IS_PROBAND).booleanValue();
   }
 
-  private static String readShortStudy(JsonNode node){
-    return requiredGet(requiredGet(node, STUDY), SHORT_NAME).textValue();
+  private static JsonNode getStudyNode(JsonNode node){
+    return requiredGet(node, STUDY);
+  }
+
+  private static String readStudyShortName(JsonNode node){
+    return requiredGet(node, SHORT_NAME).textValue();
+  }
+
+  private static String readStudyStudyId(JsonNode node){
+    return requiredGet(node, EXTERNAL_ID).textValue();
   }
 
   private static JsonNode getParticipantsNode(JsonNode node){
@@ -120,7 +153,8 @@ public class KFParser {
         .map(x -> KFParticipant.builder()
             .participantId(readParticipantId(x))
             .proband(isProband(x))
-            .studyShortName(readShortStudy(x))
+            .studyShortName(readStudyShortName(getStudyNode(x)))
+            .studyId(readStudyStudyId(getStudyNode(x)))
             .build()
         )
         .collect(toImmutableSet());
@@ -145,6 +179,7 @@ public class KFParser {
     private boolean controlledAccess;
     private Set<KFParticipant> participants;
     private String fileId;
+    private String fileName;
     private String dataType;
     private String fileFormat;
     private long size;
@@ -160,6 +195,7 @@ public class KFParser {
     private String participantId;
     private boolean proband;
     private String studyShortName;
+    private String studyId;
   }
 
 

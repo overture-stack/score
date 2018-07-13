@@ -6,12 +6,21 @@
 			"op": "and",
 			"content": [
 				{
-					"op": "in",
+					"op": "filter",
 					"content": {
-						"field": "kf_id",
-						"value": [
-							"set_id:[(${manifestId})]"
-						]
+						"fields": [
+							"kf_id",
+							"file_name",
+							"participants.kf_id",
+							"participants.study.short_name",
+							"participants.study.external_id",
+							"data_type",
+							"file_format",
+
+							"participants.family_id",
+							"latest_did"
+						],
+						"value": "[(${objectId})]"
 					}
 				}
 			]

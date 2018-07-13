@@ -2,7 +2,6 @@ package bio.overture.score.client.manifest;
 
 import bio.overture.score.client.manifest.DownloadManifest.ManifestEntry;
 import bio.overture.score.client.manifest.KFParser.KFEntity;
-import bio.overture.score.client.manifest.KFParser.KFParticipant;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
@@ -32,10 +31,10 @@ public class Gen3ManifestService implements ManifestService{
   @Override
   public DownloadManifest getDownloadManifest(ManifestResource resource) {
     if (resource.getType() == ManifestResource.Type.ID){
-      val entities = kfPortalClient.getEntitiesFromManifest(resource.getValue());
+      val entities = kfPortalClient.findEntitiesFromManifest(resource.getValue());
       return convertToDownloadManifest(entities);
     } else if (resource.getType() == ManifestResource.Type.FILE){
-      return null;// temproary, fill in dummy download manifest with the minimum amount of information to do a download. If have time, use KFPortalClient.getEntity(String latest_did) to create a DownloadManifest that contains one entry;
+      return null;// temproary, fill in dummy download manifest with the minimum amount of information to do a download. If have time, use KFPortalClient.findEntity(String latest_did) to create a DownloadManifest that contains one entry;
     } else {
       throw new IllegalStateException(
           format("The ManifestResource type '%s' is not supported", resource.getType()));
@@ -57,22 +56,21 @@ public class Gen3ManifestService implements ManifestService{
   }
 
   private ManifestEntry convertToManifestEntry(KFEntity entity){
-    return ManifestEntry.builder()
-        .donorId(entity.getParticipants()
-            .stream()
-            .findFirst()
-            .map(KFParticipant::getParticipantId)
-            .orElse(null))
+    return entity.getParticipants().stream()
+        .findFirst()
+        .map(x -> ManifestEntry.builder()
+            .donorId(x.getParticipantId())
+            .projectId(x.getStudyId()))
+        .orElse(ManifestEntry.builder())
         .fileFormat(entity.getFileFormat())
         .fileId(entity.getFileId())
         .fileMd5sum(null)
-        .fileName(null) //TODO, fix the query to provide this
+        .fileName(entity.getFileName())
         .fileUuid(entity.getLatestDid())
         .fileSize(Long.toString(entity.getSize()))
         .indexFileUuid(null)
-        .projectId(null ) //TODO, fix this. is this the projectCode
         .repoCode(null)
-        .study(null) //TODO, fix this.shold this be PCAWG or none?
+        .study(null)
         .build();
   }
 

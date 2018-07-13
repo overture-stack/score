@@ -1,33 +1,61 @@
 package bio.overture.score.client.metadata;
 
+import bio.overture.score.client.manifest.KFParser.KFEntity;
+import bio.overture.score.client.manifest.KFParser.KFParticipant;
+import bio.overture.score.client.manifest.KFPortalClient;
 import com.google.common.collect.ImmutableList;
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
 
+import static java.lang.String.format;
+
 @Slf4j
 @Service
 @Profile("gen3")
 public class Gen3MetadataService implements MetadataService {
   private static final List<Entity> EMPTY_LIST = ImmutableList.<Entity>of();
+  private static final String CONTROLLED = "controlled";
+  private static final String OPEN= "open";
+  private static final String DEFAULT_BUNDLE = "unknown_bundle";
+
+  private final KFPortalClient kfPortalClient;
+
+  @Autowired
+  public Gen3MetadataService(@NonNull KFPortalClient kfPortalClient) {
+    this.kfPortalClient = kfPortalClient;
+  }
 
   @Override public List<Entity> getEntities(String... fields) {
     return EMPTY_LIST;
   }
 
   @Override public Entity getEntity(String objectId) {
-    log.warn("The 'getEntity' method in '{}' is not correctly implemented. This is just temporary to get Gen3 downloading", getClass().getCanonicalName());
+    val result = kfPortalClient.findEntity(objectId);
+    val kfEntity = result.orElseThrow(
+        () -> new EntityNotFoundException(format("The Gen3 entity with objectId '%s' does not exist", objectId))
+    );
     return Entity.builder()
-        .gnosId(null)
-        .access(null)
+        .gnosId(kfEntity.getParticipants().stream().map(KFParticipant::getParticipantId).findFirst().orElse(DEFAULT_BUNDLE))
+        .access(resolveAccess(kfEntity) )
         .createdTime(System.currentTimeMillis())
-        .fileName(objectId)
+        .fileName(kfEntity.getFileName())
         .id(objectId)
-        .projectCode(null)
+        .projectCode(kfEntity.getParticipants().stream()
+            .findFirst()
+            .map(KFParticipant::getStudyId)
+            .orElse(null))
         .build();
+  }
+
+  private static String resolveAccess(KFEntity kfEntity){
+    return kfEntity.isControlledAccess() ? CONTROLLED : OPEN;
   }
 
   @Override public Optional<Entity> getIndexEntity(Entity entity) {
