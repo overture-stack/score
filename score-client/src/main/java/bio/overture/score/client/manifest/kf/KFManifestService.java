@@ -5,7 +5,6 @@ import bio.overture.score.client.manifest.DownloadManifest.ManifestEntry;
 import bio.overture.score.client.manifest.ManifestResource;
 import bio.overture.score.client.manifest.ManifestService;
 import bio.overture.score.client.manifest.UploadManifest;
-import bio.overture.score.client.manifest.kf.KFParser.KFEntity;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;

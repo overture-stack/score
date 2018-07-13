@@ -1,7 +1,7 @@
 package bio.overture.score.client.metadata.gen3;
 
-import bio.overture.score.client.manifest.kf.KFParser.KFEntity;
-import bio.overture.score.client.manifest.kf.KFParser.KFParticipant;
+import bio.overture.score.client.manifest.kf.KFEntity;
+import bio.overture.score.client.manifest.kf.KFParticipant;
 import bio.overture.score.client.manifest.kf.KFPortalClient;
 import bio.overture.score.client.metadata.Entity;
 import bio.overture.score.client.metadata.EntityNotFoundException;

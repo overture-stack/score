@@ -1,6 +1,5 @@
 package bio.overture.score.client.manifest.kf;
 
-import bio.overture.score.client.manifest.kf.KFParser.KFEntity;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Data;
 import lombok.NonNull;

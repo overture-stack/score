@@ -2,9 +2,6 @@ package bio.overture.score.client.manifest.kf;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.collect.ImmutableSet;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.val;
 
@@ -173,33 +170,6 @@ public class KFParser {
   private static JsonNode requiredGet(JsonNode root, String key){
     checkArgument(root.has(key), "The following root element doesnt have the key '%s': %s", key, root);
     return root.path(key);
-  }
-
-  @Data
-  @Builder
-  @AllArgsConstructor
-  @NoArgsConstructor
-  public static class KFEntity {
-    private boolean controlledAccess;
-    private Set<KFParticipant> participants;
-    private String fileId;
-    private String fileName;
-    private String dataType;
-    private String fileFormat;
-    private long size;
-    private String latestDid;
-    private String id;
-  }
-
-  @Data
-  @Builder
-  @AllArgsConstructor
-  @NoArgsConstructor
-  public static class KFParticipant{
-    private String participantId;
-    private boolean proband;
-    private String studyShortName;
-    private String studyId;
   }
 
 }
