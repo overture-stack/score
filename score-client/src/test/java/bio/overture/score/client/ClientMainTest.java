@@ -48,8 +48,11 @@ public class ClientMainTest extends AbstractClientMainTest {
   @Test
   public void testRob() throws Exception {
     val objectId= "06736a0b-9158-43c9-8c75-01f52bde5d14";//"6bfde0ad-6780-4bee-a313-194239759400";
-    executeMain("--profile",  "gen3", "download", "--object-id", objectId, "--output-dir", "something", "--verify-connection=false", "--force");
-//    executeMain("--profile",  "gen3", "help", "download");
+    val manifestId= "ecdb0288-3dd5-4012-a57e-afbe17c98c4f";
+//    executeMain("--profile",  "gen3", "download", "--object-id", objectId, "--output-dir", "something", "--verify-connection=false");
+//    executeMain("--profile",  "gen3", "manifest" ,"--manifest", manifestId);
+    executeMain("--profile",  "gen3", "download" ,"--manifest", manifestId, "--output-dir", "something2", "--verify-connection=false");
+    To do: change template query to include all columns include studyCode and filename
 
     assertTrue(getExitCode() == 1);
 

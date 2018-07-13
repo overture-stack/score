@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
 Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.
- 
+
 This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
 You should have received a copy of the GNU General Public License along with
 this program. If not, see <http://www.gnu.org/licenses/>.
@@ -96,6 +96,19 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
       <artifactId>aws-java-sdk-s3</artifactId>
     </dependency>
 
+    <!-- Thymeleaf Template Engine -->
+    <dependency>
+      <groupId>org.thymeleaf</groupId>
+      <artifactId>thymeleaf</artifactId>
+      <version>${thymeleaf.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-thymeleaf</artifactId>
+      <!--<version>2.0.3.RELEASE</version>-->
+      <version>${spring-boot-thymeleaf.version}</version>
+    </dependency>
+
     <!-- CLI -->
     <dependency>
       <groupId>com.beust</groupId>
@@ -133,7 +146,7 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
       <artifactId>htsjdk</artifactId>
       <version>${htsjdk.version}</version>
     </dependency>
-	
+
     <!-- Utilities -->
     <dependency>
       <groupId>com.google.guava</groupId>
@@ -228,6 +241,8 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
     <!-- Versions - FUSE -->
     <javafs.version>0.1.0</javafs.version>
     <jackson.version>2.8.3</jackson.version>
+    <thymeleaf.version>3.0.9.RELEASE</thymeleaf.version>
+    <spring-boot-thymeleaf.version>2.0.3.RELEASE</spring-boot-thymeleaf.version>
   </properties>
 
 </project>

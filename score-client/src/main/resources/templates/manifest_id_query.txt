@@ -1,0 +1,27 @@
+{
+  "query": "query ($sort: [Sort], $first: Int, $offset: Int, $score: String, $sqon: JSON) {\n  file {\n    hits(first: $first, offset: $offset, sort: $sort, score: $score, filters: $sqon) {\n      total\n      edges {\n        node {\n          controlled_access\n          kf_id\n          participants {\n            hits {\n              edges {\n                node {\n                  kf_id\n                }\n              }\n            }\n          }\n          participants {\n            hits {\n              edges {\n                node {\n                  is_proband\n                }\n              }\n            }\n          }\n          participants {\n            hits {\n              edges {\n                node {\n                  study {\n                    short_name\n                  }\n                }\n              }\n            }\n          }\n          data_type\n          file_format\n          size\n          participants {\n            hits {\n              edges {\n                node {\n                  family_id\n                }\n              }\n            }\n          }\n          latest_did\n          kf_id\n          id\n        }\n      }\n    }\n  }\n}\n",
+  "variables": {
+    "first": [(${first})],
+    "offset": [(${offset})],
+    "sort": [
+      {
+        "field": "size",
+        "order": "asc"
+      }
+    ],
+    "sqon": {
+      "op": "and",
+      "content": [
+        {
+          "op": "in",
+          "content": {
+            "field": "kf_id",
+            "value": [
+              "set_id:[(${manifestId})]"
+            ]
+          }
+        }
+      ]
+    }
+  }
+}
