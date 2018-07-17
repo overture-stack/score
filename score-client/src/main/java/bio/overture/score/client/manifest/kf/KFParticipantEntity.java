@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class KFParticipant {
+public class KFParticipantEntity {
   private String participantId;
   private boolean proband;
   private String studyShortName;

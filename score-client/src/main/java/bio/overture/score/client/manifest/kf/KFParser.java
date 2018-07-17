@@ -35,16 +35,16 @@ public class KFParser {
   private static final String EXTERNAL_ID = "external_id";
   private static final String FILE_NAME = "file_name";
   private static final String TOTAL = "total";
-  private static final Set<KFEntity> EMPTY_KF_ENTITY_SET = ImmutableSet.of();
+  private static final Set<KFFileEntity> EMPTY_KF_ENTITY_SET = ImmutableSet.of();
 
-  public static Set<KFEntity> readEntries(JsonNode root){
+  public static Set<KFFileEntity> readEntries(JsonNode root){
     val fileNode = getFileNode(getDataNode(root));
     val totalHits = readFileTotal(fileNode);
     if (totalHits > 0){
       val edgesNode = getEdgesNode(getHitsNode(fileNode));
       return stream(edgesNode)
           .map(KFParser::getNodeNode)
-          .map(x -> KFEntity.builder()
+          .map(x -> KFFileEntity.builder()
               .controlledAccess(isControlledAccess(x))
               .participants(readParticipants(getParticipantsNode(x)))
               .fileId(readFileId(x))
@@ -146,11 +146,11 @@ public class KFParser {
     return requiredGet(node, PARTICIPANTS);
   }
 
-  private static Set<KFParticipant> readParticipants(JsonNode participantsNode){
+  private static Set<KFParticipantEntity> readParticipants(JsonNode participantsNode){
     val edgesNode = getEdgesNode(getHitsNode(participantsNode));
     return stream(edgesNode)
         .map(KFParser::getNodeNode)
-        .map(x -> KFParticipant.builder()
+        .map(x -> KFParticipantEntity.builder()
             .participantId(readParticipantId(x))
             .proband(isProband(x))
             .studyShortName(readStudyShortName(getStudyNode(x)))

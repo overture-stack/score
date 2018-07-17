@@ -1,7 +1,7 @@
 package bio.overture.score.client.metadata.gen3;
 
-import bio.overture.score.client.manifest.kf.KFEntity;
-import bio.overture.score.client.manifest.kf.KFParticipant;
+import bio.overture.score.client.manifest.kf.KFFileEntity;
+import bio.overture.score.client.manifest.kf.KFParticipantEntity;
 import bio.overture.score.client.manifest.kf.KFPortalClient;
 import bio.overture.score.client.metadata.Entity;
 import bio.overture.score.client.metadata.EntityNotFoundException;
@@ -45,20 +45,20 @@ public class Gen3MetadataService implements MetadataService {
         () -> new EntityNotFoundException(format("The Gen3 entity with objectId '%s' does not exist", objectId))
     );
     return Entity.builder()
-        .gnosId(kfEntity.getParticipants().stream().map(KFParticipant::getParticipantId).findFirst().orElse(DEFAULT_BUNDLE))
+        .gnosId(kfEntity.getParticipants().stream().map(KFParticipantEntity::getParticipantId).findFirst().orElse(DEFAULT_BUNDLE))
         .access(resolveAccess(kfEntity) )
         .createdTime(System.currentTimeMillis())
         .fileName(kfEntity.getFileName())
         .id(objectId)
         .projectCode(kfEntity.getParticipants().stream()
             .findFirst()
-            .map(KFParticipant::getStudyId)
+            .map(KFParticipantEntity::getStudyId)
             .orElse(null))
         .build();
   }
 
-  private static String resolveAccess(KFEntity kfEntity){
-    return kfEntity.isControlledAccess() ? CONTROLLED : OPEN;
+  private static String resolveAccess(KFFileEntity kfFileEntity){
+    return kfFileEntity.isControlledAccess() ? CONTROLLED : OPEN;
   }
 
   @Override public Optional<Entity> getIndexEntity(Entity entity) {

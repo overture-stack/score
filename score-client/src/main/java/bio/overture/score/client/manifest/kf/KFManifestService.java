@@ -54,14 +54,14 @@ public class KFManifestService implements ManifestService {
     throw new IllegalStateException("Not implemented for Gen3 mode");
   }
 
-  private DownloadManifest convertToDownloadManifest(Set<KFEntity> entities){
+  private DownloadManifest convertToDownloadManifest(Set<KFFileEntity> entities){
    val manifestEntries =  entities.stream()
         .map(this::convertToManifestEntry)
         .collect(toImmutableList());
     return new DownloadManifest(manifestEntries);
   }
 
-  private ManifestEntry convertToManifestEntry(KFEntity entity){
+  private ManifestEntry convertToManifestEntry(KFFileEntity entity){
     return entity.getParticipants().stream()
         .findFirst()
         .map(x -> ManifestEntry.builder()

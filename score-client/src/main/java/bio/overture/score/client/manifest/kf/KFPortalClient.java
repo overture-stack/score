@@ -1,7 +1,7 @@
 package bio.overture.score.client.manifest.kf;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.Data;
+import com.google.common.collect.ImmutableSet;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.val;
@@ -34,6 +34,7 @@ public class KFPortalClient {
   private static final String OBJECT_ID= "objectId";
   private static final String OFFSET = "offset";
   private static final String FIRST= "first";
+  private static final int MAX_SIZE = 10000;
   private final String kfPortalUrl;
   private final RestTemplate serviceTemplate;
   private final RetryTemplate retry;
@@ -51,67 +52,26 @@ public class KFPortalClient {
     this.textTemplateEngine = textTemplateEngine;
   }
 
-  @Data
-  public static class KFEntityOld{
-    //Access
-    private String access;
-
-    //Data Type
-    private String dataType;
-
-    //Experiment Strategy
-    private String experimentStrategy;
-
-    //External Aliquot Id
-    private String externalAliquotId;
-
-    //External Sample Id
-    private String externalSampleId;
-
-    //Family ID
-    private String familyId;
-
-    //File Format
-    private String fileFormat;
-
-    //File ID
-    private String fileId;
-
-    //File Name
-    private String fileName;
-
-    //File Size
-    private long fileSize;
-
-    //Icd Id Diagnosis
-    private String icgIdDiagnosis;
-
-    //Latest Did
-    private String latestDid;
-
-    //Participants Family Id
-    private String participantsFamilyId;
-
-    //Participants ID
-    private String participantsId;
-
-    //Proband
-    private String proband;
-
-    //Study ID
-    private String studyId;
-
-    //Study Name
-    private String name;
+  /**
+   * Page through all entities belonging to a manifestId, MAX_SIZE at a time
+   */
+  public Set<KFFileEntity> findEntitiesFromManifest(String manifestId){
+    int currentOffset = 0;
+    val allEntities = ImmutableSet.<KFFileEntity>builder();
+    val pageSize = MAX_SIZE;
+    while(true){
+      val query = createManifestIdQuery(manifestId,currentOffset, pageSize);
+      val response = post(String.class, kfPortalUrl, query);
+      val entities = parseManifestEntityResponse(response);
+      if (entities.isEmpty()){
+        return allEntities.build();
+      }
+      allEntities.addAll(entities);
+      currentOffset += pageSize;
+    }
   }
 
-  public Set<KFEntity> findEntitiesFromManifest(String manifestId){
-    val query = createManifestIdQuery(manifestId,0, 10000);
-    val response = post(String.class, kfPortalUrl, query);
-    return parseManifestEntityResponse(response);
-  }
-
-  public Optional<KFEntity> findEntity(@NonNull String objectId){
+  public Optional<KFFileEntity> findEntity(@NonNull String objectId){
     val query = createObjectIdQuery(objectId);
     val response = post(String.class, kfPortalUrl, query);
     val entities = parseManifestEntityResponse(response);
@@ -120,7 +80,6 @@ public class KFPortalClient {
         entities.size(), objectId, entities);
     return entities.stream().findFirst();
   }
-
 
   private String createObjectIdQuery(String objectId){
     val context = new Context();
@@ -140,7 +99,7 @@ public class KFPortalClient {
   }
 
   @SneakyThrows
-  private Set<KFEntity> parseManifestEntityResponse(ResponseEntity<String> response){
+  private Set<KFFileEntity> parseManifestEntityResponse(ResponseEntity<String> response){
     val mapper = new ObjectMapper();
     val root = mapper.readTree(response.getBody());
     return readEntries(root);

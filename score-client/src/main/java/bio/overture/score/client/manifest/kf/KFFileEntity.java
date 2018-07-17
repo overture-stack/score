@@ -11,9 +11,9 @@ import java.util.Set;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class KFEntity {
+public class KFFileEntity {
   private boolean controlledAccess;
-  private Set<KFParticipant> participants;
+  private Set<KFParticipantEntity> participants;
   private String fileId;
   private String fileName;
   private String dataType;
