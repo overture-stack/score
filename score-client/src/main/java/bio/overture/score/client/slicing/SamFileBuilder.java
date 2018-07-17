@@ -91,7 +91,12 @@ public class SamFileBuilder {
   private ReferenceSource referenceSource;
 
   private boolean queryCompiledFlag = false;
+  private SamReader reader;
 
+  public SamFileBuilder reader(SamReader r) {
+    reader = r;
+    return this;
+  }
   public SamFileBuilder containedOnly(boolean flag) {
     containedOnly = flag;
     return this;
@@ -187,7 +192,7 @@ public class SamFileBuilder {
   }
 
   @SneakyThrows
-  protected SamReader createSamReader() {
+  public SamReader createSamReader() {
     try {
       // Need to use non-STRICT due to header date formats in the wild.
       return SamReaderFactory.makeDefault().validationStringency(ValidationStringency.LENIENT).
@@ -567,10 +572,16 @@ public class SamFileBuilder {
   @SneakyThrows
   public void buildTrimmed() {
     session.info("----- Constructing Trimmed Output for {}", entity.getFileName());
-    @Cleanup
-    val reader = createSamReader();
-    QueryInterval[] intervals = normalizeQueries(reader, query);
+    if (reader == null) {
+      buildTrimmed(createSamReader());
+    } else {
+      buildTrimmed(reader);
+    }
+  }
 
+  @SneakyThrows
+  public void buildTrimmed(SamReader reader) {
+    QueryInterval[] intervals = normalizeQueries(reader, query);
     val alignments = doQuery(reader, intervals);
     createTrimmed(reader, entity, query, alignments);
   }

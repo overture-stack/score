@@ -21,17 +21,23 @@ import bio.overture.score.client.metadata.Entity;
 import bio.overture.score.client.metadata.MetadataService;
 import bio.overture.score.client.slicing.SamFileBuilder;
 import bio.overture.score.client.transport.NullSourceSeekableHTTPStream;
+import bio.overture.score.client.view.Viewer;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import htsjdk.samtools.CRAMFileReader;
 import htsjdk.samtools.SamInputResource;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.ValidationStringency;
 import htsjdk.samtools.cram.ref.ReferenceSource;
+import htsjdk.samtools.seekablestream.SeekableStream;
 import htsjdk.tribble.AbstractFeatureReader;
 import htsjdk.tribble.Feature;
 import htsjdk.tribble.bed.BEDCodec;
 import htsjdk.tribble.bed.BEDFeature;
 import htsjdk.tribble.readers.LineIterator;
+import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -53,6 +59,7 @@ import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -100,7 +107,7 @@ public class ViewCommand extends RepositoryAccessCommand {
   private File sequenceFile = null;
   @Parameter(names = "--input-file-index", description = "Explicit local path to index file (requires --input-file)", validateValueWith = FileValidator.class)
   private File indexFile = null;
-  @Parameter(names = "--reference-file", description = "Explicit local path to the fasta file that a cram file was encoded with(requires --input-file)", validateValueWith = FileValidator.class)
+  @Parameter(names = "--reference-file", description = "Explicit local path to the fasta file that a cram file was encoded with", validateValueWith = FileValidator.class)
   private File referenceFile = null;
   @Parameter(names = "--query", description = "Query to define extract from BAM file (coordinate format 'sequence:start-end'). Multiple"
       + " ranges separated by space", variableArity = true)
@@ -139,6 +146,7 @@ public class ViewCommand extends RepositoryAccessCommand {
 
   @Override
   public int execute() throws Exception {
+    Viewer v;
     terminal.println("Viewing...");
     session.info("***** Beginning view session");
     validateParms();
@@ -152,15 +160,12 @@ public class ViewCommand extends RepositoryAccessCommand {
     }
 
     if (bedFile != null) {
-      handleBedFile();
+      query = handleBedFile(bedFile);
     }
 
     if (sequenceFile != null) {
-        val resource = getFileResource(sequenceFile, indexFile);
-        val entity = new Entity();
-        entity.setFileName(sequenceFile.toString());
-        val reference=new ReferenceSource(referenceFile);
-        SamFileBuilder builder = createBuilder(resource).entity(entity).cramReferenceSource(reference);
+        v = new Viewer(referenceFile);
+        val builder = configureBuilder(v.getBuilder(sequenceFile,indexFile));
         build(builder);
     } else if (objectId != null) {
       // Ad-hoc single - supercedes --manifest
@@ -189,88 +194,51 @@ public class ViewCommand extends RepositoryAccessCommand {
     return SUCCESS_STATUS;
   }
 
-  private List<DownloadManifest.ManifestEntry> filterManifest(List<DownloadManifest.ManifestEntry> entries) {
-    val result = Lists.<DownloadManifest.ManifestEntry> newArrayList();
-    // we're only going to process BAM/SAM files
-    for (DownloadManifest.ManifestEntry me : entries) {
-      if (me.getFileName().toLowerCase().endsWith(String.format(".%s", OutputFormat.BAM.toString().toLowerCase()))
-          || me.getFileName().toLowerCase().endsWith(String.format(".%s", OutputFormat.SAM.toString().toLowerCase()))) {
-        result.add(me);
-        val msg = String.format("Queuing %s", me.getFileName());
-        log.info(msg);
-        session.info(msg);
-      } else {
-        val msg = String.format("Skipping manifest file entry: %s", me.getFileName());
-        log.warn(String.format(msg));
-        session.info(msg);
-      }
+  private String getCommandLine() {
+    StringBuilder msg = new StringBuilder();
+    for (val s : applicationArguments.getSourceArgs()) {
+      msg.append(s).append(" ");
     }
-    return result;
+    return msg.toString();
   }
 
-  private void validateParms() {
-    if (stdout) {
-      checkParameter(manifestResource == null && objectId != null && !objectId.isEmpty(),
-          "Output to stdout only permitted with --object-id. Not compatible with --manifest.");
+  private Entity getEntity(String oid) {
+    val e = fetchEntity(oid);
 
-      if (outputFormat.equals(OutputFormat.BAM)) {
-        terminal.println("When --stdout specified, output format forced to SAM.");
-      }
-    }
-
-    checkParameter(objectId != null || sequenceFile != null || manifestResource != null,
-        "One of --object-id, --input-file or --manifest must be specified");
-
-    if (objectId == null && sequenceFile == null) {
-      checkParameter(manifestResource != null && outputDir != null,
-          "--output-dir must be specified when using --manifest");
-    }
-
-    if (outputDir == null) {
-      stdout = true;
-    }
-  }
-
-  @SneakyThrows
-  int process(List<String> objectIds) {
-    for (val objectId : objectIds) {
-      if (process(objectId) != SUCCESS_STATUS) {
-        log.error("Failed to process {}", objectId);
-        return FAILURE_STATUS;
-      }
-    }
-    return SUCCESS_STATUS;
-  }
-
-  SamFileBuilder createBuilder(SamInputResource resource) {
-    val builder = new SamFileBuilder().programName(PROGRAM_NAME)
-      .version(VersionUtils.getScmInfo().get("git.commit.id.describe")).programId(ICGC).commandLine(getCommandLine())
-      .containedOnly(containedOnly).useOriginalHeader(useOriginalHeader).outputFormat(outputFormat).queries(query)
-      .outputDir(outputDir).bedFile(bedFile).outputIndex(outputIndex).stdout(stdout)
-      .samInput(resource);
-    log.info("Constructed SamFileBuilder: " + builder.toString());
-    return builder;
-  }
-
-  /**
-   * Main sequence of steps to construct a SAM/BAM file via htsjdk.
-   * @param oid Object id of sample to query against
-   * @return Status flag indicating whether output SAM/BAM has been written
-   */
-  @SneakyThrows
-  int process(String oid) {
-    val entity = getEntity(oid);
-    if (!entity.isPresent()) {
+    if (!e.isPresent()) {
       val msg = String.format("Metadata not found for object id %s", oid);
       log.error(msg);
       session.info(msg);
       throw new RuntimeException(msg);
     }
 
-    val resource = getRemoteResource(entity.get());
-    val builder = createBuilder(resource).entity(entity.get());
-    return build(builder);
-    }
+    return e.get();
+  }
+
+
+  public SamFileBuilder configureBuilder(SamFileBuilder builder) {
+    builder = builder.programName(PROGRAM_NAME)
+      .version(VersionUtils.getScmInfo().get("git.commit.id.describe")).programId(ICGC).commandLine(getCommandLine())
+      .containedOnly(containedOnly).useOriginalHeader(useOriginalHeader).outputFormat(outputFormat).queries(query)
+      .outputDir(outputDir).bedFile(bedFile).outputIndex(outputIndex).stdout(stdout);
+
+    log.info("Constructed SamFileBuilder: " + builder.toString());
+    return builder;
+  }
+
+  @SneakyThrows
+  int process(String oid) {
+    val entity = getEntity(oid);
+    val urls = getPresignedUrls(entity);
+
+    val inputStream = Viewer.openInputStream(urls.file);
+    val indexStream = Viewer.openIndexStream(urls.index);
+    val isCram = isCRAM(entity.getFileName());
+    val viewer = new Viewer(referenceFile);
+
+    val builder = configureBuilder(viewer.getBuilder(inputStream, indexStream, isCram));
+    return build(builder.entity(entity));
+  }
 
   @SneakyThrows
   int build(SamFileBuilder builder) {
@@ -292,51 +260,93 @@ public class ViewCommand extends RepositoryAccessCommand {
     return SUCCESS_STATUS;
   }
 
-  private Optional<Entity> getEntity(String oid) {
-    // if objectId is present, get gnos id associated with it
-    return Optional
-        .ofNullable(oid != null && !oid.trim().isEmpty() ? metadataService.getEntity(oid) : null);
+  @SneakyThrows
+  int process(List<String> objectIds) {
+    for (val objectId : objectIds) {
+      if (process(objectId) != SUCCESS_STATUS) {
+        log.error("Failed to process {}", objectId);
+        return FAILURE_STATUS;
+      }
+    }
+    return SUCCESS_STATUS;
   }
 
-  private SamInputResource getFileResource(File bamFile, File baiFile) {
-    if (baiFile != null) {
-      return SamInputResource.of(bamFile).index(baiFile);
-    } else {
-      return SamInputResource.of(bamFile);
+  private Optional<Entity> fetchEntity(String oid) {
+    // fetch the entity for the given object id from our metadata service
+    return Optional
+      .ofNullable(oid != null && !oid.trim().isEmpty() ? metadataService.getEntity(oid) : null);
+  }
+
+  public PresignedUrls getPresignedUrls(Entity entity) {
+    val indexEntity = metadataService.getIndexEntity(entity);
+    checkParameter(indexEntity.isPresent(), "No index file associated with BAM/CRAM file with object id '%s'",
+      entity.getId());
+
+    val bamFileUrl = downloadService.getUrl(entity.getId());
+    val indexFileUrl = downloadService.getUrl(indexEntity.get().getId());
+    return new PresignedUrls(bamFileUrl, indexFileUrl);
+  }
+
+  private void validateParms() {
+    if (stdout) {
+      checkParameter(manifestResource == null && objectId != null && !objectId.isEmpty(),
+        "Output to stdout only permitted with --object-id. Not compatible with --manifest.");
+
+      if (outputFormat.equals(ViewCommand.OutputFormat.BAM)) {
+        terminal.println("When --stdout specified, output format forced to SAM.");
+      }
+    }
+
+    checkParameter(objectId != null || sequenceFile != null || manifestResource != null,
+      "One of --object-id, --input-file or --manifest must be specified");
+
+    if (objectId == null && sequenceFile == null) {
+      checkParameter(manifestResource != null && outputDir != null,
+        "--output-dir must be specified when using --manifest");
+    }
+
+    if (outputDir == null) {
+      stdout = true;
     }
   }
 
-  private SamInputResource getRemoteResource(Entity entity) {
-    val indexEntity = metadataService.getIndexEntity(entity);
-    checkParameter(indexEntity.isPresent(), "No index file associated with BAM file with object id '%s'",
-        entity.getId());
-
-    val bamFileUrl = downloadService.getUrl(entity.getId());
-    val bamFileHttpStream = new NullSourceSeekableHTTPStream(bamFileUrl);
-    val indexFileUrl = downloadService.getUrl(indexEntity.get().getId());
-    val indexFileHttpStream = new NullSourceSeekableHTTPStream(indexFileUrl);
-
-    return SamInputResource.of(bamFileHttpStream).index(indexFileHttpStream);
-  }
 
   @SneakyThrows
-  private void handleBedFile() {
+  private List<String> handleBedFile(File bedFile) {
+    val query = new ArrayList<String>();
     query.clear();
     final BEDCodec codec = new BEDCodec();
     final AbstractFeatureReader<BEDFeature, LineIterator> bfs =
-        AbstractFeatureReader.getFeatureReader(bedFile.getAbsolutePath(), codec, false);
+      AbstractFeatureReader.getFeatureReader(bedFile.getAbsolutePath(), codec, false);
     for (final Feature feat : bfs.iterator()) {
       val region = String.format("%s:%d-%d", feat.getContig(), feat.getStart(), feat.getEnd());
       System.out.println(region);
       query.add(region);
     }
+    return query;
   }
 
-  private String getCommandLine() {
-    StringBuilder msg = new StringBuilder();
-    for (val s : applicationArguments.getSourceArgs()) {
-      msg.append(s).append(" ");
+  private List<DownloadManifest.ManifestEntry> filterManifest(List<DownloadManifest.ManifestEntry> entries) {
+    val result = Lists.<DownloadManifest.ManifestEntry> newArrayList();
+    // we're only going to process CRAM/BAM/SAM files
+    for (DownloadManifest.ManifestEntry me : entries) {
+      if (me.isBAM()|| me.isSAM()||me.isCRAM()) {
+        result.add(me);
+        val msg = String.format("Queuing %s", me.getFileName());
+        log.info(msg);
+        session.info(msg);
+      } else {
+        val msg = String.format("Skipping manifest file entry: %s", me.getFileName());
+        log.warn(String.format(msg));
+        session.info(msg);
+      }
     }
-    return msg.toString();
+    return result;
   }
+
+  public static boolean isCRAM(String filename) {
+    return filename.toLowerCase().endsWith(ViewCommand.OutputFormat.CRAM.toString().toLowerCase());
+  }
+
+
 }
