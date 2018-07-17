@@ -22,6 +22,7 @@ import java.net.URI;
 import java.net.URL;
 
 import static com.google.common.base.Preconditions.checkState;
+import static java.lang.String.format;
 import static java.util.Objects.isNull;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 import static org.springframework.http.HttpHeaders.CONTENT_LENGTH;
@@ -33,29 +34,54 @@ public class Gen3Client {
 
   private static final long MIN_EXPIRATION = 3600;
   private final String jwt;
-  private final String keyStoreUrl;
+  private final String tokenUrl;
   private final String apiUrl;
   private final long urlExpiration;
   private final RetryTemplate retry;
+  private final RestTemplate restTemplate = new RestTemplate();
 
   public Gen3Client(
       @Value("${client.accessToken}") @NonNull String jwt,
-      @Value("${gen3.keystore.url}") @NonNull String keyStoreUrl,
+      @Value("${gen3.token.url}") @NonNull String tokenUrl,
       @Value("${gen3.download.url}") @NonNull String apiUrl,
       @Value("${gen3.download.expiration}") long urlExpiration,
       @Autowired RetryTemplate retry ){
     this.jwt = jwt;
     this.apiUrl = apiUrl;
-    this.keyStoreUrl = keyStoreUrl;
     this.urlExpiration = Math.max(urlExpiration, MIN_EXPIRATION);
+    this.tokenUrl = tokenUrl;
     this.retry = retry;
   }
 
-  private final RestTemplate restTemplate = new RestTemplate();
-
   public String generateAccessToken(){
-    val key = getGen3ApiKey();
-    return getGen3AccessToken(key).getAccessToken();
+    val accessTokenResponse = getObject(AccessTokenResponse.class, jwt, tokenUrl);
+    return accessTokenResponse.getAccessToken();
+  }
+
+  public PresignedUrl generatePresignedUrl(@NonNull String objectId){
+    val accessToken = generateAccessToken();
+    val response = getResponse(UrlResponse.class, accessToken, getGen3DownloadEndpoint(objectId));
+    val url = response.getBody().getUrl();
+    val size = peekResponseContentSize(url);
+    return PresignedUrl.builder()
+        .size(size)
+        .url(url)
+        .build();
+  }
+
+  private String getGen3DownloadEndpoint(String objectId){
+    return format("%s/user/data/download/%s?expires_in=%s", apiUrl, objectId, urlExpiration);
+  }
+
+  @SneakyThrows
+  private <T> ResponseEntity<T> getResponse(Class<T> responseType, String accessToken, String url){
+    val entity = new HttpEntity<T>(null, buildAuthHeader(accessToken));
+    return retry.execute(ctx -> restTemplate.exchange(new URI(url), HttpMethod.GET, entity, responseType));
+  }
+
+  @SneakyThrows
+  private <T> T getObject(Class<T> responseType, String accessToken, String url){
+    return getResponse(responseType, accessToken, url).getBody();
   }
 
   @SneakyThrows
@@ -71,48 +97,12 @@ public class Gen3Client {
     return contentLength;
   }
 
-  public PresignedUrl generatePresignedUrl(@NonNull String objectId){
-    val accessToken = generateAccessToken();
-    val response = getResponse(UrlResponse.class, accessToken, getGen3DownloadEndpoint(objectId));
-    val url = response.getBody().getUrl();
-    val size = peekResponseContentSize(url);
-    return PresignedUrl.builder()
-        .size(size)
-        .url(url)
-        .build();
-  }
-
-  private AccessTokenResponse getGen3AccessToken(Gen3ApiKeyResponse gen3ApiKeyResponse){
-    return post(AccessTokenResponse.class, jwt, getGen3AccessTokenEndpoint(), gen3ApiKeyResponse);
-  }
-
-  private String getGen3DownloadEndpoint(String objectId){
-    return String.format("%s/user/data/download/%s?expires_in=%s", apiUrl, objectId, urlExpiration);
-  }
-
-  private String getGen3AccessTokenEndpoint(){
-    return String.format("%s/user/credentials/cdis/access_token", apiUrl);
-  }
-
-  private Gen3ApiKeyResponse getGen3ApiKey(){
-    return getObject(Gen3ApiKeyResponse.class, jwt, keyStoreUrl);
-  }
-
-  @SneakyThrows
-  private <T> ResponseEntity<T> getResponse(Class<T> responseType, String accessToken, String url){
-    val entity = new HttpEntity<T>(null, buildAuthHeader(accessToken));
-    return retry.execute(ctx -> restTemplate.exchange(new URI(url), HttpMethod.GET, entity, responseType));
-  }
-
-  @SneakyThrows
-  private <T> T getObject(Class<T> responseType, String accessToken, String url){
-    return getResponse(responseType, accessToken, url).getBody();
-  }
-
-  @SneakyThrows
-  private <T, R> T post(Class<T> responseType, String accessToken, String url, R body ){
-    val entity = new HttpEntity<R>(body, buildAuthHeader(accessToken));
-    return retry.execute(ctx -> restTemplate.exchange(new URI(url), HttpMethod.POST, entity, responseType).getBody());
+  private static HttpHeaders buildAuthHeader(String accessToken ){
+    val headers = new HttpHeaders();
+    if (!isNull(accessToken)){
+      headers.set(AUTHORIZATION, "Bearer "+accessToken);
+    }
+    return headers;
   }
 
   @lombok.Value
@@ -122,27 +112,13 @@ public class Gen3Client {
     private final long size;
   }
 
-  private static HttpHeaders buildAuthHeader(String accessToken ){
-    val headers = new HttpHeaders();
-    if (!isNull(accessToken)){
-      headers.set(AUTHORIZATION, "Bearer "+accessToken);
-    }
-    return headers;
-  }
-
-  @Data
-  public static class Gen3ApiKeyResponse {
-    @JsonProperty("key_id")
-    private String keyId;
-
-    @JsonProperty("api_key")
-    private String apiKey;
-  }
-
   @Data
   public static class AccessTokenResponse {
     @JsonProperty("access_token")
     private String accessToken;
+
+    @JsonProperty("refresh_token")
+    private String refreshToken;
   }
 
   @Data

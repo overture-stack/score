@@ -26,13 +26,13 @@ import java.util.List;
 import java.util.Optional;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static java.lang.String.format;
 
 @Slf4j
 @Service
 @Profile("gen3")
 public class Gen3StorageService extends AbstractStorageService {
 
-  private static final  String NOT_IMPLEMENTED_MESSAGE = "Not implemented for Gen3 Storage";
 
   /**
    * Dependencies.
@@ -103,50 +103,56 @@ public class Gen3StorageService extends AbstractStorageService {
     return ImmutableList.copyOf(parts);
   }
 
+  private static String getNonImplementedMessage(){
+    val calledMethod= Thread.currentThread().getStackTrace()[2].getMethodName();
+    return format("The method '%s' is not implemented for Gen3", calledMethod);
+  }
+
   /**
    *  Not implemented for Gen3
    */
   @Override public String ping() {
-    throw new IllegalStateException(NOT_IMPLEMENTED_MESSAGE);
+    log.warn("The 'ping' method is not implemented properly in Gen3. This is a bypass");
+    return "bypass ping";
   }
 
   @Override public boolean isUploadDataRecoverable(String objectId, long fileSize) throws IOException {
-    throw new IllegalStateException(NOT_IMPLEMENTED_MESSAGE);
+    throw new IllegalStateException(getNonImplementedMessage());
   }
 
   @Override public void deleteUploadPart(String objectId, String uploadId, Part part) throws IOException {
-    throw new IllegalStateException(NOT_IMPLEMENTED_MESSAGE);
+    throw new IllegalStateException(getNonImplementedMessage());
   }
 
   @Override public void finalizeUpload(String objectId, String uploadId) throws IOException {
-    throw new IllegalStateException(NOT_IMPLEMENTED_MESSAGE);
+    throw new IllegalStateException(getNonImplementedMessage());
   }
 
   @Override public void finalizeUploadPart(String objectId, String uploadId, int partNumber, String md5, String etag,
       boolean disableChecksum) throws IOException {
-    throw new IllegalStateException(NOT_IMPLEMENTED_MESSAGE);
+    throw new IllegalStateException(getNonImplementedMessage());
   }
 
   @Override public boolean isObjectExist(String objectId) throws IOException {
-    throw new IllegalStateException(NOT_IMPLEMENTED_MESSAGE);
+    throw new IllegalStateException(getNonImplementedMessage());
   }
 
   @Override public void uploadPart(DataChannel channel, Part part, String objectId, String uploadId)
       throws IOException {
-    throw new IllegalStateException(NOT_IMPLEMENTED_MESSAGE);
+    throw new IllegalStateException(getNonImplementedMessage());
   }
 
   @Override public List<ObjectInfo> listObjects() {
-    throw new IllegalStateException(NOT_IMPLEMENTED_MESSAGE);
+    throw new IllegalStateException(getNonImplementedMessage());
   }
 
   @Override public UploadProgress getProgress(String objectId, long fileSize) throws IOException {
-    throw new IllegalStateException(NOT_IMPLEMENTED_MESSAGE);
+    throw new IllegalStateException(getNonImplementedMessage());
   }
 
   @Override public ObjectSpecification initiateUpload(String objectId, long length, boolean overwrite, String md5)
       throws IOException {
-    throw new IllegalStateException(NOT_IMPLEMENTED_MESSAGE);
+    throw new IllegalStateException(getNonImplementedMessage());
   }
 
 }

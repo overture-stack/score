@@ -37,8 +37,8 @@ kfportal:
   url: https://arranger.kids-first.io/june_13/graphql
 
 gen3:
-  keystore:
-    url: https://g9xs4f0xy8.execute-api.us-east-1.amazonaws.com/prod/key-store?service=gen3
+  token:
+    url: https://v2i1r42t6d.execute-api.us-east-1.amazonaws.com/beta/token
   download:
     url: https://data.kidsfirstdrc.org
     partSize: 1073741824
