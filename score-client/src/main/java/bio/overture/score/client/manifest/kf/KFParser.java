@@ -5,7 +5,6 @@ import com.google.common.collect.ImmutableSet;
 import lombok.NoArgsConstructor;
 import lombok.val;
 
-import java.util.Optional;
 import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -158,13 +157,6 @@ public class KFParser {
             .build()
         )
         .collect(toImmutableSet());
-  }
-
-  private static Optional<JsonNode> optionalGet(JsonNode root, String key){
-    if (!root.has(key) || root.path(key).isNull() ){
-      return Optional.empty();
-    }
-    return Optional.of(root.path(key));
   }
 
   private static JsonNode requiredGet(JsonNode root, String key){
