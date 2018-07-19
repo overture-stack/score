@@ -26,7 +26,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 
 @Configuration
-@Profile({ "aws", "collab", "gen3" })
+@Profile({ "aws", "collab", "kf" })
 public class S3Config {
 
   @Bean

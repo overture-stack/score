@@ -1,4 +1,4 @@
-package bio.overture.score.client.metadata.gen3;
+package bio.overture.score.client.metadata.kf;
 
 import bio.overture.score.client.manifest.kf.KFFileEntity;
 import bio.overture.score.client.manifest.kf.KFParticipantEntity;
@@ -21,8 +21,8 @@ import static java.lang.String.format;
 
 @Slf4j
 @Service
-@Profile("gen3")
-public class Gen3MetadataService implements MetadataService {
+@Profile("kf")
+public class KFMetadataService implements MetadataService {
   private static final List<Entity> EMPTY_LIST = ImmutableList.<Entity>of();
   private static final String CONTROLLED = "controlled";
   private static final String OPEN= "open";
@@ -31,7 +31,7 @@ public class Gen3MetadataService implements MetadataService {
   private final KFPortalClient kfPortalClient;
 
   @Autowired
-  public Gen3MetadataService(@NonNull KFPortalClient kfPortalClient) {
+  public KFMetadataService(@NonNull KFPortalClient kfPortalClient) {
     this.kfPortalClient = kfPortalClient;
   }
 
@@ -42,7 +42,7 @@ public class Gen3MetadataService implements MetadataService {
   @Override public Entity getEntity(String objectId) {
     val result = kfPortalClient.findEntity(objectId);
     val kfEntity = result.orElseThrow(
-        () -> new EntityNotFoundException(format("The Gen3 entity with objectId '%s' does not exist", objectId))
+        () -> new EntityNotFoundException(format("The KF entity with objectId '%s' does not exist", objectId))
     );
     return Entity.builder()
         .gnosId(kfEntity.getParticipants().stream().map(KFParticipantEntity::getParticipantId).findFirst().orElse(DEFAULT_BUNDLE))

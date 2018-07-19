@@ -28,7 +28,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-@Profile("!gen3")
+@Profile("!kf")
 public class LegacyMetadataService implements MetadataService {
 
   @Autowired

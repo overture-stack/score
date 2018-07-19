@@ -69,7 +69,7 @@ import static org.springframework.http.HttpMethod.POST;
  */
 @Slf4j
 @Service
-@Profile({"dev", "collab", "aws", "default", "!gen3"})
+@Profile({"dev", "collab", "aws", "default", "!kf"})
 public class ScoreStorageService extends AbstractStorageService {
 
   /**

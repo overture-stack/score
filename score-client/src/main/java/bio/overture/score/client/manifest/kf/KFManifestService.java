@@ -18,7 +18,7 @@ import static java.lang.String.format;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 
 @Service
-@Profile("gen3")
+@Profile("kf")
 public class KFManifestService implements ManifestService {
 
   private final KFPortalClient kfPortalClient;
@@ -51,7 +51,7 @@ public class KFManifestService implements ManifestService {
 
   @Override
   public UploadManifest getUploadManifest(ManifestResource resource) {
-    throw new IllegalStateException("Not implemented for Gen3 mode");
+    throw new IllegalStateException("Not implemented for KF mode");
   }
 
   private DownloadManifest convertToDownloadManifest(Set<KFFileEntity> entities){

@@ -35,7 +35,7 @@ import java.net.URL;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 @Service
-@Profile("!gen3")
+@Profile("!kf")
 public class IcgcManifestService implements ManifestService {
 
   /**

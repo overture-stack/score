@@ -66,7 +66,7 @@ import static java.util.stream.Collectors.toSet;
 @Slf4j
 @Component
 @Parameters(separators = "=", commandDescription = "Mount a read-only FUSE file system view of the remote storage repository")
-@Profile("!gen3")
+@Profile("!kf")
 public class MountCommand extends RepositoryAccessCommand {
 
   /**

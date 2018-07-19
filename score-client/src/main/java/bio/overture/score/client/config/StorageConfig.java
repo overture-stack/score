@@ -18,7 +18,7 @@ public class StorageConfig {
   @Value("${storage.url}")
   private String endpoint;
 
-  @Value("${gen3.download.partSize}")
+  @Value("${kf.download.partSize}")
   private int partSize;
 
   @Autowired

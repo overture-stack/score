@@ -1,8 +1,8 @@
-package bio.overture.score.client.storage.gen3;
+package bio.overture.score.client.storage.kf;
 
 import bio.overture.score.client.download.DownloadStateStore;
 import bio.overture.score.client.storage.AbstractStorageService;
-import bio.overture.score.client.storage.gen3.Gen3Client.PresignedUrl;
+import bio.overture.score.client.storage.kf.KFStorageClient.PresignedUrl;
 import bio.overture.score.core.model.DataChannel;
 import bio.overture.score.core.model.ObjectInfo;
 import bio.overture.score.core.model.ObjectSpecification;
@@ -30,36 +30,35 @@ import static java.lang.String.format;
 
 @Slf4j
 @Service
-@Profile("gen3")
-public class Gen3StorageService extends AbstractStorageService {
+@Profile("kf")
+public class KFStorageService extends AbstractStorageService {
 
 
   /**
    * Dependencies.
    */
-  private final Gen3Client gen3Client;
+  private final KFStorageClient kfStorageClient;
   private final SimplePartCalculator partCalculator;
 
 
   @Autowired
-  public Gen3StorageService(
+  public KFStorageService(
       @NonNull DownloadStateStore downloadStateStore,
       @Qualifier("pingTemplate") @NonNull RestTemplate dataTemplate,
       @NonNull RetryTemplate retry,
       SimplePartCalculator partCalculator,
-      @NonNull Gen3Client gen3Client
+      @NonNull KFStorageClient kfStorageClient
   ) {
     super(downloadStateStore, dataTemplate, retry);
-    this.gen3Client = gen3Client;
+    this.kfStorageClient = kfStorageClient;
     this.partCalculator = partCalculator;
-    log.info("*****************LOADED GEN3 STORAGE SERVICE");
   }
 
 
   @Override
   public ObjectSpecification getDownloadSpecification(String objectId, long offset, long length)
       throws IOException {
-    val presignedUrl = gen3Client.generatePresignedUrl(objectId);
+    val presignedUrl = kfStorageClient.generatePresignedUrl(objectId);
     val parts = generateParts(presignedUrl, offset, length);
     return ObjectSpecification.builder()
         .objectId(objectId)
@@ -105,14 +104,14 @@ public class Gen3StorageService extends AbstractStorageService {
 
   private static String getNonImplementedMessage(){
     val calledMethod= Thread.currentThread().getStackTrace()[2].getMethodName();
-    return format("The method '%s' is not implemented for Gen3", calledMethod);
+    return format("The method '%s' is not implemented for KF", calledMethod);
   }
 
   /**
-   *  Not implemented for Gen3
+   *  Not implemented for KF
    */
   @Override public String ping() {
-    log.warn("The 'ping' method is not implemented properly in Gen3. This is a bypass");
+    log.warn("The 'ping' method is not implemented properly in KF. This is a bypass");
     return "bypass ping";
   }
 

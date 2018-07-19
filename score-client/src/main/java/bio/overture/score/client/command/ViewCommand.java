@@ -64,7 +64,7 @@ import static java.util.stream.Collectors.toList;
 @Slf4j
 @Component
 @Parameters(separators = "=", commandDescription = "Locally store/display some or all of a remote SAM/BAM file object")
-@Profile("!gen3")
+@Profile("!kf")
 public class ViewCommand extends RepositoryAccessCommand {
 
   public enum OutputFormat {

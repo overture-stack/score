@@ -36,7 +36,7 @@ client:
 kfportal:
   url: https://arranger.kids-first.io/june_13/graphql
 
-gen3:
+kf:
   token:
     url: https://v2i1r42t6d.execute-api.us-east-1.amazonaws.com/beta/token
   download:
@@ -94,14 +94,14 @@ client:
 ---
 
 ###############################################################################
-# Profile - "gen3"
+# Profile - "kf"
 ###############################################################################
 
-spring.profiles: gen3
+spring.profiles: kf
 
 # Storage server
 storage:
-  url: https://gen3.com
+  url: https://kf.com
 
 
 client:

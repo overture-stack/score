@@ -1,4 +1,4 @@
-package bio.overture.score.client.storage.gen3;
+package bio.overture.score.client.storage.kf;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
@@ -29,8 +29,8 @@ import static org.springframework.http.HttpHeaders.CONTENT_LENGTH;
 
 @Builder
 @Component
-@Profile("gen3")
-public class Gen3Client {
+@Profile("kf")
+public class KFStorageClient {
 
   private static final long MIN_EXPIRATION = 3600;
   private final String jwt;
@@ -40,11 +40,11 @@ public class Gen3Client {
   private final RetryTemplate retry;
   private final RestTemplate restTemplate = new RestTemplate();
 
-  public Gen3Client(
+  public KFStorageClient(
       @Value("${client.accessToken}") @NonNull String jwt,
-      @Value("${gen3.token.url}") @NonNull String tokenUrl,
-      @Value("${gen3.download.url}") @NonNull String apiUrl,
-      @Value("${gen3.download.expiration}") long urlExpiration,
+      @Value("${kf.token.url}") @NonNull String tokenUrl,
+      @Value("${kf.download.url}") @NonNull String apiUrl,
+      @Value("${kf.download.expiration}") long urlExpiration,
       @Autowired RetryTemplate retry ){
     this.jwt = jwt;
     this.apiUrl = apiUrl;
@@ -60,7 +60,7 @@ public class Gen3Client {
 
   public PresignedUrl generatePresignedUrl(@NonNull String objectId){
     val accessToken = generateAccessToken();
-    val response = getResponse(UrlResponse.class, accessToken, getGen3DownloadEndpoint(objectId));
+    val response = getResponse(UrlResponse.class, accessToken, getKFDownloadEndpoint(objectId));
     val url = response.getBody().getUrl();
     val size = peekResponseContentSize(url);
     return PresignedUrl.builder()
@@ -69,7 +69,7 @@ public class Gen3Client {
         .build();
   }
 
-  private String getGen3DownloadEndpoint(String objectId){
+  private String getKFDownloadEndpoint(String objectId){
     return format("%s/user/data/download/%s?expires_in=%s", apiUrl, objectId, urlExpiration);
   }
 

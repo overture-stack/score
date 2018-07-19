@@ -40,7 +40,7 @@ import static bio.overture.score.client.cli.Parameters.checkParameter;
 @Slf4j
 @Component
 @Parameters(separators = "=", commandDescription = "Upload file object(s) to the remote storage repository")
-@Profile("!gen3")
+@Profile("!kf")
 public class UploadCommand extends RepositoryAccessCommand {
 
   /**
