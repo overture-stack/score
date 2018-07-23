@@ -17,9 +17,6 @@
  */
 package bio.overture.score.client.download;
 
-import static com.google.common.base.Preconditions.checkState;
-import static com.google.common.collect.Iterables.getOnlyElement;
-
 import bio.overture.score.client.cli.Terminal;
 import bio.overture.score.client.exception.NotResumableException;
 import bio.overture.score.client.exception.NotRetryableException;
@@ -28,33 +25,36 @@ import bio.overture.score.client.metadata.Entity;
 import bio.overture.score.client.progress.Progress;
 import bio.overture.score.client.transport.StorageService;
 import bio.overture.score.client.transport.Transport;
+import bio.overture.score.core.model.ObjectSpecification;
+import bio.overture.score.core.model.Part;
+import bio.overture.score.core.util.MD5s;
+import com.google.common.hash.Hashing;
+import com.google.common.io.BaseEncoding;
 import lombok.NonNull;
 import lombok.SneakyThrows;
-import lombok.val;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.file.FileAlreadyExistsException;
-import java.nio.file.Files;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.Set;
 
-import javax.annotation.PostConstruct;
-
-import bio.overture.score.core.model.ObjectSpecification;
-import bio.overture.score.core.model.Part;
-import bio.overture.score.core.util.MD5s;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
-
-import com.google.common.io.BaseEncoding;
+import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.collect.Iterables.getOnlyElement;
+import static com.google.common.io.Files.hash;
+import static java.lang.String.format;
+import static java.nio.file.Files.createDirectories;
 
 @Slf4j
 @Component
@@ -112,7 +112,7 @@ public class DownloadService {
    * @param redo
    * @throws IOException
    */
-  public void download(DownloadRequest downloadRequest, boolean redo) throws IOException {
+  public void download(DownloadRequest downloadRequest, boolean redo, boolean skipExistingMd5Check) throws IOException {
     log.debug("Beginning download of {}", downloadRequest.toString());
     int retry = 0;
     for (; retry < retryNumber; retry++) {
@@ -122,7 +122,7 @@ public class DownloadService {
           startNewDownload(downloadRequest);
         } else {
           // Only perform checksum the first time of the resume
-          resumeIfPossible(downloadRequest, retry == 0 ? true : false);
+          resumeIfPossible(downloadRequest, retry == 0 ? true : false, skipExistingMd5Check);
         }
         return;
       } catch (NotResumableException e) {
@@ -153,21 +153,59 @@ public class DownloadService {
     }
   }
 
-  private void resumeIfPossible(DownloadRequest request, boolean checksum)
+  private void resumeIfPossible(DownloadRequest request, boolean checksum, boolean skipExistingMd5Check)
       throws IOException {
     log.debug("Attempting to resume download for {}", request.toString());
     ObjectSpecification spec = null;
     try {
       spec = downloadStateStore.getProgress(request.getOutputDir(), request.getObjectId());
     } catch (NotRetryableException e) {
-      log.info("New download: {} because {}", request.getObjectId(), e.getMessage());
-      terminal.printStatus("Restarting ");
-      resetDownload(request.getOutputFilePath());
-      startNewDownload(request);
+      if (isNewDownload(request,false, skipExistingMd5Check)) {
+        resetDownload(request.getOutputFilePath());
+        startNewDownload(request);
+      }
       return;
     }
     resume(request, spec, checksum);
   }
+
+  @SneakyThrows
+  private boolean isNewDownload(DownloadRequest request, boolean force, boolean skipExistingMd5Check){
+    val file = request.getOutputFilePath();
+    if (!force && file.exists()){
+      if (!skipExistingMd5Check){
+        val expectedSpec = storageService.getDownloadSpecification(request.getObjectId());
+        val expectedMd5 = expectedSpec.getObjectMd5();
+        val actualMd5 = calculateMd5(file);
+        if(expectedMd5.equals(actualMd5)){
+          log.info("File already downloaded with matching checksum comparison, skipping download: {}",
+              request.getObjectId());
+          terminal.printStatus(format("Skipping download for existing objectId '%s' with matching checksum comparison",
+              request.getObjectId()));
+        } else {
+          log.info("File is existing but has mismatching checksum. "
+                  + "Re-downloading : objectId={}   expectedMd5={}   actualMd5={}",
+              request.getObjectId(), expectedMd5, actualMd5);
+          return true;
+        }
+      } else {
+        log.info("File already downloaded, skipping download and checksum comparison: {}", request.getObjectId());
+        terminal.printStatus(format("Skipping existing objectId '%s' and skipping checksum comparison",
+            request.getObjectId()));
+      }
+      return false;
+    }
+    log.info("New download: {}", request.getObjectId());
+    terminal.printStatus("Restarting download");
+    return true;
+  }
+
+  @SneakyThrows
+  private static String calculateMd5(File file){
+    return hash(file, Hashing.md5()).toString();
+  }
+
+
 
   private void resume(DownloadRequest request, ObjectSpecification spec, boolean checksum) {
     log.info("Resuming from previous download...");
@@ -245,8 +283,15 @@ public class DownloadService {
     val dir = request.getOutputDir();
     if (!dir.exists()) {
       log.debug("{} did not exist; creating now", dir.toString());
-      Files.createDirectories(dir.toPath());
+      createDirectories(dir.toPath());
       log.debug("finished creating {}", dir.toString());
+    }
+
+    val parentDir = objFile.toPath().getParent();
+    if (!parentDir.equals(dir.toPath())){
+      log.debug("{} did not exist; creating now", parentDir.toString());
+      createDirectories(parentDir);
+      log.debug("finished creating {}", parentDir.toString());
     }
 
     log.debug("Downloading specification for {}: {}-{}", request.getObjectId(), request.getOffset(),
@@ -259,7 +304,7 @@ public class DownloadService {
     // doesn't really matter if we're just going to skip silently if part md5's aren't there
     // *****
 
-    downloadStateStore.init(dir, spec);
+    downloadStateStore.init(parentDir.toFile(), spec);
 
     // TODO: Assign session id
     val progress = new Progress(terminal, quiet, spec.getParts().size(), 0);
@@ -311,7 +356,7 @@ public class DownloadService {
     if (check) {
       log.info("MD5 for {} validated correctly", outputFile.getAbsolutePath());
     } else {
-      val msg = String.format("MD5 for %s was %s but was expecting %s", outputFile.getAbsolutePath(), downloadedMd5,
+      val msg = format("MD5 for %s was %s but was expecting %s", outputFile.getAbsolutePath(), downloadedMd5,
           spec.getObjectMd5());
       log.error(msg);
       terminal.printWarn(msg);

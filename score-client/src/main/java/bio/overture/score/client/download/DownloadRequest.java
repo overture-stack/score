@@ -17,11 +17,12 @@
  */
 package bio.overture.score.client.download;
 
-import java.io.File;
-
 import bio.overture.score.client.metadata.Entity;
 import lombok.Builder;
 import lombok.Data;
+import lombok.val;
+
+import java.io.File;
 
 @Data
 @Builder
@@ -33,8 +34,24 @@ public class DownloadRequest {
   private long length;
   private boolean validate;
   private Entity entity;
+  private OutputLayout layout = OutputLayout.ID;
 
   public File getOutputFilePath() {
-    return new File(outputDir, objectId);
+    if (layout == OutputLayout.BUNDLE) {
+      // "bundle/filename"
+      val bundleDir = new File(outputDir, entity.getGnosId());
+      val target = new File(bundleDir, entity.getFileName());
+      return target;
+    } else if (layout == OutputLayout.FILENAME) {
+      // "filename"
+      val target = new File(outputDir, entity.getFileName());
+      return target;
+    } else if (layout == OutputLayout.ID) {
+      // "id"
+      val target = new File(outputDir, entity.getId());
+      return target;
+    }
+    throw new IllegalStateException("Unsupported layout: " + layout);
   }
+
 }

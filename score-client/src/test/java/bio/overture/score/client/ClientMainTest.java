@@ -17,18 +17,17 @@
  */
 package bio.overture.score.client;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
-import java.io.File;
-import java.util.UUID;
-
 import lombok.val;
-
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+
+import java.io.File;
+import java.util.UUID;
+
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 public class ClientMainTest extends AbstractClientMainTest {
 
@@ -42,6 +41,15 @@ public class ClientMainTest extends AbstractClientMainTest {
     assertTrue(getExitCode() == 1);
     assertTrue(getOutput().contains(
         "Bad parameter(s): \"--output-format\": couldn't convert \"xxx\" to a value in [bam, sam, cram]"));
+  }
+
+  @Test
+  public void testRob(){
+    val manifestId_big = "17a9c9a9-bf43-4105-8187-6949edf227ed";
+    val manifestId = "9d4abd7f-e5e3-45b3-833c-fa78ba53c64f";
+    executeMain("--profile", "collab", "download", "--manifest" , manifestId, "--output-dir", "./robtest1", "--output-layout", "filename");
+//    executeMain("help", "download");
+
   }
 
   @Test

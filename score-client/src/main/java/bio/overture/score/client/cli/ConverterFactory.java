@@ -19,8 +19,8 @@ package bio.overture.score.client.cli;
 
 import java.util.Map;
 
-import bio.overture.score.client.command.DownloadCommand;
 import bio.overture.score.client.command.ViewCommand;
+import bio.overture.score.client.download.OutputLayout;
 import bio.overture.score.client.manifest.ManifestResource;
 import bio.overture.score.client.mount.MountOptions;
 import bio.overture.score.fs.StorageFileLayout;
@@ -38,10 +38,10 @@ public class ConverterFactory implements IStringConverterFactory {
     return null;
   }
 
-  public static class OutputLayoutConverter extends EnumConverter<DownloadCommand.OutputLayout> {
+  public static class OutputLayoutConverter extends EnumConverter<OutputLayout> {
 
     public OutputLayoutConverter(String optionName) {
-      super(DownloadCommand.OutputLayout.class, optionName);
+      super(OutputLayout.class, optionName);
     }
 
   }

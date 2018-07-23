@@ -17,19 +17,25 @@
  */
 package bio.overture.score.client.command;
 
-import static java.util.stream.Collectors.toList;
-import static org.icgc.dcc.common.core.util.Formats.formatBytes;
-import static bio.overture.score.client.cli.Parameters.checkParameter;
-
+import bio.overture.score.client.cli.ConverterFactory.OutputLayoutConverter;
+import bio.overture.score.client.cli.CreatableDirectoryValidator;
+import bio.overture.score.client.cli.ObjectIdListValidator;
 import bio.overture.score.client.download.DownloadRequest;
 import bio.overture.score.client.download.DownloadService;
+import bio.overture.score.client.download.OutputLayout;
 import bio.overture.score.client.manifest.ManifestResource;
 import bio.overture.score.client.manifest.ManifestService;
 import bio.overture.score.client.metadata.Entity;
 import bio.overture.score.client.metadata.MetadataService;
+import com.beust.jcommander.Parameter;
+import com.beust.jcommander.Parameters;
+import com.google.common.collect.Multimaps;
+import com.google.common.io.Files;
 import lombok.SneakyThrows;
-import lombok.val;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.io.IOException;
@@ -39,37 +45,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import bio.overture.score.client.download.DownloadRequest;
-import bio.overture.score.client.download.DownloadService;
-import bio.overture.score.client.manifest.ManifestResource;
-import bio.overture.score.client.manifest.ManifestService;
-import bio.overture.score.client.metadata.Entity;
-import bio.overture.score.client.metadata.MetadataService;
-import bio.overture.score.client.cli.ConverterFactory.OutputLayoutConverter;
-import bio.overture.score.client.cli.CreatableDirectoryValidator;
-import bio.overture.score.client.cli.ObjectIdListValidator;
-import bio.overture.score.client.download.DownloadRequest;
-import bio.overture.score.client.download.DownloadService;
-import bio.overture.score.client.manifest.ManifestResource;
-import bio.overture.score.client.manifest.ManifestService;
-import bio.overture.score.client.metadata.Entity;
-import bio.overture.score.client.metadata.MetadataService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-
-import com.beust.jcommander.Parameter;
-import com.beust.jcommander.Parameters;
-import com.google.common.collect.Multimaps;
-import com.google.common.io.Files;
+import static bio.overture.score.client.cli.Parameters.checkParameter;
+import static java.util.stream.Collectors.toList;
+import static org.icgc.dcc.common.core.util.Formats.formatBytes;
 
 @Slf4j
 @Component
 @Parameters(separators = "=", commandDescription = "Retrieve file object(s) from the remote storage repository")
 public class DownloadCommand extends RepositoryAccessCommand {
-
-  public enum OutputLayout {
-    BUNDLE, FILENAME, ID
-  }
 
   /**
    * Options
@@ -94,6 +77,8 @@ public class DownloadCommand extends RepositoryAccessCommand {
   private boolean validate = true;
   @Parameter(names = "--verify-connection", description = "Verify connection to repository", arity = 1)
   private boolean verifyConnection = true;
+  @Parameter(names = "--skip-existing-md5-check", description = "If a file already exists, skip the md5 checksum comparison", arity = 1)
+  private boolean skipExistingMd5Check = false;
 
   /**
    * Dependencies
@@ -129,7 +114,7 @@ public class DownloadCommand extends RepositoryAccessCommand {
                 manifestResource.getValue());
         return FAILURE_STATUS;
       }
-      val manifest = manifestService.getDownloadManifest(manifestResource);
+       val manifest = manifestService.getDownloadManifest(manifestResource);
 
       validateManifest(manifest);
 
@@ -167,11 +152,17 @@ public class DownloadCommand extends RepositoryAccessCommand {
               entity.getFileName())
           .printLine();
 
-      val builder = DownloadRequest.builder();
-      val request = builder.outputDir(outputDir).entity(entity).objectId(entity.getId()).offset(offset).length(length)
-          .validate(validate).build();
+      val request = DownloadRequest.builder()
+          .outputDir(outputDir)
+          .entity(entity)
+          .objectId(entity.getId())
+          .offset(offset)
+          .length(length)
+          .validate(validate)
+          .layout(layout)
+          .build();
 
-      downloadService.download(request, force);
+      downloadService.download(request, force, skipExistingMd5Check);
       finalizeDownload(entity);
 
       terminal.println("Done.");
