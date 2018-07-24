@@ -191,22 +191,33 @@ public class DownloadCommand extends RepositoryAccessCommand {
   @SneakyThrows
   private boolean alreadyDownloaded(Entity entity, boolean skipExistingMd5Check)  {
     val target = getLayoutTarget(entity);
+
+    // Check if final path exists
     if (target.exists()){
+
+      // Continue with download if it was previously started
       if (isResumeable(entity)){
         return false;
       }
 
+      // Since file exists, check its actual md5 against the expected
       if (!skipExistingMd5Check){
         val expectedMd5Result = downloadService.getExpectedMd5(entity.getId());
+
+        // Check there is an expected md5, if there isnt then assume the file has been downloaded already
         if (expectedMd5Result.isPresent()){
           val expectedMd5 = expectedMd5Result.get();
           val actualMd5 = calculateMd5(target);
+
+          // Skip downloading since md5s match
           if (expectedMd5.equals(actualMd5)){
             val message = format("File already downloaded with matching checksum comparison, "
                     + "skipping download: objectId=%s",
                 entity.getId());
             log.warn(message);
             terminal.printWarn(message);
+
+           // Do the download since the md5s dont match
           } else {
             val message = format("File exists but has a mismatching checksum. "
                     + "Re-downloading : objectId=%s   expectedMd5=%s   actualMd5=%s",
@@ -215,12 +226,16 @@ public class DownloadCommand extends RepositoryAccessCommand {
             terminal.printWarn(message);
             return false;
           }
+
+          // Skip downloading since md5 doesnt exist
         } else {
           val message = format("File exists but does not have an expected MD5, skipping download: objectId=%s",
               entity.getId());
           log.warn(message);
           terminal.printWarn(message);
         }
+
+        // Skip the download since file exists and forcibly skipping md5 checking
       } else {
         val message = format("File already downloaded, skipping download and checksum comparison: objectId=%s",
             entity.getId());
