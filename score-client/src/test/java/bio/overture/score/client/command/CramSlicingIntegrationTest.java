@@ -18,32 +18,18 @@
 package bio.overture.score.client.command;
 
 import bio.overture.score.client.metadata.Entity;
-import bio.overture.score.client.slicing.SamFileBuilder;
-import bio.overture.score.client.transport.NullSourceSeekableHTTPStream;
 import bio.overture.score.client.view.Viewer;
-import htsjdk.samtools.*;
-import htsjdk.samtools.cram.ref.ReferenceSource;
-import htsjdk.samtools.seekablestream.SeekableStream;
 import lombok.val;
-import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
 
-public class CramSlicingTest {
-  @Before
-  public void setUp() {
-    // integration test
-    // 1) Run minio.sh
-    // 2) Run the test below
-    // 3) Profit?
-  }
-
+@Ignore
+public class CramSlicingIntegrationTest {
   @Test
   public void test_cram_slicing() throws IOException {
     val endpoint="http://localhost:9444";
@@ -87,5 +73,4 @@ public class CramSlicingTest {
   public List<String> l(String... s) {
     return Arrays.asList(s);
   }
-
 }
