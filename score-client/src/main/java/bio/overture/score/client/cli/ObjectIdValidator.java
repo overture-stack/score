@@ -17,11 +17,11 @@
  */
 package bio.overture.score.client.cli;
 
-import static java.lang.String.format;
-import static bio.overture.score.core.util.UUIDs.tryParse;
-
 import com.beust.jcommander.IValueValidator;
 import com.beust.jcommander.ParameterException;
+
+import static bio.overture.score.core.util.UUIDs.tryParse;
+import static java.lang.String.format;
 
 public class ObjectIdValidator implements IValueValidator<String> {
 

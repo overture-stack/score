@@ -17,16 +17,13 @@
  */
 package bio.overture.score.client.exception;
 
-import static bio.overture.score.client.exception.ControlExceptionFactory.notResumableException;
-import static bio.overture.score.client.exception.ControlExceptionFactory.notRetryableException;
-import static bio.overture.score.client.exception.ControlExceptionFactory.retryableException;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.client.ClientHttpResponse;
+import org.springframework.web.client.DefaultResponseErrorHandler;
 
 import java.io.IOException;
 
-import lombok.extern.slf4j.Slf4j;
-
-import org.springframework.http.client.ClientHttpResponse;
-import org.springframework.web.client.DefaultResponseErrorHandler;
+import static bio.overture.score.client.exception.ControlExceptionFactory.*;
 
 /**
  * Responsible for translating server-side errors to client-side errors

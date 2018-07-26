@@ -17,13 +17,13 @@
  */
 package bio.overture.score.client.cli;
 
-import static bio.overture.score.client.cli.Parameters.checkParameter;
+import com.beust.jcommander.IValueValidator;
+import com.beust.jcommander.ParameterException;
 
 import java.io.File;
 import java.io.IOException;
 
-import com.beust.jcommander.IValueValidator;
-import com.beust.jcommander.ParameterException;
+import static bio.overture.score.client.cli.Parameters.checkParameter;
 
 public class CreatableDirectoryValidator implements IValueValidator<File> {
 

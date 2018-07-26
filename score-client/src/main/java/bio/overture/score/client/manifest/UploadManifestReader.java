@@ -17,25 +17,23 @@
  */
 package bio.overture.score.client.manifest;
 
-import static com.google.common.base.Preconditions.checkState;
-import static java.nio.charset.StandardCharsets.UTF_8;
+import bio.overture.score.client.manifest.UploadManifest.ManifestEntry;
+import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableList.Builder;
+import com.google.common.io.LineProcessor;
+import com.google.common.io.Resources;
+import lombok.NonNull;
+import lombok.SneakyThrows;
+import lombok.val;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.List;
 
-import lombok.NonNull;
-import lombok.SneakyThrows;
-import lombok.val;
-
-import bio.overture.score.client.manifest.UploadManifest.ManifestEntry;
-
-import com.google.common.base.Splitter;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableList.Builder;
-import com.google.common.io.LineProcessor;
-import com.google.common.io.Resources;
+import static com.google.common.base.Preconditions.checkState;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class UploadManifestReader {
 

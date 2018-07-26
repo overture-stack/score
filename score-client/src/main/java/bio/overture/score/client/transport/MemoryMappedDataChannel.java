@@ -17,22 +17,20 @@
  */
 package bio.overture.score.client.transport;
 
+import bio.overture.score.client.exception.NotRetryableException;
+import com.google.common.hash.Hashing;
+import com.google.common.hash.HashingOutputStream;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Method;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.Channels;
-
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
-
-import bio.overture.score.client.exception.NotRetryableException;
-
-import com.google.common.hash.Hashing;
-import com.google.common.hash.HashingOutputStream;
 
 /**
  * Channel based on {@link java.nio.MappedByteBuffer memory mapped buffer}

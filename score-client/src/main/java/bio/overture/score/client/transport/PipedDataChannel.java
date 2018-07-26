@@ -17,19 +17,17 @@
  */
 package bio.overture.score.client.transport;
 
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.PipedInputStream;
-
-import org.apache.commons.compress.utils.IOUtils;
 import bio.overture.score.client.exception.NotRetryableException;
-
 import com.google.common.hash.Hashing;
 import com.google.common.hash.HashingOutputStream;
-
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.compress.utils.IOUtils;
+
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.PipedInputStream;
 
 /**
  * Channels that use pipe

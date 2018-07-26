@@ -3,18 +3,19 @@
  */
 
 package bio.overture.score.client.command;
-import java.io.IOException;
-import java.net.URL;
 
-  import com.amazonaws.AmazonServiceException;
-  import com.amazonaws.HttpMethod;
-  import com.amazonaws.SdkClientException;
-  import com.amazonaws.auth.profile.ProfileCredentialsProvider;
+import com.amazonaws.AmazonServiceException;
+import com.amazonaws.HttpMethod;
+import com.amazonaws.SdkClientException;
+import com.amazonaws.auth.profile.ProfileCredentialsProvider;
 import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.services.s3.AmazonS3;
-  import com.amazonaws.services.s3.AmazonS3ClientBuilder;
-  import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest;
+import com.amazonaws.services.s3.AmazonS3ClientBuilder;
+import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest;
 import lombok.AllArgsConstructor;
+
+import java.io.IOException;
+import java.net.URL;
 
 @AllArgsConstructor
 public class PresignedURLGenerator {

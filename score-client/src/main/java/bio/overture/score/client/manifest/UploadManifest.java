@@ -17,11 +17,11 @@
  */
 package bio.overture.score.client.manifest;
 
-import java.util.List;
-
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.Value;
+
+import java.util.List;
 
 @Value
 public class UploadManifest {

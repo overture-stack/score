@@ -17,10 +17,10 @@
  */
 package bio.overture.score.client.download;
 
+import bio.overture.score.core.model.Part;
+
 import java.io.File;
 import java.util.List;
-
-import bio.overture.score.core.model.Part;
 
 public class Downloads {
 

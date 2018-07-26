@@ -17,8 +17,10 @@
  */
 package bio.overture.score.client.util;
 
-import lombok.val;
+import com.amazonaws.auth.internal.SignerConstants;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import org.springframework.http.HttpHeaders;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -27,10 +29,6 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.Map;
-
-import org.springframework.http.HttpHeaders;
-
-import com.amazonaws.auth.internal.SignerConstants;
 
 @Slf4j
 public class S3PresignedUrlValidator extends PresignedUrlValidator {

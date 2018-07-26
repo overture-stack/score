@@ -17,10 +17,11 @@
  */
 package bio.overture.score.client.manifest;
 
-import static bio.overture.score.core.util.UUIDs.isUUID;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.val;
+
+import static bio.overture.score.core.util.UUIDs.isUUID;
 
 @Getter
 public class ManifestResource {

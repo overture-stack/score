@@ -17,8 +17,19 @@
  */
 package bio.overture.score.client.metadata;
 
-import static java.util.stream.Collectors.joining;
-import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.Lists;
+import lombok.Getter;
+import lombok.NonNull;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import org.icgc.dcc.common.core.security.SSLCertificateValidation;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 import java.io.FileNotFoundException;
 import java.net.URL;
@@ -26,21 +37,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 
-import org.icgc.dcc.common.core.security.SSLCertificateValidation;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
-
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.collect.Lists;
-
-import lombok.Getter;
-import lombok.NonNull;
-import lombok.SneakyThrows;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
+import static java.util.stream.Collectors.joining;
+import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 
 /**
  * Responsible for interacting with metadata service.

@@ -17,9 +17,12 @@
  */
 package bio.overture.score.client.command;
 
-import lombok.val;
-
 import bio.overture.score.client.config.ClientProperties;
+import com.beust.jcommander.Parameter;
+import com.beust.jcommander.Parameters;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
+import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.config.RandomValuePropertySource;
@@ -27,11 +30,6 @@ import org.springframework.core.env.EnumerablePropertySource;
 import org.springframework.core.env.StandardEnvironment;
 import org.springframework.core.env.SystemEnvironmentPropertySource;
 import org.springframework.stereotype.Component;
-
-import com.beust.jcommander.Parameter;
-import com.beust.jcommander.Parameters;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
 
 @Component
 @Parameters(separators = "=", commandDescription = "Display application configuration information")

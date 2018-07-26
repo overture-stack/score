@@ -17,42 +17,30 @@
  */
 package bio.overture.score.client.slicing;
 
+import bio.overture.score.client.command.ViewCommand.OutputFormat;
+import bio.overture.score.client.metadata.Entity;
+import com.google.common.base.Throwables;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+import htsjdk.samtools.*;
+import htsjdk.samtools.SAMFileHeader.SortOrder;
+import htsjdk.samtools.cram.ref.ReferenceSource;
+import htsjdk.samtools.util.RuntimeIOException;
+import lombok.Cleanup;
+import lombok.NonNull;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-
-import bio.overture.score.client.metadata.Entity;
-import htsjdk.samtools.cram.ref.ReferenceSource;
-import org.apache.commons.lang.StringUtils;
-import bio.overture.score.client.command.ViewCommand.OutputFormat;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Throwables;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
-
-import htsjdk.samtools.QueryInterval;
-import htsjdk.samtools.SAMFileHeader;
-import htsjdk.samtools.SAMFileHeader.SortOrder;
-import htsjdk.samtools.SAMFileWriter;
-import htsjdk.samtools.SAMFileWriterFactory;
-import htsjdk.samtools.SAMProgramRecord;
-import htsjdk.samtools.SAMReadGroupRecord;
-import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SamInputResource;
-import htsjdk.samtools.SamReader;
-import htsjdk.samtools.SamReaderFactory;
-import htsjdk.samtools.ValidationStringency;
-import htsjdk.samtools.util.RuntimeIOException;
-import lombok.Cleanup;
-import lombok.NonNull;
-import lombok.SneakyThrows;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class SamFileBuilder {

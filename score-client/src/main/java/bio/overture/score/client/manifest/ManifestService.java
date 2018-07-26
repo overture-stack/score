@@ -17,19 +17,17 @@
  */
 package bio.overture.score.client.manifest;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
+import com.google.common.io.Resources;
+import lombok.SneakyThrows;
+import lombok.val;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-import lombok.SneakyThrows;
-import lombok.val;
-
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-
-import com.google.common.io.Resources;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 @Service
 public class ManifestService {

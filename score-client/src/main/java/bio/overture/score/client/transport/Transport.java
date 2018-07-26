@@ -17,11 +17,11 @@
  */
 package bio.overture.score.client.transport;
 
-import java.io.File;
-import java.util.List;
-
 import bio.overture.score.client.progress.Progress;
 import bio.overture.score.core.model.Part;
+
+import java.io.File;
+import java.util.List;
 
 /**
  * A transport for data upload.

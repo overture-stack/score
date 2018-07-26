@@ -17,25 +17,19 @@
  */
 package bio.overture.score.client.transport;
 
-import java.io.File;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-
 import bio.overture.score.client.progress.ProgressDataChannel;
 import bio.overture.score.core.model.DataChannel;
 import bio.overture.score.core.model.Part;
-
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteSource;
 import com.google.common.io.Files;
-
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+
+import java.io.File;
+import java.io.PipedInputStream;
+import java.io.PipedOutputStream;
+import java.util.concurrent.*;
 
 /**
  * A data transport using piped input channels for parallel upload

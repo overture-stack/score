@@ -17,12 +17,19 @@
  */
 package bio.overture.score.client.mount;
 
-import static com.google.common.collect.Iterables.getLast;
-import static com.google.common.collect.Maps.uniqueIndex;
-import static com.google.common.collect.Multimaps.index;
-import static java.util.concurrent.TimeUnit.HOURS;
-import static lombok.AccessLevel.PRIVATE;
-import static bio.overture.score.fs.StorageFile.storageFile;
+import bio.overture.score.client.download.DownloadService;
+import bio.overture.score.client.metadata.Entity;
+import bio.overture.score.core.model.IndexFileType;
+import bio.overture.score.core.model.ObjectInfo;
+import bio.overture.score.fs.StorageContext;
+import bio.overture.score.fs.StorageFile;
+import bio.overture.score.fs.StorageFileLayout;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Multimap;
+import lombok.*;
 
 import java.io.IOException;
 import java.net.URL;
@@ -32,26 +39,12 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
-import bio.overture.score.client.download.DownloadService;
-import bio.overture.score.client.metadata.Entity;
-
-import bio.overture.score.core.model.IndexFileType;
-import bio.overture.score.core.model.ObjectInfo;
-import bio.overture.score.fs.StorageContext;
-import bio.overture.score.fs.StorageFile;
-import bio.overture.score.fs.StorageFileLayout;
-
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Multimap;
-
-import lombok.Getter;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
-import lombok.val;
+import static bio.overture.score.fs.StorageFile.storageFile;
+import static com.google.common.collect.Iterables.getLast;
+import static com.google.common.collect.Maps.uniqueIndex;
+import static com.google.common.collect.Multimaps.index;
+import static java.util.concurrent.TimeUnit.HOURS;
+import static lombok.AccessLevel.PRIVATE;
 
 @RequiredArgsConstructor
 public class MountStorageContext implements StorageContext {

@@ -17,10 +17,9 @@
  */
 package bio.overture.score.client.cli;
 
-import org.junit.Test;
-
 import lombok.SneakyThrows;
 import lombok.val;
+import org.junit.Test;
 
 public class TerminalTest {
 

@@ -17,22 +17,14 @@
  */
 package bio.overture.score.client;
 
-import static bio.overture.score.client.command.ClientCommand.APPLICATION_NAME;
-import static bio.overture.score.client.command.ClientCommand.FAILURE_STATUS;
-import static bio.overture.score.client.util.SingletonBeansInitializer.singletonBeans;
-import static com.google.common.base.Objects.firstNonNull;
-import static java.lang.System.err;
-import static java.lang.System.out;
-
-import java.util.List;
-import java.util.Map;
-import java.util.function.Consumer;
-
 import bio.overture.score.client.cli.ConverterFactory;
 import bio.overture.score.client.cli.Terminal;
 import bio.overture.score.client.command.ClientCommand;
 import bio.overture.score.client.metadata.EntityNotFoundException;
+import com.beust.jcommander.*;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.Banner.Mode;
 import org.springframework.boot.CommandLineRunner;
@@ -40,14 +32,16 @@ import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 
-import com.beust.jcommander.JCommander;
-import com.beust.jcommander.MissingCommandException;
-import com.beust.jcommander.Parameter;
-import com.beust.jcommander.ParameterException;
-import com.beust.jcommander.Parameters;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Consumer;
 
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
+import static bio.overture.score.client.command.ClientCommand.APPLICATION_NAME;
+import static bio.overture.score.client.command.ClientCommand.FAILURE_STATUS;
+import static bio.overture.score.client.util.SingletonBeansInitializer.singletonBeans;
+import static com.google.common.base.Objects.firstNonNull;
+import static java.lang.System.err;
+import static java.lang.System.out;
 
 /**
  * Application entry-point.

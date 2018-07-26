@@ -17,7 +17,16 @@
  */
 package bio.overture.score.client.transport;
 
-import static com.google.common.base.Preconditions.checkState;
+import bio.overture.score.client.download.Downloads;
+import bio.overture.score.client.progress.Progress;
+import bio.overture.score.client.progress.ProgressDataChannel;
+import bio.overture.score.core.model.DataChannel;
+import bio.overture.score.core.model.Part;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Ordering;
+import lombok.*;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -27,30 +36,10 @@ import java.nio.channels.FileChannel;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
 
-import bio.overture.score.client.progress.Progress;
-import bio.overture.score.client.download.Downloads;
-import bio.overture.score.client.progress.ProgressDataChannel;
-import bio.overture.score.core.model.DataChannel;
-import bio.overture.score.core.model.Part;
-
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Ordering;
-
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.SneakyThrows;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
+import static com.google.common.base.Preconditions.checkState;
 
 /**
  * The default transport for parallel upload

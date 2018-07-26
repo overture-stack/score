@@ -17,17 +17,15 @@
  */
 package bio.overture.score.client.slicing;
 
+import bio.overture.score.client.util.AlphanumComparator;
 import htsjdk.samtools.QueryInterval;
 import htsjdk.samtools.SAMSequenceDictionary;
-
-import java.util.List;
-import java.util.Optional;
-
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
 
-import bio.overture.score.client.util.AlphanumComparator;
+import java.util.List;
+import java.util.Optional;
 
 @RequiredArgsConstructor
 public class SliceConverter {

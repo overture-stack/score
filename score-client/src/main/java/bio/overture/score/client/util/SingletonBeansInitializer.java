@@ -17,14 +17,13 @@
  */
 package bio.overture.score.client.util;
 
-import static lombok.AccessLevel.PRIVATE;
-
-import org.springframework.context.ApplicationContextInitializer;
-import org.springframework.context.ConfigurableApplicationContext;
-
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
+import org.springframework.context.ApplicationContextInitializer;
+import org.springframework.context.ConfigurableApplicationContext;
+
+import static lombok.AccessLevel.PRIVATE;
 
 @RequiredArgsConstructor(access = PRIVATE)
 public class SingletonBeansInitializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {

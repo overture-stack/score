@@ -17,16 +17,15 @@
  */
 package bio.overture.score.client.manifest;
 
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.hasSize;
-import static org.junit.Assert.assertThat;
+import bio.overture.score.client.manifest.DownloadManifest.ManifestEntry;
+import lombok.val;
+import org.junit.Test;
 
 import java.io.File;
 
-import bio.overture.score.client.manifest.DownloadManifest.ManifestEntry;
-import org.junit.Test;
-
-import lombok.val;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasSize;
+import static org.junit.Assert.assertThat;
 
 public class DownloadManifestReaderTest {
 

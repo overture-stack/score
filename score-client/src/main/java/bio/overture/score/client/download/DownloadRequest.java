@@ -17,11 +17,11 @@
  */
 package bio.overture.score.client.download;
 
-import java.io.File;
-
 import bio.overture.score.client.metadata.Entity;
 import lombok.Builder;
 import lombok.Data;
+
+import java.io.File;
 
 @Data
 @Builder

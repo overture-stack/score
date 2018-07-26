@@ -17,26 +17,14 @@
  */
 package bio.overture.score.client.config;
 
-import static com.fasterxml.jackson.databind.SerializationFeature.FAIL_ON_EMPTY_BEANS;
-import static com.google.common.base.Objects.firstNonNull;
-import static com.google.common.base.Strings.padEnd;
-import static com.google.common.base.Strings.repeat;
-import static org.icgc.dcc.common.core.util.Joiners.WHITESPACE;
-import static org.icgc.dcc.common.core.util.VersionUtils.getScmInfo;
-
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import lombok.val;
 import lombok.extern.slf4j.Slf4j;
-
-import java.io.File;
-import java.lang.management.ManagementFactory;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-
-import javax.annotation.PostConstruct;
-
+import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.config.RandomValuePropertySource;
 import org.springframework.core.env.EnumerablePropertySource;
@@ -44,10 +32,19 @@ import org.springframework.core.env.StandardEnvironment;
 import org.springframework.core.env.SystemEnvironmentPropertySource;
 import org.springframework.stereotype.Component;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
+import javax.annotation.PostConstruct;
+import java.io.File;
+import java.lang.management.ManagementFactory;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+
+import static com.fasterxml.jackson.databind.SerializationFeature.FAIL_ON_EMPTY_BEANS;
+import static com.google.common.base.Objects.firstNonNull;
+import static com.google.common.base.Strings.padEnd;
+import static com.google.common.base.Strings.repeat;
+import static org.icgc.dcc.common.core.util.Joiners.WHITESPACE;
+import static org.icgc.dcc.common.core.util.VersionUtils.getScmInfo;
 
 @Slf4j
 @Component

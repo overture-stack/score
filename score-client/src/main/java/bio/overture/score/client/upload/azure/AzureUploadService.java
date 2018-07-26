@@ -17,33 +17,26 @@
  */
 package bio.overture.score.client.upload.azure;
 
+import bio.overture.score.client.cli.Terminal;
 import bio.overture.score.client.exception.NotRetryableException;
 import bio.overture.score.client.progress.Progress;
 import bio.overture.score.client.transport.StorageService;
-import lombok.val;
+import bio.overture.score.client.upload.UploadService;
+import bio.overture.score.core.model.ObjectSpecification;
+import com.microsoft.azure.storage.*;
+import com.microsoft.azure.storage.blob.BlobRequestOptions;
+import com.microsoft.azure.storage.blob.CloudBlockBlob;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import org.apache.commons.lang3.tuple.Pair;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import org.apache.commons.lang3.tuple.Pair;
-import bio.overture.score.client.cli.Terminal;
-import bio.overture.score.client.upload.UploadService;
-import bio.overture.score.core.model.ObjectSpecification;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-
-import com.microsoft.azure.storage.AccessCondition;
-import com.microsoft.azure.storage.OperationContext;
-import com.microsoft.azure.storage.ResponseReceivedEvent;
-import com.microsoft.azure.storage.RetryingEvent;
-import com.microsoft.azure.storage.StorageEvent;
-import com.microsoft.azure.storage.StorageException;
-import com.microsoft.azure.storage.blob.BlobRequestOptions;
-import com.microsoft.azure.storage.blob.CloudBlockBlob;
 
 @Slf4j
 public class AzureUploadService implements UploadService {

@@ -17,29 +17,19 @@
  */
 package bio.overture.score.client.transport;
 
-import static com.google.common.base.Preconditions.checkState;
-import static org.springframework.http.HttpMethod.DELETE;
-import static org.springframework.http.HttpMethod.GET;
-import static org.springframework.http.HttpMethod.POST;
-
-import java.io.File;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.net.SocketTimeoutException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.List;
-
 import bio.overture.score.client.download.DownloadStateStore;
 import bio.overture.score.client.exception.NotResumableException;
 import bio.overture.score.client.exception.NotRetryableException;
 import bio.overture.score.client.exception.RetryableException;
-import bio.overture.score.core.model.DataChannel;
-import bio.overture.score.core.model.ObjectInfo;
-import bio.overture.score.core.model.ObjectSpecification;
-import bio.overture.score.core.model.Part;
-import bio.overture.score.core.model.UploadProgress;
+import bio.overture.score.core.model.*;
 import bio.overture.score.core.util.Parts;
+import com.amazonaws.services.s3.Headers;
+import com.amazonaws.services.s3.model.SSEAlgorithm;
+import com.google.common.hash.Hashing;
+import com.google.common.hash.HashingInputStream;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -56,14 +46,16 @@ import org.springframework.web.client.ResponseExtractor;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
-import com.amazonaws.services.s3.Headers;
-import com.amazonaws.services.s3.model.SSEAlgorithm;
-import com.google.common.hash.Hashing;
-import com.google.common.hash.HashingInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.net.SocketTimeoutException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.List;
 
-import lombok.SneakyThrows;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
+import static com.google.common.base.Preconditions.checkState;
+import static org.springframework.http.HttpMethod.*;
 
 /**
  * Service responsible for interacting with the remote upload service.

@@ -17,43 +17,20 @@
  */
 package bio.overture.score.client.command;
 
-import static com.google.common.base.Objects.firstNonNull;
-import static com.google.common.collect.Maps.newHashMap;
-import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toSet;
-import static bio.overture.score.client.mount.MountService.INTERNAL_MOUNT_OPTIONS;
-import static bio.overture.score.client.util.Formats.formatBytes;
-import static bio.overture.score.client.util.Formats.formatBytesUnits;
-import static bio.overture.score.fs.util.Formats.formatCount;
-import static bio.overture.score.client.cli.Parameters.checkParameter;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Stream;
-
+import bio.overture.score.client.cli.ConverterFactory.MountOptionsConverter;
+import bio.overture.score.client.cli.ConverterFactory.StorageFileLayoutConverter;
+import bio.overture.score.client.cli.DirectoryValidator;
 import bio.overture.score.client.download.DownloadService;
 import bio.overture.score.client.manifest.ManifestResource;
 import bio.overture.score.client.manifest.ManifestService;
 import bio.overture.score.client.metadata.Entity;
 import bio.overture.score.client.metadata.MetadataService;
-import bio.overture.score.client.transport.StorageService;
-import lombok.SneakyThrows;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
-
-import bio.overture.score.client.cli.ConverterFactory.MountOptionsConverter;
-import bio.overture.score.client.cli.ConverterFactory.StorageFileLayoutConverter;
-import bio.overture.score.client.cli.DirectoryValidator;
 import bio.overture.score.client.mount.MountService;
 import bio.overture.score.client.mount.MountStorageContext;
+import bio.overture.score.client.transport.StorageService;
 import bio.overture.score.core.model.ObjectInfo;
 import bio.overture.score.fs.StorageFileLayout;
 import bio.overture.score.fs.StorageFileSystems;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -62,8 +39,28 @@ import com.google.common.base.Stopwatch;
 import com.google.common.base.Supplier;
 import com.sun.akuma.Daemon;
 import com.sun.akuma.JavaVMArguments;
-
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Stream;
+
+import static bio.overture.score.client.cli.Parameters.checkParameter;
+import static bio.overture.score.client.mount.MountService.INTERNAL_MOUNT_OPTIONS;
+import static bio.overture.score.client.util.Formats.formatBytes;
+import static bio.overture.score.client.util.Formats.formatBytesUnits;
+import static bio.overture.score.fs.util.Formats.formatCount;
+import static com.google.common.base.Objects.firstNonNull;
+import static com.google.common.collect.Maps.newHashMap;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
 
 @Slf4j
 @Component

@@ -17,10 +17,9 @@
  */
 package bio.overture.score.client.metadata;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)

@@ -17,31 +17,6 @@
  */
 package bio.overture.score.client.command;
 
-import bio.overture.score.client.metadata.Entity;
-import bio.overture.score.client.metadata.MetadataService;
-import bio.overture.score.client.slicing.SamFileBuilder;
-import bio.overture.score.client.transport.NullSourceSeekableHTTPStream;
-import bio.overture.score.client.view.Viewer;
-import com.beust.jcommander.Parameter;
-import com.beust.jcommander.Parameters;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
-import htsjdk.samtools.CRAMFileReader;
-import htsjdk.samtools.SamInputResource;
-import htsjdk.samtools.SamReader;
-import htsjdk.samtools.ValidationStringency;
-import htsjdk.samtools.cram.ref.ReferenceSource;
-import htsjdk.samtools.seekablestream.SeekableStream;
-import htsjdk.tribble.AbstractFeatureReader;
-import htsjdk.tribble.Feature;
-import htsjdk.tribble.bed.BEDCodec;
-import htsjdk.tribble.bed.BEDFeature;
-import htsjdk.tribble.readers.LineIterator;
-import lombok.AllArgsConstructor;
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
-import lombok.val;
-import org.icgc.dcc.common.core.util.VersionUtils;
 import bio.overture.score.client.cli.ConverterFactory.OutputFormatConverter;
 import bio.overture.score.client.cli.ConverterFactory.OutputTypeConverter;
 import bio.overture.score.client.cli.CreatableDirectoryValidator;
@@ -51,6 +26,23 @@ import bio.overture.score.client.download.DownloadService;
 import bio.overture.score.client.manifest.DownloadManifest;
 import bio.overture.score.client.manifest.ManifestResource;
 import bio.overture.score.client.manifest.ManifestService;
+import bio.overture.score.client.metadata.Entity;
+import bio.overture.score.client.metadata.MetadataService;
+import bio.overture.score.client.slicing.SamFileBuilder;
+import bio.overture.score.client.view.Viewer;
+import com.beust.jcommander.Parameter;
+import com.beust.jcommander.Parameters;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
+import htsjdk.tribble.AbstractFeatureReader;
+import htsjdk.tribble.Feature;
+import htsjdk.tribble.bed.BEDCodec;
+import htsjdk.tribble.bed.BEDFeature;
+import htsjdk.tribble.readers.LineIterator;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import org.icgc.dcc.common.core.util.VersionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -59,13 +51,12 @@ import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static java.util.stream.Collectors.toList;
 import static bio.overture.score.client.cli.Parameters.checkParameter;
+import static java.util.stream.Collectors.toList;
 
 @Slf4j
 @Component

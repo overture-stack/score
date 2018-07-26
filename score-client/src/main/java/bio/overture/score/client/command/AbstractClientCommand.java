@@ -17,12 +17,11 @@
  */
 package bio.overture.score.client.command;
 
-import bio.overture.score.client.manifest.DownloadManifest;
-import lombok.val;
-
 import bio.overture.score.client.cli.Terminal;
 import bio.overture.score.client.config.ClientProperties;
+import bio.overture.score.client.manifest.DownloadManifest;
 import bio.overture.score.client.util.ProfileRepoValidator;
+import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 

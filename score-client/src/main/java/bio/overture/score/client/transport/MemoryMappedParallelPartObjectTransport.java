@@ -17,7 +17,20 @@
  */
 package bio.overture.score.client.transport;
 
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import bio.overture.score.client.download.Downloads;
+import bio.overture.score.client.exception.NotResumableException;
+import bio.overture.score.client.exception.NotRetryableException;
+import bio.overture.score.client.exception.RetryableException;
+import bio.overture.score.client.progress.ProgressDataChannel;
+import bio.overture.score.core.model.DataChannel;
+import bio.overture.score.core.model.Part;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Ordering;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import lombok.AllArgsConstructor;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -27,30 +40,10 @@ import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.Collections;
 import java.util.LinkedList;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import lombok.AllArgsConstructor;
-import lombok.SneakyThrows;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
-
-import bio.overture.score.client.download.Downloads;
-import bio.overture.score.client.exception.NotResumableException;
-import bio.overture.score.client.exception.NotRetryableException;
-import bio.overture.score.client.exception.RetryableException;
-import bio.overture.score.client.progress.ProgressDataChannel;
-import bio.overture.score.core.model.DataChannel;
-import bio.overture.score.core.model.Part;
-
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Ordering;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 /**
  * A data transport using memory mapped channels for parallel upload/download

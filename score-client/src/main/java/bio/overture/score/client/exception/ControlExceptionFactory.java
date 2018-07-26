@@ -17,11 +17,10 @@
  */
 package bio.overture.score.client.exception;
 
-import java.io.IOException;
-
+import com.amazonaws.util.IOUtils;
 import org.springframework.http.client.ClientHttpResponse;
 
-import com.amazonaws.util.IOUtils;
+import java.io.IOException;
 
 public class ControlExceptionFactory {
 

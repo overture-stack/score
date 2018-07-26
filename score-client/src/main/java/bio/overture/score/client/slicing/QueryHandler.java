@@ -19,16 +19,15 @@ package bio.overture.score.client.slicing;
 
 import htsjdk.samtools.QueryInterval;
 import htsjdk.samtools.SAMFileHeader;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Arrays;
-import java.util.Collections;
-
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.val;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class QueryHandler {

@@ -17,13 +17,12 @@
  */
 package bio.overture.score.client.cli;
 
-import static lombok.AccessLevel.PRIVATE;
-
 import com.beust.jcommander.MissingCommandException;
 import com.beust.jcommander.ParameterException;
-
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
+
+import static lombok.AccessLevel.PRIVATE;
 
 @NoArgsConstructor(access = PRIVATE)
 public class Parameters {

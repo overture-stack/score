@@ -17,20 +17,14 @@
  */
 package bio.overture.score.client.transport;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import com.google.common.hash.Hashing;
+import com.google.common.hash.HashingOutputStream;
+import lombok.AllArgsConstructor;
+
+import java.io.*;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
-
-import lombok.AllArgsConstructor;
-
-import com.google.common.hash.Hashing;
-import com.google.common.hash.HashingOutputStream;
 
 /**
  * A data Channel based on {@link java.io.File File}

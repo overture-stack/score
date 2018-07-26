@@ -17,13 +17,12 @@
  */
 package bio.overture.score.client.progress;
 
+import bio.overture.score.core.util.ForwardingInputStream;
 import lombok.NonNull;
 import lombok.val;
 
 import java.io.IOException;
 import java.io.InputStream;
-
-import bio.overture.score.core.util.ForwardingInputStream;
 
 public class ProgressInputStream extends ForwardingInputStream {
 
