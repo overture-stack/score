@@ -17,7 +17,9 @@
  */
 package bio.overture.score.client.transport;
 
+import bio.overture.score.client.config.ClientProperties;
 import bio.overture.score.client.download.DownloadStateStore;
+import bio.overture.score.client.encryption.TokenEncryptionService;
 import bio.overture.score.client.exception.NotResumableException;
 import bio.overture.score.client.exception.NotRetryableException;
 import bio.overture.score.client.exception.RetryableException;
@@ -41,6 +43,7 @@ import org.springframework.retry.RetryCallback;
 import org.springframework.retry.RetryContext;
 import org.springframework.retry.support.RetryTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import org.springframework.web.client.RequestCallback;
 import org.springframework.web.client.ResponseExtractor;
 import org.springframework.web.client.RestClientException;
@@ -89,6 +92,11 @@ public class StorageService {
   @Autowired
   @Qualifier("clientVersion")
   private String clientVersion;
+  @Autowired
+  private ClientProperties properties;
+  @Autowired
+  private TokenEncryptionService tokenEncryptionService;
+
 
   @SneakyThrows
   public List<ObjectInfo> listObjects() {
@@ -112,13 +120,21 @@ public class StorageService {
       @Override
       public Void doWithRetry(RetryContext ctx) throws IOException {
         log.debug("Download Part URL: {}", part.getUrl());
+        // set encrypted access token if not already set
+        if(StringUtils.isEmpty(properties.getEncryptedAccessToken())){
+          setEncryptedAccessToken();
+        }
 
         try {
           // the actual GET operation
           log.debug("performing GET {}", part.getUrl());
           String md5 = dataTemplate.execute(new URI(part.getUrl()), HttpMethod.GET,
 
-              request -> request.getHeaders().set(HttpHeaders.RANGE, Parts.getHttpRangeValue(part)),
+              request ->
+              {
+                    request.getHeaders().set(HttpHeaders.RANGE, Parts.getHttpRangeValue(part));
+                    request.getHeaders().set("X-ICGC-TOKEN", properties.getEncryptedAccessToken());
+              },
 
               response -> {
                 try (HashingInputStream his = new HashingInputStream(Hashing.md5(), response.getBody())) {
@@ -364,6 +380,11 @@ public class StorageService {
     }
   }
 
+  private void setEncryptedAccessToken() {
+    val encryptedToken = tokenEncryptionService.encryptAccessToken(properties.getAccessToken());
+    val tokenValue = encryptedToken.isPresent() ? encryptedToken.get() : "";
+    properties.setEncryptedAccessToken(tokenValue);
+  }
   private HttpEntity<Object> defaultEntity() {
     return new HttpEntity<Object>(defaultHeaders());
   }

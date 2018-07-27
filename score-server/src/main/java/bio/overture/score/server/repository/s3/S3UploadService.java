@@ -1,12 +1,45 @@
 package bio.overture.score.server.repository.s3;
 
+import bio.overture.score.core.model.ObjectKey;
+import bio.overture.score.core.model.ObjectSpecification;
+import bio.overture.score.core.model.UploadProgress;
+import bio.overture.score.core.util.ObjectKeys;
 import bio.overture.score.server.config.S3Config;
-import com.amazonaws.services.s3.model.*;
+import bio.overture.score.server.exception.IdNotFoundException;
+import bio.overture.score.server.exception.InternalUnrecoverableError;
+import bio.overture.score.server.exception.NotRetryableException;
+import bio.overture.score.server.exception.RetryableException;
+import bio.overture.score.server.metadata.MetadataEntity;
+import bio.overture.score.server.metadata.MetadataService;
+import bio.overture.score.server.repository.PartCalculator;
+import bio.overture.score.server.repository.URLGenerator;
+import bio.overture.score.server.repository.UploadPartDetail;
+import bio.overture.score.server.repository.UploadService;
+import bio.overture.score.server.repository.UploadStateStore;
+import com.amazonaws.AmazonClientException;
+import com.amazonaws.AmazonServiceException;
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.model.AbortMultipartUploadRequest;
+import com.amazonaws.services.s3.model.AmazonS3Exception;
+import com.amazonaws.services.s3.model.CompleteMultipartUploadRequest;
+import com.amazonaws.services.s3.model.InitiateMultipartUploadRequest;
+import com.amazonaws.services.s3.model.ListMultipartUploadsRequest;
+import com.amazonaws.services.s3.model.ListPartsRequest;
+import com.amazonaws.services.s3.model.MultipartUpload;
+import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.amazonaws.services.s3.model.PartSummary;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.NonNull;
 import lombok.Setter;
 import lombok.SneakyThrows;
-import lombok.val;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Profile;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClientException;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -17,32 +50,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import bio.overture.score.core.model.ObjectKey;
-import bio.overture.score.core.model.ObjectSpecification;
-import bio.overture.score.core.model.UploadProgress;
-import bio.overture.score.core.util.ObjectKeys;
-import bio.overture.score.server.config.S3Config;
-import bio.overture.score.server.exception.IdNotFoundException;
-import bio.overture.score.server.exception.InternalUnrecoverableError;
-import bio.overture.score.server.exception.NotRetryableException;
-import bio.overture.score.server.exception.RetryableException;
-import bio.overture.score.server.metadata.MetadataService;
-import bio.overture.score.server.repository.URLGenerator;
-import bio.overture.score.server.repository.PartCalculator;
-import bio.overture.score.server.repository.UploadPartDetail;
-import bio.overture.score.server.repository.UploadService;
-import bio.overture.score.server.repository.UploadStateStore;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Profile;
-import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestClientException;
-
-import com.amazonaws.AmazonClientException;
-import com.amazonaws.AmazonServiceException;
-import com.amazonaws.services.s3.AmazonS3;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import static bio.overture.score.server.metadata.MetadataService.getAnalysisId;
 
 /**
  * A service for object upload.
@@ -57,6 +65,7 @@ public class S3UploadService implements UploadService {
    * Constants.
    */
   private static final ObjectMapper MAPPER = new ObjectMapper();
+  private static final String UNPUBLISHED_ANALYSIS_STATE = "UNPUBLISHED";
 
   /**
    * Configuration.
@@ -65,6 +74,9 @@ public class S3UploadService implements UploadService {
   private String dataDir;
   @Value("${collaboratory.upload.expiration}")
   private int expiration;
+
+  @Value("${metadata.useLegacyMode:false}")
+  private boolean useLegacyMode;
 
   @Autowired
   private S3Config s3Conf;
@@ -394,6 +406,23 @@ public class S3UploadService implements UploadService {
 
       log.error(message); // Log to audit log file
       throw new InternalUnrecoverableError(message);
+    }
+
+    if (!useLegacyMode){
+      checkAnalysisState(entity);
+    }
+  }
+
+  void checkAnalysisState(MetadataEntity entity){
+    val objectId = entity.getId();
+    val analysisState = metadataClient.getAnalysisStateForMetadata(entity);
+    if (!analysisState.equals(UNPUBLISHED_ANALYSIS_STATE)){
+      val message = String.format("Critical Error: cannot complete upload for objectId '%s' with "
+              + "analysisState '%s' and analysisId '%s'. "
+              + "Can only upload objects that have the analysisState '%s'. Update the file metadata and retry.",
+          objectId, analysisState, getAnalysisId(entity), UNPUBLISHED_ANALYSIS_STATE);
+      log.error(message); // Log to audit log file
+      throw new NotRetryableException(new IllegalStateException(message));
     }
   }
 
