@@ -15,10 +15,23 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package bio.overture.score.client.metadata;
+package bio.overture.score.client.metadata.legacy;
 
-import static java.util.stream.Collectors.joining;
-import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
+import bio.overture.score.client.metadata.Entity;
+import bio.overture.score.client.metadata.EntityNotFoundException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.Lists;
+import lombok.Getter;
+import lombok.NonNull;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import org.icgc.dcc.common.core.security.SSLCertificateValidation;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 import java.io.FileNotFoundException;
 import java.net.URL;
@@ -26,28 +39,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 
-import org.icgc.dcc.common.core.security.SSLCertificateValidation;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
-
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.collect.Lists;
-
-import lombok.Getter;
-import lombok.NonNull;
-import lombok.SneakyThrows;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
+import static java.util.stream.Collectors.joining;
+import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 
 /**
  * Responsible for interacting with metadata service.
  */
 @Slf4j
 @Component
-public class MetadataClient {
+public class LegacyMetadataClient {
 
   /**
    * Constants.
@@ -62,7 +62,7 @@ public class MetadataClient {
   private final String serverUrl;
 
   @Autowired
-  public MetadataClient(@Value("${metadata.url}") String serverUrl, @Value("${metadata.ssl.enabled}") boolean ssl) {
+  public LegacyMetadataClient(@Value("${metadata.url}") String serverUrl, @Value("${metadata.ssl.enabled}") boolean ssl) {
     if (!ssl) {
       SSLCertificateValidation.disable();
     }
@@ -72,10 +72,6 @@ public class MetadataClient {
 
   public Entity findEntity(@NonNull String objectId) throws EntityNotFoundException {
     return read("/" + objectId);
-  }
-
-  public List<Entity> findEntities() throws EntityNotFoundException {
-    return findEntities(new String[] {});
   }
 
   public List<Entity> findEntities(String... fields) throws EntityNotFoundException {

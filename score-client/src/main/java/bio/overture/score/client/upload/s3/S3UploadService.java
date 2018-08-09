@@ -17,29 +17,27 @@
  */
 package bio.overture.score.client.upload.s3;
 
+import bio.overture.score.client.cli.Terminal;
 import bio.overture.score.client.exception.NotResumableException;
 import bio.overture.score.client.exception.NotRetryableException;
 import bio.overture.score.client.progress.Progress;
-import bio.overture.score.client.transport.StorageService;
+import bio.overture.score.client.storage.StorageService;
 import bio.overture.score.client.transport.Transport;
-import lombok.SneakyThrows;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
-
-import javax.annotation.PostConstruct;
-
-import bio.overture.score.client.cli.Terminal;
 import bio.overture.score.client.upload.UploadService;
 import bio.overture.score.client.upload.UploadStateStore;
 import bio.overture.score.core.model.ObjectSpecification;
 import bio.overture.score.core.model.Part;
 import bio.overture.score.core.model.UploadProgress;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+
+import javax.annotation.PostConstruct;
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
 
 /**
  * main class to handle uploading objects

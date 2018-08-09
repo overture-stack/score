@@ -17,18 +17,18 @@
  */
 package bio.overture.score.client.transport;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import bio.overture.score.client.progress.Progress;
+import bio.overture.score.client.progress.ProgressDataChannel;
+import bio.overture.score.client.storage.StorageService;
+import bio.overture.score.core.model.DataChannel;
+import bio.overture.score.core.model.Part;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
 import java.util.List;
 
-import bio.overture.score.client.progress.Progress;
-import bio.overture.score.client.progress.ProgressDataChannel;
-import bio.overture.score.core.model.DataChannel;
-import bio.overture.score.core.model.Part;
-
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * A data transport for sequential upload

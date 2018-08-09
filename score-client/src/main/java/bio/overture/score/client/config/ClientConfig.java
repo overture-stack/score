@@ -17,32 +17,24 @@
  */
 package bio.overture.score.client.config;
 
-import static com.google.common.base.Objects.firstNonNull;
-import static java.lang.String.format;
-import static java.util.Collections.singletonList;
-import static javax.ws.rs.core.HttpHeaders.AUTHORIZATION;
-
-import java.io.IOException;
-
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.SSLContext;
-
 import bio.overture.score.client.download.DownloadStateStore;
-import bio.overture.score.client.upload.UploadStateStore;
-import lombok.SneakyThrows;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
-
-import org.apache.http.client.HttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.message.BasicHeader;
 import bio.overture.score.client.exception.AmazonS3RetryableResponseErrorHandler;
 import bio.overture.score.client.exception.ConnectivityResponseHandler;
 import bio.overture.score.client.exception.NotResumableException;
 import bio.overture.score.client.exception.NotRetryableException;
 import bio.overture.score.client.exception.RetryableException;
 import bio.overture.score.client.exception.ServiceRetryableResponseErrorHandler;
+import bio.overture.score.client.manifest.kf.KFFileBean;
+import bio.overture.score.client.upload.UploadStateStore;
+import bio.overture.score.client.util.CsvParser;
+import com.google.common.collect.ImmutableMap;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import org.apache.http.client.HttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.message.BasicHeader;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.PropertyPlaceholderAutoConfiguration;
@@ -56,8 +48,19 @@ import org.springframework.retry.backoff.ExponentialBackOffPolicy;
 import org.springframework.retry.policy.SimpleRetryPolicy;
 import org.springframework.retry.support.RetryTemplate;
 import org.springframework.web.client.RestTemplate;
+import org.thymeleaf.TemplateEngine;
+import org.thymeleaf.spring5.templateresolver.SpringResourceTemplateResolver;
+import org.thymeleaf.templatemode.TemplateMode;
+import org.thymeleaf.templateresolver.ITemplateResolver;
 
-import com.google.common.collect.ImmutableMap;
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.SSLContext;
+import java.io.IOException;
+
+import static com.google.common.base.Objects.firstNonNull;
+import static java.lang.String.format;
+import static java.util.Collections.singletonList;
+import static javax.ws.rs.core.HttpHeaders.AUTHORIZATION;
 
 /**
  * Configurations for connections for uploads
@@ -68,6 +71,7 @@ import com.google.common.collect.ImmutableMap;
 @Import(PropertyPlaceholderAutoConfiguration.class)
 public class ClientConfig {
 
+  private static final Character TAB_SEP = '\t';
   /**
    * Configuration.
    */
@@ -85,6 +89,31 @@ public class ClientConfig {
   @Bean
   public String clientVersion() {
     return firstNonNull(ClientConfig.class.getPackage().getImplementationVersion(), "[unknown version]");
+  }
+
+  @Bean
+  public CsvParser<KFFileBean> kfFileBeanCsvParser(){
+    return new CsvParser<>(KFFileBean.class, TAB_SEP);
+  }
+
+  @Bean
+  public TemplateEngine textTemplateEngine(){
+    val templateEngine = new TemplateEngine();
+    templateEngine.addTemplateResolver(springThymeleafTemplateResolver());
+    return templateEngine;
+  }
+
+  @Bean
+  public ITemplateResolver springThymeleafTemplateResolver() {
+    val templateResolver = new SpringResourceTemplateResolver();
+    templateResolver.setPrefix("classpath:/templates/");
+    templateResolver.setSuffix(".txt");
+    templateResolver.setTemplateMode(TemplateMode.TEXT);
+    templateResolver.setCharacterEncoding("UTF8");
+    templateResolver.setCheckExistence(true);
+    templateResolver.setCacheable(false);
+    templateResolver.setOrder(1);
+    return templateResolver;
   }
 
   @Bean

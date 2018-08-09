@@ -15,54 +15,51 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package bio.overture.score.core.model;
+package bio.overture.score.core.util;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import bio.overture.score.core.model.Part;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableList.Builder;
+import lombok.extern.slf4j.Slf4j;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import java.util.List;
 
 /**
- * An entity to represent a part that the client will be uploaded
+ * a simple way to divide an object into multi parts
  */
-@Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
-@JsonIgnoreProperties(ignoreUnknown = true)
-final public class Part implements Comparable<Part> {
+@Slf4j
+public class SimplePartCalculator implements PartCalculator {
 
-  int partNumber;
-  long partSize;
-  long offset;
-  String url;
-  String md5; // md5 of a local copy of the part (i.e., after a download)
-  @JsonInclude(Include.NON_NULL)
-  String sourceMd5; // original md5 of part; set when uploaded to S3/Ceph
+  private static final int MAX_NUM_PART = 10000;
+  private static final int MIN_PART_SIZE = 20 * 1024 * 1024; // 20MB
 
-  @JsonIgnore
-  public boolean isCompleted() {
-    return md5 != null;
+  private final int minPartSize;
+
+  public SimplePartCalculator(int minPartSize) {
+    this.minPartSize = Math.max(minPartSize, MIN_PART_SIZE);
   }
 
   @Override
-  public int compareTo(Part otherPart) {
-    return this.partNumber - otherPart.partNumber;
+  public List<Part> divide(long fileSize) {
+    return divide(0, fileSize);
   }
 
-  @JsonIgnore
-  public boolean hasFailedChecksum() {
-    // if we don't have a source MD5 (because it wasn't getting saved), we can't do this check
-    return isMissingSourceMd5() ? false : !sourceMd5.equals(md5);
+  @Override
+  public List<Part> divide(long offset, long objectLength) {
+    int defaultPartSize = Math.max(minPartSize, (int) (objectLength / MAX_NUM_PART) + 1);
+    log.debug("Part Size: {}", defaultPartSize);
+    Builder<Part> parts = ImmutableList.builder();
+    long currentTotalLength = 0;
+    for (int i = 1; currentTotalLength < objectLength; ++i) {
+      int partSize = (int) Math.min(defaultPartSize, objectLength - currentTotalLength);
+      parts.add(new Part(i, partSize, offset + currentTotalLength, null, null, null));
+      currentTotalLength += partSize;
+    }
+    return parts.build();
   }
 
-  @JsonIgnore
-  public boolean isMissingSourceMd5() {
-    return (sourceMd5 == null) || sourceMd5.trim().isEmpty();
+  @Override
+  public List<Part> specify(long offset, long length) {
+    return ImmutableList.of(new Part(1, length, offset, null, null, null));
   }
 }

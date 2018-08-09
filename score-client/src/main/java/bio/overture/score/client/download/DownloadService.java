@@ -17,22 +17,27 @@
  */
 package bio.overture.score.client.download;
 
-import static com.google.common.base.Preconditions.checkState;
-import static com.google.common.collect.Iterables.getOnlyElement;
-
 import bio.overture.score.client.cli.Terminal;
 import bio.overture.score.client.exception.NotResumableException;
 import bio.overture.score.client.exception.NotRetryableException;
 import bio.overture.score.client.exception.RetryableException;
 import bio.overture.score.client.metadata.Entity;
 import bio.overture.score.client.progress.Progress;
-import bio.overture.score.client.transport.StorageService;
+import bio.overture.score.client.storage.StorageService;
 import bio.overture.score.client.transport.Transport;
+import bio.overture.score.core.model.ObjectSpecification;
+import bio.overture.score.core.model.Part;
+import bio.overture.score.core.util.MD5s;
+import com.google.common.io.BaseEncoding;
 import lombok.NonNull;
 import lombok.SneakyThrows;
-import lombok.val;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -45,16 +50,8 @@ import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.Set;
 
-import javax.annotation.PostConstruct;
-
-import bio.overture.score.core.model.ObjectSpecification;
-import bio.overture.score.core.model.Part;
-import bio.overture.score.core.util.MD5s;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
-
-import com.google.common.io.BaseEncoding;
+import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.collect.Iterables.getOnlyElement;
 
 @Slf4j
 @Component

@@ -15,21 +15,59 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package bio.overture.score.server.repository;
+package bio.overture.score.client.metadata.legacy;
+
+import bio.overture.score.client.metadata.Entity;
+import bio.overture.score.client.metadata.MetadataService;
+import lombok.val;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Profile;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
-import bio.overture.score.core.model.Part;
+@Service
+@Profile("!kf")
+public class LegacyMetadataService implements MetadataService {
 
-/**
- * An interface to represent a way to calculate the part size given the file size
- */
-public interface PartCalculator {
+  @Autowired
+  private LegacyMetadataClient legacyMetadataClient;
 
-  public List<Part> divide(long offset, long fileSize);
+  public List<Entity> getEntities(String... fields) {
+    return legacyMetadataClient.findEntities(fields);
+  }
 
-  public List<Part> divide(long fileSize);
+  public Entity getEntity(String objectId) {
+    return legacyMetadataClient.findEntity(objectId);
+  }
 
-  public List<Part> specify(long offset, long length);
+  public Optional<Entity> getIndexEntity(Entity entity) {
+    val entities = legacyMetadataClient.findEntitiesByGnosId(entity.getGnosId());
+    return entities
+        .stream()
+        .filter(e -> isIndexFile(e, entity.getFileName()))
+        .findFirst();
+  }
+
+  private static boolean isIndexFile(Entity e, String fileName) {
+    return isBaiFile(e, fileName) || isTbiFile(e, fileName) || isIdxFile(e, fileName);
+  }
+
+  private static boolean isTbiFile(Entity e, String fileName) {
+    return isMatch(e, fileName + ".tbi");
+  }
+
+  private static boolean isIdxFile(Entity e, String fileName) {
+    return isMatch(e, fileName + ".idx");
+  }
+
+  private static boolean isBaiFile(Entity e, String fileName) {
+    return isMatch(e, fileName + ".bai");
+  }
+
+  private static boolean isMatch(Entity e, String indexFileName) {
+    return e.getFileName().compareToIgnoreCase(indexFileName) == 0;
+  }
 
 }

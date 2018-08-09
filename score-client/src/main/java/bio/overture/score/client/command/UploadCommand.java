@@ -17,30 +17,30 @@
  */
 package bio.overture.score.client.command;
 
-import static bio.overture.score.client.cli.Parameters.checkParameter;
+import bio.overture.score.client.cli.FileValidator;
+import bio.overture.score.client.cli.ObjectIdValidator;
+import bio.overture.score.client.manifest.ManifestResource;
+import bio.overture.score.client.manifest.ManifestService;
+import bio.overture.score.client.manifest.UploadManifest;
+import bio.overture.score.client.upload.UploadService;
+import com.beust.jcommander.Parameter;
+import com.beust.jcommander.Parameters;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Profile;
+import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
-import bio.overture.score.client.manifest.ManifestResource;
-import bio.overture.score.client.manifest.ManifestService;
-import bio.overture.score.client.manifest.UploadManifest;
-import bio.overture.score.client.cli.FileValidator;
-import bio.overture.score.client.cli.ObjectIdValidator;
-import bio.overture.score.client.upload.UploadService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-
-import com.beust.jcommander.Parameter;
-import com.beust.jcommander.Parameters;
-
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
+import static bio.overture.score.client.cli.Parameters.checkParameter;
 
 @Slf4j
 @Component
 @Parameters(separators = "=", commandDescription = "Upload file object(s) to the remote storage repository")
+@Profile("!kf")
 public class UploadCommand extends RepositoryAccessCommand {
 
   /**

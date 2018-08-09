@@ -17,10 +17,10 @@
  */
 package bio.overture.score.server.config;
 
-import bio.overture.score.server.repository.SimplePartCalculator;
+import bio.overture.score.core.util.SimplePartCalculator;
 import bio.overture.score.server.repository.URLGenerator;
 import bio.overture.score.server.repository.BenchmarkURLGenerator;
-import bio.overture.score.server.repository.PartCalculator;
+import bio.overture.score.core.util.PartCalculator;
 import bio.overture.score.server.repository.UploadStateStore;
 import bio.overture.score.server.repository.s3.S3UploadStateStore;
 import org.springframework.beans.factory.annotation.Value;

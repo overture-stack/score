@@ -17,11 +17,11 @@
  */
 package bio.overture.score.client.manifest;
 
-import java.util.List;
-
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.Value;
+
+import java.util.List;
 
 /**
  * See https://wiki.oicr.on.ca/display/DCCSOFT/Uniform+metadata+JSON+document+for+ICGC+Data+Repositories#

@@ -19,13 +19,11 @@ package bio.overture.score.client.command;
 
 import bio.overture.score.client.manifest.ManifestResource;
 import bio.overture.score.client.manifest.ManifestService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
-
 import lombok.val;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 @Component
 @Parameters(separators = "=", commandDescription = "Resolve a file object manifest and display it")
