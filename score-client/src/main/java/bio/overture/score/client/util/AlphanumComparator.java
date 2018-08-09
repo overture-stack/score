@@ -17,10 +17,10 @@
  */
 package bio.overture.score.client.util;
 
+import bio.overture.score.client.slicing.Slice;
+
 import java.io.Serializable;
 import java.util.Comparator;
-
-import bio.overture.score.client.slicing.Slice;
 
 /*
  * The Alphanum Algorithm is an improved sorting algorithm for strings

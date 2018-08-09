@@ -17,12 +17,11 @@
  */
 package bio.overture.score.client.cli;
 
-import java.util.Arrays;
-
 import com.beust.jcommander.ParameterException;
 import com.beust.jcommander.converters.BaseConverter;
-
 import lombok.val;
+
+import java.util.Arrays;
 
 public abstract class EnumConverter<T extends Enum<T>> extends BaseConverter<T> {
 

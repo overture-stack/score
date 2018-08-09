@@ -17,23 +17,21 @@
  */
 package bio.overture.score.client.command;
 
-import static com.google.common.base.Objects.firstNonNull;
-import static com.google.common.base.Strings.padEnd;
-import static com.google.common.base.Strings.repeat;
-import static bio.overture.score.client.cli.Parameters.checkParameter;
-
-import java.util.List;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterDescription;
 import com.beust.jcommander.Parameters;
 import com.beust.jcommander.internal.Lists;
-
 import lombok.val;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import java.util.List;
+
+import static bio.overture.score.client.cli.Parameters.checkParameter;
+import static com.google.common.base.Objects.firstNonNull;
+import static com.google.common.base.Strings.padEnd;
+import static com.google.common.base.Strings.repeat;
 
 @Component
 @Parameters(separators = "=", commandDescription = "Display help information for a specified command name")

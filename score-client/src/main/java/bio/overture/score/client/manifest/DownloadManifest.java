@@ -17,6 +17,7 @@
  */
 package bio.overture.score.client.manifest;
 
+import bio.overture.score.client.command.ViewCommand;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.Value;
@@ -29,7 +30,6 @@ import java.util.List;
  */
 @Value
 public class DownloadManifest {
-
   @NonNull
   private final List<ManifestEntry> entries;
 
@@ -49,10 +49,24 @@ public class DownloadManifest {
     String projectId;
     String study;
 
+    public boolean isBAM() {
+      return hasExtention(ViewCommand.OutputFormat.BAM.toString());
+    }
+
+    public boolean isCRAM() {
+      return hasExtention(ViewCommand.OutputFormat.CRAM.toString());
+    }
+
+    public boolean isSAM() {
+      return hasExtention(ViewCommand.OutputFormat.SAM.toString());
+    }
+
+    public boolean hasExtention(String ext) {
+      return fileName.toLowerCase().endsWith(ext.toLowerCase());
+    }
   }
 
   public long getTotalSize() {
     return entries.stream().mapToLong(entry -> Long.valueOf(entry.getFileSize())).sum();
   }
-
 }

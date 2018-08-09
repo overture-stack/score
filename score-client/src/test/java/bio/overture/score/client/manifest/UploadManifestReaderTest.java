@@ -17,17 +17,16 @@
  */
 package bio.overture.score.client.manifest;
 
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.hasSize;
-import static org.junit.Assert.assertThat;
+import bio.overture.score.client.manifest.icgc.UploadManifestReader;
+import bio.overture.score.client.manifest.UploadManifest.ManifestEntry;
+import lombok.val;
+import org.junit.Test;
 
 import java.io.File;
 
-import bio.overture.score.client.manifest.UploadManifest.ManifestEntry;
-import bio.overture.score.client.manifest.icgc.UploadManifestReader;
-import org.junit.Test;
-
-import lombok.val;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasSize;
+import static org.junit.Assert.assertThat;
 
 public class UploadManifestReaderTest {
 

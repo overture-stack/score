@@ -17,20 +17,18 @@
  */
 package bio.overture.score.client.ssl;
 
-import java.security.cert.Certificate;
-import java.security.cert.X509Certificate;
-
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.SSLSession;
-
+import lombok.NonNull;
+import lombok.SneakyThrows;
+import lombok.val;
 import org.apache.http.conn.ssl.DefaultHostnameVerifier;
 import org.bouncycastle.asn1.x500.style.BCStyle;
 import org.bouncycastle.asn1.x500.style.IETFUtils;
 import org.bouncycastle.cert.jcajce.JcaX509CertificateHolder;
 
-import lombok.NonNull;
-import lombok.SneakyThrows;
-import lombok.val;
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.SSLSession;
+import java.security.cert.Certificate;
+import java.security.cert.X509Certificate;
 
 /**
  * Custom verifier for cases where the client locally has the server's key installed in the trust store with a CN having

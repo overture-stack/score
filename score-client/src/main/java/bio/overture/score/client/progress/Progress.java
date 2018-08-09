@@ -1,22 +1,18 @@
 package bio.overture.score.client.progress;
 
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static java.util.concurrent.TimeUnit.SECONDS;
-import static bio.overture.score.client.util.Formats.formatBytes;
-import static bio.overture.score.client.util.Formats.formatBytesUnits;
-import static bio.overture.score.client.util.Formats.formatCount;
+import bio.overture.score.client.cli.Terminal;
+import com.google.common.base.Stopwatch;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-import bio.overture.score.client.cli.Terminal;
-
-import com.google.common.base.Stopwatch;
-
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
+import static bio.overture.score.client.util.Formats.*;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 /**
  * Progress bar for keeping track of the upload/download progress.

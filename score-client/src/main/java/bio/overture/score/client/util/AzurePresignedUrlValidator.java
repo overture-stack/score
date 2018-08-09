@@ -17,16 +17,15 @@
  */
 package bio.overture.score.client.util;
 
-import lombok.val;
+import com.microsoft.azure.storage.Constants.QueryConstants;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
-
-import com.microsoft.azure.storage.Constants.QueryConstants;
 
 @Slf4j
 public class AzurePresignedUrlValidator extends PresignedUrlValidator {

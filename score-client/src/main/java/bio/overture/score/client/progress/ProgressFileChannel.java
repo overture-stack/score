@@ -17,14 +17,13 @@
  */
 package bio.overture.score.client.progress;
 
+import bio.overture.score.core.util.ForwardingFileChannel;
 import lombok.NonNull;
 import lombok.val;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
-
-import bio.overture.score.core.util.ForwardingFileChannel;
 
 public class ProgressFileChannel extends ForwardingFileChannel {
 

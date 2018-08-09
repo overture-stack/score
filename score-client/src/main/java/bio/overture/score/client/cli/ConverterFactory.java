@@ -17,18 +17,17 @@
  */
 package bio.overture.score.client.cli;
 
-import java.util.Map;
-
 import bio.overture.score.client.command.DownloadCommand;
 import bio.overture.score.client.command.ViewCommand;
 import bio.overture.score.client.manifest.ManifestResource;
 import bio.overture.score.client.mount.MountOptions;
 import bio.overture.score.fs.StorageFileLayout;
-
 import com.beust.jcommander.IStringConverter;
 import com.beust.jcommander.IStringConverterFactory;
 import com.beust.jcommander.ParameterException;
 import com.beust.jcommander.converters.BaseConverter;
+
+import java.util.Map;
 
 public class ConverterFactory implements IStringConverterFactory {
 

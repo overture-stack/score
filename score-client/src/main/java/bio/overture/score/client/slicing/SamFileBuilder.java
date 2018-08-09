@@ -17,42 +17,30 @@
  */
 package bio.overture.score.client.slicing;
 
+import bio.overture.score.client.command.ViewCommand.OutputFormat;
+import bio.overture.score.client.metadata.Entity;
+import com.google.common.base.Throwables;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+import htsjdk.samtools.*;
+import htsjdk.samtools.SAMFileHeader.SortOrder;
+import htsjdk.samtools.cram.ref.ReferenceSource;
+import htsjdk.samtools.util.RuntimeIOException;
+import lombok.Cleanup;
+import lombok.NonNull;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-
-import bio.overture.score.client.metadata.Entity;
-import htsjdk.samtools.cram.ref.ReferenceSource;
-import org.apache.commons.lang.StringUtils;
-import bio.overture.score.client.command.ViewCommand.OutputFormat;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Throwables;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
-
-import htsjdk.samtools.QueryInterval;
-import htsjdk.samtools.SAMFileHeader;
-import htsjdk.samtools.SAMFileHeader.SortOrder;
-import htsjdk.samtools.SAMFileWriter;
-import htsjdk.samtools.SAMFileWriterFactory;
-import htsjdk.samtools.SAMProgramRecord;
-import htsjdk.samtools.SAMReadGroupRecord;
-import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SamInputResource;
-import htsjdk.samtools.SamReader;
-import htsjdk.samtools.SamReaderFactory;
-import htsjdk.samtools.ValidationStringency;
-import htsjdk.samtools.util.RuntimeIOException;
-import lombok.Cleanup;
-import lombok.NonNull;
-import lombok.SneakyThrows;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class SamFileBuilder {
@@ -91,7 +79,12 @@ public class SamFileBuilder {
   private ReferenceSource referenceSource;
 
   private boolean queryCompiledFlag = false;
+  private SamReader reader;
 
+  public SamFileBuilder reader(SamReader r) {
+    reader = r;
+    return this;
+  }
   public SamFileBuilder containedOnly(boolean flag) {
     containedOnly = flag;
     return this;
@@ -187,7 +180,7 @@ public class SamFileBuilder {
   }
 
   @SneakyThrows
-  protected SamReader createSamReader() {
+  public SamReader createSamReader() {
     try {
       // Need to use non-STRICT due to header date formats in the wild.
       return SamReaderFactory.makeDefault().validationStringency(ValidationStringency.LENIENT).
@@ -567,10 +560,16 @@ public class SamFileBuilder {
   @SneakyThrows
   public void buildTrimmed() {
     session.info("----- Constructing Trimmed Output for {}", entity.getFileName());
-    @Cleanup
-    val reader = createSamReader();
-    QueryInterval[] intervals = normalizeQueries(reader, query);
+    if (reader == null) {
+      buildTrimmed(createSamReader());
+    } else {
+      buildTrimmed(reader);
+    }
+  }
 
+  @SneakyThrows
+  public void buildTrimmed(SamReader reader) {
+    QueryInterval[] intervals = normalizeQueries(reader, query);
     val alignments = doQuery(reader, intervals);
     createTrimmed(reader, entity, query, alignments);
   }

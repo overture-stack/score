@@ -18,22 +18,16 @@
 package bio.overture.score.client.upload;
 
 import bio.overture.score.client.exception.NotRetryableException;
-import lombok.NonNull;
-import lombok.SneakyThrows;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
-
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
-import java.nio.charset.StandardCharsets;
-import java.util.Optional;
-
 import bio.overture.score.client.state.TransferState;
 import bio.overture.score.core.model.ObjectSpecification;
+import lombok.NonNull;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.util.Optional;
 
 /**
  * This really shouldn't have 'Store' in the class name - it has no state, so it's not storing anything. It's a

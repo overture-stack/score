@@ -17,20 +17,16 @@
  */
 package bio.overture.score.client.exception;
 
-import static bio.overture.score.client.exception.ControlExceptionFactory.notResumableException;
-import static bio.overture.score.client.exception.ControlExceptionFactory.notRetryableException;
-import static bio.overture.score.client.exception.ControlExceptionFactory.retryableException;
-
-import java.io.IOException;
-
+import com.amazonaws.services.s3.model.AmazonS3Exception;
+import com.amazonaws.util.IOUtils;
 import lombok.extern.slf4j.Slf4j;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.web.client.DefaultResponseErrorHandler;
 
-import com.amazonaws.services.s3.model.AmazonS3Exception;
-import com.amazonaws.util.IOUtils;
+import java.io.IOException;
+
+import static bio.overture.score.client.exception.ControlExceptionFactory.*;
 
 /**
  * responsible to translate amazon s3 errors to client side errors

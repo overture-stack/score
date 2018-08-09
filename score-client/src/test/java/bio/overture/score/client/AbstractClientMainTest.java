@@ -17,12 +17,11 @@
  */
 package bio.overture.score.client;
 
-import java.util.function.Consumer;
-
 import lombok.Getter;
-
 import org.junit.Rule;
 import org.springframework.boot.test.rule.OutputCapture;
+
+import java.util.function.Consumer;
 
 public abstract class AbstractClientMainTest {
 

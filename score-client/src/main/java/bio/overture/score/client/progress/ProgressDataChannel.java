@@ -17,14 +17,13 @@
  */
 package bio.overture.score.client.progress;
 
+import bio.overture.score.core.model.DataChannel;
+import bio.overture.score.core.util.ForwardingDataChannel;
+import lombok.NonNull;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-
-import lombok.NonNull;
-
-import bio.overture.score.core.model.DataChannel;
-import bio.overture.score.core.util.ForwardingDataChannel;
 
 public class ProgressDataChannel extends ForwardingDataChannel {
 

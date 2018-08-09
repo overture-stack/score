@@ -17,21 +17,19 @@
  */
 package bio.overture.score.client.config;
 
-import java.security.KeyStore;
-
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManagerFactory;
-
+import bio.overture.score.client.ssl.TrustedCnHostnameVerifier;
+import lombok.SneakyThrows;
+import lombok.val;
 import org.apache.http.conn.ssl.DefaultHostnameVerifier;
 import org.apache.http.ssl.SSLContexts;
-import bio.overture.score.client.ssl.TrustedCnHostnameVerifier;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import lombok.SneakyThrows;
-import lombok.val;
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManagerFactory;
+import java.security.KeyStore;
 
 /**
  * Configurations for SSL

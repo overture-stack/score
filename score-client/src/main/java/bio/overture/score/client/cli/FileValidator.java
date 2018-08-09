@@ -17,12 +17,12 @@
  */
 package bio.overture.score.client.cli;
 
-import static java.lang.String.format;
+import com.beust.jcommander.IValueValidator;
+import com.beust.jcommander.ParameterException;
 
 import java.io.File;
 
-import com.beust.jcommander.IValueValidator;
-import com.beust.jcommander.ParameterException;
+import static java.lang.String.format;
 
 public class FileValidator implements IValueValidator<File> {
 

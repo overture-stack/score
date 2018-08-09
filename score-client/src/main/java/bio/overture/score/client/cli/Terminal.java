@@ -1,22 +1,20 @@
 package bio.overture.score.client.cli;
 
-import static com.google.common.base.Strings.repeat;
-import static org.fusesource.jansi.Ansi.Color.GREEN;
-
-import java.util.concurrent.Callable;
-import java.util.concurrent.Executors;
-
+import com.google.common.base.Strings;
+import jline.TerminalFactory;
+import lombok.SneakyThrows;
+import lombok.val;
 import org.fusesource.jansi.Ansi;
 import org.fusesource.jansi.AnsiConsole;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import com.google.common.base.Strings;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Executors;
 
-import jline.TerminalFactory;
-import lombok.SneakyThrows;
-import lombok.val;
+import static com.google.common.base.Strings.repeat;
+import static org.fusesource.jansi.Ansi.Color.GREEN;
 
 @Component
 public class Terminal {

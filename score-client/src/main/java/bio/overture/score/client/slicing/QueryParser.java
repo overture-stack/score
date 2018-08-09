@@ -17,14 +17,13 @@
  */
 package bio.overture.score.client.slicing;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Iterators;
-
 import lombok.val;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class QueryParser {
 

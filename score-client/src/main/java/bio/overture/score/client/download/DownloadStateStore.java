@@ -18,21 +18,19 @@
 package bio.overture.score.client.download;
 
 import bio.overture.score.client.exception.NotRetryableException;
-import lombok.val;
+import bio.overture.score.client.state.TransferState;
+import bio.overture.score.client.util.PresignedUrlValidator;
+import bio.overture.score.core.model.ObjectSpecification;
+import bio.overture.score.core.model.Part;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-
-import bio.overture.score.client.state.TransferState;
-import bio.overture.score.client.util.PresignedUrlValidator;
-import bio.overture.score.core.model.ObjectSpecification;
-import bio.overture.score.core.model.Part;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Slf4j
 public class DownloadStateStore extends TransferState {

@@ -17,17 +17,15 @@
  */
 package bio.overture.score.client.command;
 
-import java.net.URL;
-
-import bio.overture.score.client.download.DownloadService;
-import lombok.val;
-
 import bio.overture.score.client.cli.ObjectIdValidator;
+import bio.overture.score.client.download.DownloadService;
+import com.beust.jcommander.Parameter;
+import com.beust.jcommander.Parameters;
+import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.beust.jcommander.Parameter;
-import com.beust.jcommander.Parameters;
+import java.net.URL;
 
 @Component
 @Parameters(separators = "=", commandDescription = "Resolve the URL of a specified remote file object")

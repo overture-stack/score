@@ -17,12 +17,11 @@
  */
 package bio.overture.score.client.command;
 
-import static com.google.common.base.Objects.firstNonNull;
-import static org.icgc.dcc.common.core.util.VersionUtils.getScmInfo;
-
+import com.beust.jcommander.Parameters;
 import org.springframework.stereotype.Component;
 
-import com.beust.jcommander.Parameters;
+import static com.google.common.base.Objects.firstNonNull;
+import static org.icgc.dcc.common.core.util.VersionUtils.getScmInfo;
 
 @Component
 @Parameters(separators = "=", commandDescription = "Display application version information")

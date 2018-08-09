@@ -17,9 +17,12 @@
  */
 package bio.overture.score.client.util;
 
+import com.google.common.collect.ImmutableMap;
 import lombok.SneakyThrows;
-import lombok.val;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.utils.URLEncodedUtils;
 
 import java.net.URL;
 import java.nio.charset.Charset;
@@ -27,11 +30,6 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
-
-import org.apache.http.NameValuePair;
-import org.apache.http.client.utils.URLEncodedUtils;
-
-import com.google.common.collect.ImmutableMap;
 
 @Slf4j
 public abstract class PresignedUrlValidator {

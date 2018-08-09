@@ -18,15 +18,13 @@
 
 package bio.overture.score.client.transport;
 
+import bio.overture.score.core.model.DataChannel;
+import com.google.common.io.ByteStreams;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+
 import java.io.IOException;
 import java.io.InputStream;
-
-import bio.overture.score.core.model.DataChannel;
-
-import com.google.common.io.ByteStreams;
-
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * A representation of a channel for data tranfser.
