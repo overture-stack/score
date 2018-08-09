@@ -30,7 +30,7 @@ usage(){
 cat << EOF
 usage: $0 options
 
-This script installs the dcc-storage-server from Artifactory, relinks the jar and restarts the daemon.
+This script installs the score-server from Artifactory, relinks the jar and restarts the daemon.
 
 OPTIONS:
    -h      Show this message
@@ -85,7 +85,7 @@ logdir="$basedir/logs"
 # Maven artifact location
 name="score-server"
 server="https://artifacts.oicr.on.ca/artifactory"
-artifact="org/icgc/dcc/$name"
+artifact="bio/overture/$name"
 
 if [[ -n $release ]]
 then

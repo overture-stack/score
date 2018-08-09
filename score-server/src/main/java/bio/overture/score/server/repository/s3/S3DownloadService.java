@@ -41,7 +41,7 @@ import bio.overture.score.server.exception.RetryableException;
 import bio.overture.score.server.repository.URLGenerator;
 import bio.overture.score.server.repository.BucketNamingService;
 import bio.overture.score.server.repository.DownloadService;
-import bio.overture.score.server.repository.PartCalculator;
+import bio.overture.score.core.util.PartCalculator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;

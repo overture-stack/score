@@ -15,8 +15,10 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package bio.overture.score.client.metadata;
+package bio.overture.score.client.metadata.legacy;
 
+import bio.overture.score.client.metadata.Entity;
+import bio.overture.score.client.metadata.EntityNotFoundException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -45,7 +47,7 @@ import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
  */
 @Slf4j
 @Component
-public class MetadataClient {
+public class LegacyMetadataClient {
 
   /**
    * Constants.
@@ -60,7 +62,7 @@ public class MetadataClient {
   private final String serverUrl;
 
   @Autowired
-  public MetadataClient(@Value("${metadata.url}") String serverUrl, @Value("${metadata.ssl.enabled}") boolean ssl) {
+  public LegacyMetadataClient(@Value("${metadata.url}") String serverUrl, @Value("${metadata.ssl.enabled}") boolean ssl) {
     if (!ssl) {
       SSLCertificateValidation.disable();
     }
@@ -70,10 +72,6 @@ public class MetadataClient {
 
   public Entity findEntity(@NonNull String objectId) throws EntityNotFoundException {
     return read("/" + objectId);
-  }
-
-  public List<Entity> findEntities() throws EntityNotFoundException {
-    return findEntities(new String[] {});
   }
 
   public List<Entity> findEntities(String... fields) throws EntityNotFoundException {

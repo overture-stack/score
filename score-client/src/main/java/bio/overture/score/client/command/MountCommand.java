@@ -27,7 +27,7 @@ import bio.overture.score.client.metadata.Entity;
 import bio.overture.score.client.metadata.MetadataService;
 import bio.overture.score.client.mount.MountService;
 import bio.overture.score.client.mount.MountStorageContext;
-import bio.overture.score.client.transport.StorageService;
+import bio.overture.score.client.storage.StorageService;
 import bio.overture.score.core.model.ObjectInfo;
 import bio.overture.score.fs.StorageFileLayout;
 import bio.overture.score.fs.StorageFileSystems;
@@ -44,6 +44,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
@@ -65,6 +66,7 @@ import static java.util.stream.Collectors.toSet;
 @Slf4j
 @Component
 @Parameters(separators = "=", commandDescription = "Mount a read-only FUSE file system view of the remote storage repository")
+@Profile("!kf")
 public class MountCommand extends RepositoryAccessCommand {
 
   /**

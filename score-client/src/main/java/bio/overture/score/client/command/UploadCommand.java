@@ -28,6 +28,7 @@ import com.beust.jcommander.Parameters;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
@@ -39,6 +40,7 @@ import static bio.overture.score.client.cli.Parameters.checkParameter;
 @Slf4j
 @Component
 @Parameters(separators = "=", commandDescription = "Upload file object(s) to the remote storage repository")
+@Profile("!kf")
 public class UploadCommand extends RepositoryAccessCommand {
 
   /**

@@ -17,7 +17,7 @@
  */
 package bio.overture.score.client.command;
 
-import bio.overture.score.client.transport.StorageService;
+import bio.overture.score.client.storage.StorageService;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.IOException;

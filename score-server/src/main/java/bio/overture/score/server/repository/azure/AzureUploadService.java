@@ -31,7 +31,7 @@ import bio.overture.score.core.util.ObjectKeys;
 import bio.overture.score.server.exception.InternalUnrecoverableError;
 import bio.overture.score.server.exception.NotRetryableException;
 import bio.overture.score.server.repository.URLGenerator;
-import bio.overture.score.server.repository.PartCalculator;
+import bio.overture.score.core.util.PartCalculator;
 import bio.overture.score.server.repository.UploadService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;

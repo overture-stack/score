@@ -17,6 +17,7 @@
  */
 package bio.overture.score.client;
 
+import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -29,6 +30,7 @@ import java.util.UUID;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+@Slf4j
 public class ClientMainTest extends AbstractClientMainTest {
 
   @Rule

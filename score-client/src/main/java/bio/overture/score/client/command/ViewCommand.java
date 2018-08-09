@@ -47,6 +47,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
@@ -61,6 +62,7 @@ import static java.util.stream.Collectors.toList;
 @Slf4j
 @Component
 @Parameters(separators = "=", commandDescription = "Locally store/display some or all of a remote SAM/BAM file object")
+@Profile("!kf")
 public class ViewCommand extends RepositoryAccessCommand {
 
   public enum OutputFormat {

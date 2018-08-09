@@ -19,7 +19,7 @@ package bio.overture.score.server.config;
 
 import bio.overture.score.server.repository.URLGenerator;
 import bio.overture.score.server.repository.BucketNamingService;
-import bio.overture.score.server.repository.PartCalculator;
+import bio.overture.score.core.util.PartCalculator;
 import bio.overture.score.server.repository.UploadStateStore;
 import bio.overture.score.server.repository.azure.AzureBucketNamingService;
 import bio.overture.score.server.repository.azure.AzurePartCalculator;

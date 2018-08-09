@@ -17,7 +17,7 @@
  */
 package bio.overture.score.server.repository.azure;
 
-import bio.overture.score.server.repository.PartCalculator;
+import bio.overture.score.core.util.PartCalculator;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
