@@ -17,6 +17,7 @@
  */
 package bio.overture.score.client.manifest;
 
+import bio.overture.score.client.manifest.icgc.DownloadManifestReader;
 import bio.overture.score.client.manifest.DownloadManifest.ManifestEntry;
 import lombok.val;
 import org.junit.Test;

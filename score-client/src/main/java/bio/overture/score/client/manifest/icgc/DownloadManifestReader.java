@@ -17,6 +17,7 @@
  */
 package bio.overture.score.client.manifest.icgc;
 
+import bio.overture.score.client.manifest.DownloadManifest;
 import bio.overture.score.client.manifest.DownloadManifest.ManifestEntry;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;

@@ -20,7 +20,7 @@ package bio.overture.score.client.upload.azure;
 import bio.overture.score.client.cli.Terminal;
 import bio.overture.score.client.exception.NotRetryableException;
 import bio.overture.score.client.progress.Progress;
-import bio.overture.score.client.transport.StorageService;
+import bio.overture.score.client.storage.StorageService;
 import bio.overture.score.client.upload.UploadService;
 import bio.overture.score.core.model.ObjectSpecification;
 import com.microsoft.azure.storage.*;
