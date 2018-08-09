@@ -62,9 +62,7 @@ public class DownloadManifest {
     }
 
     public boolean hasExtention(String ext) {
-      if (fileName.toLowerCase().endsWith(ext.toLowerCase())) {
-        return true;
-      } return false;
+      return fileName.toLowerCase().endsWith(ext.toLowerCase());
     }
   }
 
