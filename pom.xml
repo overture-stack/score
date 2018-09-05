@@ -205,7 +205,7 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
   <properties>
     <jdk.version>1.8</jdk.version>
 
-    <lombok.version>1.16.10</lombok.version>
+    <lombok.version>1.18.2</lombok.version>
     <findbugs.version>3.0.1u2</findbugs.version>
 
     <maven-compiler-plugin.version>3.1</maven-compiler-plugin.version>
