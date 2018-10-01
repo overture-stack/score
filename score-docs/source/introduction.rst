@@ -41,8 +41,34 @@ Getting Started
 ============================
 
 Client
+---------------
+
+The Score Client is available to download as both a docker container or as a Java CLI application.
+
+The docker container can be pulled from here: 
+
+``docker pull overture/score``
+
+For the Java CLI, use the following steps:
+
+.. code-block:: bash
+
+    wget -O score-client.tar.gz https://artifacts.oicr.on.ca/artifactory/dcc-release/bio/overture/score-client/[RELEASE]/score-client-[RELEASE]-dist.tar.gz
+
+    tar xvzf score-client.tar.gz
+
+    echo export PATH=$(pwd)/score-client-x.x.x/bin:$PATH >> ~/.bashrc
+
+    source ~/.bashrc
+
+    # you will then be able to use it by running the following command anywhere is the system
+    score-client
+
 
 Server
+---------------
+
+To be Added...
 
 
 License

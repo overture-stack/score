@@ -84,3 +84,4 @@ score-client/deploy/
 
 .settings
 _build
+.vscode
