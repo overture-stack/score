@@ -145,13 +145,17 @@ public class MountCommand extends RepositoryAccessCommand {
       terminal.printStatus(i++, "Indexing remote entities" + tip + ". Please wait");
       val entities = terminal.printWaiting(this::resolveEntities);
 
-      log.info("Indexing remove objects...");
+      log.info("Indexing remote objects...");
       terminal.printStatus(i++, "Indexing remote objects" + tip + ". Please wait");
       List<ObjectInfo> objects = terminal.printWaiting(this::resolveObjects);
       if (hasManifest()) {
         // Manifest is a filtered view y'all!
         objects = filterManifestObjects(objects);
       }
+
+      // Filter for objects that have no entities.
+      val entityIds = entities.stream().map(Entity::getId).collect(toSet());
+      objects = objects.stream().filter( o -> entityIds.contains(o.getId())).collect(toList());
 
       //
       // Check access

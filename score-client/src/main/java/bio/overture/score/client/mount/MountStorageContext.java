@@ -85,7 +85,7 @@ public class MountStorageContext implements StorageContext {
     try {
       // TODO: Figure out why getFirst fails. All objects should exist! May need to filter out junk bucket paths on
       // server as this could be causing the failure.
-      val probe = getLast(objects);
+      val probe = getLast(entities);
       val probeUrl = downloadService.getUrl(probe.getId());
       probeUrl.openStream();
     } catch (IOException e) {
@@ -141,12 +141,15 @@ public class MountStorageContext implements StorageContext {
     val entityIndex = uniqueIndex(entities, Entity::getId);
 
     val files = ImmutableList.<StorageFile> builder();
-    for (val object : objects) {
+    if (objects == null) {
+      return files.build();
+    }
+    objects.stream().filter(o -> {
+      val objectId = o.getId();
+      return entityIndex.get(objectId) != null;
+    }).forEach(object -> {
       val objectId = object.getId();
       val entity = entityIndex.get(objectId);
-      if (entity == null) {
-        continue;
-      }
 
       // Join entity to object
       files.add(
@@ -157,7 +160,7 @@ public class MountStorageContext implements StorageContext {
               .lastModified(object.getLastModified())
               .size(object.getSize())
               .build());
-    }
+    });
 
     return files.build();
   }
