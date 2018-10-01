@@ -83,3 +83,5 @@ score-client/deploy/
 .factorypath
 
 .settings
+_build
+.vscode
