@@ -43,7 +43,7 @@ public class S3DownloadServiceTest {
 
     @Test
     public void test_if_unpublished_file_triggers_error() {
-        val throwable = catchThrowable(() -> s3DownloadService.checkAnalysisState(metadataEntity));
+        val throwable = catchThrowable(() -> s3DownloadService.checkPublishedAnalysisState(metadataEntity));
         assertThat(throwable)
                 .hasMessageContaining(
                         format("Critical Error: cannot complete download for objectId '%s' with ", objectId));
@@ -54,8 +54,8 @@ public class S3DownloadServiceTest {
         when(mockService.getAnalysisStateForMetadata(metadataEntity)).thenReturn("UNPUBLISHED");
         when(mockService.getEntity(objectId)).thenReturn(metadataEntity);
 
-        val throwable1 = catchThrowable(() -> s3DownloadService.download(objectId, 0, -1, false));
-        assertThat(throwable1).isExactlyInstanceOf(NotRetryableException.class);
+        val throwable = catchThrowable(() -> s3DownloadService.download(objectId, 0, -1, false));
+        assertThat(throwable).isExactlyInstanceOf(NotRetryableException.class);
     }
 
 }

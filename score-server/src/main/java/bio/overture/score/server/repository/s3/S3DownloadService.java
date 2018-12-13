@@ -103,7 +103,7 @@ public class S3DownloadService implements DownloadService {
   @Override
   public ObjectSpecification download(String objectId, long offset, long length, boolean forExternalUse) {
     try {
-      checkAnalysisState(metadataService.getEntity(objectId));
+      checkPublishedAnalysisState(metadataService.getEntity(objectId));
 
       checkArgument(offset > -1L);
 
@@ -152,7 +152,7 @@ public class S3DownloadService implements DownloadService {
     }
   }
 
-  void checkAnalysisState(MetadataEntity entity){
+  void checkPublishedAnalysisState(MetadataEntity entity){
     if(!useLegacyMode){
       val objectId = entity.getId();
       val analysisState = metadataService.getAnalysisStateForMetadata(entity);

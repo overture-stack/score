@@ -83,15 +83,19 @@ public class ObjectDownloadServiceTest extends S3DownloadService {
     namingService.setBucketPoolSize(16);
     namingService.setBucketKeySize(3);
     service.setBucketNamingService(namingService);
+    service.setS3Client(s3Client);
 
     ReflectionTestUtils.setField(service, "dataDir", dataDir);
     ReflectionTestUtils.setField(service, "expiration", 7);
     ReflectionTestUtils.setField(service, "urlGenerator", new S3URLGenerator());
     ReflectionTestUtils.setField(service, "partCalculator", new SimplePartCalculator(20000));
 
+    setUpMockService();
+  }
+
+  public void setUpMockService(){
     mockService = mock(MetadataService.class);
     service.setMetadataService(mockService);
-    service.setS3Client(s3Client);
     metadataEntity = MetadataEntity.builder()
             .id(objectId)
             .fileName("file_1")
@@ -99,7 +103,6 @@ public class ObjectDownloadServiceTest extends S3DownloadService {
             .gnosId("an1")
             .projectCode("project")
             .build();
-
     when(mockService.getAnalysisStateForMetadata(metadataEntity)).thenReturn("PUBLISHED");
     when(mockService.getEntity(objectId)).thenReturn(metadataEntity);
   }
