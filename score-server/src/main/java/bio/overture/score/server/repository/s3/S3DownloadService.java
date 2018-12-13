@@ -17,8 +17,11 @@
  */
 package bio.overture.score.server.repository.s3;
 
+import static bio.overture.score.server.metadata.MetadataService.getAnalysisId;
 import static com.google.common.base.Preconditions.checkArgument;
 
+import bio.overture.score.server.metadata.MetadataEntity;
+import bio.overture.score.server.metadata.MetadataService;
 import lombok.Cleanup;
 import lombok.Setter;
 import lombok.val;
@@ -69,6 +72,7 @@ public class S3DownloadService implements DownloadService {
    * Constants.
    */
   private static final ObjectMapper MAPPER = new ObjectMapper();
+  private static final String PUBLISHED_ANALYSIS_STATE = "PUBLISHED";
 
   /**
    * Configuration.
@@ -79,6 +83,8 @@ public class S3DownloadService implements DownloadService {
   private int expiration;
   @Value("${object.sentinel}")
   private String sentinelObjectId;
+  @Value("${metadata.useLegacyMode:false}")
+  private boolean useLegacyMode;
 
   /**
    * Dependencies.
@@ -91,10 +97,14 @@ public class S3DownloadService implements DownloadService {
   private URLGenerator urlGenerator;
   @Autowired
   private PartCalculator partCalculator;
+  @Autowired
+  private MetadataService metadataService;
 
   @Override
   public ObjectSpecification download(String objectId, long offset, long length, boolean forExternalUse) {
     try {
+      checkAnalysisState(metadataService.getEntity(objectId));
+
       checkArgument(offset > -1L);
 
       // Retrieve our meta file for object id
@@ -139,6 +149,21 @@ public class S3DownloadService implements DownloadService {
           objectId, offset, length, forExternalUse, e);
 
       throw e;
+    }
+  }
+
+  void checkAnalysisState(MetadataEntity entity){
+    if(!useLegacyMode){
+      val objectId = entity.getId();
+      val analysisState = metadataService.getAnalysisStateForMetadata(entity);
+      if (!analysisState.equals(PUBLISHED_ANALYSIS_STATE)){
+        val message = String.format("Critical Error: cannot complete download for objectId '%s' with "
+                        + "analysisState '%s' and analysisId '%s'. "
+                        + "Can only download objects that have the analysisState '%s'. Update the file metadata and retry.",
+                objectId, analysisState, getAnalysisId(entity), PUBLISHED_ANALYSIS_STATE);
+        log.error(message); // Log to audit log file
+        throw new NotRetryableException(new IllegalStateException(message));
+      }
     }
   }
 

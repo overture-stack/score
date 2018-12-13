@@ -19,9 +19,7 @@ package bio.overture.score.server.service.download;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import java.net.URL;
 import java.util.regex.Pattern;
@@ -30,13 +28,14 @@ import bio.overture.score.core.util.ObjectKeys;
 import bio.overture.score.server.config.ServerConfig;
 import bio.overture.score.server.exception.IdNotFoundException;
 import bio.overture.score.core.util.SimplePartCalculator;
+import bio.overture.score.server.metadata.MetadataEntity;
+import bio.overture.score.server.metadata.MetadataService;
 import bio.overture.score.server.repository.s3.S3BucketNamingService;
 import bio.overture.score.server.repository.s3.S3DownloadService;
 import bio.overture.score.server.repository.s3.S3URLGenerator;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
@@ -69,10 +68,13 @@ public class ObjectDownloadServiceTest extends S3DownloadService {
   /**
    * SUT
    */
-  @InjectMocks
-  S3DownloadService service;
+  S3DownloadService service = new S3DownloadService();
 
   S3BucketNamingService namingService = new S3BucketNamingService();
+
+  MetadataService mockService;
+
+  MetadataEntity metadataEntity;
 
   @Before
   public void setUp() {
@@ -82,15 +84,24 @@ public class ObjectDownloadServiceTest extends S3DownloadService {
     namingService.setBucketKeySize(3);
     service.setBucketNamingService(namingService);
 
-    // ReflectionTestUtils.setField(service, "dataBucketName", dataBucketName);
-    // ReflectionTestUtils.setField(service, "stateBucketName", stateBucketName);
     ReflectionTestUtils.setField(service, "dataDir", dataDir);
-    // ReflectionTestUtils.setField(service, "bucketPoolSize", 5);
-    // ReflectionTestUtils.setField(service, "bucketKeySize", 2);
     ReflectionTestUtils.setField(service, "expiration", 7);
-
     ReflectionTestUtils.setField(service, "urlGenerator", new S3URLGenerator());
     ReflectionTestUtils.setField(service, "partCalculator", new SimplePartCalculator(20000));
+
+    mockService = mock(MetadataService.class);
+    service.setMetadataService(mockService);
+    service.setS3Client(s3Client);
+    metadataEntity = MetadataEntity.builder()
+            .id(objectId)
+            .fileName("file_1")
+            .access("open")
+            .gnosId("an1")
+            .projectCode("project")
+            .build();
+
+    when(mockService.getAnalysisStateForMetadata(metadataEntity)).thenReturn("PUBLISHED");
+    when(mockService.getEntity(objectId)).thenReturn(metadataEntity);
   }
 
   @Test(expected = IdNotFoundException.class)
