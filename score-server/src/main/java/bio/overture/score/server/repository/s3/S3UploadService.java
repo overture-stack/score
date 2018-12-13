@@ -409,11 +409,11 @@ public class S3UploadService implements UploadService {
     }
 
     if (!useLegacyMode){
-      checkAnalysisState(entity);
+      checkUnpublishedAnalysisState(entity);
     }
   }
 
-  void checkAnalysisState(MetadataEntity entity){
+  void checkUnpublishedAnalysisState(MetadataEntity entity){
     val objectId = entity.getId();
     val analysisState = metadataClient.getAnalysisStateForMetadata(entity);
     if (!analysisState.equals(UNPUBLISHED_ANALYSIS_STATE)){
