@@ -13,7 +13,6 @@ import lombok.SneakyThrows;
 import lombok.val;
 
 import java.io.File;
-import java.io.InputStream;
 import java.net.URL;
 
 public class Viewer {
@@ -31,7 +30,7 @@ public class Viewer {
     }
   }
 
-  public static InputStream openInputStream(URL url) {
+  public static SeekableStream openInputStream(URL url) {
     return new NullSourceSeekableHTTPStream(url);
   }
 
@@ -45,12 +44,17 @@ public class Viewer {
     entity.setFileName(sequenceFile.toString());
     val reference=new ReferenceSource(referenceFile);
     val resource = getFileResource(sequenceFile, indexFile);
-    val builder=new SamFileBuilder().samInput(resource).cramReferenceSource(reference);
+    val builder = new SamFileBuilder()
+        .entity(entity)
+        .samInput(resource)
+        .cramReferenceSource(reference);
+    val reader = builder.createSamReader();
+    builder.reader(reader);
     return builder;
   }
 
   @SneakyThrows
-  public SamFileBuilder getBuilder(InputStream inputStream, SeekableStream indexStream, boolean isCram) {
+  public SamFileBuilder getBuilder(SeekableStream inputStream, SeekableStream indexStream, boolean isCram) {
     val resource = SamInputResource.of(inputStream).index(indexStream);
     val builder = new SamFileBuilder().samInput(resource);
 
