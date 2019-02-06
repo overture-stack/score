@@ -79,7 +79,7 @@ public class UploadStateStore extends TransferState {
   }
 
   protected static String getStateName() {
-    return "uploadid";
+    return "uploadId";
   }
 
   public static Optional<String> fetchUploadId(@NonNull File uploadFile, @NonNull String objectId) {
