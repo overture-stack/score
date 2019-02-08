@@ -9,11 +9,14 @@ import htsjdk.samtools.SamReader;
 import htsjdk.samtools.ValidationStringency;
 import htsjdk.samtools.cram.ref.ReferenceSource;
 import htsjdk.samtools.seekablestream.SeekableStream;
+import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.val;
 
 import java.io.File;
 import java.net.URL;
+
+import static java.util.Objects.isNull;
 
 public class Viewer {
   File referenceFile=null;
@@ -22,11 +25,19 @@ public class Viewer {
     this.referenceFile=referenceFile;
   }
 
-  public static SamInputResource getFileResource(File bamFile, File baiFile) {
-    if (baiFile != null) {
-      return SamInputResource.of(bamFile).index(baiFile);
-    } else {
+  public static SamInputResource getFileResource(@NonNull File bamFile, File baiFile) {
+    if (isNull(baiFile)) {
       return SamInputResource.of(bamFile);
+    } else {
+      return SamInputResource.of(bamFile).index(baiFile);
+    }
+  }
+
+  public static SamInputResource getStreamResource(@NonNull SeekableStream inputStream, SeekableStream indexStream) {
+    if (isNull(indexStream)) {
+      return SamInputResource.of(inputStream);
+    } else {
+      return SamInputResource.of(inputStream).index(indexStream);
     }
   }
 
@@ -39,7 +50,7 @@ public class Viewer {
   }
 
   @SneakyThrows
-  public SamFileBuilder getBuilder(File sequenceFile, File indexFile) {
+  public SamFileBuilder getBuilder(@NonNull File sequenceFile, File indexFile) {
     val entity = new Entity();
     entity.setFileName(sequenceFile.toString());
     val reference=new ReferenceSource(referenceFile);
@@ -54,8 +65,8 @@ public class Viewer {
   }
 
   @SneakyThrows
-  public SamFileBuilder getBuilder(SeekableStream inputStream, SeekableStream indexStream, boolean isCram) {
-    val resource = SamInputResource.of(inputStream).index(indexStream);
+  public SamFileBuilder getBuilder(@NonNull SeekableStream inputStream, SeekableStream indexStream, boolean isCram) {
+    val resource =  getStreamResource(inputStream, indexStream);
     val builder = new SamFileBuilder().samInput(resource);
 
     if (isCram) {
