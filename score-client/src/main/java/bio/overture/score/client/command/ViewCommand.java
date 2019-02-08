@@ -57,7 +57,9 @@ import java.util.List;
 import java.util.Optional;
 
 import static bio.overture.score.client.cli.Parameters.checkParameter;
+import static java.util.Objects.isNull;
 import static java.util.stream.Collectors.toList;
+import static org.springframework.util.StringUtils.isEmpty;
 
 @Slf4j
 @Component
@@ -158,8 +160,9 @@ public class ViewCommand extends RepositoryAccessCommand {
 
     if (sequenceFile != null) {
         v = new Viewer(referenceFile);
+        val indexFileExists = !isNull(indexFile);
         val builder = configureBuilder(v.getBuilder(sequenceFile,indexFile));
-        build(builder);
+        build(builder, indexFileExists);
     } else if (objectId != null) {
       // Ad-hoc single - supercedes --manifest
       if (manifestResource != null) {
@@ -211,10 +214,17 @@ public class ViewCommand extends RepositoryAccessCommand {
 
   public SamFileBuilder configureBuilder(SamFileBuilder builder) {
     builder = builder.programName(PROGRAM_NAME)
-      .version(VersionUtils.getScmInfo().get("git.commit.id.describe")).programId(ICGC).commandLine(getCommandLine())
-      .containedOnly(containedOnly).useOriginalHeader(useOriginalHeader).outputFormat(outputFormat).queries(query)
-      .outputDir(outputDir).bedFile(bedFile).outputIndex(outputIndex).stdout(stdout);
-
+        .version(VersionUtils.getScmInfo().get("git.commit.id.describe"))
+        .programId(ICGC)
+        .commandLine(getCommandLine())
+        .containedOnly(containedOnly)
+        .useOriginalHeader(useOriginalHeader)
+        .outputFormat(outputFormat)
+        .outputDir(outputDir)
+        .outputIndex(outputIndex)
+        .stdout(stdout)
+        .queries(query)
+        .bedFile(bedFile);
     log.info("Constructed SamFileBuilder: " + builder.toString());
     return builder;
   }
@@ -224,18 +234,26 @@ public class ViewCommand extends RepositoryAccessCommand {
     val entity = getEntity(oid);
     val urls = getPresignedUrls(entity);
 
+    val indexExists = !isNull(urls.index);
     val inputStream = Viewer.openInputStream(urls.file);
-    val indexStream = Viewer.openIndexStream(urls.index);
+    val indexStream = indexExists ? Viewer.openIndexStream(urls.index) : null;
     val isCram = isCRAM(entity.getFileName());
     val viewer = new Viewer(referenceFile);
 
     val builder = configureBuilder(viewer.getBuilder(inputStream, indexStream, isCram));
-    return build(builder.entity(entity));
+    return build(builder.entity(entity), indexExists);
+  }
+
+  private boolean isQueryDefined(){
+    return !isEmpty(bedFile) || !isNull(query) && !query.isEmpty();
   }
 
   @SneakyThrows
-  int build(SamFileBuilder builder) {
-    if (headerOnly) {
+  int build(SamFileBuilder builder, boolean hasIndex) {
+    if (isQueryDefined() && !hasIndex){
+      log.warn("Supplied query or bedfile will not be used since no index is available");
+    }
+    if (headerOnly || !hasIndex) {
       builder.buildHeaderOnly();
     } else {
       switch (outputType) {
@@ -272,11 +290,9 @@ public class ViewCommand extends RepositoryAccessCommand {
 
   public PresignedUrls getPresignedUrls(Entity entity) {
     val indexEntity = metadataService.getIndexEntity(entity);
-    checkParameter(indexEntity.isPresent(), "No index file associated with BAM/CRAM file with object id '%s'",
-      entity.getId());
-
     val bamFileUrl = downloadService.getUrl(entity.getId());
-    val indexFileUrl = downloadService.getUrl(indexEntity.get().getId());
+    val indexFileUrl = indexEntity.map(x -> downloadService.getUrl(x.getId())).orElse(null);
+
     return new PresignedUrls(bamFileUrl, indexFileUrl);
   }
 
