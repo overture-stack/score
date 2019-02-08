@@ -161,7 +161,7 @@ public class ViewCommand extends RepositoryAccessCommand {
     if (sequenceFile != null) {
         v = new Viewer(referenceFile);
         val indexFileExists = !isNull(indexFile);
-        val builder = configureBuilder(v.getBuilder(sequenceFile,indexFile), indexFileExists);
+        val builder = configureBuilder(v.getBuilder(sequenceFile,indexFile));
         build(builder, indexFileExists);
     } else if (objectId != null) {
       // Ad-hoc single - supercedes --manifest
@@ -212,7 +212,7 @@ public class ViewCommand extends RepositoryAccessCommand {
   }
 
 
-  public SamFileBuilder configureBuilder(SamFileBuilder builder, boolean hasIndex) {
+  public SamFileBuilder configureBuilder(SamFileBuilder builder) {
     builder = builder.programName(PROGRAM_NAME)
         .version(VersionUtils.getScmInfo().get("git.commit.id.describe"))
         .programId(ICGC)
@@ -240,7 +240,7 @@ public class ViewCommand extends RepositoryAccessCommand {
     val isCram = isCRAM(entity.getFileName());
     val viewer = new Viewer(referenceFile);
 
-    val builder = configureBuilder(viewer.getBuilder(inputStream, indexStream, isCram), indexExists);
+    val builder = configureBuilder(viewer.getBuilder(inputStream, indexStream, isCram));
     return build(builder.entity(entity), indexExists);
   }
 
