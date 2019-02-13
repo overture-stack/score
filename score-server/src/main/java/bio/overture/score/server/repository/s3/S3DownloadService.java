@@ -17,40 +17,20 @@
  */
 package bio.overture.score.server.repository.s3;
 
-import static bio.overture.score.server.metadata.MetadataService.getAnalysisId;
-import static com.google.common.base.Preconditions.checkArgument;
-
-import bio.overture.score.server.metadata.MetadataEntity;
-import bio.overture.score.server.metadata.MetadataService;
-import lombok.Cleanup;
-import lombok.Setter;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
-
-import java.io.IOException;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.Date;
-import java.util.List;
-
 import bio.overture.score.core.model.ObjectKey;
 import bio.overture.score.core.model.ObjectSpecification;
 import bio.overture.score.core.model.Part;
 import bio.overture.score.core.util.ObjectKeys;
+import bio.overture.score.core.util.PartCalculator;
 import bio.overture.score.server.exception.IdNotFoundException;
 import bio.overture.score.server.exception.InternalUnrecoverableError;
 import bio.overture.score.server.exception.NotRetryableException;
 import bio.overture.score.server.exception.RetryableException;
-import bio.overture.score.server.repository.URLGenerator;
+import bio.overture.score.server.metadata.MetadataEntity;
+import bio.overture.score.server.metadata.MetadataService;
 import bio.overture.score.server.repository.BucketNamingService;
 import bio.overture.score.server.repository.DownloadService;
-import bio.overture.score.core.util.PartCalculator;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Profile;
-import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
-
+import bio.overture.score.server.repository.URLGenerator;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.GetObjectRequest;
@@ -58,6 +38,25 @@ import com.amazonaws.services.s3.model.S3Object;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.Cleanup;
+import lombok.NonNull;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Profile;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+
+import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.Date;
+import java.util.List;
+
+import static bio.overture.score.server.metadata.MetadataService.getAnalysisId;
+import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * service responsible for object download (full or partial)
@@ -100,10 +99,13 @@ public class S3DownloadService implements DownloadService {
   @Autowired
   private MetadataService metadataService;
 
+
   @Override
-  public ObjectSpecification download(String objectId, long offset, long length, boolean forExternalUse) {
+  public ObjectSpecification download(String objectId, long offset, long length, boolean forExternalUse, boolean excludeUrls) {
     try {
-      checkPublishedAnalysisState(metadataService.getEntity(objectId));
+      if (!excludeUrls){
+        checkPublishedAnalysisState(metadataService.getEntity(objectId));
+      }
 
       checkArgument(offset > -1L);
 
@@ -112,7 +114,7 @@ public class S3DownloadService implements DownloadService {
 
       // Short-circuit in default case
       if (!forExternalUse && (offset == 0L && length < 0L)) {
-        return objectSpec;
+        return excludeUrls ? removeUrls(objectSpec) : objectSpec;
       }
 
       // Calculate range values
@@ -142,14 +144,22 @@ public class S3DownloadService implements DownloadService {
 
       fillPartUrls(objectKey, parts, objectSpec.isRelocated(), forExternalUse);
 
-      return new ObjectSpecification(objectKey.getKey(), objectId, objectId, parts, length, objectSpec.getObjectMd5(),
+      val spec = new ObjectSpecification(objectKey.getKey(), objectId, objectId, parts, length, objectSpec.getObjectMd5(),
           objectSpec.isRelocated());
+
+      return excludeUrls ? removeUrls(spec) : spec;
+
     } catch (Exception e) {
-      log.error("Failed to download objectId: {}, offset: {}, length: {}, forExternalUse: {}: {} ",
-          objectId, offset, length, forExternalUse, e);
+      log.error("Failed to download objectId: {}, offset: {}, length: {}, forExternalUse: {}, excludeUrls: {} : {} ",
+          objectId, offset, length, forExternalUse, excludeUrls, e);
 
       throw e;
     }
+  }
+
+  private static ObjectSpecification removeUrls(ObjectSpecification spec){
+    spec.getParts().forEach(x -> x.setUrl(null));
+    return spec;
   }
 
   void checkPublishedAnalysisState(MetadataEntity entity){
@@ -159,7 +169,7 @@ public class S3DownloadService implements DownloadService {
       if (!analysisState.equals(PUBLISHED_ANALYSIS_STATE)){
         val message = String.format("Critical Error: cannot complete download for objectId '%s' with "
                         + "analysisState '%s' and analysisId '%s'. "
-                        + "Can only download objects that have the analysisState '%s'. Update the file metadata and retry.",
+                        + "Can only download objects that have the analysisState '%s' or when the 'exclude-urls=true' flag is set. Update the file metadata or url parameters and retry.",
                 objectId, analysisState, getAnalysisId(entity), PUBLISHED_ANALYSIS_STATE);
         log.error(message); // Log to audit log file
         throw new NotRetryableException(new IllegalStateException(message));

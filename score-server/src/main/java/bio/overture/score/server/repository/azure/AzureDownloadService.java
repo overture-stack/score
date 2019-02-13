@@ -68,7 +68,7 @@ public class AzureDownloadService implements DownloadService {
   private String sentinelObjectId;
 
   @Override
-  public ObjectSpecification download(String objectId, long offset, long length, boolean forExternalUse) {
+  public ObjectSpecification download(String objectId, long offset, long length, boolean forExternalUse, boolean excludeUrls) {
     try {
       checkArgument(offset >= 0L);
 

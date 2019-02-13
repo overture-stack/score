@@ -17,22 +17,19 @@
  */
 package bio.overture.score.server.service.download;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.*;
-
-import java.net.URL;
-import java.util.regex.Pattern;
-
 import bio.overture.score.core.util.ObjectKeys;
+import bio.overture.score.core.util.SimplePartCalculator;
 import bio.overture.score.server.config.ServerConfig;
 import bio.overture.score.server.exception.IdNotFoundException;
-import bio.overture.score.core.util.SimplePartCalculator;
 import bio.overture.score.server.metadata.MetadataEntity;
 import bio.overture.score.server.metadata.MetadataService;
 import bio.overture.score.server.repository.s3.S3BucketNamingService;
 import bio.overture.score.server.repository.s3.S3DownloadService;
 import bio.overture.score.server.repository.s3.S3URLGenerator;
+import com.amazonaws.AmazonServiceException;
+import com.amazonaws.services.s3.AmazonS3;
+import com.google.common.base.Splitter;
+import lombok.val;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -43,11 +40,15 @@ import org.springframework.http.HttpStatus;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import com.amazonaws.AmazonServiceException;
-import com.amazonaws.services.s3.AmazonS3;
-import com.google.common.base.Splitter;
+import java.net.URL;
+import java.util.regex.Pattern;
 
-import lombok.val;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
 @ContextConfiguration(classes = ServerConfig.class)
@@ -114,7 +115,7 @@ public class ObjectDownloadServiceTest extends S3DownloadService {
     firstException.setStatusCode(HttpStatus.NOT_FOUND.value());
     when(s3Client.getObject(Mockito.any())).thenThrow(firstException, firstException); // stubs first two calls to
                                                                                        // s3Client.getObject()
-    service.download(objectId, 0, 1000, false);
+    service.download(objectId, 0, 1000, false, false);
   }
 
   @Test
@@ -148,7 +149,7 @@ public class ObjectDownloadServiceTest extends S3DownloadService {
     val sut = spy(service);
     doReturn(os).when(sut).getSpecification(objectId);
 
-    val objSpec = sut.download(objectId, 0, 104857600, false);
+    val objSpec = sut.download(objectId, 0, 104857600, false, false);
 
     val p = objSpec.getParts().get(0);
 
@@ -194,7 +195,7 @@ public class ObjectDownloadServiceTest extends S3DownloadService {
     val sut = spy(service);
     doReturn(os).when(sut).getSpecification(objectId);
 
-    val objSpec = sut.download(objectId, 0, 104857600, false);
+    val objSpec = sut.download(objectId, 0, 104857600, false, false);
 
     val p = objSpec.getParts().get(0);
 
