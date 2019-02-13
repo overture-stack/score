@@ -21,7 +21,7 @@ import bio.overture.score.core.model.ObjectSpecification;
 
 public interface DownloadService {
 
-  ObjectSpecification download(String objectId, long offset, long length, boolean forExternalUse);
+  ObjectSpecification download(String objectId, long offset, long length, boolean forExternalUse, boolean excludeUrls);
 
   /**
    * Attempts to fetch a pre-defined object id (defined in application.yml) from the object repository. Used to confirm

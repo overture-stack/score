@@ -9,8 +9,10 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.runners.MockitoJUnitRunner;
+
 import static java.lang.String.format;
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -50,11 +52,11 @@ public class S3DownloadServiceTest {
     }
 
     @Test
-    public void verify_if_download_unpublished_objectId_is_blocked() {
+    public void verify_if_download_is_blocked_with_unpublished_objectId() {
         when(mockService.getAnalysisStateForMetadata(metadataEntity)).thenReturn("UNPUBLISHED");
         when(mockService.getEntity(objectId)).thenReturn(metadataEntity);
 
-        val throwable = catchThrowable(() -> s3DownloadService.download(objectId, 0, -1, false));
+        val throwable = catchThrowable(() -> s3DownloadService.download(objectId, 0, -1, false, false));
         assertThat(throwable).isExactlyInstanceOf(NotRetryableException.class);
     }
 

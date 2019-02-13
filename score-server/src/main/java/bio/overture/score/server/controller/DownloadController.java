@@ -17,12 +17,13 @@
  */
 package bio.overture.score.server.controller;
 
-import javax.servlet.http.HttpServletRequest;
-
 import bio.overture.score.core.model.ObjectSpecification;
-import bio.overture.score.server.util.HttpServletRequests;
 import bio.overture.score.server.repository.DownloadService;
 import bio.overture.score.server.security.TokenHasher;
+import bio.overture.score.server.util.HttpServletRequests;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpHeaders;
@@ -39,9 +40,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import lombok.Setter;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
+import javax.servlet.http.HttpServletRequest;
 
 /**
  * A controller to expose RESTful API for download
@@ -76,6 +75,7 @@ public class DownloadController {
       @RequestParam(value = "offset", required = true) long offset,
       @RequestParam(value = "length", required = true) long length,
       @RequestParam(value = "external", defaultValue = "false") boolean external,
+      @RequestParam(value = "exclude-urls", defaultValue = "false") boolean excludeUrls,
       @RequestHeader(value = "User-Agent", defaultValue = "unknown") String userAgent,
       HttpServletRequest request) {
 
@@ -83,7 +83,7 @@ public class DownloadController {
 
     log.info("Requesting download of object id {} with access token {} (MD5) from {} and client version {}", objectId,
         identifier(accessToken), ipAddress, userAgent);
-    return downloadService.download(objectId, offset, length, external);
+    return downloadService.download(objectId, offset, length, external, excludeUrls);
   }
 
   protected String identifier(String accessToken) {
