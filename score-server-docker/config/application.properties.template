@@ -1,0 +1,49 @@
+#
+# Copyright (c) 2018 The Ontario Institute for Cancer Research. All rights reserved.
+#
+# This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
+# You should have received a copy of the GNU General Public License along with
+# this program. If not, see <http://www.gnu.org/licenses/>.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
+# EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+# OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT
+# SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+# TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+# OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+# IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+# ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+# DCC Storage Server - Configuration
+#
+
+
+server.port=${STORAGE_SERVER_PORT}
+server.ssl.enabled=false
+bucket.name.object=${STORAGE_SERVER_DATA_BUCKET}
+bucket.name.state=${STORAGE_SERVER_STATE_BUCKET}
+object.sentinel=${STORAGE_SERVER_OBJECT_SENTINEL}
+collaboratory.data.directory=${STORAGE_SERVER_DATA_DIR}
+upload.partsize=1073741824
+upload.connection.timeout=1200000
+metadata.url=${SERVER_URL}
+s3.sigV4Enabled=true
+s3.secured=true
+s3.accessKey=${OBJECT_STORAGE_ACCESS_KEY}
+s3.secretKey=${OBJECT_STORAGE_SECRET_KEY}
+s3.endpoint=${OBJECT_STORAGE_URL}
+s3.masterEncryptionKeyId=
+auth.server.url=${AUTH_SERVER_URL}
+auth.server.clientId=${AUTH_SERVER_CLIENTID}
+auth.server.clientSecret=${AUTH_SERVER_CLIENTSECRET}
+auth.server.uploadScope=${AUTH_SERVER_UPLOADSCOPE}
+auth.server.downloadScope=${AUTH_SERVER_DOWNLOADSCOPE}
+
+# Debug
+logging.level.bio.overture.score.server=TRACE
+logging.level.org.apache.http.wire=TRACE
+logging.level.org.apache.http.headers=TRACE
+endpoints.dump.enabled=true
+endpoints.env.enabled=true
+endpoints.info.enabled=true

@@ -1,0 +1,8 @@
+current_dir=$PWD
+fn=$0
+sing_home=$current_dir/`dirname $fn`/../
+#echo "SING_HOME = $sing_home"
+java \
+         -Dspring.config.location="$sing_home/conf/" \
+         -jar $sing_home/lib/song-client.jar \
+         $@
