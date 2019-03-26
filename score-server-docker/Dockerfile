@@ -1,0 +1,60 @@
+FROM openjdk:8-jre-alpine
+
+# example:  1.4.1
+ENV SCORE_VERSION $ENV_VERSION
+RUN test -n "$SCORE_VERSION"
+ENV SCORE_VERSION $SCORE_VERSION
+
+# example dcc-release
+ENV SCORE_ARTIFACTORY_REPO_NAME $ENV_SCORE_ARTIFACTORY_REPO_NAME
+RUN test -n "$SCORE_ARTIFACTORY_REPO_NAME"
+ENV SCORE_ARTIFACTORY_REPO_NAME $SCORE_ARTIFACTORY_REPO_NAME
+
+RUN apk add --no-cache python3 && \
+    python3 -m ensurepip && \
+    rm -r /usr/lib/python*/ensurepip && \
+    pip3 install --upgrade pip setuptools && \
+    if [ ! -e /usr/bin/pip  ]; then ln -s pip3 /usr/bin/pip ; fi && \
+    if [[ ! -e /usr/bin/python  ]]; then ln -sf /usr/bin/python3 /usr/bin/python; fi && \
+    rm -r /root/.cache
+
+# Directory Paths
+ENV SCORE_HOME /score-server
+ENV SCORE_TOOLS $SCORE_HOME/tools
+ENV SCORE_CONF $SCORE_HOME/conf
+ENV SCORE_TEMPLATES $SCORE_HOME/templates
+ENV SCORE_LIB $SCORE_HOME/lib
+ENV SCORE_LOGS $SCORE_HOME/logs
+ENV SCORE_TMP $SCORE_HOME/tmp
+
+
+# File paths
+ENV EXPAND_SCRIPT       $SCORE_TOOLS/expand.py
+ENV LOGGING_CONFIG_FILE $SCORE_CONF/logback.xml
+ENV INPUT_FILE          $SCORE_TEMPLATES/application.properties.template
+ENV OUTPUT_FILE         $SCORE_CONF/application-secure.properties
+ENV TARBALL_FILE        $SCORE_LIB/score-server.jar
+ENV JAR_FILE            $SCORE_LIB/score-server.jar
+
+RUN mkdir -p $SCORE_HOME $SCORE_TOOLS $SCORE_CONF $SCORE_TEMPLATES $SCORE_LIB $SCORE_LOGS
+
+COPY tools/expand.py  $EXPAND_SCRIPT
+COPY score/application-secure.properties.template $INPUT_FILE
+COPY score/logback.xml $LOGGING_CONFIG_FILE
+
+RUN wget https://artifacts.oicr.on.ca/artifactory/${SCORE_ARTIFACTORY_REPO_NAME}/bio/overture/score-server/${SCORE_VERSION}/score-server-${SCORE_VERSION}-dist.tar.gz -O /tmp/score-server.tar.gz && \
+    tar zxvf /tmp/score-server.tar.gz -C /tmp && \
+    mv -f /tmp/score-server-${SCORE_VERSION}  /tmp/score-dist && \
+    cp -f /tmp/score-dist/lib/score-server.jar $JAR_FILE && \
+    rm -rf /tmp/score-server.tar.gz /tmp/score-dist
+
+WORKDIR $SCORE_HOME
+
+CMD python3 $EXPAND_SCRIPT $INPUT_FILE $OUTPUT_FILE && \
+    java -Dlog.path=$SCORE_LOGS \
+    -jar $JAR_FILE \
+    --spring.config.location=classpath:/,file:$SCORE_CONF/ \
+    --spring.profiles.active=amazon,collaboratory,prod,secure \
+    --logging.config=$LOGGING_CONFIG_FILE
+
+#&& FOR_100_YEARS=$((100*365*24*60*60));while true;do sleep $FOR_100_YEARS;done
