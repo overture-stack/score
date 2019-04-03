@@ -15,8 +15,8 @@ s3.masterEncryptionKeyId=
 auth.server.url=${AUTH_SERVER_URL}
 auth.server.clientId=${AUTH_SERVER_CLIENTID}
 auth.server.clientSecret=${AUTH_SERVER_CLIENTSECRET}
-auth.server.uploadScope=${UPLOAD_SCOPE}
-auth.server.downloadScope=${DOWNLOAD_SCOPE}
+auth.server.uploadScope=${AUTH_SERVER_UPLOAD_SCOPE}
+auth.server.downloadScope=${AUTH_SERVER_DOWNLOAD_SCOPE}
 
 # Debug
 logging.level.bio.overture.score.server=DEBUG
