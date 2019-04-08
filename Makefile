@@ -3,8 +3,6 @@ DOCKERFILE_SERVER := Dockerfile.server
 DOCKER_CONTAINER_NAME := score-server-$(VERSION)
 DOCKER_IMAGE_NAME := overture/score-server:$(VERSION)
 
-#.PHONY: help
-
 help:
 	@grep '^[A-Za-z0-9_-]\+:.*' ./Makefile | sed 's/:.*//'
 
