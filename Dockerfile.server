@@ -1,0 +1,39 @@
+FROM openjdk:8-jre-alpine
+
+# example:  1.4.1
+ARG SCORE_VERSION
+RUN test -n "$SCORE_VERSION"
+ENV SCORE_VERSION $SCORE_VERSION
+
+# example dcc-release
+ARG SCORE_ARTIFACTORY_REPO_NAME
+RUN test -n "$SCORE_ARTIFACTORY_REPO_NAME"
+ENV SCORE_ARTIFACTORY_REPO_NAME $SCORE_ARTIFACTORY_REPO_NAME
+
+# Directory Paths
+ENV SCORE_HOME /score-server
+ENV SCORE_CONF $SCORE_HOME/conf
+ENV SCORE_LIB $SCORE_HOME/lib
+ENV SCORE_LOGS $SCORE_HOME/logs
+ENV SCORE_TMP $SCORE_HOME/tmp
+
+
+# File paths
+ENV JAR_FILE            $SCORE_LIB/score-server.jar
+
+RUN mkdir -p $SCORE_HOME $SCORE_CONF $SCORE_LIB $SCORE_LOGS
+
+RUN wget https://artifacts.oicr.on.ca/artifactory/${SCORE_ARTIFACTORY_REPO_NAME}/bio/overture/score-server/${SCORE_VERSION}/score-server-${SCORE_VERSION}-dist.tar.gz -O /tmp/score-server.tar.gz && \
+    tar zxvf /tmp/score-server.tar.gz -C /tmp && \
+    mv -f /tmp/score-server-${SCORE_VERSION}  /tmp/score-dist && \
+    cp -f /tmp/score-dist/lib/score-server.jar $JAR_FILE && \
+    rm -rf /tmp/score-server.tar.gz /tmp/score-dist
+
+WORKDIR $SCORE_HOME
+
+CMD java -Dlog.path=$SCORE_LOGS \
+    -jar $JAR_FILE \
+    --spring.config.location=classpath:/application.yml \
+    --spring.profiles.active=amazon,collaboratory,prod,secure 
+
+#&& FOR_100_YEARS=$((100*365*24*60*60));while true;do sleep $FOR_100_YEARS;done
