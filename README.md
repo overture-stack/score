@@ -32,6 +32,19 @@ Top level system modules:
 - [Server](score-server/README.md)
 - [Test](score-test/README.md)
 
+## Dockerhub Configuration for score-server
+1. Edit build configurations by selecting the `Builds` tab at the top, then click `Build Configuration`
+2. Create a new build rule by clicking the `+` sign beside the `BUILD RULES` text
+3. Edit the configuration as follows:
+   Source Type: `branch`
+   Source: `develop`
+   Docker Tag: `develop`
+   Dockerfile Location: `Dockerfile.server`
+   Build Context: `/`
+   `Autobuild` is set to the ON position
+   `Build Caching` is set to the ON position
+4. Then save the configuration
+
 ## Changes
 
 Change log for the user-facing system modules may be found in [CHANGES.md](CHANGES.md).
