@@ -1,14 +1,11 @@
 version: '3.2'
 services:
   server:
-    image: "overture/score-server:$VERSION"
-    container_name: "score-server-$VERSION"
+    image: "overture/score-server:local"
+    container_name: "score-server-local"
     build:
       context: ./
       dockerfile: Dockerfile.server
-      args:
-        - SCORE_VERSION=${VERSION}
-        - SCORE_ARTIFACTORY_REPO_NAME=dcc-release
     network_mode: host
     environment:
       SERVER_PORT: 8087
