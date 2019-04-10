@@ -1,8 +1,8 @@
 version: '3.2'
 services:
   server:
-    image: "overture/score-server:local"
-    container_name: "score-server-local"
+    container_name: "score-server-${SOURCE_COMMIT}"
+    image: "${DOCKER_REPO}:${SOURCE_COMMIT}"
     build:
       context: ./
       dockerfile: Dockerfile.server
