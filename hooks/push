@@ -14,7 +14,7 @@ echo "Extracted TAG=${tag} from SOURCE_BRANCH=${SOURCE_BRANCH}"
 
 if [[ ${tag} =~ $regex ]]; then
     version="${BASH_REMATCH[1]}"
-    echo "TAG ${TAG} matches to regex: $regex. Tagging and pushing versioned image with version ${version}..."
+    echo "TAG ${TAG} matches the regex: $regex. Tagging and pushing versioned image with version ${version}"
 
     echo "Tagging image $DOCKER_REPO:$SOURCE_COMMIT with tag $DOCKER_REPO:${version}"
     docker tag $DOCKER_REPO:$SOURCE_COMMIT $DOCKER_REPO:${version}
