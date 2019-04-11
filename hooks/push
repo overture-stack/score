@@ -8,13 +8,14 @@ docker tag $DOCKER_REPO:$SOURCE_COMMIT $DOCKER_REPO:edge
 echo "Pushing tag $DOCKER_REPO:edge"
 docker push $DOCKER_REPO:edge
 
-regex="([0-9]+\.[0-9]+\.[0-9]+)"
+regex="^([0-9]+\.[0-9]+\.[0-9]+)$"
 echo "SOURCE_BRANCH=${SOURCE_BRANCH}"
 tag=`git describe --tags`
 echo "TAG=${tag}"
 
 if [[ ${tag} =~ $regex ]]; then
     version="${BASH_REMATCH[1]}"
+    echo "$SOURCE_BRANCH matches to reges: $regex. Tagging and pushing versioned image with ${version}..."
 
     echo "Tagging image $DOCKER_REPO:$SOURCE_COMMIT with tag $DOCKER_REPO:${version}"
     docker tag $DOCKER_REPO:$SOURCE_COMMIT $DOCKER_REPO:${version}
