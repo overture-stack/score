@@ -16,8 +16,58 @@ RUN mvn package -DskipTests \
     && cp -f /tmp/score-dist/lib/score-server.jar $JAR_FILE
 
 ###############################################################################################################
+#
+#    _____ __________  ____          _________            __
+#   / ___// ____/ __ \/ __ \___     / ____/ (_)__  ____  / /_
+#   \__ \/ /   / / / / /_/ / _ \   / /   / / / _ \/ __ \/ __/
+#  ___/ / /___/ /_/ / _, _/  __/  / /___/ / /  __/ / / / /_
+# /____/\____/\____/_/ |_|\___/   \____/_/_/\___/_/ /_/\__/
+#
+# Banner @ https://goo.gl/Yyoc6R
 
-FROM openjdk:8-jre-alpine
+FROM       ubuntu:16.04 as client
+MAINTAINER ICGC <dcc-support@icgc.org>
+
+#
+# Update apt, add FUSE support and basic command line tools
+#
+
+RUN \
+  apt-get update && \
+  apt-get -y upgrade && \
+  apt-get install -y libfuse-dev fuse curl wget software-properties-common
+
+#
+# Install Oracle JDK 8
+#
+
+RUN add-apt-repository ppa:webupd8team/java
+RUN apt-get update && apt-get upgrade -y
+RUN echo oracle-java8-installer shared/accepted-oracle-license-v1-1 select true | /usr/bin/debconf-set-selections
+RUN apt-get install -y \
+    oracle-java8-installer \
+    oracle-java8-set-default
+ENV JAVA_HOME /usr/lib/jvm/java-8-oracle
+
+#
+# Install edge version of score client distribution
+#
+
+COPY --from=builder /srv/score-client/target/score-client-*-dist.tar.gz /tmp/score-client.tar.gz
+RUN mkdir -p /score-client && \
+	cd /score-client && \
+        cat /tmp/score-client.tar.gz | tar xvz --strip-components 1 && \
+	rm -rf /tmp/score-client.tar.gz
+
+#
+# Set working directory for convenience with interactive usage
+#
+
+
+WORKDIR /score-client
+
+###############################################################################################################
+FROM openjdk:8-jre-alpine as server
 
 # Paths
 ENV SCORE_HOME /score-server
