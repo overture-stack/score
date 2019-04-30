@@ -29,7 +29,7 @@ elif [[ -n "$JAVA_HOME" ]] && [[ -x "$JAVA_HOME/bin/java" ]];  then
 #    echo Found Java in JAVA_HOME
     _java="$JAVA_HOME/bin/java"
 else
-    echo "Java not found. The Storage Client requires Oracle JDK 1.8 or higher"
+    echo "Java not found. The Storage Client requires JDK 1.8"
     exit 1
 fi
 
@@ -38,14 +38,7 @@ if [[ "$_java" ]]; then
     if [[ "$version" > "1.8" ]]; then
         :
     else
-        echo Oracle Java 1.8 required for SCORe Client
-        exit 1
-    fi
-
-    open_pattern="openjdk*"
-    impl=$("$_java" -version 2>&1)
-    if [[ $impl =~ $open_pattern ]]; then
-        echo OpenJDK not supported. SCORe Client requires Oracle JDK
+        echo Java 1.8 required for SCORe Client. Current version is $version
         exit 1
     fi
 fi
