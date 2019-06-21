@@ -1,18 +1,18 @@
 /*
- * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.                             
- *                                                                                                               
+ * Copyright (c) 2016-2019 The Ontario Institute for Cancer Research. All rights reserved.
+ *
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
- * You should have received a copy of the GNU General Public License along with                                  
- * this program. If not, see <http://www.gnu.org/licenses/>.                                                     
- *                                                                                                               
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY                           
- * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES                          
- * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT                           
- * SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,                                
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED                          
- * TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;                               
- * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER                              
- * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
+ * You should have received a copy of the GNU General Public License along with
+ * this program. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
+ * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT
+ * SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+ * TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+ * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 package bio.overture.score.client.command;
@@ -47,6 +47,7 @@ import java.util.Set;
 import static bio.overture.score.client.cli.Parameters.checkParameter;
 import static java.util.stream.Collectors.toList;
 import static org.icgc.dcc.common.core.util.Formats.formatBytes;
+import static java.lang.String.format;
 
 @Slf4j
 @Component
@@ -109,10 +110,10 @@ public class DownloadCommand extends RepositoryAccessCommand {
       // Manifest based
       if (manifestResource.isGnosManifest()) {
         terminal
-            .printError(
-                "Manifest '%s' looks like a GNOS-format manifest file. Please ensure you are using a tab-delimited text file"
-                    + " manifest from https://dcc.icgc.org/repositories",
-                manifestResource.getValue());
+          .printError(
+            "Manifest '%s' looks like a GNOS-format manifest file. Please ensure you are using a tab-delimited text file"
+              + " manifest from https://dcc.icgc.org/repositories",
+            manifestResource.getValue());
         return FAILURE_STATUS;
       }
       val manifest = manifestService.getDownloadManifest(manifestResource);
@@ -146,22 +147,51 @@ public class DownloadCommand extends RepositoryAccessCommand {
       entitySet = filterEntities(entities);
     }
 
+    // If --force is specified, delete all the old files first, so that we can resume later if the new downloads fail.
+    if (force) {
+      for (val entity : entitySet) {
+        val target = getLayoutTarget(entity);
+        if (target.exists() && !target.delete()) {
+          terminal.printf("Couldn't delete existing file '%s'", target);
+        }
+      }
+    }
+
+
     for (val entity : entitySet) {
       terminal
-          .printLine()
-          .printf("[%s/%s] Downloading object: %s (%s)%n", i++, entities.size(), terminal.value(entity.getId()),
-              entity.getFileName())
-          .printLine();
+        .printLine()
+        .printf("[%s/%s] Downloading object: %s (%s)%n", i++, entities.size(), terminal.value(entity.getId()),
+          entity.getFileName())
+        .printLine();
 
       val builder = DownloadRequest.builder();
       val request = builder.outputDir(outputDir).entity(entity).objectId(entity.getId()).offset(offset).length(length)
-          .validate(validate).build();
+        .validate(validate).build();
 
+      // only try to re-download a file that exists if --force was specified on the command line
+      val target = getLayoutTarget(entity);
+      if (target.exists()) {
+        if (force) {
+          log.warn(format("File '%s' shouldn't exist anymore, but it does... trying to delete it...", target));
+          if ( !target.delete()) {
+            log.warn(format("Couldn't delete existing file '%s'", target));
+          }
+        } else {
+          terminal.printf(
+            "Download file '%s' already exists and --force was not specified... not re-downloading it.", target);
+          continue;
+        }
+      }
+      // Download the file by parts into <outputDir>/<.objectId>, resuming from previous downloads if possible.
+      // Don't try to resume if --force was specified.
       downloadService.download(request, force);
-      finalizeDownload(entity);
 
-      terminal.println("Done.");
+      // Rename file to target.
+      finalizeDownload(entity);
     }
+
+    terminal.println("Done.");
 
     return SUCCESS_STATUS;
   }
@@ -180,9 +210,6 @@ public class DownloadCommand extends RepositoryAccessCommand {
     // For cases like layout = bundle, make sure sub-directory exists
     val targetDir = target.getParentFile();
     checkParameter(targetDir.exists() || targetDir.mkdirs(), "Could not create target sub-directory '%s'", targetDir);
-
-    checkParameter(!target.exists() || force && target.delete(),
-        "Download file '%s' already exists and --force was not specified", target);
 
     Files.move(source, target);
   }
@@ -263,9 +290,9 @@ public class DownloadCommand extends RepositoryAccessCommand {
         for (int i = 1; i < entityCollection.size(); i++) {
           val e = entityCollection.get(i);
           terminal
-              .printWarn(
-                  "File '%s' (with object id '%s') already scheduled for download. Omitting file with duplicate name (and object id '%s')",
-                  e.getFileName(), firstObjectId, e.getId());
+            .printWarn(
+              "File '%s' (with object id '%s') already scheduled for download. Omitting file with duplicate name (and object id '%s')",
+              e.getFileName(), firstObjectId, e.getId());
         }
       }
     }
@@ -289,11 +316,11 @@ public class DownloadCommand extends RepositoryAccessCommand {
     val spaceRequired = downloadService.getSpaceRequired(entities);
     val spaceAvailable = getLocalAvailableSpace();
     log.warn("Space required: {} ({})  Space available: {} ({})",
-        formatBytes(spaceRequired), spaceRequired, formatBytes(spaceAvailable), spaceAvailable);
+      formatBytes(spaceRequired), spaceRequired, formatBytes(spaceAvailable), spaceAvailable);
 
     if (spaceRequired > spaceAvailable) {
       terminal.printWarn("Insufficient space to download requested files: Require %s. %s Available",
-          formatBytes(spaceRequired), formatBytes(spaceAvailable));
+        formatBytes(spaceRequired), formatBytes(spaceAvailable));
       terminal.clearLine();
       return false;
     }
