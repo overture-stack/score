@@ -22,6 +22,7 @@ import bio.overture.score.client.exception.NotResumableException;
 import bio.overture.score.client.exception.NotRetryableException;
 import bio.overture.score.client.exception.RetryableException;
 import bio.overture.score.client.progress.ProgressDataChannel;
+import bio.overture.score.client.progress.ProgressMemoryMappedDataChannel;
 import bio.overture.score.core.model.DataChannel;
 import bio.overture.score.core.model.Part;
 import com.google.common.collect.ImmutableList;
@@ -203,7 +204,7 @@ public class MemoryMappedParallelPartObjectTransport extends ParallelPartObjectT
               val buffer = channel.map(FileChannel.MapMode.READ_WRITE, currOffset, part.getPartSize());
               log.debug("Created memory buffer of capacity {}", buffer.capacity());
               val memoryChannel = new MemoryMappedDataChannel(buffer, part.getOffset(), part.getPartSize(), null);
-              val progressChannel = new ProgressDataChannel(memoryChannel, progress);
+              val progressChannel = new ProgressMemoryMappedDataChannel(memoryChannel, progress);
               try {
                 log.debug("Checking if part #{} is downloaded", part.getPartNumber());
                 if (part.isCompleted()) {
