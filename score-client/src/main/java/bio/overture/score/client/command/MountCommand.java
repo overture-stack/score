@@ -194,7 +194,7 @@ public class MountCommand extends RepositoryAccessCommand {
       //[ERROR]     lower bounds: java.lang.Object
       //[ERROR]     lower bounds: void
 
-      terminal.printWaiting(() ->  mount((MountStorageContext) context));
+      terminal.printWaiting(() -> { mount(context); });
 
       reportMount();
 
