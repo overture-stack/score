@@ -1,4 +1,4 @@
-FROM openjdk:8-jdk-alpine as builder 
+FROM openjdk:11.0.3-jdk as builder
 
 RUN apk update && apk upgrade && \
     apk add --no-cache maven
@@ -17,7 +17,7 @@ RUN mvn package -DskipTests \
 
 ###############################################################################################################
 
-FROM openjdk:8-jre-alpine
+FROM openjdk:11-jre
 
 # Paths
 ENV SCORE_HOME /score-server
