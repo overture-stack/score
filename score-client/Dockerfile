@@ -20,11 +20,11 @@ RUN \
   apt-get install -y libfuse-dev fuse curl wget software-properties-common
 
 #
-# Install Oracle JDK 8
+# Install Open JDK 11
 #
-RUN apt install -y openjdk-8-jdk
+RUN apt install -y openjdk-11-jdk
 
-ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-amd64
+ENV JAVA_HOME /usr/lib/jvm/java-11-openjdk-amd64
 
 #
 # Install latest version of score client distribution
