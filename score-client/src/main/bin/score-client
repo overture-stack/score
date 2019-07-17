@@ -35,10 +35,18 @@ fi
 
 if [[ "$_java" ]]; then
     version=$("$_java" -version 2>&1 | awk -F '"' '/version/ {print $2}')
-    if [[ "$version" > "1.8" ]]; then
-        :
+    # echo $version
+
+    regex="^1?\.." #matches 1.xx java versioning    
+    if [[ $version =~ $regex ]]; then 
+        versionMajor=$(echo $version | awk -F '.' '{print $2}') 
     else
-        echo Java 1.8 required for SCORe Client. Current version is $version
+	    versionMajor=$(echo $version | awk -F '.' '{print $1}') 
+    fi
+    # echo $versionMajor
+    
+    if [[ $versionMajor -lt 11 ]]; then
+        echo Java 11 required for SCORe Client. Current version is $version
         exit 1
     fi
 fi
