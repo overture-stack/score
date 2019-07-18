@@ -203,7 +203,6 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
   </profiles>
 
   <properties>
-<!--    <jdk.version>1.8</jdk.version>-->
     <jdk.version>11</jdk.version>
 
     <lombok.version>1.18.4</lombok.version>

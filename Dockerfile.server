@@ -17,7 +17,7 @@ RUN mvn package -DskipTests \
 
 ###############################################################################################################
 
-FROM openjdk:11-jre
+FROM openjdk:11.0.3-jre
 
 # Paths
 ENV SCORE_HOME /score-server

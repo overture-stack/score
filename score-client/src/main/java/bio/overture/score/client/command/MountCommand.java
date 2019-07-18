@@ -185,17 +185,13 @@ public class MountCommand extends RepositoryAccessCommand {
       //
 
       terminal.printStatus(i++, "Mounting file system to '" + mountPoint.getAbsolutePath() + "'");
-//      terminal.printWaiting(() -> mount(context));
-
       //Java 11 compatibility change
       //Changed to fix this error
       //[ERROR] Compilation failure
       //[ERROR] MountCommand.java:[188,28] incompatible types: inference variable T has incompatible bounds
       //[ERROR]     lower bounds: java.lang.Object
       //[ERROR]     lower bounds: void
-
       terminal.printWaiting(() -> { mount(context); });
-
       reportMount();
 
       //
