@@ -40,7 +40,7 @@ if [[ "$_java" ]]; then
     if [[ $version =~ $regex ]]; then 
         versionMajor=$(echo $version | awk -F '.' '{print $2}') 
     else
-	    versionMajor=$(echo $version | awk -F '.' '{print $1}') 
+	versionMajor=$(echo $version | awk -F '.' '{print $1}') 
     fi
     
     if [[ $versionMajor -lt 11 ]]; then
