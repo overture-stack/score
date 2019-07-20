@@ -50,7 +50,7 @@ CLIENT_DIR="$(cd ${BASE_DIR} && pwd -P)"
 
 exec java -Xmx3G \
 	-Dlogging.path=${BASE_DIR}/logs \
-	-Dspring.config.location=${CLIENT_DIR}/conf/ \
+	-Dspring.config.additional-location=${CLIENT_DIR}/conf/ \
 	-Dlogging.config=${CLIENT_DIR}/conf/logback.xml \
 	-Dclient.directory=${CLIENT_DIR} \
 	-Dstorage.profile=${STORAGE_PROFILE:-aws} \

@@ -7,7 +7,7 @@ jobs:
   build:
     docker:
       # specify the version you desire here
-      - image: goyalzz/ubuntu-java-8-maven-docker-image
+      - image: circleci/openjdk:11-jdk
       
       # Specify service dependencies here if necessary
       # CircleCI maintains a library of pre-built images
