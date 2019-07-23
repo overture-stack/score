@@ -71,7 +71,6 @@ public class MountService {
 
   public void mount(@NonNull FileSystem fileSystem, @NonNull Path mountPoint, Map<String, String> options)
       throws IOException, InterruptedException {
-    patchFfi();
 
     val readOnly = true;
     JavaFS.mount(fileSystem, mountPoint, readOnly, logging, resolveOptions(options));
@@ -90,26 +89,6 @@ public class MountService {
     combined.putAll(parseOptions(INTERNAL_MOUNT_OPTIONS));
 
     return combined;
-  }
-
-  /**
-   * Workaround for unfortunate system class loader usage.
-   * 
-   * @see "https://github.com/jnr/jnr-ffi/issues/51"
-   */
-  @SneakyThrows
-  private void patchFfi() {
-    ClosureManager closureManager = NativeRuntime.getInstance().getClosureManager();
-
-    // Get inner class loader
-    val classLoader = findField(closureManager.getClass(), "classLoader");
-    classLoader.setAccessible(true);
-    val asmClassLoader = classLoader.get(closureManager);
-
-    // Update to use context class loader over the default system class loader
-    val parent = findField(asmClassLoader.getClass(), "parent");
-    parent.setAccessible(true);
-    parent.set(asmClassLoader, Thread.currentThread().getContextClassLoader());
   }
 
 }
