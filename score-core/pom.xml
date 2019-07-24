@@ -57,12 +57,12 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-core</artifactId>
-      <version>2.8.11</version>
+      <version>${fasterxml-jackson.version}</version>
     </dependency>
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
-      <version>2.9.9.1</version>
+      <version>${fasterxml-jackson.version}</version>
     </dependency>
     <dependency>
       <groupId>com.microsoft.azure</groupId>
