@@ -19,10 +19,7 @@ package bio.overture.score.client.mount;
 
 import co.paralleluniverse.javafs.JavaFS;
 import com.google.common.collect.Maps;
-import jnr.ffi.provider.ClosureManager;
-import jnr.ffi.provider.jffi.NativeRuntime;
 import lombok.NonNull;
-import lombok.SneakyThrows;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -33,7 +30,6 @@ import java.nio.file.Path;
 import java.util.Map;
 
 import static bio.overture.score.client.mount.MountOptions.parseOptions;
-import static org.springframework.util.ReflectionUtils.findField;
 
 @Service
 public class MountService {

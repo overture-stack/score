@@ -217,7 +217,7 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
     <dcc-auth.version>4.3.2</dcc-auth.version>
 
     <!-- Versions - Spring -->
-    <spring-boot.version>1.4.1.RELEASE</spring-boot.version>
+    <spring-boot.version>2.1.6.RELEASE</spring-boot.version>
     <spring-retry.version>1.1.2.RELEASE</spring-retry.version>
     <spring-security-oauth2.version>2.0.7.RELEASE</spring-security-oauth2.version>
 
