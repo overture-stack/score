@@ -19,17 +19,23 @@ package bio.overture.score.client.mount;
 
 import co.paralleluniverse.javafs.JavaFS;
 import com.google.common.collect.Maps;
+import jnr.ffi.provider.ClosureManager;
+import jnr.ffi.provider.jffi.NativeRuntime;
 import lombok.NonNull;
+import lombok.SneakyThrows;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.nio.file.FileSystem;
 import java.nio.file.Path;
 import java.util.Map;
 
 import static bio.overture.score.client.mount.MountOptions.parseOptions;
+import static org.springframework.util.ReflectionUtils.findField;
 
 @Service
 public class MountService {
@@ -67,6 +73,7 @@ public class MountService {
 
   public void mount(@NonNull FileSystem fileSystem, @NonNull Path mountPoint, Map<String, String> options)
       throws IOException, InterruptedException {
+    patchFfi();
 
     val readOnly = true;
     JavaFS.mount(fileSystem, mountPoint, readOnly, logging, resolveOptions(options));
@@ -85,6 +92,30 @@ public class MountService {
     combined.putAll(parseOptions(INTERNAL_MOUNT_OPTIONS));
 
     return combined;
+  }
+
+  /**
+   * Workaround for unfortunate system class loader usage.
+   * This could be a issue in future Java versions, for now a work around makes it work up to Java 12
+   *
+   * @see "https://github.com/jnr/jnr-ffi/issues/51"
+   * @see "https://github.com/maketechnology/chromium.swt/issues/69"
+   */
+  @SneakyThrows
+  private void patchFfi() {
+    ClosureManager closureManager = NativeRuntime.getInstance().getClosureManager();
+
+    // Get inner class loader
+    Field classLoader = findField(closureManager.getClass(), "classLoader");
+    classLoader.setAccessible(true);
+
+    // Update to use context class loader over the default system class loader
+    Class<?> asmClass = closureManager.getClass().getClassLoader().loadClass("jnr.ffi.provider.jffi.AsmClassLoader");
+    Constructor<?> constructor = asmClass.getConstructor(ClassLoader.class);
+    constructor.setAccessible(true);
+    Object newIns = constructor.newInstance(Thread.currentThread().getContextClassLoader());
+    classLoader.set(closureManager, newIns);
+
   }
 
 }
