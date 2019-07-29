@@ -34,11 +34,10 @@ else
 fi
 
 if [[ "$_java" ]]; then
-    version=$("$_java" -version 2>&1 | awk -F '"' '/version/ {print $2}')
-    if [[ "$version" > "1.8" ]]; then
-        :
-    else
-        echo Java 1.8 required for SCORe Client. Current version is $version
+    version=$("$_java" -version 2>&1 | awk -F '"' '/version/ {print $2}')    
+    regex="^1[1-9][\.]{0,1}"
+    if [[ ! $version =~ $regex ]]; then 
+        echo Java 11 required for SCORe Client. Current version is $version
         exit 1
     fi
 fi
@@ -49,9 +48,9 @@ BASE_DIR=`dirname $0`/..; export BASE_DIR
 # Installation directory
 CLIENT_DIR="$(cd ${BASE_DIR} && pwd -P)"
 
-exec java -Xmx3G \
+exec java -Xmx3G --illegal-access=deny \
 	-Dlogging.path=${BASE_DIR}/logs \
-	-Dspring.config.location=${CLIENT_DIR}/conf/ \
+	-Dspring.config.additional-location=${CLIENT_DIR}/conf/ \
 	-Dlogging.config=${CLIENT_DIR}/conf/logback.xml \
 	-Dclient.directory=${CLIENT_DIR} \
 	-Dstorage.profile=${STORAGE_PROFILE:-aws} \

@@ -25,7 +25,7 @@ import com.google.common.collect.Sets;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.context.config.RandomValuePropertySource;
+import org.springframework.boot.env.RandomValuePropertySource;
 import org.springframework.core.env.EnumerablePropertySource;
 import org.springframework.core.env.StandardEnvironment;
 import org.springframework.core.env.SystemEnvironmentPropertySource;

@@ -38,7 +38,7 @@ import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.config.RandomValuePropertySource;
+import org.springframework.boot.env.RandomValuePropertySource;
 import org.springframework.core.env.EnumerablePropertySource;
 import org.springframework.core.env.StandardEnvironment;
 import org.springframework.core.env.SystemEnvironmentPropertySource;

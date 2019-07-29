@@ -203,9 +203,9 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
   </profiles>
 
   <properties>
-    <jdk.version>1.8</jdk.version>
+    <jdk.version>11</jdk.version>
 
-    <lombok.version>1.18.2</lombok.version>
+    <lombok.version>1.18.4</lombok.version>
     <findbugs.version>3.0.1u2</findbugs.version>
 
     <maven-compiler-plugin.version>3.1</maven-compiler-plugin.version>
@@ -217,7 +217,7 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
     <dcc-auth.version>4.3.2</dcc-auth.version>
 
     <!-- Versions - Spring -->
-    <spring-boot.version>1.4.1.RELEASE</spring-boot.version>
+    <spring-boot.version>2.1.6.RELEASE</spring-boot.version>
     <spring-retry.version>1.1.2.RELEASE</spring-retry.version>
     <spring-security-oauth2.version>2.0.7.RELEASE</spring-security-oauth2.version>
 
@@ -227,7 +227,7 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
     <azure-storage.version>4.4.0</azure-storage.version>
 
     <!-- Versions - Utilities -->
-    <jcommander.version>1.48</jcommander.version>
+    <jcommander.version>1.69</jcommander.version>
     <guava.version>19.0</guava.version>
     <joda-time.version>2.2</joda-time.version>
     <jsr305.version>1.3.9</jsr305.version>
@@ -238,12 +238,14 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
     <maven-enforcer-plugin.version>1.3.1</maven-enforcer-plugin.version>
     <maven-enforcer-plugin.versionRange>[1.0.0,)</maven-enforcer-plugin.versionRange>
     <maven-enforcer-plugin.requireMavenVersion>[3.0.0,)</maven-enforcer-plugin.requireMavenVersion>
-    <maven-enforcer-plugin.requireJavaVersion>[1.8,)</maven-enforcer-plugin.requireJavaVersion>
+    <maven-enforcer-plugin.requireJavaVersion>[11,)</maven-enforcer-plugin.requireJavaVersion>
 
     <!-- PMD -->
     <pmd.sourcedir>${basedir}/src/main/pmd</pmd.sourcedir>
     <pmd.targetdir>${project.build.directory}</pmd.targetdir>
 
+
+    <fasterxml-jackson.version>2.10.0.pr1</fasterxml-jackson.version>
   </properties>
 
 </project>

@@ -28,6 +28,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.nio.file.FileSystem;
 import java.nio.file.Path;
 import java.util.Map;
@@ -94,22 +96,26 @@ public class MountService {
 
   /**
    * Workaround for unfortunate system class loader usage.
-   * 
+   * This could be a issue in future Java versions, for now a work around makes it work up to Java 12
+   *
    * @see "https://github.com/jnr/jnr-ffi/issues/51"
+   * @see "https://github.com/maketechnology/chromium.swt/issues/69"
    */
   @SneakyThrows
   private void patchFfi() {
     ClosureManager closureManager = NativeRuntime.getInstance().getClosureManager();
 
     // Get inner class loader
-    val classLoader = findField(closureManager.getClass(), "classLoader");
+    Field classLoader = findField(closureManager.getClass(), "classLoader");
     classLoader.setAccessible(true);
-    val asmClassLoader = classLoader.get(closureManager);
 
     // Update to use context class loader over the default system class loader
-    val parent = findField(asmClassLoader.getClass(), "parent");
-    parent.setAccessible(true);
-    parent.set(asmClassLoader, Thread.currentThread().getContextClassLoader());
+    Class<?> asmClass = closureManager.getClass().getClassLoader().loadClass("jnr.ffi.provider.jffi.AsmClassLoader");
+    Constructor<?> constructor = asmClass.getConstructor(ClassLoader.class);
+    constructor.setAccessible(true);
+    Object newIns = constructor.newInstance(Thread.currentThread().getContextClassLoader());
+    classLoader.set(closureManager, newIns);
+
   }
 
 }

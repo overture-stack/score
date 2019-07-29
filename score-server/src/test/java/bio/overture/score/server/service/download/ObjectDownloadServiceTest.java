@@ -136,7 +136,8 @@ public class ObjectDownloadServiceTest extends S3DownloadService {
         ObjectDownloadServiceStubFactory.createS3ClientForRadosGW(endpointUrl));
     ReflectionTestUtils.setField(service, "urlGenerator", urlGen);
 
-    when(s3Client.getObject(Mockito.any())).thenThrow(firstException);
+    //Added linient strictness to get around org.mockito.exceptions.misusing.UnnecessaryStubbingException
+    Mockito.lenient().when(s3Client.getObject(Mockito.any())).thenThrow(firstException);
 
     val parts = ObjectDownloadServiceStubFactory.createParts(5); // based on 104857600 size / 20971520 part size
     val os = ObjectDownloadServiceStubFactory.createObjectSpecification(objectId,
@@ -182,7 +183,8 @@ public class ObjectDownloadServiceTest extends S3DownloadService {
         ObjectDownloadServiceStubFactory.createS3ClientForRadosGW(endpointUrl));
     ReflectionTestUtils.setField(service, "urlGenerator", urlGen);
 
-    when(s3Client.getObject(Mockito.any())).thenThrow(firstException);
+    //Added linient strictness to get around org.mockito.exceptions.misusing.UnnecessaryStubbingException
+    Mockito.lenient().when(s3Client.getObject(Mockito.any())).thenThrow(firstException);
 
     val parts = ObjectDownloadServiceStubFactory.createParts(5); // based on 104857600 size / 20971520 part size
     val os = ObjectDownloadServiceStubFactory.createObjectSpecification(objectId,
