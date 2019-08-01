@@ -11,6 +11,10 @@
 [![Documentation Status](https://readthedocs.org/projects/score-docs/badge/?version=latest)](https://score-docs.readthedocs.io/en/latest/?badge=latest)
 [![Slack](http://slack.overture.bio/badge.svg)](http://slack.overture.bio)
 
+## Documentation
+
+Explore documentation with the Score [Read the Docs](https://score-docs.readthedocs.io/en/develop/introduction.html).
+
 ## Build
 
 To compile, test and package the system, execute the following from the root of the repository:
