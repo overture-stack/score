@@ -27,17 +27,7 @@ Before getting started:
 - Open ports 8444 and 5431 of the EC2 for anybody who will use the storage system as a client and open port 8443 to anybody who will generate access tokens to be given to end users.
   - Also, open ports 8443, 8444, 5431, and 27017 of the EC2 to the ip of the EC2 to ensure the servers can communicate with each other.
 - Get a domain and point it towards the new EC2's IP address. The command shown in this guide use the domain storage.ucsc-cgl.org; this should be replaced with the desired domain.
-
-Then do the following on the EC2:
-
-Oracle Java is required.
-```
-# install oracle java
-sudo apt-get install -y python-software-properties
-sudo add-apt-repository ppa:webupd8team/java
-sudo apt-get update
-sudo apt-get install -y oracle-java8-installer
-```
+- Install Java 11 on the EC2 instance.
 
 Add $DCC_HOME environment variable that points to the directory to hold all storage system files.
 ```
