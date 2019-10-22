@@ -1,28 +1,79 @@
-version: '3.2'
+version: '3.7'
 services:
-  server:
-    container_name: "score-server-${SOURCE_COMMIT}"
-    image: "${DOCKER_REPO}:${SOURCE_COMMIT}"
+  ego-api:
+    image: "overture/ego:latest"
+    environment:
+      SERVER_PORT: 8080
+      SPRING_DATASOURCE_URL: jdbc:postgresql://ego-postgres:5432/ego?stringtype=unspecified
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: password
+      SPRING_FLYWAY_ENABLED: "true"
+      SPRING_FLYWAY_LOCATIONS: "classpath:flyway/sql,classpath:db/migration"
+      SPRING_PROFILES: demo, auth
+    expose:
+      - "8080"
+    ports:
+      - "9082:8080"
+    command: java -jar /srv/ego/install/ego.jar
+    depends_on:
+      - ego-postgres
+  ego-postgres:
+    image: postgres:9.5
+    environment:
+      - POSTGRES_DB=ego
+      - POSTGRES_PASSWORD=password
+    expose:
+      - "5432"
+    volumes:
+      - "./docker/ego-init:/docker-entrypoint-initdb.d"
+    ports:
+      - "9444:5432"
+  object-storage:
+    image: minio/minio:RELEASE.2019-10-12T01-39-57Z
+    hostname: localhost
+    volumes:
+      - "./docker-data/minio:/opt/dcc/data"
+    environment:
+      MINIO_ACCESS_KEY: minio
+      MINIO_SECRET_KEY: minio123
+    deploy:
+        restart_policy:
+            delay: 10s
+            max_attempts: 10
+            window: 60s
+    command: server /opt/dcc/data
+    volumes:
+      - object-storage-data:/opt/dcc/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    #command: server --address=0.0.0.0:8085 /opt/dcc/data
+    #command: server /opt/dcc/data
+    ports:
+      - "8085:9000"
+  score-server:
     build:
       context: ./
-      dockerfile: Dockerfile.server
-    network_mode: host
+      dockerfile: Dockerfile
+      target: server
     environment:
-      SERVER_PORT: 8087
+      SERVER_PORT: 8080
       OBJECT_SENTINEL: heliograph
       BUCKET_NAME_OBJECT: oicr.icgc.test
       BUCKET_NAME_STATE: oicr.icgc.test
       COLLABORATORY_DATA_DIRECTORY: data
-      METADATA_URL: https://song.cancercollaboratory.org
-      S3_ENDPOINT: http://localhost:8085
+      METADATA_URL: http://song-server:8080
+      S3_ENDPOINT:  http://object-storage:9000
       S3_ACCESSKEY: minio
       S3_SECRETKEY: minio123
       S3_SIGV4ENABLED: "true"
-      AUTH_SERVER_URL: http://localhost:8084/check_token/
-      AUTH_SERVER_CLIENTID: 3kJhz9pNtC0pFHAxr2SPkUkGjXrkWWqGcnPC0vBP
-      AUTH_SERVER_CLIENTSECRET: v9mjRtuEVwpt7cgqnsq6mxtCa5FbUOpKLGh7WX8a1dWbBKfrM3iV3VYMtE60jr3W7GLWtNeYIaJ8EUxPkaInclWVXf64qKdR3IKwyfpDU7JhvWEwIYQYdwV1YAUZjB2e
-      AUTH_SERVER_UPLOADSCOPE: collab.upload
-      AUTH_SERVER_DOWNLOADSCOPE: collab.download
+      AUTH_SERVER_URL: http://ego-api:8080/o/check_token/
+      AUTH_SERVER_CLIENTID: score
+      AUTH_SERVER_CLIENTSECRET: scoresecret
+      AUTH_SERVER_UPLOADSCOPE: score.WRITE
+      AUTH_SERVER_DOWNLOADSCOPE: score.READ
       SERVER_SSL_ENABLED: "false"
       UPLOAD_PARTSIZE: 1073741824
       UPLOAD_CONNECTION_TIMEOUT: 1200000
@@ -32,3 +83,54 @@ services:
       ENDPOINTS_DUMP_ENABLED: "false"
       ENDPOINTS_ENV_ENABLED: "true"
       ENDPOINTS_INFO_ENABLED: "true"
+    ports:
+      - "8087:8080"
+    depends_on:
+      - object-storage
+      - song-server
+      - ego-api
+    volumes:
+      - "./docker-scratch/logs/storage_server_logs:/opt/dcc/storage_server_logs"
+      - "./docker-scratch/data:/opt/dcc/data"
+  score-client:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+      target: client
+  song-db:
+    image: "postgres:9.6"
+    environment:
+      POSTGRES_DB: song
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+  song-server:
+    image: overture/song-server:latest
+    environment:
+      SERVER_PORT: 8080
+      SPRING_PROFILES_ACTIVE: "prod,secure,default"
+      AUTH_SERVER_URL: http://ego-api:8080/o/check_token/
+      AUTH_SERVER_CLIENTID: song
+      AUTH_SERVER_CLIENTSECRET: songsecret
+      AUTH_SERVER_SCOPE_STUDY_PREFIX: song.
+      AUTH_SERVER_SCOPE_STUDY_SUFFIX: .WRITE
+      AUTH_SERVER_SCOPE_SYSTEM: song.WRITE
+      SCORE_URL: http://score-server:8080
+      SCORE_ACCESSTOKEN: ad83ebde-a55c-11e7-abc4-cec278b6b50a
+      MANAGEMENT_SERVER_PORT: 8081
+      ID_REALIDS: "false"
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: password
+      SPRING_DATASOURCE_URL: jdbc:postgresql://song-db/song?stringtype=unspecified
+      SPRING_FLYWAY_ENABLED: "true"
+      SPRING_FLYWAY_LOCATIONS: "classpath:db/migration"
+    ports:
+      - "8080:8080"
+    depends_on:
+      - song-db 
+      - ego-api
+    volumes:
+      - "./docker-scratch/logs/server_logs:/opt/dcc/server_logs"
+
+volumes:
+    db-data: {}
+    object-storage-data: {}
