@@ -29,7 +29,8 @@ services:
     ports:
       - "9444:5432"
   object-storage:
-    image: minio/minio:RELEASE.2019-10-12T01-39-57Z
+    #NOTE: must use 2018-05-11 version, since the ETag rules are different. 2018 will return the part md5, anything newer will not, and score-server expects etag==md5
+    image: minio/minio:RELEASE.2018-05-11T00-29-24Z
     environment:
       MINIO_ACCESS_KEY: minio
       MINIO_SECRET_KEY: minio123
@@ -96,8 +97,12 @@ services:
       ACCESSTOKEN: f69b726d-d40f-4261-b105-1ec7e6bf04d5
       METADATA_URL: http://song-server:8080
       STORAGE_URL: http://score-server:8080
+      JAVA_TOOL_OPTIONS: -agentlib:jdwp=transport=dt_socket,address=5005,server=y,suspend=n
+    ports:
+      - "5005:5005"
     volumes:
       - "./docker/score-client-init:/data"
+      - "./docker/scratch/score-client-logs:/score-client/logs"
     command: bin/score-client
   song-db:
     image: "postgres:9.6"
