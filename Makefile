@@ -55,21 +55,23 @@ help:
 
 setup: $(SCORE_CLIENT_LOG_FILE)
 
+clean: clean-docker clean-mvn
+
 nuke:
 	@echo $(YELLOW)$(INFO_HEADER) "Destroying running docker services" $(END)
 	@$(DOCKER_COMPOSE_CMD) down -v
 
-clean: nuke
+clean-docker: nuke
 	@echo $(YELLOW)$(INFO_HEADER) "Deleting generated files" $(END)
 	@sudo rm -rf $(DOCKER_DIR)/object-storage-init/data/.minio.sys
 	@find $(DOCKER_DIR)/object-storage-init/data/ -type f | grep -v heliograph | xargs sudo rm -rf
 	@sudo rm -rf $(DOCKER_DIR)/scratch
-	@if [ $(DEV_MODE) -eq 1 ]; then \
-		echo $(YELLOW)$(INFO_HEADER) "Cleaning maven" $(END); \
-		mvn clean; \
-	fi
 
-mvn-package: 
+clean-mvn:
+	@echo $(YELLOW)$(INFO_HEADER) "Cleaning maven" $(END)
+	@mvn clean
+
+package: 
 	@if [ $(DEV_MODE) -eq 1 ] && ( [ ! -e $(SCORE_SERVER_DIST_FILE) ] ||  [ ! -e $(SCORE_CLIENT_DIST_FILE) ]) ; then \
 		echo $(YELLOW)$(INFO_HEADER) "Running maven package" $(END); \
 		mvn package -DskipTests; \
@@ -82,11 +84,11 @@ mvn-package:
 		echo $(YELLOW)$(INFO_HEADER) "Skipping maven package since files exist: $(SCORE_SERVER_DIST_FILE)   $(SCORE_CLIENT_DIST_FILE)" $(END); \
 	fi
 
-start-deps: setup mvn-package
+start-deps: setup package
 	@echo $(YELLOW)$(INFO_HEADER) "Starting dependencies: ego, song and object-storage" $(END)
 	@$(DC_UP_CMD) ego-api song-server object-storage
 
-start-score-server: setup mvn-package
+start-score-server: setup package
 	@echo $(YELLOW)$(INFO_HEADER) "Starting score-server" $(END)
 	@$(DC_UP_CMD) score-server
 
