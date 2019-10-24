@@ -4,16 +4,17 @@
 DEMO_MODE := 0
 FORCE := 0
 
+# Required System files
+DOCKER_COMPOSE_EXE := $(shell which docker-compose)
+CURL_EXE := $(shell which curl)
+MVN_EXE := $(shell which mvn)
+
 # Variables
 DOCKERFILE_NAME := $(shell if [ $(DEMO_MODE) -eq 1 ]; then echo Dockerfile; else echo Dockerfile.dev; fi)
 ROOT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 THIS_USER := $$(id -u):$$(id -g)
 ACCESS_TOKEN := f69b726d-d40f-4261-b105-1ec7e6bf04d5
-PROJECT_VERSION := $$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout 2>&1  | tail -1)
-
-# Required System files
-DOCKER_COMPOSE_EXE := $(shell which docker-compose)
-CURL_EXE := $(shell which curl)
+PROJECT_VERSION := $$($(MVN_CMD) help:evaluate -Dexpression=project.version -q -DforceStdout 2>&1  | tail -1)
 
 # STDOUT Formatting
 RED := $$(echo  "\033[0;31m")
@@ -24,33 +25,67 @@ INFO_HEADER := "**************** "
 DONE_MESSAGE := $(YELLOW)$(INFO_HEADER) "- done\n" $(END)
 
 # Paths
-DOCKER_DIR := ./docker
+DOCKER_DIR := $(ROOT_DIR)/docker
 SCRATCH_DIR := $(DOCKER_DIR)/scratch/
 SCORE_CLIENT_LOGS_DIR := $(SCRATCH_DIR)/score-client-logs
 SCORE_CLIENT_LOG_FILE := $(SCORE_CLIENT_LOGS_DIR)/client.log
-SCORE_SERVER_DIST_FILE := ./score-server/target/score-server-$(PROJECT_VERSION)-dist.tar.gz
-SCORE_CLIENT_DIST_FILE := ./score-client/target/score-client-$(PROJECT_VERSION)-dist.tar.gz
+SCORE_SERVER_DIST_FILE := $(ROOT_DIR)/score-server/target/score-server-$(PROJECT_VERSION)-dist.tar.gz
+SCORE_CLIENT_DIST_FILE := $(ROOT_DIR)/score-client/target/score-client-$(PROJECT_VERSION)-dist.tar.gz
 RETRY_CMD := $(DOCKER_DIR)/retry-command.sh
 
 # Commands
 DOCKER_COMPOSE_CMD := echo "*********** DEMO_MODE = $(DEMO_MODE) **************" \
 	&& echo "*********** FORCE = $(FORCE) **************" \
-	&& DOCKERFILE_NAME=$(DOCKERFILE_NAME) $(DOCKER_COMPOSE_EXE)
+	&& DOCKERFILE_NAME=$(DOCKERFILE_NAME) $(DOCKER_COMPOSE_EXE) -f $(ROOT_DIR)/docker-compose.yml
 SCORE_CLIENT_CMD := $(DOCKER_COMPOSE_CMD) run --rm -u $(THIS_USER) score-client bin/score-client
 DC_UP_CMD := $(DOCKER_COMPOSE_CMD) up -d --build
+MVN_CMD := $(MVN_EXE) -f $(ROOT_DIR)/pom.xml
 
+#############################################################
 # Internal Targets
+#############################################################
 $(SCORE_CLIENT_LOG_FILE):
 	@mkdir -p $(SCORE_CLIENT_LOGS_DIR)
 	@touch $(SCORE_CLIENT_LOGS_DIR)/client.log
 	@chmod 777 $(SCORE_CLIENT_LOGS_DIR)/client.log
 
+_ping_score_server:
+	@echo $(YELLOW)$(INFO_HEADER) "Pinging score-server on http://localhost:8087" $(END)
+	@$(RETRY_CMD) curl  \
+		-XGET \
+		-H 'Authorization: Bearer f69b726d-d40f-4261-b105-1ec7e6bf04d5' \
+		'http://localhost:8087/download/ping'
+	@echo ""
+
+_ping_song_server:
+	@echo $(YELLOW)$(INFO_HEADER) "Pinging song-server on http://localhost:8080" $(END)
+	@$(RETRY_CMD) curl --connect-timeout 5 \
+		--max-time 10 \
+		--retry 5 \
+		--retry-delay 0 \
+		--retry-max-time 40 \
+		--retry-connrefuse \
+		'http://localhost:8080/isAlive'
+	@echo ""
+
+
 _setup: $(SCORE_CLIENT_LOG_FILE)
+
+#############################################################
+# Help
+#############################################################
 
 # Help menu, displaying all available targets
 help:
-	@grep '^[A-Za-z0-9_-]\+:.*' ./Makefile | sed 's/:.*//'
-
+	@echo
+	@echo "**************************************************************"
+	@echo "                  Help"
+	@echo "**************************************************************"
+	@echo "To dry-execute a target run: make -n <target> "
+	@echo
+	@echo "Available Targets: "
+	@grep '^[A-Za-z][A-Za-z0-9_-]\+:.*' $(ROOT_DIR)/Makefile | sed 's/:.*//' | sed 's/^/\t/'
+	@echo
 
 #############################################################
 #  Cleaning targets
@@ -71,7 +106,7 @@ clean-docker: nuke
 # Maven clean
 clean-mvn:
 	@echo $(YELLOW)$(INFO_HEADER) "Cleaning maven" $(END)
-	@mvn clean
+	@$(MVN_CMD) clean
 
 # Just kill and delete the score-server container
 clean-score-server:
@@ -95,12 +130,12 @@ clean: clean-docker clean-mvn
 package: 
 	@if [ $(DEMO_MODE) -eq 0 ] && ( [ ! -e $(SCORE_SERVER_DIST_FILE) ] ||  [ ! -e $(SCORE_CLIENT_DIST_FILE) ]) ; then \
 		echo $(YELLOW)$(INFO_HEADER) "Running maven package" $(END); \
-		mvn package -DskipTests; \
+		$(MVN_CMD) package -DskipTests; \
 	elif [ $(DEMO_MODE) -ne 0 ]; then \
 		echo $(YELLOW)$(INFO_HEADER) "Skipping maven package since DEMO_MODE=$(DEMO_MODE)" $(END); \
 	elif [ $(FORCE) -eq 1 ]; then \
 		echo $(YELLOW)$(INFO_HEADER) "Forcefully runnint maven package since FORCE=$(FORCE)" $(END); \
-		mvn package -DskipTests; \
+		$(MVN_CMD) package -DskipTests; \
 	else \
 		echo $(YELLOW)$(INFO_HEADER) "Skipping maven package since files exist: $(SCORE_SERVER_DIST_FILE)   $(SCORE_CLIENT_DIST_FILE)" $(END); \
 	fi
@@ -143,27 +178,6 @@ song-publish:
 #############################################################
 #  Client targets
 #############################################################
-_ping_score_server:
-	@echo $(YELLOW)$(INFO_HEADER) "Pinging score-server on http://localhost:8087" $(END)
-	@$(RETRY_CMD) curl --connect-timeout 5 \
-		--max-time 10 \
-		--retry 5 \
-		--retry-delay 0 \
-		--retry-max-time 40 \
-		--retry-connrefuse \
-		--header 'Authorization: Bearer f69b726d-d40f-4261-b105-1ec7e6bf04d5' 'http://localhost:8087/download/ping'
-	@echo ""
-
-_ping_song_server:
-	@echo $(YELLOW)$(INFO_HEADER) "Pinging song-server on http://localhost:8080" $(END)
-	@$(RETRY_CMD) curl --connect-timeout 5 \
-		--max-time 10 \
-		--retry 5 \
-		--retry-delay 0 \
-		--retry-max-time 40 \
-		--retry-connrefuse \
-		'http://localhost:8080/isAlive'
-	@echo ""
 
 # Upload a manifest using the score-client. Affected by DEMO_MODE
 test-upload: start-score-server _ping_score_server
