@@ -87,6 +87,7 @@ _destroy-object-storage:
 	fi
 
 _setup: $(SCORE_CLIENT_LOG_FILE)
+	@mkdir 
 
 #############################################################
 # Help
@@ -116,7 +117,7 @@ nuke:
 # Kills running services and removes created files/directories
 clean-docker: nuke
 	@echo $(YELLOW)$(INFO_HEADER) "Deleting generated files" $(END)
-	@sudo rm -rf $(DOCKER_DIR)/scratch
+	@sudo rm -rf $(SCRATCH_DIR)
 
 # Maven clean
 clean-mvn:

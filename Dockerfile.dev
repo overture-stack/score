@@ -38,7 +38,10 @@ RUN tar zxvf score-client.tar.gz -C /tmp \
     && cp -r /tmp/score-client-dist $CLIENT_DIST_DIR \
 	&& mkdir -p $CLIENT_DIST_DIR/logs \
 	&& touch $CLIENT_DIST_DIR/logs/client.log \
-	&& chmod 777 $CLIENT_DIST_DIR/logs/client.log
+	&& chmod 777 $CLIENT_DIST_DIR/logs/client.log \
+	&& mkdir -p $SCORE_CLIENT_HOME \
+	&& mv $CLIENT_DIST_DIR/* $SCORE_CLIENT_HOME 
+
 
 # Set working directory for convenience with interactive usage
 WORKDIR $SCORE_CLIENT_HOME
