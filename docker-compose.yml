@@ -34,11 +34,6 @@ services:
     environment:
       MINIO_ACCESS_KEY: minio
       MINIO_SECRET_KEY: minio123
-    deploy:
-        restart_policy:
-            delay: 10s
-            max_attempts: 10
-            window: 60s
     command: server /data
     volumes:
       - "./docker/object-storage-init/data:/data"
@@ -52,7 +47,7 @@ services:
   score-server:
     build:
       context: ./
-      dockerfile: Dockerfile
+      dockerfile: "$DOCKERFILE_NAME"
       target: server
     environment:
       SERVER_PORT: 8080
@@ -86,12 +81,11 @@ services:
       - song-server
       - ego-api
     volumes:
-      - "./docker-scratch/logs/storage_server_logs:/opt/dcc/storage_server_logs"
-      - "./docker-scratch/data:/opt/dcc/data"
+      - "./docker/scratch/storage-server-logs:/opt/dcc/storage_server_logs"
   score-client:
     build:
       context: ./
-      dockerfile: Dockerfile
+      dockerfile: "$DOCKERFILE_NAME"
       target: client
     environment:
       ACCESSTOKEN: f69b726d-d40f-4261-b105-1ec7e6bf04d5
@@ -138,7 +132,7 @@ services:
       - song-db 
       - ego-api
     volumes:
-      - "./docker-scratch/logs/server_logs:/opt/dcc/server_logs"
+      - "./docker/scratch/song-server-logs:/opt/dcc/server_logs"
 
 volumes:
     object-storage-data: {}
