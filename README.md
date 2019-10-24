@@ -49,6 +49,37 @@ Top level system modules:
    `Build Caching` is set to the ON position
 4. Then save the configuration
 
+## Developement
+Several `make` targets are provided for locally deploying dependent services using docker. 
+By using this, the developer will be able to replicate a live environment for score-server and score-client. 
+It allows to user to develop locally, and test uploads/downloads in an isolated environment.
+
+There are 2 modes:
+
+### 1. Developement Mode
+The purpose of this mode is to decrease the wait time between building and testing against dependent services.
+This mode will run a `mvn package` if the `*-dist.tar.gz` files are missing, and copy them into a container for them to be run. 
+This method allows for fast developement, since the `mvn package` step is handled on the **Docker host**.
+In addition, the debug port `5005` is enabled for both `score-server` and `score-client`, allowing developers to debug the `score-server` and `score-client` docker containers.
+This mode can be enabled using the `DEMO_MODE=0` override. This is the default behaviour if the variable `DEMO_MODE` is not defined.
+
+#### Debugging with IntelliJ
+sdf
+
+### 2. Demo Mode
+The purpose of this mode is to demo the current `score-server` and `score-client` code by building it in **inside the Docker image**, 
+as opposed to the **Docker host** as is done in Developement mode and then running the containers.
+This mode will not run `mvn package` on the Docker host, but instead inside the Docker container.
+This method is very slow, since maven will download dependencies every time a build is triggered, however creates a completely isolated environment for testing.
+This mode can be enabled using the `DEMO_MODE=1` make variable override. For example, to start the score-server, the following command would be run:
+
+```bash
+make start-score-server DEMO_MODE=1
+```
+
+For more information on the different targets, run `make help` or read the comments above each target for a description
+
+
 ## Changes
 
 Change log for the user-facing system modules may be found in [CHANGES.md](CHANGES.md).
