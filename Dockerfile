@@ -91,3 +91,7 @@ CMD mkdir -p  $SCORE_HOME $SCORE_LOGS \
     --spring.config.location=classpath:/application.yml \
     --spring.profiles.active=amazon,collaboratory,prod,secure
 
+###############################
+# Minio
+###############################
+

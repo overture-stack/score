@@ -14,7 +14,7 @@ DOCKERFILE_NAME := $(shell if [ $(DEMO_MODE) -eq 1 ]; then echo Dockerfile; else
 ROOT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 THIS_USER := $$(id -u):$$(id -g)
 ACCESS_TOKEN := f69b726d-d40f-4261-b105-1ec7e6bf04d5
-PROJECT_VERSION := $$($(MVN_CMD) help:evaluate -Dexpression=project.version -q -DforceStdout 2>&1  | tail -1)
+PROJECT_VERSION := $(shell $(MVN_EXE) -f $(ROOT_DIR) help:evaluate -Dexpression=project.version -q -DforceStdout 2>&1  | tail -1)
 
 # STDOUT Formatting
 RED := $$(echo  "\033[0;31m")
@@ -69,6 +69,23 @@ _ping_song_server:
 	@echo ""
 
 
+_setup-object-storage: 
+	@echo $(YELLOW)$(INFO_HEADER) "Setting up bucket oicr.icgc.test and heliograph" $(END)
+	@if  $(DOCKER_COMPOSE_CMD) run aws-cli --endpoint-url http://object-storage:9000 s3 ls s3://oicr.icgc.test ; then \
+		echo $(YELLOW)$(INFO_HEADER) "Bucket already exists. Skipping creation..." $(END); \
+	else \
+		$(DOCKER_COMPOSE_CMD) run aws-cli --endpoint-url http://object-storage:9000 s3 mb s3://oicr.icgc.test; \
+	fi
+	@$(DOCKER_COMPOSE_CMD) run aws-cli --endpoint-url http://object-storage:9000 s3 cp /score-data/heliograph s3://oicr.icgc.test/data/heliograph
+
+_destroy-object-storage:
+	@echo $(YELLOW)$(INFO_HEADER) "Removing bucket oicr.icgc.test" $(END)
+	@if  $(DOCKER_COMPOSE_CMD) run aws-cli --endpoint-url http://object-storage:9000 s3 ls s3://oicr.icgc.test ; then \
+		$(DOCKER_COMPOSE_CMD) run aws-cli --endpoint-url http://object-storage:9000 s3 rb s3://oicr.icgc.test --force; \
+	else \
+		echo $(YELLOW)$(INFO_HEADER) "Bucket does not exist. Skipping..." $(END); \
+	fi
+
 _setup: $(SCORE_CLIENT_LOG_FILE)
 
 #############################################################
@@ -99,8 +116,6 @@ nuke:
 # Kills running services and removes created files/directories
 clean-docker: nuke
 	@echo $(YELLOW)$(INFO_HEADER) "Deleting generated files" $(END)
-	@sudo rm -rf $(DOCKER_DIR)/object-storage-init/data/.minio.sys
-	@find $(DOCKER_DIR)/object-storage-init/data/ -type f | grep -v heliograph | xargs sudo rm -rf
 	@sudo rm -rf $(DOCKER_DIR)/scratch
 
 # Maven clean
@@ -115,9 +130,7 @@ clean-score-server:
 	@$(DOCKER_COMPOSE_CMD) rm score-server
 
 # Delete all objects from object storage
-clean-objects:
-	@echo $(YELLOW)$(INFO_HEADER) "Deleting all objects from object-storage" $(END)
-	@find $(DOCKER_DIR)/object-storage-init/data/ -type f | grep -v heliograph | xargs sudo rm -rf
+clean-objects: _destroy-object-storage
 
 # Clean everything. Kills all services, maven cleans and removes generated files/directories
 clean: clean-docker clean-mvn
@@ -150,7 +163,7 @@ start-deps: _setup package
 	@$(DC_UP_CMD) ego-api song-server object-storage
 
 # Start score-server and all dependencies. Affected by DEMO_MODE
-start-score-server: _setup package
+start-score-server: _setup package start-deps _setup-object-storage
 	@echo $(YELLOW)$(INFO_HEADER) "Starting score-server" $(END)
 	@$(DC_UP_CMD) score-server
 

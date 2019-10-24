@@ -35,8 +35,8 @@ services:
       MINIO_ACCESS_KEY: minio
       MINIO_SECRET_KEY: minio123
     command: server /data
-    volumes:
-      - "./docker/object-storage-init/data:/data"
+    #volumes:
+      #- "./docker/object-storage-init/data:/data"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
       interval: 30s
@@ -106,6 +106,15 @@ services:
       POSTGRES_PASSWORD: password
     volumes:
       - "./docker/song-db-init:/docker-entrypoint-initdb.d"
+  aws-cli:
+    image: "mesosphere/aws-cli:latest"
+    environment:
+      AWS_ACCESS_KEY_ID: minio
+      AWS_SECRET_ACCESS_KEY: minio123
+      AWS_DEFAULT_REGION: us-east-1
+    volumes:
+      - "./docker/object-storage-init/data/oicr.icgc.test/data:/score-data:ro"
+    #command: --endpoint-url http://object-storage:9000 s3 cp /data/oicr.icgc.test/heliograph s3://oicr.icgc.test/data/heliograph
   song-server:
     image: overture/song-server:latest
     environment:
