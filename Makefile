@@ -30,6 +30,7 @@ SCORE_CLIENT_LOGS_DIR := $(SCRATCH_DIR)/score-client-logs
 SCORE_CLIENT_LOG_FILE := $(SCORE_CLIENT_LOGS_DIR)/client.log
 SCORE_SERVER_DIST_FILE := ./score-server/target/score-server-$(PROJECT_VERSION)-dist.tar.gz
 SCORE_CLIENT_DIST_FILE := ./score-client/target/score-client-$(PROJECT_VERSION)-dist.tar.gz
+RETRY_CMD := $(DOCKER_DIR)/retry-command.sh
 
 # Commands
 DOCKER_COMPOSE_CMD := echo "*********** DEMO_MODE = $(DEMO_MODE) **************" \
@@ -142,14 +143,35 @@ song-publish:
 #############################################################
 #  Client targets
 #############################################################
+_ping_score_server:
+	@echo $(YELLOW)$(INFO_HEADER) "Pinging score-server on http://localhost:8087" $(END)
+	@$(RETRY_CMD) curl --connect-timeout 5 \
+		--max-time 10 \
+		--retry 5 \
+		--retry-delay 0 \
+		--retry-max-time 40 \
+		--retry-connrefuse \
+		--header 'Authorization: Bearer f69b726d-d40f-4261-b105-1ec7e6bf04d5' 'http://localhost:8087/download/ping'
+	@echo ""
+
+_ping_song_server:
+	@echo $(YELLOW)$(INFO_HEADER) "Pinging song-server on http://localhost:8080" $(END)
+	@$(RETRY_CMD) curl --connect-timeout 5 \
+		--max-time 10 \
+		--retry 5 \
+		--retry-delay 0 \
+		--retry-max-time 40 \
+		--retry-connrefuse \
+		'http://localhost:8080/isAlive'
+	@echo ""
 
 # Upload a manifest using the score-client. Affected by DEMO_MODE
-test-upload: start-score-server
+test-upload: start-score-server _ping_score_server
 	@echo $(YELLOW)$(INFO_HEADER) "Uploading test /data/manifest.txt" $(END)
 	@$(SCORE_CLIENT_CMD) upload --manifest /data/manifest.txt
 
 # Download an object-id. Affected by DEMO_MODE
-test-download: start-score-server song-publish
+test-download: start-score-server _ping_score_server _ping_song_server song-publish
 	@echo $(YELLOW)$(INFO_HEADER) "Downlaoding test object id" $(END)
 	@$(SCORE_CLIENT_CMD) download --object-id 5be58fbb-775b-5259-bbbd-555e07fbdf24 --output-dir /tmp
 
