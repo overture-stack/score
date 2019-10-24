@@ -34,6 +34,7 @@ RUN mkdir /usr/lib/jvm \
 
 COPY score-client/target/score-client-*-dist.tar.gz  /score-client.tar.gz
 RUN tar zxvf score-client.tar.gz -C /tmp \
+	&& rm -rf score-client.tar.gz \
     && mv -f /tmp/score-client-*  /tmp/score-client-dist  \
     && cp -r /tmp/score-client-dist $CLIENT_DIST_DIR \
 	&& mkdir -p $CLIENT_DIST_DIR/logs \
