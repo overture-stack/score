@@ -91,7 +91,7 @@ services:
       ACCESSTOKEN: f69b726d-d40f-4261-b105-1ec7e6bf04d5
       METADATA_URL: http://song-server:8080
       STORAGE_URL: http://score-server:8080
-      JAVA_TOOL_OPTIONS: -agentlib:jdwp=transport=dt_socket,address=5005,server=y,suspend=n
+      JAVA_TOOL_OPTIONS: -agentlib:jdwp=transport=dt_socket,address=*:5005,server=y,suspend=n
     ports:
       - "5005:5005"
     volumes:
@@ -135,8 +135,10 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://song-db/song?stringtype=unspecified
       SPRING_FLYWAY_ENABLED: "true"
       SPRING_FLYWAY_LOCATIONS: "classpath:db/migration"
+      JAVA_TOOL_OPTIONS: -agentlib:jdwp=transport=dt_socket,address=*:5006,server=y,suspend=n
     ports:
       - "8080:8080"
+      - "5006:5006"
     depends_on:
       - song-db 
       - ego-api

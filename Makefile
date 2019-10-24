@@ -188,6 +188,12 @@ song-publish:
 	@$(CURL_EXE) -XPUT --header 'Authorization: Bearer $(ACCESS_TOKEN)' 'http://localhost:8080/studies/ABC123/analysis/publish/735b65fa-f502-11e9-9811-6d6ef1d32823'
 	@echo ""
 
+# UnPublishes the analysis. Used before running the test-download target
+song-unpublish:
+	@echo $(YELLOW)$(INFO_HEADER) "UnPublishing analysis" $(END)
+	@$(CURL_EXE) -XPUT --header 'Authorization: Bearer $(ACCESS_TOKEN)' 'http://localhost:8080/studies/ABC123/analysis/unpublish/735b65fa-f502-11e9-9811-6d6ef1d32823'
+	@echo ""
+
 #############################################################
 #  Client targets
 #############################################################
