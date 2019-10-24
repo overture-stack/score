@@ -56,6 +56,7 @@ help:
 setup: $(SCORE_CLIENT_LOG_FILE)
 
 nuke:
+	@echo $(YELLOW)$(INFO_HEADER) "Destroying running docker services" $(END)
 	@$(DOCKER_COMPOSE_CMD) down -v
 
 clean: nuke
