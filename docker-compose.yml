@@ -72,8 +72,10 @@ services:
       ENDPOINTS_DUMP_ENABLED: "false"
       ENDPOINTS_ENV_ENABLED: "true"
       ENDPOINTS_INFO_ENABLED: "true"
+      JAVA_TOOL_OPTIONS: -agentlib:jdwp=transport=dt_socket,address=*:5006,server=y,suspend=n
     ports:
       - "8087:8080"
+      - "5006:5006"
     depends_on:
       - object-storage
       - song-server
@@ -132,10 +134,8 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://song-db/song?stringtype=unspecified
       SPRING_FLYWAY_ENABLED: "true"
       SPRING_FLYWAY_LOCATIONS: "classpath:db/migration"
-      JAVA_TOOL_OPTIONS: -agentlib:jdwp=transport=dt_socket,address=*:5006,server=y,suspend=n
     ports:
       - "8080:8080"
-      - "5006:5006"
     depends_on:
       - song-db 
       - ego-api

@@ -14,6 +14,7 @@ DOCKERFILE_NAME := $(shell if [ $(DEMO_MODE) -eq 1 ]; then echo Dockerfile; else
 ROOT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 THIS_USER := $$(id -u):$$(id -g)
 ACCESS_TOKEN := f69b726d-d40f-4261-b105-1ec7e6bf04d5
+PROJECT_NAME := $(shell echo $(ROOT_DIR) | sed 's/.*\///g')
 PROJECT_VERSION := $(shell $(MVN_EXE) -f $(ROOT_DIR) help:evaluate -Dexpression=project.version -q -DforceStdout 2>&1  | tail -1)
 
 # STDOUT Formatting
@@ -48,6 +49,9 @@ $(SCORE_CLIENT_LOG_FILE):
 	@mkdir -p $(SCORE_CLIENT_LOGS_DIR)
 	@touch $(SCORE_CLIENT_LOGS_DIR)/client.log
 	@chmod 777 $(SCORE_CLIENT_LOGS_DIR)/client.log
+
+_build-score-client: package
+	@$(DOCKER_COMPOSE_CMD) build score-client
 
 _ping_score_server:
 	@echo $(YELLOW)$(INFO_HEADER) "Pinging score-server on http://localhost:8087" $(END)
@@ -87,7 +91,6 @@ _destroy-object-storage:
 	fi
 
 _setup: $(SCORE_CLIENT_LOG_FILE)
-	@mkdir 
 
 #############################################################
 # Help
@@ -97,13 +100,26 @@ _setup: $(SCORE_CLIENT_LOG_FILE)
 help:
 	@echo
 	@echo "**************************************************************"
-	@echo "                  Help"
 	@echo "**************************************************************"
 	@echo "To dry-execute a target run: make -n <target> "
 	@echo
 	@echo "Available Targets: "
 	@grep '^[A-Za-z][A-Za-z0-9_-]\+:.*' $(ROOT_DIR)/Makefile | sed 's/:.*//' | sed 's/^/\t/'
 	@echo
+
+# Outputs the Docker run profile in IntelliJ to debug score-client
+intellij-score-client-config: _build-score-client
+	@echo
+	@echo
+	@echo $(YELLOW)$(INFO_HEADER) In IntelliJ, configure the docker run profile with the following parameters to allow interactive debug on port 5005 $(END)
+	@echo "$(YELLOW)Image ID:$(END)               $(PROJECT_NAME)_score-client:latest"
+	@echo "$(YELLOW)Command:$(END)                bin/score-client upload --manifest /data/manifest.txt"
+	@echo "$(YELLOW)Bind Mounts:$(END)            $(DOCKER_DIR)/score-client-init:/data $(SCRATCH_DIR)/score-client/logs:/score-client/logs"
+	@echo "$(YELLOW)Environment Variables:$(END)  ACCESSTOKEN=f69b726d-d40f-4261-b105-1ec7e6bf04d5; METADATA_URL=http://song-server:8080; STORAGE_URL=http://score-server:8080; JAVA_TOOL_OPTIONS=-agentlib:jdwp=transport=dt_socket,address=*:5005,server=y,suspend=n"
+	@echo "$(YELLOW)Run Options:$(END)            --rm --network $(PROJECT_NAME)_default"
+	@echo
+	@echo
+	@echo $(YELLOW)$(INFO_HEADER) After configuring docker run profile, configure debug profile with port forwarding 5005:5005 $(END)
 
 #############################################################
 #  Cleaning targets
@@ -128,7 +144,7 @@ clean-mvn:
 clean-score-server:
 	@echo $(YELLOW)$(INFO_HEADER) "Killing and Cleaning score-server" $(END)
 	@$(DOCKER_COMPOSE_CMD) kill score-server
-	@$(DOCKER_COMPOSE_CMD) rm score-server
+	@$(DOCKER_COMPOSE_CMD) rm -f score-server
 
 # Delete all objects from object storage
 clean-objects: _destroy-object-storage
@@ -198,6 +214,8 @@ song-unpublish:
 #############################################################
 #  Client targets
 #############################################################
+
+
 
 # Upload a manifest using the score-client. Affected by DEMO_MODE
 test-upload: start-score-server _ping_score_server
