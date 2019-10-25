@@ -133,7 +133,6 @@ nuke:
 # Kills running services and removes created files/directories
 clean-docker: nuke
 	@echo $(YELLOW)$(INFO_HEADER) "Deleting generated files" $(END)
-	@sudo rm -rf $(SCRATCH_DIR)
 
 # Maven clean
 clean-mvn:
