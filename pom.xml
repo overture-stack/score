@@ -103,6 +103,15 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
         <version>${spring-retry.version}</version>
       </dependency>
 
+      <!-- Spring Cloud -->
+      <dependency>
+        <groupId>org.springframework.cloud</groupId>
+        <artifactId>spring-cloud-dependencies</artifactId>
+        <version>${spring-cloud.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+
       <!-- Amazon -->
       <dependency>
         <groupId>com.amazonaws</groupId>
@@ -220,6 +229,7 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
     <spring-boot.version>2.1.6.RELEASE</spring-boot.version>
     <spring-retry.version>1.1.2.RELEASE</spring-retry.version>
     <spring-security-oauth2.version>2.0.7.RELEASE</spring-security-oauth2.version>
+    <spring-cloud.version>Greenwich.SR3</spring-cloud.version>
 
     <!-- Versions - Amazon -->
     <aws-java-sdk.version>1.11.219</aws-java-sdk.version>
