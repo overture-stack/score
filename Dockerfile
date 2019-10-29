@@ -88,4 +88,4 @@ WORKDIR $SCORE_HOME
 CMD mkdir -p  $SCORE_HOME $SCORE_LOGS \
     && java -Dlog.path=$SCORE_LOGS \
     -jar $JAR_FILE \
-    --spring.config.location=classpath:/application.yml
+    --spring.config.location=classpath:/application.yml,classpath:/bootstrap.properties

@@ -48,6 +48,7 @@ services:
       dockerfile: "$DOCKERFILE_NAME"
       target: server
     environment:
+      SPRING_PROFILES_ACTIVE: amazon,collaboratory,prod,secure
       SERVER_PORT: 8080
       OBJECT_SENTINEL: heliograph
       BUCKET_NAME_OBJECT: oicr.icgc.test

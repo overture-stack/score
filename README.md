@@ -36,23 +36,10 @@ Top level system modules:
 - [Server](score-server/README.md)
 - [Test](score-test/README.md)
 
-## Dockerhub Configuration for score-server
-1. Edit build configurations by selecting the `Builds` tab at the top, then click `Build Configuration`
-2. Create a new build rule by clicking the `+` sign beside the `BUILD RULES` text
-3. Edit the configuration as follows:
-   Source Type: `branch`
-   Source: `develop`
-   Docker Tag: `develop`
-   Dockerfile Location: `Dockerfile.server`
-   Build Context: `/`
-   `Autobuild` is set to the ON position
-   `Build Caching` is set to the ON position
-4. Then save the configuration
-
 ## Developement
 Several `make` targets are provided for locally deploying dependent services using docker. 
 By using this, the developer will be able to replicate a live environment for score-server and score-client. 
-It allows to user to develop locally, and test uploads/downloads in an isolated environment.
+It allows the user to develop locally, and test uploads/downloads in an isolated environment.
 
 There are 2 modes:
 
@@ -60,11 +47,33 @@ There are 2 modes:
 The purpose of this mode is to decrease the wait time between building and testing against dependent services.
 This mode will run a `mvn package` if the `*-dist.tar.gz` files are missing, and copy them into a container for them to be run. 
 This method allows for fast developement, since the `mvn package` step is handled on the **Docker host**.
-In addition, the debug port `5005` is enabled for both `score-server` and `score-client`, allowing developers to debug the `score-server` and `score-client` docker containers.
+In addition, the debug ports `5005` and `5006` are exposed for both `score-client` and `score-server`, respectively, allowing developers to debug the docker containers.
 This mode can be enabled using the `DEMO_MODE=0` override. This is the default behaviour if the variable `DEMO_MODE` is not defined.
 
-#### Debugging with IntelliJ
-sdf
+#### Debugging the score-client with IntelliJ
+Since the JVM debug port is exposed by the `score-client` docker container, IntelliJ can **remotely debug** a running docker container. 
+To do this, a **docker image run profile** must be created with the configuration outputted by the `make intellij-score-client-config` command, which will output a basic upload command, however it can be modified to be any score-client command.
+Then, a **remote debug profile** must be created, with the following config:
+
+```
+Host: localhost
+Port: 5005
+Use module classpath: score-client
+```
+and in the `Before launch: Activate tool window` section, click the `+` sign, and select `Launch docker before debug`. 
+Then ensure the `Docker configuration` field is set to the name of the previously created **docker image run profile**  and that `Custom Options` is set to `-p 5005:5005`. 
+To run debug, simply run the **remote debug profile** and it will call the **docker image run profile** before launch.
+
+#### Debugging the score-server with IntelliJ
+Since the `score-server` is a server and exposes the 5006 debug port, configuration is much easier. First, start the server with `make clean start-score-server`. Then, create a **remote debug profile** in Intellij with the following configuration:
+```
+Host: localhost
+Port: 5006
+Use module classpath: score-server
+```
+and then run it in debug mode. 
+
+
 
 ### 2. Demo Mode
 The purpose of this mode is to demo the current `score-server` and `score-client` code by building it in **inside the Docker image**, 
