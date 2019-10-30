@@ -1,0 +1,12 @@
+{
+	"version": "9",
+	"hosts": {
+		"object-storage": {
+			"url": "http://object-storage:9000",
+			"accessKey": "minio",
+			"secretKey": "minio123",
+			"api": "s3v4",
+			"lookup": "auto"
+		}
+	}
+}

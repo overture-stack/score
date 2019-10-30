@@ -4,6 +4,7 @@
 .apt_generated
 org.eclipse.core.resources.prefs
 org.eclipse.jdt.apt.core.prefs
+.minio.sys
 
 # Intellij IDE
 .idea
