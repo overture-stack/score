@@ -17,31 +17,28 @@
  */
 package bio.overture.score.server.security;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import bio.overture.score.server.exception.NotRetryableException;
+import bio.overture.score.server.metadata.MetadataEntity;
+import bio.overture.score.server.metadata.MetadataService;
+import lombok.val;
+import org.junit.Before;
+import org.junit.Test;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 
-import bio.overture.score.server.exception.NotRetryableException;
-import bio.overture.score.server.metadata.MetadataEntity;
-import bio.overture.score.server.metadata.MetadataService;
-import lombok.val;
-
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.Mock;
-import org.springframework.vault.support.Versioned;
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class ProjectScopeStrategyTest {
 
-  public static final String TEST_SCOPE = "test.upload";
-  public static final AuthScope testScope = AuthScope.from(TEST_SCOPE);
-  public static final String PROJECT1="TEST1-CA";
-  public static final String PROJECT2="TEST2-DK";
+  private static final String TEST_SCOPE = "test.upload";
+  private static final AuthScope testScope = AuthScope.from(TEST_SCOPE);
+  private static final String PROJECT1="TEST1-CA";
+  private static final String PROJECT2="TEST2-DK";
   private ProjectScopeStrategy _sut; // "System Under Test"
 
   @Before
@@ -52,7 +49,7 @@ public class ProjectScopeStrategyTest {
     val meta = mock(MetadataService.class);
     when(meta.getEntity("1")).thenReturn(e1);
     when(meta.getEntity("2")).thenReturn(e2);
-    
+
     _sut = new ProjectScopeStrategy(TEST_SCOPE);
     _sut.setMetadataService(meta);
   }
@@ -165,12 +162,7 @@ public class ProjectScopeStrategyTest {
     assertEquals("java.lang.IllegalArgumentException: Failed to retrieve metadata for objectId: NOT-FOUND",
       exception.getMessage());
   }
-
-  @Test
-  public void testFetchObjectCode() {
-    fail();
-  }
-
+  
   @Test
   public void test_uuid_validation_success() {
     String uuid = "a0bec88a-c5e3-51a9-87bf-3bd6f9c7f23c";
