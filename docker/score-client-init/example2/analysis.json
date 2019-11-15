@@ -1,0 +1,42 @@
+{
+  "study" : "TEST-CA",
+  "analysisType" : {
+    "name" : "variantCall",
+    "version" : 1
+  },
+  "experiment": {
+    "variantCallingTool": "silver bullet",
+    "matchedNormalSampleSubmitterId": "sample-1"
+  },
+  "sample": [
+    {
+      "sampleSubmitterId": "sample-2",
+      "sampleType": "Total RNA",
+      "specimen": {
+        "specimenSubmitterId": "speciment-2a",
+        "specimenClass": "Tumour",
+        "specimenType": "Primary tumour - other"
+      },
+      "donor": {
+        "donorSubmitterId": "d1",
+        "donorGender": "female"
+      }
+    }
+  ],
+  "file": [
+    {
+      "fileName": "fake1.vcf.gz",
+      "fileSize": 93,
+      "fileMd5sum": "69de25a55c687bf85e1597ab16378cd8",
+      "fileAccess" : "restricted",
+      "fileType": "VCF"
+    },
+    {
+      "fileName": "fake1.vcf.gz.idx",
+      "fileSize": 19,
+      "fileMd5sum": "02a91461f3607c3091d730d7b9162b79",
+      "fileAccess" : "restricted",
+      "fileType": "IDX"
+    }
+  ]
+}

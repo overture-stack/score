@@ -13,7 +13,8 @@ MVN_EXE := $(shell which mvn)
 DOCKERFILE_NAME := $(shell if [ $(DEMO_MODE) -eq 1 ]; then echo Dockerfile; else echo Dockerfile.dev; fi)
 ROOT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 THIS_USER := $$(id -u):$$(id -g)
-ACCESS_TOKEN := f69b726d-d40f-4261-b105-1ec7e6bf04d5
+#ACCESS_TOKEN := f69b726d-d40f-4261-b105-1ec7e6bf04d5
+ACCESS_TOKEN := 7d777111-67cc-4ba3-a4b5-27ec39237166" 
 PROJECT_NAME := $(shell echo $(ROOT_DIR) | sed 's/.*\///g')
 PROJECT_VERSION := $(shell $(MVN_EXE) -f $(ROOT_DIR) help:evaluate -Dexpression=project.version -q -DforceStdout 2>&1  | tail -1)
 
@@ -169,9 +170,22 @@ package:
 		echo $(YELLOW)$(INFO_HEADER) "Skipping maven package since files exist: $(SCORE_SERVER_DIST_FILE)   $(SCORE_CLIENT_DIST_FILE)" $(END); \
 	fi
 
+
+
 #############################################################
 #  Docker targets
 #############################################################
+
+rebuild-client: clean-mvn package 
+	@echo $(YELLOW)$(INFO_HEADER) "Rebuilding client docker" $(END)
+	@$(DOCKER_COMPOSE_CMD) build score-client
+
+rebuild-server: clean-mvn package 
+	@echo $(YELLOW)$(INFO_HEADER) "Rebuilding server docker" $(END)
+	@$(DOCKER_COMPOSE_CMD) build score-server
+
+rebuild-all: clean-mvn package
+	@$(DOCKER_COMPOSE_CMD) build score-server score-client
 
 # Start ego, song, and object-storage.
 start-deps: _setup package
@@ -214,16 +228,14 @@ song-unpublish:
 #  Client targets
 #############################################################
 
-
-
 # Upload a manifest using the score-client. Affected by DEMO_MODE
 test-upload: start-score-server _ping_score_server
-	@echo $(YELLOW)$(INFO_HEADER) "Uploading test /data/manifest.txt" $(END)
-	@$(SCORE_CLIENT_CMD) upload --manifest /data/manifest.txt
+	@echo $(YELLOW)$(INFO_HEADER) "Uploading test (invalid project - should fail)" $(END)
+	@$(SCORE_CLIENT_CMD) upload --manifest /data/manifest.txt 
+	@echo $(YELLOW)$(INFO_HEADER) "Upload test (valid project) should work" $(END)
+	@$(SCORE_CLIENT_CMD) upload --file /data/example2/fake1.vcf.gz --md5 69de25a55c687bf85e1597ab16378cd8 --object-id 88eb4128-3889-5935-b5b0-661922b09f62 
 
 # Download an object-id. Affected by DEMO_MODE
 test-download: start-score-server _ping_score_server _ping_song_server song-publish
 	@echo $(YELLOW)$(INFO_HEADER) "Downlaoding test object id" $(END)
 	@$(SCORE_CLIENT_CMD) download --object-id 5be58fbb-775b-5259-bbbd-555e07fbdf24 --output-dir /tmp
-
-
