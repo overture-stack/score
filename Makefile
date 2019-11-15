@@ -14,7 +14,7 @@ DOCKERFILE_NAME := $(shell if [ $(DEMO_MODE) -eq 1 ]; then echo Dockerfile; else
 ROOT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 THIS_USER := $$(id -u):$$(id -g)
 #ACCESS_TOKEN := f69b726d-d40f-4261-b105-1ec7e6bf04d5
-ACCESS_TOKEN := 7d777111-67cc-4ba3-a4b5-27ec39237166" 
+ACCESS_TOKEN := 7d777111-67cc-4ba3-a4b5-27ec39237166
 PROJECT_NAME := $(shell echo $(ROOT_DIR) | sed 's/.*\///g')
 PROJECT_VERSION := $(shell $(MVN_EXE) -f $(ROOT_DIR) help:evaluate -Dexpression=project.version -q -DforceStdout 2>&1  | tail -1)
 
@@ -229,13 +229,14 @@ song-unpublish:
 #############################################################
 
 # Upload a manifest using the score-client. Affected by DEMO_MODE
-test-upload: start-score-server _ping_score_server
+test-upload-fail: start-score-server _ping_score_server
 	@echo $(YELLOW)$(INFO_HEADER) "Uploading test (invalid project - should fail)" $(END)
-	@$(SCORE_CLIENT_CMD) upload --manifest /data/manifest.txt 
+	@$(SCORE_CLIENT_CMD) upload --manifest /data/manifest.txt
+test-upload-pass: start-score-server _ping_score_server
 	@echo $(YELLOW)$(INFO_HEADER) "Upload test (valid project) should work" $(END)
 	@$(SCORE_CLIENT_CMD) upload --file /data/example2/fake1.vcf.gz --md5 69de25a55c687bf85e1597ab16378cd8 --object-id 88eb4128-3889-5935-b5b0-661922b09f62 
 
 # Download an object-id. Affected by DEMO_MODE
 test-download: start-score-server _ping_score_server _ping_song_server song-publish
-	@echo $(YELLOW)$(INFO_HEADER) "Downlaoding test object id" $(END)
+	@echo $(YELLOW)$(INFO_HEADER) "Downloading test object id" $(END)
 	@$(SCORE_CLIENT_CMD) download --object-id 5be58fbb-775b-5259-bbbd-555e07fbdf24 --output-dir /tmp

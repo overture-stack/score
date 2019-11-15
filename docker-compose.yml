@@ -89,7 +89,7 @@ services:
       dockerfile: "$DOCKERFILE_NAME"
       target: client
     environment:
-      ACCESSTOKEN: f69b726d-d40f-4261-b105-1ec7e6bf04d5
+      ACCESSTOKEN: 7d777111-67cc-4ba3-a4b5-27ec39237166
       METADATA_URL: http://song-server:8080
       STORAGE_URL: http://score-server:8080
       JAVA_TOOL_OPTIONS: -agentlib:jdwp=transport=dt_socket,address=*:5005,server=y,suspend=n

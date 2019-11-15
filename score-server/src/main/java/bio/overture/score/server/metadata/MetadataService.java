@@ -27,6 +27,7 @@ import lombok.val;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
+import bio.overture.score.server.security.UserRestTemplate;
 import org.springframework.web.client.RestTemplate;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -37,7 +38,7 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
 @Slf4j
 @Service
 public class MetadataService {
-  private final RestTemplate restTemplate = new RestTemplate();
+  private final RestTemplate restTemplate = new UserRestTemplate();
 
   @Value("${metadata.url}")
   private String metadataUrl;
