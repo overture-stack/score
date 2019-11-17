@@ -33,13 +33,12 @@ import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class ProjectScopeStrategyTest {
-
+public class UploadScopeAuthorizationStrategyTest {
   private static final String TEST_SCOPE = "test.upload";
   private static final AuthScope testScope = AuthScope.from(TEST_SCOPE);
   private static final String PROJECT1="TEST1-CA";
   private static final String PROJECT2="TEST2-DK";
-  private ProjectScopeStrategy _sut; // "System Under Test"
+  private UploadScopeAuthorizationStrategy _sut; // "System Under Test"
 
   @Before
   public void init() {
@@ -50,8 +49,7 @@ public class ProjectScopeStrategyTest {
     when(meta.getEntity("1")).thenReturn(e1);
     when(meta.getEntity("2")).thenReturn(e2);
 
-    _sut = new ProjectScopeStrategy(TEST_SCOPE);
-    _sut.setMetadataService(meta);
+    _sut = new UploadScopeAuthorizationStrategy(TEST_SCOPE, meta);
   }
 
   @Test
@@ -59,7 +57,7 @@ public class ProjectScopeStrategyTest {
     val scopeStrs =
         new HashSet<String>(Arrays.asList("test1.download", "test.download", "test.OTHER-CODE.upload",
             "test.ALT-CODE.upload", "test.CODE.upload", "test2.download"));
-    val scopes = _sut.extractScopes(scopeStrs);
+    val scopes = testScope.matchingScopes(scopeStrs);
     // should only return scopes of format test.{something}.upload
     assertEquals(3, scopes.size());
   }
@@ -67,7 +65,7 @@ public class ProjectScopeStrategyTest {
   @Test
   public void test_extract_scopes_handle_blanket() {
     val scopeStrs = new HashSet<String>(Arrays.asList("test.upload"));
-    val scopes = _sut.extractScopes(scopeStrs);
+    val scopes = testScope.matchingScopes(scopeStrs);
     assertEquals(1, scopes.size());
     assertTrue(scopes.get(0).allowAllProjects());
   }
@@ -75,7 +73,7 @@ public class ProjectScopeStrategyTest {
   @Test
   public void test_extract_scopes_handle_project() {
     val scopeStrs = new HashSet<String>(Arrays.asList("test.PROJ-CODE.upload"));
-    val scopes = _sut.extractScopes(scopeStrs);
+    val scopes = testScope.matchingScopes(scopeStrs);
     assertEquals(1, scopes.size());
     assertFalse(scopes.get(0).allowAllProjects());
     assertEquals("PROJ-CODE", scopes.get(0).getProject());
@@ -85,8 +83,8 @@ public class ProjectScopeStrategyTest {
   public void test_scope_filtering() {
     // this represents the list of scopes that are contained in a token
     val scopeStrs = new HashSet<String>(Arrays.asList(TEST_SCOPE, "test.download", "other.upload", "other.upload"));
-    val scopes = _sut.extractScopes(scopeStrs);
-    val result = _sut.extractProjects(testScope, scopes);
+    val scopes = testScope.matchingScopes(scopeStrs);
+    val result = testScope.matchingProjects(scopes);
     assertEquals(1, result.size());
   }
 
@@ -97,8 +95,8 @@ public class ProjectScopeStrategyTest {
   public void test_scope_internal_wildcard_representation() {
     // this represents the list of scopes that are contained in a token
     val scopeStrs = new HashSet<String>(Arrays.asList(TEST_SCOPE, "test.download", "other.upload", "other.upload"));
-    val scopes = _sut.extractScopes(scopeStrs);
-    val result = _sut.extractProjects(testScope, scopes);
+    val scopes = testScope.matchingScopes(scopeStrs);
+    val result = testScope.matchingProjects(scopes);
     assertTrue(result.containsAll(new ArrayList<String>(Arrays.asList(AuthScope.ALL_PROJECTS))));
   }
 
@@ -107,21 +105,21 @@ public class ProjectScopeStrategyTest {
     val scopeStrs =
         new HashSet<String>(Arrays.asList("test.GBM-US.upload", "test.IGNORE-THIS.download", "test.BRCA-US.upload",
             "test.PRAD-US.upload", "test.upload"));
-    val scopes = _sut.extractScopes(scopeStrs);
-    val projects = _sut.extractProjects(testScope, scopes);
+    val scopes = testScope.matchingScopes(scopeStrs);
+    val projects = testScope.matchingProjects(scopes);
     assertEquals(4, projects.size());
 
     // returns access without trying to retrieve project code for object id
-    assertTrue(_sut.verifyProjectAccess(scopes, "DOESN'T-MATTER"));
+    assertTrue(_sut.verify(scopes, "DOESN'T-MATTER"));
   }
 
   @Test
   public void test_check_project_object_wrong_project() {
     val scopeStrs = new HashSet<String>(Arrays.asList("test.GBM-US.upload",
       "test.PRAD-US.upload"));
-    val scopes = _sut.extractScopes(scopeStrs);
+    val scopes = testScope.matchingScopes(scopeStrs);
 
-    assertFalse(_sut.verifyProjectAccess(scopes, "1"));
+    assertFalse(_sut.verify(scopes, "1"));
 
   }
 
@@ -129,9 +127,9 @@ public class ProjectScopeStrategyTest {
   public void test_check_project_object_wrong_access() {
     val scopeStrs = new HashSet<String>(Arrays.asList("test."+PROJECT1+".download",
       "test." + PROJECT2 + ".UPLOAD"));
-    val scopes = _sut.extractScopes(scopeStrs);
+    val scopes = testScope.matchingScopes(scopeStrs);
 
-    assertFalse(_sut.verifyProjectAccess(scopes, "1"));
+    assertFalse(_sut.verify(scopes, "1"));
 
   }
 
@@ -139,9 +137,9 @@ public class ProjectScopeStrategyTest {
   public void test_check_project_object_right_access() {
     val scopeStrs = new HashSet<String>(Arrays.asList("test."+PROJECT1+".download",
       "test." + PROJECT2 + ".UPLOAD"));
-    val scopes = _sut.extractScopes(scopeStrs);
+    val scopes = testScope.matchingScopes(scopeStrs);
 
-    assertTrue(_sut.verifyProjectAccess(scopes, "2"));
+    assertTrue(_sut.verify(scopes, "2"));
 
   }
 
@@ -149,30 +147,18 @@ public class ProjectScopeStrategyTest {
   public void test_check_project_object_not_found() {
     val scopeStrs = new HashSet<String>(Arrays.asList("test.GBM-US.upload",
       "test.PRAD-US.upload"));
-    val scopes = _sut.extractScopes(scopeStrs);
+    val scopes = testScope.matchingScopes(scopeStrs);
 
     // returns access without trying to retrieve project code for object id
     Exception exception = null;
     try {
-      _sut.verifyProjectAccess(scopes, "NOT-FOUND");
+      _sut.verify(scopes, "NOT-FOUND");
     } catch(NotRetryableException e) {
       exception = e;
     }
     assertNotNull(exception);
     assertEquals("java.lang.IllegalArgumentException: Failed to retrieve metadata for objectId: NOT-FOUND",
       exception.getMessage());
-  }
-  
-  @Test
-  public void test_uuid_validation_success() {
-    String uuid = "a0bec88a-c5e3-51a9-87bf-3bd6f9c7f23c";
-    assertTrue(_sut.validate(uuid));
-  }
-
-  @Test
-  public void test_uuid_validation_failure() {
-    String uuid = "a0bec88a-c5e3-51a9-87bfg-3bd6f9c7f23c";
-    assertFalse(_sut.validate(uuid));
   }
 
 }

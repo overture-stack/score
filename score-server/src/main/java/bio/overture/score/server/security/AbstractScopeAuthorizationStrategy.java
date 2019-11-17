@@ -17,43 +17,22 @@
  */
 package bio.overture.score.server.security;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
-import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 import lombok.NonNull;
-import lombok.val;
 import lombok.extern.slf4j.Slf4j;
-
-import bio.overture.score.server.metadata.MetadataService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.val;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
 
+import java.util.Collections;
+import java.util.List;
+
 @Slf4j
-@NoArgsConstructor
+@Getter
+@AllArgsConstructor
 public abstract class AbstractScopeAuthorizationStrategy {
-
-  protected AuthScope scope;
-
-  @Autowired
-  protected MetadataService metadataService;
-
-  /**
-   * Package-private constructor for use in unit tests (to initialize scope context) without a Spring Context
-   */
-  protected AbstractScopeAuthorizationStrategy(final String scopeStr) {
-    setAuthorizeScope(scopeStr);
-    scope = AuthScope.from(getAuthorizeScope());
-  }
-
-  protected abstract void setAuthorizeScope(String scopeStr);
-
-  protected abstract String getAuthorizeScope();
-
+  private AuthScope scope;
   protected abstract boolean verify(@NonNull List<AuthScope> grantedScopes, @NonNull final String objectId);
 
   /**
@@ -61,51 +40,21 @@ public abstract class AbstractScopeAuthorizationStrategy {
    * access to this)
    */
   public boolean authorize(@NonNull Authentication authentication, @NonNull final String objectId) {
-    log.info("Checking authorization with object id {}", objectId);
-    scope = AuthScope.from(getAuthorizeScope());
+    log.info("Checking authorization for operation with scope {} on object with id {} ", scope, objectId);
+    List<AuthScope> applicableScopes;
 
-    // TODO: urrrrr
-    // if not OAuth2, then no scopes available at all
-    List<AuthScope> grantedScopes = Collections.<AuthScope> emptyList();
     if (authentication instanceof OAuth2Authentication) {
-      OAuth2Authentication o2auth = (OAuth2Authentication) authentication;
-      grantedScopes = getScopes(o2auth);
+      val scopes =((OAuth2Authentication) authentication).getOAuth2Request().getScope();
+      applicableScopes = scope.matchingScopes(scopes);
+      log.info("Found authorized scopes '{}'", applicableScopes);
+    } else {
+      log.warn("Unknown authentication type: no authorized scopes available.");
+      applicableScopes = Collections.emptyList();
     }
 
-    return verify(grantedScopes, objectId);
-  }
-
-  /**
-   * Handles OAuth2Authentication object
-   * @param o2auth from Authentication token
-   * @return collection of AuthScope objects
-   */
-  protected List<AuthScope> getScopes(@NonNull OAuth2Authentication o2auth) {
-    val scopeStrs = o2auth.getOAuth2Request().getScope();
-    return extractScopes(scopeStrs);
-  }
-
-  /**
-   * Filters out any AuthScope instances that don't match the active system/operation.
-   */
-  protected List<AuthScope> extractScopes(@NonNull Set<String> scopeStrs) {
-    val result = scopeStrs.stream().map(s -> AuthScope.from(s))
-        .filter(p -> p.matches(scope))
-        .collect(Collectors.toList());
-    return result;
-  }
-
-  protected boolean validate(@NonNull String uuid5) {
-    try {
-      UUID.fromString(uuid5);
-      return true;
-    } catch (IllegalArgumentException e) {
-      return false;
-    }
-  }
-
-  void setMetadataService(MetadataService mock) {
-    metadataService = mock;
+    val status = verify(applicableScopes, objectId);
+    log.info("Authorization was {}", status? "granted":"denied");
+    return status;
   }
 
 }

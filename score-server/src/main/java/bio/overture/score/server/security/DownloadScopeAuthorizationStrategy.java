@@ -18,80 +18,34 @@
 package bio.overture.score.server.security;
 
 import bio.overture.score.server.exception.NotRetryableException;
+import bio.overture.score.server.metadata.MetadataService;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.springframework.beans.factory.annotation.Value;
 
-import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Slf4j
-public class ProjectScopeStrategy extends AbstractScopeAuthorizationStrategy {
-
-  @Value("${auth.server.uploadScope}")
-  protected String uploadScope;
-
-  public ProjectScopeStrategy() {
-    super();
-  }
-
-  ProjectScopeStrategy(final String scopeStr) {
-    super(scopeStr);
-  }
-
-  @Override
-  protected void setAuthorizeScope(String scopeStr) {
-    uploadScope = scopeStr;
-  }
-
-  @Override
-  protected String getAuthorizeScope() {
-    return uploadScope;
+public class DownloadScopeAuthorizationStrategy extends UploadScopeAuthorizationStrategy {
+  public DownloadScopeAuthorizationStrategy(String authScope, MetadataService metadataService) {
+      super(authScope, metadataService);
   }
 
   @Override
   protected boolean verify(@NonNull List<AuthScope> grantedScopes, @NonNull final String objectId) {
-    return verifyProjectAccess(grantedScopes, objectId);
-  }
+    val objectAccessType = fetchObjectAccessType(objectId);
+    val accessType = new Access(objectAccessType);
 
-  protected boolean verifyProjectAccess(@NonNull List<AuthScope> grantedScopes, @NonNull final String objectId) {
-    val projectCodes = getAuthorizedProjectCodes(grantedScopes);
-
-    boolean result = false;
-    if (projectCodes.contains(AuthScope.ALL_PROJECTS)) {
-      log.info("Access granted to blanket scope");
-      result = true;
+    if (accessType.isOpen()) {
+      return true;
+    } else if (accessType.isControlled()) {
+        return super.verify(grantedScopes, objectId);
     } else {
-      val projCd = fetchProjectCode(objectId);
-      result = projectCodes.contains(projCd);
-      log.info("checking for permission to project {} for object id {} ({})", projCd, objectId, result);
+      val msg = String.format("Invalid access type '%s' found in Metadata record for object id: %s", objectAccessType,
+              objectId);
+      log.error(msg);
+      throw new NotRetryableException(new IllegalArgumentException(msg));
     }
-    return result;
-    // return projectCodes.contains(AuthScope.ALL_PROJECTS) ? true : projectCodes.contains(fetchProjectCode(objectId));
-  }
-
-  protected List<String> getAuthorizedProjectCodes(@NonNull List<AuthScope> grantedScopes) {
-    return extractProjects(scope, grantedScopes);
-  }
-
-  /**
-   * Extracts project codes (strings) from list of AuthScopes. This method broken out from getAuthorizedProjectCodes()
-   * to isolate actual mapping logic from organizing inputs; facilitating unit testing.
-   * 
-   * @param uploadScope - the expected project/operation to evaluate scope for i.e., collab.upload, aws.upload
-   * @param scopes - list of scopes following convention of the form {system}.{project-code}.{operation} i.e.,
-   * collab.BRCA-US.upload
-   * @return list of project codes
-   */
-  protected List<String> extractProjects(@NonNull final AuthScope uploadScope,
-      @NonNull final Collection<AuthScope> scopes) {
-    val result = scopes.stream().filter(s -> s.matches(uploadScope))
-        .map(s -> s.getProject())
-        .collect(Collectors.toList());
-
-    return result;
   }
 
   /**
@@ -99,16 +53,15 @@ public class ProjectScopeStrategy extends AbstractScopeAuthorizationStrategy {
    * @param objectId
    * @return project code
    */
-  protected String fetchProjectCode(@NonNull final String objectId) {
+  protected String fetchObjectAccessType(@NonNull final String objectId) {
     // makes a query to meta service to retrieve project code for the given object id
     val entity = metadataService.getEntity(objectId);
     if (entity != null) {
-      return entity.getProjectCode();
+      return entity.getAccess();
     } else {
       val msg = String.format("Failed to retrieve metadata for objectId: %s", objectId);
       log.error(msg);
       throw new NotRetryableException(new IllegalArgumentException(msg));
     }
   }
-
 }

@@ -17,67 +17,43 @@
  */
 package bio.overture.score.server.security;
 
+import bio.overture.score.server.exception.NotRetryableException;
+import bio.overture.score.server.metadata.MetadataService;
+import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+
+import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import bio.overture.score.server.exception.NotRetryableException;
-import lombok.NonNull;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
-
-import org.springframework.beans.factory.annotation.Value;
-
 @Slf4j
-public class BasicScopeAuthorizationStrategy extends AbstractScopeAuthorizationStrategy {
+public class UploadScopeAuthorizationStrategy extends AbstractScopeAuthorizationStrategy {
+  MetadataService metadataService;
 
-  @Value("${auth.server.downloadScope}")
-  private String downloadScope;
-
-  public BasicScopeAuthorizationStrategy() {
-    super();
-  }
-
-  BasicScopeAuthorizationStrategy(final String scopeStr) {
-    super(scopeStr);
-  }
-
-  @Override
-  protected void setAuthorizeScope(String scopeStr) {
-    downloadScope = scopeStr;
-  }
-
-  @Override
-  protected String getAuthorizeScope() {
-    return downloadScope;
+  public UploadScopeAuthorizationStrategy(String scope, MetadataService metadataService) {
+    super(AuthScope.from(scope));
+    this.metadataService = metadataService;
   }
 
   @Override
   protected boolean verify(@NonNull List<AuthScope> grantedScopes, @NonNull final String objectId) {
-    return verifyAccessType(grantedScopes, objectId);
-  }
+    val projectCodes = getAuthorizedProjectCodes(grantedScopes);
 
-  protected boolean verifyAccessType(@NonNull List<AuthScope> grantedScopes, @NonNull final String objectId) {
-    val objectAccessType = fetchObjectAccessType(objectId);
-    val accessType = new Access(objectAccessType);
-
-    if (accessType.isOpen()) {
-      return true;
-    } else if (accessType.isControlled()) {
-      return verifyBasicScope(grantedScopes);
-    } else {
-      val msg =
-          String.format("Invalid access type '%s' found in Metadata record for object id: %s", objectAccessType,
-              objectId);
-      log.error(msg);
-      throw new NotRetryableException(new IllegalArgumentException(msg));
-    }
-  }
-
-  protected boolean verifyBasicScope(@NonNull List<AuthScope> grantedScopes) {
     boolean result = false;
-    val check = grantedScopes.stream().filter(s -> s.matches(scope)).collect(Collectors.toList());
-    result = !check.isEmpty();
+    if (projectCodes.contains(AuthScope.ALL_PROJECTS)) {
+      log.info("Access granted to blanket scope");
+      result = true;
+    } else {
+      val projCd = fetchProjectCode(objectId);
+      result = projectCodes.contains(projCd);
+      log.info("checking for permission to project {} for object id {} ({})", projCd, objectId, result);
+    }
     return result;
+  }
+
+  protected List<String> getAuthorizedProjectCodes(@NonNull List<AuthScope> grantedScopes) {
+    return getScope().matchingProjects(grantedScopes);
   }
 
   /**
@@ -85,11 +61,11 @@ public class BasicScopeAuthorizationStrategy extends AbstractScopeAuthorizationS
    * @param objectId
    * @return project code
    */
-  protected String fetchObjectAccessType(@NonNull final String objectId) {
+  protected String fetchProjectCode(@NonNull final String objectId) {
     // makes a query to meta service to retrieve project code for the given object id
     val entity = metadataService.getEntity(objectId);
     if (entity != null) {
-      return entity.getAccess();
+      return entity.getProjectCode();
     } else {
       val msg = String.format("Failed to retrieve metadata for objectId: %s", objectId);
       log.error(msg);
