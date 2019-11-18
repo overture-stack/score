@@ -1,27 +1,22 @@
 #!/bin/bash
+set -x
+SCORE_CLIENT="/score-client/bin/score-client"
+
 function upload() {
   $SCORE_CLIENT upload --manifest /data/$1 && echo "OK" || echo "FAILED"
 }
 
 function download() {
-  $SCORE_CLIENT download --manifest /data/$1 --output-dir /tmp && echo "OK" || echo "FAILED"
+  DIR=/tmp/$1;test -d $DIR && rm -r $DIR;mkdir $DIR;$SCORE_CLIENT download --manifest /data/$1 --output-dir $DIR && echo "OK" || echo "FAILED"
 }
-
 
 echo "upload combined manifest"
 upload combined.manifest
 
-echo "upload TEST-CA/manifest"
-upload test-ca.manifest
+# Note: download manifests have 11 fields, upload manifests only have 3
+# Write a test for downloading manifests at some point
+#echo "download TEST-CA/manifest"
+#download test-ca.manifest
 
-echo "upload ABC123/manifest"
-upload test-abc.manifest
-
-echo "download TEST-CA/manifest"
-download test-ca.manifest
-
-echo "download ABC123/manifest"
-download test-abc.manifest
-
-echo "download combined manifest"
-download combined.manifest
+#echo "download ABC123/manifest"
+#download test-abc.manifest

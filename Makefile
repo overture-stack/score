@@ -39,6 +39,7 @@ DOCKER_COMPOSE_CMD := echo "*********** DEMO_MODE = $(DEMO_MODE) **************"
 	&& echo "*********** FORCE = $(FORCE) **************" \
 	&& DOCKERFILE_NAME=$(DOCKERFILE_NAME) $(DOCKER_COMPOSE_EXE) -f $(ROOT_DIR)/docker-compose.yml
 SCORE_CLIENT_TEST := $(DOCKER_COMPOSE_CMD) run --rm -u $(THIS_USER) score-client /data/run_tests.sh
+SCORE_CLIENT_MANIFEST_TEST:= $(DOCKER_COMPOSE_CMD) run --rm -u $(THIS_USER) score-client /data/test_manifests.sh
 DC_UP_CMD := $(DOCKER_COMPOSE_CMD) up -d --build
 MVN_CMD := $(MVN_EXE) -f $(ROOT_DIR)/pom.xml
 
@@ -230,6 +231,9 @@ song-unpublish:
 #############################################################
 # Upload & download object-id with different access tokens. 
 # Affected by DEMO_MODE
-test-upload-and-download: clean-objects song-unpublish start-score-server 
-	@echo $(YELLOW)$(INFO_HEADER) "Testing uploads and downloads" $(END)
+test-manifest: clean-objects song-unpublish start-score-server 
+	@echo $(YELLOW)$(INFO_HEADER) "Testing uploads/download manifests" $(END)
+	@$(SCORE_CLIENT_MANIFEST_TEST)
+test-upload-and-download: test-manifests clean-objects song-unpublish start-score-server 
+	@echo $(YELLOW)$(INFO_HEADER) "Testing upload & download permissions" $(END)
 	@$(SCORE_CLIENT_TEST)
