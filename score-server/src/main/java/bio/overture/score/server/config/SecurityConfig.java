@@ -68,7 +68,6 @@ public class SecurityConfig extends ResourceServerConfigurerAdapter {
   @Value("${auth.server.downloadScope}")
   private String downloadScope;
 
-
   @Override
   public void configure(HttpSecurity http) throws Exception {
     http.addFilterAfter(new OncePerRequestFilter() {

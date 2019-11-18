@@ -69,7 +69,6 @@ public class UploadCommand extends RepositoryAccessCommand {
 
   @Override
   public int execute() throws Exception {
-    Thread.sleep(5 *1000);
     checkParameter(objectId != null || manifestResource != null, "One of --object-id or --manifest must be specified");
 
     if (verifyConnection) {
