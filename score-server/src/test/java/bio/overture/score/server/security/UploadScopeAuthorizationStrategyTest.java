@@ -126,7 +126,7 @@ public class UploadScopeAuthorizationStrategyTest {
   @Test
   public void test_check_project_object_wrong_access() {
     val scopeStrs = new HashSet<String>(Arrays.asList("test."+PROJECT1+".download",
-      "test." + PROJECT2 + ".UPLOAD"));
+      "test." + PROJECT2 + ".upload"));
     val scopes = testScope.matchingScopes(scopeStrs);
 
     assertFalse(_sut.verify(scopes, "1"));

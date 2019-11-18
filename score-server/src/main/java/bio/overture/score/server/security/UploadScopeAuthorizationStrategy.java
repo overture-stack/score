@@ -38,17 +38,16 @@ public class UploadScopeAuthorizationStrategy extends AbstractScopeAuthorization
 
   @Override
   protected boolean verify(@NonNull List<AuthScope> grantedScopes, @NonNull final String objectId) {
-    val projectCodes = getAuthorizedProjectCodes(grantedScopes);
-
-    boolean result = false;
-    if (projectCodes.contains(AuthScope.ALL_PROJECTS)) {
+    if (grantedScopes.stream().anyMatch(AuthScope::allowAllProjects)) {
       log.info("Access granted to blanket scope");
-      result = true;
-    } else {
-      val projCd = fetchProjectCode(objectId);
-      result = projectCodes.contains(projCd);
-      log.info("checking for permission to project {} for object id {} ({})", projCd, objectId, result);
+      return true;
     }
+
+    val projectCodes = getAuthorizedProjectCodes(grantedScopes);
+    val projCd = fetchProjectCode(objectId);
+    val result = projectCodes.contains(projCd);
+    log.info("checking for permission to project {} for object id {} ({})", projCd, objectId, result);
+
     return result;
   }
 

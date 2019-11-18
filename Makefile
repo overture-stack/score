@@ -13,8 +13,7 @@ MVN_EXE := $(shell which mvn)
 DOCKERFILE_NAME := $(shell if [ $(DEMO_MODE) -eq 1 ]; then echo Dockerfile; else echo Dockerfile.dev; fi)
 ROOT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 THIS_USER := $$(id -u):$$(id -g)
-#ACCESS_TOKEN := f69b726d-d40f-4261-b105-1ec7e6bf04d5
-ACCESS_TOKEN := 7d777111-67cc-4ba3-a4b5-27ec39237166
+ACCESS_TOKEN := f69b726d-d40f-4261-b105-1ec7e6bf04d5
 PROJECT_NAME := $(shell echo $(ROOT_DIR) | sed 's/.*\///g')
 PROJECT_VERSION := $(shell $(MVN_EXE) -f $(ROOT_DIR) help:evaluate -Dexpression=project.version -q -DforceStdout 2>&1  | tail -1)
 
@@ -39,7 +38,7 @@ RETRY_CMD := $(DOCKER_DIR)/retry-command.sh
 DOCKER_COMPOSE_CMD := echo "*********** DEMO_MODE = $(DEMO_MODE) **************" \
 	&& echo "*********** FORCE = $(FORCE) **************" \
 	&& DOCKERFILE_NAME=$(DOCKERFILE_NAME) $(DOCKER_COMPOSE_EXE) -f $(ROOT_DIR)/docker-compose.yml
-SCORE_CLIENT_CMD := $(DOCKER_COMPOSE_CMD) run --rm -u $(THIS_USER) score-client bin/score-client
+SCORE_CLIENT_TEST := $(DOCKER_COMPOSE_CMD) run --rm -u $(THIS_USER) score-client /data/run_tests.sh
 DC_UP_CMD := $(DOCKER_COMPOSE_CMD) up -d --build
 MVN_CMD := $(MVN_EXE) -f $(ROOT_DIR)/pom.xml
 
@@ -215,28 +214,22 @@ log-score-client:
 # Publishes the analysis. Used before running the test-download target
 song-publish:
 	@echo $(YELLOW)$(INFO_HEADER) "Publishing analysis" $(END)
-	@$(CURL_EXE) -XPUT --header 'Authorization: Bearer $(ACCESS_TOKEN)' 'http://localhost:8080/studies/ABC123/analysis/publish/735b65fa-f502-11e9-9811-6d6ef1d32823'
+	@$(CURL_EXE) -XPUT --header 'Authorization: Bearer $(ACCESS_TOKEN)' 'http://localhost:8080/studies/ABC123/analysis/publish/a22f44d3-097d-11ea-b4b9-374b8c686482'
+	@$(CURL_EXE) -XPUT --header 'Authorization: Bearer $(ACCESS_TOKEN)' 'http://localhost:8080/studies/TEST-CA/analysis/publish/a25ae8b4-097d-11ea-b4b9-41f0d4c18919'
 	@echo ""
 
 # UnPublishes the analysis. Used before running the test-download target
 song-unpublish:
 	@echo $(YELLOW)$(INFO_HEADER) "UnPublishing analysis" $(END)
-	@$(CURL_EXE) -XPUT --header 'Authorization: Bearer $(ACCESS_TOKEN)' 'http://localhost:8080/studies/ABC123/analysis/unpublish/735b65fa-f502-11e9-9811-6d6ef1d32823'
+	@$(CURL_EXE) -XPUT --header 'Authorization: Bearer $(ACCESS_TOKEN)' 'http://localhost:8080/studies/ABC123/analysis/unpublish/a22f44d3-097d-11ea-b4b9-374b8c686482'
+	@$(CURL_EXE) -XPUT --header 'Authorization: Bearer $(ACCESS_TOKEN)' 'http://localhost:8080/studies/TEST-CA/analysis/unpublish/a25ae8b4-097d-11ea-b4b9-41f0d4c18919'
 	@echo ""
 
 #############################################################
 #  Client targets
 #############################################################
-
-# Upload a manifest using the score-client. Affected by DEMO_MODE
-test-upload-fail: start-score-server _ping_score_server
-	@echo $(YELLOW)$(INFO_HEADER) "Uploading test (invalid project - should fail)" $(END)
-	@$(SCORE_CLIENT_CMD) upload --manifest /data/manifest.txt
-test-upload-pass: start-score-server _ping_score_server
-	@echo $(YELLOW)$(INFO_HEADER) "Upload test (valid project) should work" $(END)
-	@$(SCORE_CLIENT_CMD) upload --file /data/example2/fake1.vcf.gz --md5 69de25a55c687bf85e1597ab16378cd8 --object-id 88eb4128-3889-5935-b5b0-661922b09f62 
-
-# Download an object-id. Affected by DEMO_MODE
-test-download: start-score-server _ping_score_server _ping_song_server song-publish
-	@echo $(YELLOW)$(INFO_HEADER) "Downloading test object id" $(END)
-	@$(SCORE_CLIENT_CMD) download --object-id 5be58fbb-775b-5259-bbbd-555e07fbdf24 --output-dir /tmp
+# Upload & download object-id with different access tokens. 
+# Affected by DEMO_MODE
+test-upload-and-download: clean-objects song-unpublish start-score-server 
+	@echo $(YELLOW)$(INFO_HEADER) "Testing uploads and downloads" $(END)
+	@$(SCORE_CLIENT_TEST)
