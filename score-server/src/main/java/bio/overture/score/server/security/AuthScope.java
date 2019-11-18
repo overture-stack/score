@@ -113,4 +113,8 @@ public class AuthScope {
     return operation;
   }
 
+  @Override
+  public String toString() {
+    return system + "." + project + "." + operation;
+  }
 }

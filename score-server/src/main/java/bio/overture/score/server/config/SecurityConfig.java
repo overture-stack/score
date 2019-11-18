@@ -68,6 +68,7 @@ public class SecurityConfig extends ResourceServerConfigurerAdapter {
   @Value("${auth.server.downloadScope}")
   private String downloadScope;
 
+
   @Override
   public void configure(HttpSecurity http) throws Exception {
     http.addFilterAfter(new OncePerRequestFilter() {
@@ -130,14 +131,14 @@ public class SecurityConfig extends ResourceServerConfigurerAdapter {
   }
 
   @Bean
-  public UploadScopeAuthorizationStrategy projectSecurity() {
-    return new UploadScopeAuthorizationStrategy(uploadScope, new MetadataService());
+  public UploadScopeAuthorizationStrategy projectSecurity(MetadataService song) {
+    return new UploadScopeAuthorizationStrategy(uploadScope, song);
   }
 
   @Bean
   @Scope("prototype")
-  public DownloadScopeAuthorizationStrategy accessSecurity() {
-    return new DownloadScopeAuthorizationStrategy(downloadScope, new MetadataService());
+  public DownloadScopeAuthorizationStrategy accessSecurity(MetadataService song) {
+    return new DownloadScopeAuthorizationStrategy(downloadScope, song);
   }
 }
 

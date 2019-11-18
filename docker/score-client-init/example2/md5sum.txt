@@ -1,2 +1,0 @@
-69de25a55c687bf85e1597ab16378cd8  fake1.vcf.gz
-02a91461f3607c3091d730d7b9162b79  fake1.vcf.gz.idx

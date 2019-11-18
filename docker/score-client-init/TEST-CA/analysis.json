@@ -5,7 +5,7 @@
     "version" : 1
   },
   "experiment": {
-    "variantCallingTool": "silver bullet",
+    "variantCallingTool": "variantFinder",
     "matchedNormalSampleSubmitterId": "sample-1"
   },
   "sample": [
@@ -25,18 +25,18 @@
   ],
   "file": [
     {
-      "fileName": "fake1.vcf.gz",
-      "fileSize": 93,
-      "fileMd5sum": "69de25a55c687bf85e1597ab16378cd8",
-      "fileAccess" : "restricted",
-      "fileType": "VCF"
+      "fileName": "controlled.bam",
+      "fileSize": 44,
+      "fileMd5sum": "ac5d500ec64fa7dc287050c553b83f3a",
+      "fileAccess" : "controlled",
+      "fileType": "BAM"
     },
     {
-      "fileName": "fake1.vcf.gz.idx",
-      "fileSize": 19,
-      "fileMd5sum": "02a91461f3607c3091d730d7b9162b79",
-      "fileAccess" : "restricted",
-      "fileType": "IDX"
+      "fileName": "open.bam",
+      "fileSize": 49,
+      "fileMd5sum": "0301ca53c86138baa75b7aa357055405",
+      "fileAccess" : "open",
+      "fileType": "BAM"
     }
   ]
 }
