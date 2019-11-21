@@ -38,7 +38,7 @@ public class UploadScopeAuthorizationStrategyTest {
   private static final AuthScope testScope = AuthScope.from(TEST_SCOPE);
   private static final String PROJECT1="TEST1-CA";
   private static final String PROJECT2="TEST2-DK";
-  private UploadScopeAuthorizationStrategy _sut; // "System Under Test"
+  private UploadScopeAuthorizationStrategy sut; // "System Under Test"
 
   @Before
   public void init() {
@@ -49,7 +49,7 @@ public class UploadScopeAuthorizationStrategyTest {
     when(meta.getEntity("1")).thenReturn(e1);
     when(meta.getEntity("2")).thenReturn(e2);
 
-    _sut = new UploadScopeAuthorizationStrategy(TEST_SCOPE, meta);
+    sut = new UploadScopeAuthorizationStrategy(TEST_SCOPE, meta);
   }
 
   @Test
@@ -110,7 +110,7 @@ public class UploadScopeAuthorizationStrategyTest {
     assertEquals(4, projects.size());
 
     // returns access without trying to retrieve project code for object id
-    assertTrue(_sut.verify(scopes, "DOESN'T-MATTER"));
+    assertTrue(sut.verify(scopes, "DOESN'T-MATTER"));
   }
 
   @Test
@@ -119,7 +119,7 @@ public class UploadScopeAuthorizationStrategyTest {
       "test.PRAD-US.upload"));
     val scopes = testScope.matchingScopes(scopeStrs);
 
-    assertFalse(_sut.verify(scopes, "1"));
+    assertFalse(sut.verify(scopes, "1"));
 
   }
 
@@ -129,7 +129,7 @@ public class UploadScopeAuthorizationStrategyTest {
       "test." + PROJECT2 + ".upload"));
     val scopes = testScope.matchingScopes(scopeStrs);
 
-    assertFalse(_sut.verify(scopes, "1"));
+    assertFalse(sut.verify(scopes, "1"));
 
   }
 
@@ -139,7 +139,7 @@ public class UploadScopeAuthorizationStrategyTest {
       "test." + PROJECT2 + ".UPLOAD"));
     val scopes = testScope.matchingScopes(scopeStrs);
 
-    assertTrue(_sut.verify(scopes, "2"));
+    assertTrue(sut.verify(scopes, "2"));
 
   }
 
@@ -152,7 +152,7 @@ public class UploadScopeAuthorizationStrategyTest {
     // returns access without trying to retrieve project code for object id
     Exception exception = null;
     try {
-      _sut.verify(scopes, "NOT-FOUND");
+      sut.verify(scopes, "NOT-FOUND");
     } catch(NotRetryableException e) {
       exception = e;
     }

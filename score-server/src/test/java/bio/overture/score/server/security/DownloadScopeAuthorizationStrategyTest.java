@@ -65,22 +65,23 @@ public class DownloadScopeAuthorizationStrategyTest {
   }
 
   @Test
-  public void test_open_no_scope() {
-
-    val openEntity = entity("123", "abc", "something.bam", "PROJ-CD", "open");
+  public void test_open_missing_scope() {
+    val openEntity = entity("123", "abc", "something.bam", "PROJ-CD",
+      "open");
     when(metadataService.getEntity("123")).thenReturn(openEntity);
 
     // no test.download scope
     val scopes = getScopes("test1.download", "test.OTHER-CODE.upload",
-        "test.ALT-CODE.upload", "test.CODE.upload", "test2.download");
+      "test.ALT-CODE.upload", "test.CODE.upload", "test2.download");
 
     val result = sut.verify(scopes, "123");
     assertTrue(result);
   }
 
   @Test
-  public void test_open_no_token() {
-    val openEntity = entity("123", "abc", "something.bam", "PROJ-CD", "open");
+  public void test_open_no_scopes() {
+    val openEntity = entity("123", "abc", "something.bam", "PROJ-CD",
+      "open");
     when(metadataService.getEntity("123")).thenReturn(openEntity);
 
     // no token, means no scopes at all
@@ -91,25 +92,50 @@ public class DownloadScopeAuthorizationStrategyTest {
   }
 
   @Test
-  public void test_controlled() {
-    val openEntity = entity("123", "abc", "something.bam", "PROJ-CD", "controlled");
-    when(metadataService.getEntity("123")).thenReturn(openEntity);
+  public void test_controlled_has_blanket_scope() {
+    val controlledEntity = entity("123", "abc", "something.bam", "PROJ-CD",
+      "controlled");
+    when(metadataService.getEntity("123")).thenReturn(controlledEntity);
 
     val scopes = getScopes("test1.download", "test.download", "test.OTHER-CODE.upload",
-            "test.ALT-CODE.upload", "test.CODE.upload", "test2.download");
+      "test.ALT-CODE.upload", "test.CODE.upload", "test2.download");
 
     val result = sut.verify(scopes, "123");
     assertTrue(result);
   }
 
   @Test
-  public void test_controlled_no_scope() {
+  public void test_controlled_has_project_scope() {
+    val controlledEntity = entity("123", "abc", "something.bam", "PROJ-CD",
+      "controlled");
+    val scopes = getScopes("test1.download", "test.PROJ-CD.download", "test.OTHER-CODE.upload",
+      "test.ALT-CODE.upload", "test.CODE.upload", "test2.download");
+    when(metadataService.getEntity("123")).thenReturn(controlledEntity);
+    val result = sut.verify(scopes, "123");
+    assertTrue(result);
+  }
+
+  @Test
+  public void test_controlled_missing_scope() {
     val openEntity = entity("123", "abc", "something.bam", "PROJ-CD", "controlled");
     when(metadataService.getEntity("123")).thenReturn(openEntity);
 
     // missing test.download scope
     val scopes = getScopes("test1.download", "test.OTHER-CODE.upload",
-            "test.ALT-CODE.upload", "test.CODE.upload", "test2.download");
+      "test.ALT-CODE.upload", "test.CODE.upload", "test2.download");
+
+    val result = sut.verify(scopes, "123");
+    assertFalse(result);
+  }
+
+  @Test
+  public void test_controlled_no_scopes() {
+    val controlledEntity = entity("123", "abc", "something.bam", "PROJ-CD",
+      "controlled");
+    when(metadataService.getEntity("123")).thenReturn(controlledEntity);
+
+    // no token, means no scopes at all
+    List<AuthScope> scopes = Collections.emptyList();
 
     val result = sut.verify(scopes, "123");
     assertFalse(result);

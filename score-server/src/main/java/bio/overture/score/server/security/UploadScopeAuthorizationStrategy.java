@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.                             
+ * Copyright (c) 2016 - 2019 The Ontario Institute for Cancer Research. All rights reserved.
  *                                                                                                               
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
  * You should have received a copy of the GNU General Public License along with                                  
@@ -44,9 +44,9 @@ public class UploadScopeAuthorizationStrategy extends AbstractScopeAuthorization
     }
 
     val projectCodes = getAuthorizedProjectCodes(grantedScopes);
-    val projCd = fetchProjectCode(objectId);
-    val result = projectCodes.contains(projCd);
-    log.info("checking for permission to project {} for object id {} ({})", projCd, objectId, result);
+    val requiredProjectCode = fetchProjectCode(objectId);
+    val result = projectCodes.contains(requiredProjectCode);
+    log.info("checking for permission to project {} for object id {} ({})", requiredProjectCode, objectId, result);
 
     return result;
   }

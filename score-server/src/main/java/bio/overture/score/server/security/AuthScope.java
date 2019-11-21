@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.                             
+ * Copyright (c) 2016 - 2019 The Ontario Institute for Cancer Research. All rights reserved.
  *                                                                                                               
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
  * You should have received a copy of the GNU General Public License along with                                  
@@ -23,7 +23,7 @@ import lombok.val;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
+import static java.util.stream.Collectors.toUnmodifiableList;
 
 /**
  * Utility class modeling a Scope retrieved from dcc-Auth. Traditionally, scopes were two parts joined by a period:
@@ -74,18 +74,17 @@ public class AuthScope {
 
 
   public List<AuthScope> matchingScopes(@NonNull Set<String> scopeStrings) {
-    val result = scopeStrings.stream().map(s -> AuthScope.from(s))
-      .filter(p -> matches(p))
-      .collect(Collectors.toList());
-    return result;
+    return scopeStrings.stream()
+	    .map(AuthScope::from)
+	    .filter(this::matches)
+	    .collect(toUnmodifiableList());
   }
 
   protected List<String> matchingProjects(@NonNull final Collection<AuthScope> scopes) {
-    val result = scopes.stream().filter(s -> matches(s))
-      .map(s -> s.getProject())
-      .collect(Collectors.toList());
-
-    return result;
+    return scopes.stream()
+        .filter(this::matches)
+        .map(AuthScope::getProject)
+        .collect(toUnmodifiableList());
   }
 
   public boolean allowAllProjects() {

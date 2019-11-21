@@ -39,7 +39,7 @@ DOCKER_COMPOSE_CMD := echo "*********** DEMO_MODE = $(DEMO_MODE) **************"
 	&& DOCKERFILE_NAME=$(DOCKERFILE_NAME) $(DOCKER_COMPOSE_EXE) -f $(ROOT_DIR)/docker-compose.yml
 SCORE_CLIENT_CMD := $(DOCKER_COMPOSE_CMD) run --rm -u $(THIS_USER) score-client bin/score-client
 SCORE_CLIENT_TEST := $(DOCKER_COMPOSE_CMD) run --rm -u $(THIS_USER) score-client /data/run_tests.sh
-SCORE_CLIENT_MANIFEST_TEST:= $(DOCKER_COMPOSE_CMD) run --rm -u $(THIS_USER) score-client /data/test_manifests.sh
+SCORE_CLIENT_MANIFEST_TEST := $(DOCKER_COMPOSE_CMD) run --rm -u $(THIS_USER) score-client /data/test_manifests.sh
 DC_UP_CMD := $(DOCKER_COMPOSE_CMD) up -d --build
 MVN_CMD := $(MVN_EXE) -f $(ROOT_DIR)/pom.xml
 
@@ -157,6 +157,8 @@ reset-object-storage: clean-objects _setup-object-storage
 #############################################################
 #  Building targets
 #############################################################
+_test: 
+	@$(MVN_CMD) test
 
 # Package the score-server and score-client using maven. Affected by DEMO_MODE and FORCE
 package: 
@@ -228,4 +230,4 @@ test-upload-and-download: start-score-server _ping_score_server _ping_song_serve
 	@$(MAKE) reset-object-storage
 	@$(SCORE_CLIENT_TEST)
 
-test-all: test-manifest test-upload-and-download
+test: _test test-manifest test-upload-and-download

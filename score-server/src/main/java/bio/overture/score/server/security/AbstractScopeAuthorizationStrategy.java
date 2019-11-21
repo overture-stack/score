@@ -32,6 +32,7 @@ import java.util.List;
 @Getter
 @AllArgsConstructor
 public abstract class AbstractScopeAuthorizationStrategy {
+  @NonNull
   private AuthScope scope;
   protected abstract boolean verify(@NonNull List<AuthScope> grantedScopes, @NonNull final String objectId);
 
