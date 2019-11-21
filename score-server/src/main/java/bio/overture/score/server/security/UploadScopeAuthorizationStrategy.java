@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.                             
+ * Copyright (c) 2016 - 2019 The Ontario Institute for Cancer Research. All rights reserved.
  *                                                                                                               
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
  * You should have received a copy of the GNU General Public License along with                                  
@@ -18,80 +18,41 @@
 package bio.overture.score.server.security;
 
 import bio.overture.score.server.exception.NotRetryableException;
+import bio.overture.score.server.metadata.MetadataService;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.springframework.beans.factory.annotation.Value;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class ProjectScopeStrategy extends AbstractScopeAuthorizationStrategy {
+public class UploadScopeAuthorizationStrategy extends AbstractScopeAuthorizationStrategy {
+  MetadataService metadataService;
 
-  @Value("${auth.server.uploadScope}")
-  protected String uploadScope;
-
-  public ProjectScopeStrategy() {
-    super();
-  }
-
-  ProjectScopeStrategy(final String scopeStr) {
-    super(scopeStr);
-  }
-
-  @Override
-  protected void setAuthorizeScope(String scopeStr) {
-    uploadScope = scopeStr;
-  }
-
-  @Override
-  protected String getAuthorizeScope() {
-    return uploadScope;
+  public UploadScopeAuthorizationStrategy(String scope, MetadataService metadataService) {
+    super(AuthScope.from(scope));
+    this.metadataService = metadataService;
   }
 
   @Override
   protected boolean verify(@NonNull List<AuthScope> grantedScopes, @NonNull final String objectId) {
-    return verifyProjectAccess(grantedScopes, objectId);
-  }
-
-  protected boolean verifyProjectAccess(@NonNull List<AuthScope> grantedScopes, @NonNull final String objectId) {
-    val projectCodes = getAuthorizedProjectCodes(grantedScopes);
-
-    boolean result = false;
-    if (projectCodes.contains(AuthScope.ALL_PROJECTS)) {
+    if (grantedScopes.stream().anyMatch(AuthScope::allowAllProjects)) {
       log.info("Access granted to blanket scope");
-      result = true;
-    } else {
-      val projCd = fetchProjectCode(objectId);
-      result = projectCodes.contains(projCd);
-      log.info("checking for permission to project {} for object id {} ({})", projCd, objectId, result);
+      return true;
     }
+
+    val projectCodes = getAuthorizedProjectCodes(grantedScopes);
+    val requiredProjectCode = fetchProjectCode(objectId);
+    val result = projectCodes.contains(requiredProjectCode);
+    log.info("checking for permission to project {} for object id {} ({})", requiredProjectCode, objectId, result);
+
     return result;
-    // return projectCodes.contains(AuthScope.ALL_PROJECTS) ? true : projectCodes.contains(fetchProjectCode(objectId));
   }
 
   protected List<String> getAuthorizedProjectCodes(@NonNull List<AuthScope> grantedScopes) {
-    return extractProjects(scope, grantedScopes);
-  }
-
-  /**
-   * Extracts project codes (strings) from list of AuthScopes. This method broken out from getAuthorizedProjectCodes()
-   * to isolate actual mapping logic from organizing inputs; facilitating unit testing.
-   * 
-   * @param uploadScope - the expected project/operation to evaluate scope for i.e., collab.upload, aws.upload
-   * @param scopes - list of scopes following convention of the form {system}.{project-code}.{operation} i.e.,
-   * collab.BRCA-US.upload
-   * @return list of project codes
-   */
-  protected List<String> extractProjects(@NonNull final AuthScope uploadScope,
-      @NonNull final Collection<AuthScope> scopes) {
-    val result = scopes.stream().filter(s -> s.matches(uploadScope))
-        .map(s -> s.getProject())
-        .collect(Collectors.toList());
-
-    return result;
+    return getScope().matchingProjects(grantedScopes);
   }
 
   /**

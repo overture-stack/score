@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.                             
+ * Copyright (c) 2016 - 2019 The Ontario Institute for Cancer Research. All rights reserved.
  *                                                                                                               
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
  * You should have received a copy of the GNU General Public License along with                                  
@@ -18,6 +18,12 @@
 package bio.overture.score.server.security;
 
 import lombok.NonNull;
+import lombok.val;
+
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
+import static java.util.stream.Collectors.toUnmodifiableList;
 
 /**
  * Utility class modeling a Scope retrieved from dcc-Auth. Traditionally, scopes were two parts joined by a period:
@@ -66,6 +72,21 @@ public class AuthScope {
     return (getSystem().equals(rule.getSystem()) && getOperation().equals(rule.getOperation()));
   }
 
+
+  public List<AuthScope> matchingScopes(@NonNull Set<String> scopeStrings) {
+    return scopeStrings.stream()
+	    .map(AuthScope::from)
+	    .filter(this::matches)
+	    .collect(toUnmodifiableList());
+  }
+
+  protected List<String> matchingProjects(@NonNull final Collection<AuthScope> scopes) {
+    return scopes.stream()
+        .filter(this::matches)
+        .map(AuthScope::getProject)
+        .collect(toUnmodifiableList());
+  }
+
   public boolean allowAllProjects() {
     return ALL_PROJECTS.equals(project);
   }
@@ -91,4 +112,8 @@ public class AuthScope {
     return operation;
   }
 
+  @Override
+  public String toString() {
+    return system + "." + project + "." + operation;
+  }
 }

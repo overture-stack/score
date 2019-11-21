@@ -1,0 +1,42 @@
+{
+  "study" : "TEST-CA",
+  "analysisType" : {
+    "name" : "variantCall",
+    "version" : 1
+  },
+  "experiment": {
+    "variantCallingTool": "variantFinder",
+    "matchedNormalSampleSubmitterId": "sample-1"
+  },
+  "sample": [
+    {
+      "sampleSubmitterId": "sample-2",
+      "sampleType": "Total RNA",
+      "specimen": {
+        "specimenSubmitterId": "speciment-2a",
+        "specimenClass": "Tumour",
+        "specimenType": "Primary tumour - other"
+      },
+      "donor": {
+        "donorSubmitterId": "d1",
+        "donorGender": "female"
+      }
+    }
+  ],
+  "file": [
+    {
+      "fileName": "controlled.bam",
+      "fileSize": 44,
+      "fileMd5sum": "ac5d500ec64fa7dc287050c553b83f3a",
+      "fileAccess" : "controlled",
+      "fileType": "BAM"
+    },
+    {
+      "fileName": "open.bam",
+      "fileSize": 49,
+      "fileMd5sum": "0301ca53c86138baa75b7aa357055405",
+      "fileAccess" : "open",
+      "fileType": "BAM"
+    }
+  ]
+}

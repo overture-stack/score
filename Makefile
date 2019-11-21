@@ -1,4 +1,4 @@
-.PHONY:
+.PHONY: 
 
 # Override this variable to 1, for debug mode
 DEMO_MODE := 0
@@ -13,7 +13,6 @@ MVN_EXE := $(shell which mvn)
 DOCKERFILE_NAME := $(shell if [ $(DEMO_MODE) -eq 1 ]; then echo Dockerfile; else echo Dockerfile.dev; fi)
 ROOT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 THIS_USER := $$(id -u):$$(id -g)
-ACCESS_TOKEN := f69b726d-d40f-4261-b105-1ec7e6bf04d5
 PROJECT_NAME := $(shell echo $(ROOT_DIR) | sed 's/.*\///g')
 PROJECT_VERSION := $(shell $(MVN_EXE) -f $(ROOT_DIR) help:evaluate -Dexpression=project.version -q -DforceStdout 2>&1  | tail -1)
 
@@ -39,6 +38,8 @@ DOCKER_COMPOSE_CMD := echo "*********** DEMO_MODE = $(DEMO_MODE) **************"
 	&& echo "*********** FORCE = $(FORCE) **************" \
 	&& DOCKERFILE_NAME=$(DOCKERFILE_NAME) $(DOCKER_COMPOSE_EXE) -f $(ROOT_DIR)/docker-compose.yml
 SCORE_CLIENT_CMD := $(DOCKER_COMPOSE_CMD) run --rm -u $(THIS_USER) score-client bin/score-client
+SCORE_CLIENT_TEST := $(DOCKER_COMPOSE_CMD) run --rm -u $(THIS_USER) score-client /data/run_tests.sh
+SCORE_CLIENT_MANIFEST_TEST := $(DOCKER_COMPOSE_CMD) run --rm -u $(THIS_USER) score-client /data/test_manifests.sh
 DC_UP_CMD := $(DOCKER_COMPOSE_CMD) up -d --build
 MVN_CMD := $(MVN_EXE) -f $(ROOT_DIR)/pom.xml
 
@@ -113,7 +114,7 @@ intellij-score-client-config: _build-score-client
 	@echo
 	@echo $(YELLOW)$(INFO_HEADER) In IntelliJ, configure the docker run profile with the following parameters to allow interactive debug on port 5005 $(END)
 	@echo "$(YELLOW)Image ID:$(END)               $(PROJECT_NAME)_score-client:latest"
-	@echo "$(YELLOW)Command:$(END)                bin/score-client upload --manifest /data/manifest.txt"
+	@echo "$(YELLOW)Command:$(END)                bin/score-client upload --manifest /data/combined.manifest"
 	@echo "$(YELLOW)Bind Mounts:$(END)            $(DOCKER_DIR)/score-client-init:/data $(SCRATCH_DIR)/score-client/logs:/score-client/logs"
 	@echo "$(YELLOW)Environment Variables:$(END)  ACCESSTOKEN=f69b726d-d40f-4261-b105-1ec7e6bf04d5; METADATA_URL=http://song-server:8080; STORAGE_URL=http://score-server:8080; JAVA_TOOL_OPTIONS=-agentlib:jdwp=transport=dt_socket,address=*:5005,server=y,suspend=n"
 	@echo "$(YELLOW)Run Options:$(END)            --rm --network $(PROJECT_NAME)_default"
@@ -151,9 +152,13 @@ clean-objects: _destroy-object-storage
 # Clean everything. Kills all services, maven cleans and removes generated files/directories
 clean: clean-docker clean-mvn
 
+reset-object-storage: clean-objects _setup-object-storage
+
 #############################################################
 #  Building targets
 #############################################################
+_test: 
+	@$(MVN_CMD) test
 
 # Package the score-server and score-client using maven. Affected by DEMO_MODE and FORCE
 package: 
@@ -169,9 +174,22 @@ package:
 		echo $(YELLOW)$(INFO_HEADER) "Skipping maven package since files exist: $(SCORE_SERVER_DIST_FILE)   $(SCORE_CLIENT_DIST_FILE)" $(END); \
 	fi
 
+
+
 #############################################################
 #  Docker targets
 #############################################################
+
+rebuild-client: clean-mvn package 
+	@echo $(YELLOW)$(INFO_HEADER) "Rebuilding client docker" $(END)
+	@$(DOCKER_COMPOSE_CMD) build score-client
+
+rebuild-server: clean-mvn package 
+	@echo $(YELLOW)$(INFO_HEADER) "Rebuilding server docker" $(END)
+	@$(DOCKER_COMPOSE_CMD) build score-server
+
+rebuild-all: clean-mvn package
+	@$(DOCKER_COMPOSE_CMD) build score-server score-client
 
 # Start ego, song, and object-storage.
 start-deps: _setup package
@@ -195,35 +213,21 @@ log-score-client:
 
 
 #############################################################
-#  Song targets
-#############################################################
-
-# Publishes the analysis. Used before running the test-download target
-song-publish:
-	@echo $(YELLOW)$(INFO_HEADER) "Publishing analysis" $(END)
-	@$(CURL_EXE) -XPUT --header 'Authorization: Bearer $(ACCESS_TOKEN)' 'http://localhost:8080/studies/ABC123/analysis/publish/735b65fa-f502-11e9-9811-6d6ef1d32823'
-	@echo ""
-
-# UnPublishes the analysis. Used before running the test-download target
-song-unpublish:
-	@echo $(YELLOW)$(INFO_HEADER) "UnPublishing analysis" $(END)
-	@$(CURL_EXE) -XPUT --header 'Authorization: Bearer $(ACCESS_TOKEN)' 'http://localhost:8080/studies/ABC123/analysis/unpublish/735b65fa-f502-11e9-9811-6d6ef1d32823'
-	@echo ""
-
-#############################################################
 #  Client targets
 #############################################################
+get-client-command:
+	@echo "$(SCORE_CLIENT_CMD)"
 
+# Upload & download object-id with different access tokens. 
+# Affected by DEMO_MODE
+test-manifest: start-score-server _ping_score_server _ping_song_server
+	@echo $(YELLOW)$(INFO_HEADER) "Testing uploads/download manifests" $(END)
+	@$(MAKE) reset-object-storage
+	@$(SCORE_CLIENT_MANIFEST_TEST)
 
+test-upload-and-download: start-score-server _ping_score_server _ping_song_server
+	@echo $(YELLOW)$(INFO_HEADER) "Testing upload & download permissions" $(END)
+	@$(MAKE) reset-object-storage
+	@$(SCORE_CLIENT_TEST)
 
-# Upload a manifest using the score-client. Affected by DEMO_MODE
-test-upload: start-score-server _ping_score_server
-	@echo $(YELLOW)$(INFO_HEADER) "Uploading test /data/manifest.txt" $(END)
-	@$(SCORE_CLIENT_CMD) upload --manifest /data/manifest.txt
-
-# Download an object-id. Affected by DEMO_MODE
-test-download: start-score-server _ping_score_server _ping_song_server song-publish
-	@echo $(YELLOW)$(INFO_HEADER) "Downlaoding test object id" $(END)
-	@$(SCORE_CLIENT_CMD) download --object-id 5be58fbb-775b-5259-bbbd-555e07fbdf24 --output-dir /tmp
-
-
+test: _test test-manifest test-upload-and-download

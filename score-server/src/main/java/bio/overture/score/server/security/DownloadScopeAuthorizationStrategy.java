@@ -17,67 +17,35 @@
  */
 package bio.overture.score.server.security;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
 import bio.overture.score.server.exception.NotRetryableException;
+import bio.overture.score.server.metadata.MetadataService;
 import lombok.NonNull;
-import lombok.val;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 
-import org.springframework.beans.factory.annotation.Value;
+import java.util.List;
 
 @Slf4j
-public class BasicScopeAuthorizationStrategy extends AbstractScopeAuthorizationStrategy {
-
-  @Value("${auth.server.downloadScope}")
-  private String downloadScope;
-
-  public BasicScopeAuthorizationStrategy() {
-    super();
-  }
-
-  BasicScopeAuthorizationStrategy(final String scopeStr) {
-    super(scopeStr);
-  }
-
-  @Override
-  protected void setAuthorizeScope(String scopeStr) {
-    downloadScope = scopeStr;
-  }
-
-  @Override
-  protected String getAuthorizeScope() {
-    return downloadScope;
+public class DownloadScopeAuthorizationStrategy extends UploadScopeAuthorizationStrategy {
+  public DownloadScopeAuthorizationStrategy(String authScope, MetadataService metadataService) {
+      super(authScope, metadataService);
   }
 
   @Override
   protected boolean verify(@NonNull List<AuthScope> grantedScopes, @NonNull final String objectId) {
-    return verifyAccessType(grantedScopes, objectId);
-  }
-
-  protected boolean verifyAccessType(@NonNull List<AuthScope> grantedScopes, @NonNull final String objectId) {
     val objectAccessType = fetchObjectAccessType(objectId);
     val accessType = new Access(objectAccessType);
 
     if (accessType.isOpen()) {
       return true;
     } else if (accessType.isControlled()) {
-      return verifyBasicScope(grantedScopes);
+        return super.verify(grantedScopes, objectId);
     } else {
-      val msg =
-          String.format("Invalid access type '%s' found in Metadata record for object id: %s", objectAccessType,
+      val msg = String.format("Invalid access type '%s' found in Metadata record for object id: %s", objectAccessType,
               objectId);
       log.error(msg);
       throw new NotRetryableException(new IllegalArgumentException(msg));
     }
-  }
-
-  protected boolean verifyBasicScope(@NonNull List<AuthScope> grantedScopes) {
-    boolean result = false;
-    val check = grantedScopes.stream().filter(s -> s.matches(scope)).collect(Collectors.toList());
-    result = !check.isEmpty();
-    return result;
   }
 
   /**
@@ -96,5 +64,4 @@ public class BasicScopeAuthorizationStrategy extends AbstractScopeAuthorizationS
       throw new NotRetryableException(new IllegalArgumentException(msg));
     }
   }
-
 }

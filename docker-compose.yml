@@ -1,7 +1,7 @@
 version: '3.7'
 services:
   ego-api:
-    image: "overture/ego:latest"
+    image: "overture/ego:2.9.0"
     environment:
       SERVER_PORT: 8080
       SPRING_DATASOURCE_URL: jdbc:postgresql://ego-postgres:5432/ego?stringtype=unspecified
@@ -89,7 +89,7 @@ services:
       dockerfile: "$DOCKERFILE_NAME"
       target: client
     environment:
-      ACCESSTOKEN: f69b726d-d40f-4261-b105-1ec7e6bf04d5
+      ACCESSTOKEN: f69b726d-d40f-4261-b105-1ec7e6bf04d5 
       METADATA_URL: http://song-server:8080
       STORAGE_URL: http://score-server:8080
       JAVA_TOOL_OPTIONS: -agentlib:jdwp=transport=dt_socket,address=*:5005,server=y,suspend=n
@@ -105,6 +105,10 @@ services:
       POSTGRES_DB: song
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
+    expose:
+      - "5432"
+    ports:
+      - "12345:5432"
     volumes:
       - "./docker/song-db-init:/docker-entrypoint-initdb.d"
   aws-cli:
@@ -116,7 +120,7 @@ services:
     volumes:
       - "./docker/object-storage-init/data/oicr.icgc.test/data:/score-data:ro"
   song-server:
-    image: overture/song-server:latest
+    image: overture/song-server:2.1.0
     environment:
       SERVER_PORT: 8080
       SPRING_PROFILES_ACTIVE: "prod,secure,default"
