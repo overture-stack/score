@@ -10,9 +10,9 @@ def pom(path, target) {
 
 def jar(path, target) {
     return [pattern: "${path}/target/*.jar",
-            target: "${target}.jar",
+            target         : "${target}.jar",
             excludePatterns: ["*-exec.jar"]
-    ]
+            ]
 }
 
 def tar(path, target) {
@@ -23,33 +23,6 @@ def tar(path, target) {
 def runjar(path, target) {
     return [pattern: "${path}/target/*-exec.jar",
             target : "${target}-exec.jar"]
-}
-
-def deploy(repo, version) {
-    versionName = "$version"
-
-    project = "score"
-    subProjects = ['client', 'core', 'fs', 'server', 'test']
-
-    files = []
-    files.add([pattern: "pom.xml", target: "$repo/$project/$versionName/$project-$versionName"])
-
-    for (s in subProjects) {
-        name = "${project}-$s"
-        target = "$repo/$name/$versionName/$name-$versionName"
-        files.add(pom(name, target))
-        files.add(jar(name, target))
-
-        if (s in ['client', 'server']) {
-            files.add(runjar(name, target))
-            files.add(tar(name, target))
-        }
-    }
-
-    fileSet = JsonOutput.toJson([files: files])
-    pretty = JsonOutput.prettyPrint(fileSet)
-    print("FileSet=${pretty}")
-    return pretty
 }
 
 pipeline {
@@ -66,7 +39,10 @@ spec:
     image: openjdk:11
     env: 
       - name: DOCKER_HOST 
-        value: tcp://localhost:2375 
+        value: tcp://localhost:2375
+    volumeMounts:
+      - name: maven-cache
+        mountPath: "/root/.m2"
   - name: dind-daemon 
     image: docker:18.06-dind
     securityContext: 
@@ -92,6 +68,8 @@ spec:
       type: File
   - name: docker-graph-storage 
     emptyDir: {}
+  - name: maven-cache
+    emptyDir: {}
 """
         }
     }
@@ -104,12 +82,15 @@ spec:
                 script {
                     version = readMavenPom().getVersion()
                 }
+                
             }
         }
         stage('Test') {
             steps {
                 container('jdk') {
-                    sh "./mvnw test package"
+                    sh "id;pwd;/etc;find ~"
+                    sh "./mvnw -U compile"
+                    sh "pwd;find ~;find ."
                 }
             }
         }
@@ -233,9 +214,32 @@ spec:
             }
             steps {
                 script {
-                    files = deploy(repo, version)
+                    
+                    project = "score"
+                    versionName = "$version"
+                    subProjects = ['client', 'core', 'fs', 'server', 'test']
+
+                    files = []
+                    files.add([pattern: "pom.xml", target: "$repo/$project/$versionName/$project-$versionName"])
+
+                    for (s in subProjects) {
+                        name = "${project}-$s"
+                        target = "$repo/$name/$versionName/$name-$versionName"
+                        files.add(pom(name, target))
+                        files.add(jar(name, target))
+
+                        if (s in ['client', 'server']) {
+                            files.add(runjar(name, target))
+                            files.add(tar(name, target))
+                        }
+                    }
+
+                    fileSet = JsonOutput.toJson([files: files])
+                    pretty = JsonOutput.prettyPrint(fileSet)
+                    print("Uploading files=${pretty}")
                 }
-                rtUpload(serverId: 'artifactory', spec: files)
+
+                rtUpload(serverId: 'artifactory', spec: fileSet)
             }
         }
     }
