@@ -182,7 +182,7 @@ spec:
             }
             steps {
                 script {
-                    repo = "dcc/snapshot/bio/overture"
+                    repo = "dcc-snapshot/bio/overture"
                 }
             }
         }
@@ -196,7 +196,7 @@ spec:
             }
             steps {
                 script {
-                    repo = "dcc/release/bio/overture"
+                    repo = "dcc-release/bio/overture"
                 }
             }
         }
