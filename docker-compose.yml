@@ -1,7 +1,7 @@
 version: '3.7'
 services:
   ego-api:
-    image: "overture/ego:latest"
+    image: "overture/ego:2.9.0"
     environment:
       SERVER_PORT: 8080
       SPRING_DATASOURCE_URL: jdbc:postgresql://ego-postgres:5432/ego?stringtype=unspecified
@@ -120,8 +120,7 @@ services:
     volumes:
       - "./docker/object-storage-init/data/oicr.icgc.test/data:/score-data:ro"
   song-server:
-    #image: overture/song-server:2.1.0
-    image: overture/song-server:latest
+    image: overture/song-server:2.1.0
     environment:
       SERVER_PORT: 8080
       SPRING_PROFILES_ACTIVE: "prod,secure,default"
