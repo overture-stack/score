@@ -1,9 +1,9 @@
 import groovy.json.JsonOutput
+library 'artifactory'
 
 def version = "UNKNOWN"
 def commit = "UNKNOWN"
 def repo = "UNKNOWN"
-def snapshot = "UNKNOWN"
 
 pipeline {
     agent {
@@ -157,7 +157,6 @@ spec:
             steps {
                 script {
                     repo = "dcc/snapshot/bio/overture"
-                    snapshot = "-SNAPSHOT"
                 }
             }
         }
@@ -172,7 +171,6 @@ spec:
             steps {
                 script {
                     repo = "dcc/release/bio/overture"
-                    snapshot = ""
                 }
             }
         }
@@ -188,49 +186,7 @@ spec:
             }
             steps {
                 script {
-                    pom(path, target) {
-                        return [pattern: "${path}/pom.xml", target: "${target}.pom"]
-                    }
-
-                    jar(path, target) {
-                        return [pattern        : "${path}/target/*.jar",
-                                target         : "${target}.jar",
-                                excludePatterns: ["*-exec.jar"]
-                        ]
-                    }
-
-                    tar(path, target) {
-                        return [pattern: "${path}/target/*.tar.gz",
-                                target : "${target}-dist.tar.gz"]
-                    }
-
-                    runjar(path, target) {
-                        return [pattern: "${path}/target/*-exec.jar",
-                                target : "${target}-exec.jar"]
-                    }
-
-                    project = "score"
-                    versionName = "$version$snapshot"
-                    subProjects = ['client', 'core', 'fs', 'server', 'test']
-
-                    files = []
-                    files.add([pattern: "pom.xml", target: "$repo/$project/$versionName/$project-$versionName"])
-
-                    for (s in subProjects) {
-                        name = "${project}-$s"
-                        target = "$repo/$name/$versionName/$name-$versionName"
-                        files.add(pom(name, target))
-                        files.add(jar(name, target))
-
-                        if (s in ['client', 'server']) {
-                            files.add(runjar(name, target))
-                            files.add(tar(name, target))
-                        }
-                    }
-
-                    fileSet = JsonOutput.toJson([files: files])
-                    pretty = JsonOutput.prettyPrint(fileSet)
-                    print("Uploading files=${pretty}")
+		  files=artifactory.deploy(repo, version)
                 }
                 rtUpload(serverId: 'artifactory', spec: files)
             }
