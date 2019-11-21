@@ -85,7 +85,7 @@ spec:
                 
             }
         }
-        stage('Test') {
+        stage('Compile & Test') {
             steps {
                 container('jdk') {
                     sh "./mvnw test package"
@@ -218,7 +218,7 @@ spec:
                     subProjects = ['client', 'core', 'fs', 'server', 'test']
 
                     files = []
-                    files.add([pattern: "pom.xml", target: "$repo/$project/$versionName/$project-$versionName"])
+                    files.add([pattern: "pom.xml", target: "$repo/$project/$versionName/$project-${versionName}.pom"])
 
                     for (s in subProjects) {
                         name = "${project}-$s"
