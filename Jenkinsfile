@@ -3,7 +3,27 @@ import groovy.json.JsonOutput
 def version = "UNKNOWN"
 def commit = "UNKNOWN"
 def repo = "UNKNOWN"
-def snapshot = "UNKNOWN"
+
+def pom(path, target) {
+    return [pattern: "${path}/pom.xml", target: "${target}.pom"]
+}
+
+def jar(path, target) {
+    return [pattern: "${path}/target/*.jar",
+            target         : "${target}.jar",
+            excludePatterns: ["*-exec.jar"]
+            ]
+}
+
+def tar(path, target) {
+    return [pattern: "${path}/target/*.tar.gz",
+            target : "${target}-dist.tar.gz"]
+}
+
+def runjar(path, target) {
+    return [pattern: "${path}/target/*-exec.jar",
+            target : "${target}-exec.jar"]
+}
 
 pipeline {
     agent {
@@ -19,7 +39,10 @@ spec:
     image: openjdk:11
     env: 
       - name: DOCKER_HOST 
-        value: tcp://localhost:2375 
+        value: tcp://localhost:2375
+    volumeMounts:
+      - name: maven-cache
+        mountPath: "/root/.m2"
   - name: dind-daemon 
     image: docker:18.06-dind
     securityContext: 
@@ -45,6 +68,8 @@ spec:
       type: File
   - name: docker-graph-storage 
     emptyDir: {}
+  - name: maven-cache
+    emptyDir: {}
 """
         }
     }
@@ -57,9 +82,10 @@ spec:
                 script {
                     version = readMavenPom().getVersion()
                 }
+                
             }
         }
-        stage('Test') {
+        stage('Compile & Test') {
             steps {
                 container('jdk') {
                     sh "./mvnw test package"
@@ -156,8 +182,7 @@ spec:
             }
             steps {
                 script {
-                    repo = "dcc/snapshot/bio/overture"
-                    snapshot = "-SNAPSHOT"
+                    repo = "dcc-snapshot/bio/overture"
                 }
             }
         }
@@ -171,8 +196,7 @@ spec:
             }
             steps {
                 script {
-                    repo = "dcc/release/bio/overture"
-                    snapshot = ""
+                    repo = "dcc-release/bio/overture"
                 }
             }
         }
@@ -188,33 +212,13 @@ spec:
             }
             steps {
                 script {
-                    pom(path, target) {
-                        return [pattern: "${path}/pom.xml", target: "${target}.pom"]
-                    }
-
-                    jar(path, target) {
-                        return [pattern        : "${path}/target/*.jar",
-                                target         : "${target}.jar",
-                                excludePatterns: ["*-exec.jar"]
-                        ]
-                    }
-
-                    tar(path, target) {
-                        return [pattern: "${path}/target/*.tar.gz",
-                                target : "${target}-dist.tar.gz"]
-                    }
-
-                    runjar(path, target) {
-                        return [pattern: "${path}/target/*-exec.jar",
-                                target : "${target}-exec.jar"]
-                    }
-
+                    
                     project = "score"
-                    versionName = "$version$snapshot"
+                    versionName = "$version"
                     subProjects = ['client', 'core', 'fs', 'server', 'test']
 
                     files = []
-                    files.add([pattern: "pom.xml", target: "$repo/$project/$versionName/$project-$versionName"])
+                    files.add([pattern: "pom.xml", target: "$repo/$project/$versionName/$project-$versionName.pom"])
 
                     for (s in subProjects) {
                         name = "${project}-$s"
@@ -232,7 +236,8 @@ spec:
                     pretty = JsonOutput.prettyPrint(fileSet)
                     print("Uploading files=${pretty}")
                 }
-                rtUpload(serverId: 'artifactory', spec: files)
+
+                rtUpload(serverId: 'artifactory', spec: fileSet)
             }
         }
     }
