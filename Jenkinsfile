@@ -1,5 +1,4 @@
 import groovy.json.JsonOutput
-library 'artifactory'
 
 def version = "UNKNOWN"
 def commit = "UNKNOWN"
