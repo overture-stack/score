@@ -88,9 +88,7 @@ spec:
         stage('Test') {
             steps {
                 container('jdk') {
-                    sh "id;pwd;/etc;find ~"
-                    sh "./mvnw -U compile"
-                    sh "pwd;find ~;find ."
+                    sh "./mvnw test package"
                 }
             }
         }
