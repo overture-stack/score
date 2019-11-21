@@ -3,9 +3,8 @@
 .classpath
 .apt_generated
 org.eclipse.core.resources.prefs
-org.eclipse.jdt.apt.core.prefs
-.minio.sys
-
+org.ecli
+pse.jdt.apt.core.prefs
 # Intellij IDE
 .idea
 *.iml
@@ -13,7 +12,6 @@ atlassian-ide-plugin.xml
 
 # Sprint Boot
 application-amazon.properties
-
 # Maven
 target/
 pom.xml.releaseBackup
@@ -86,3 +84,4 @@ score-client/deploy/
 .settings
 _build
 .vscode
+
