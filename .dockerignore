@@ -1,0 +1,9 @@
+target
+Dockerfile
+docker/scratch
+docker-compose.yml
+README.md
+Makefile
+.*
+!.mvn
+docker/*

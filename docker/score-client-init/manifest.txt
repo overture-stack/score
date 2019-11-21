@@ -1,0 +1,3 @@
+735b65fa-f502-11e9-9811-6d6ef1d32823		
+632c29af-c46e-581b-ab43-65e875d86361	/data/example/example.vcf.gz.idx	c03274816eb4907a92b8e5632cd6eb81
+5be58fbb-775b-5259-bbbd-555e07fbdf24	/data/example/example.vcf.gz	9a793e90d0d1e11301ea8da996446e59

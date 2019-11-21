@@ -1,0 +1,227 @@
+#
+# Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.
+#
+# This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
+# You should have received a copy of the GNU General Public License along with
+# this program. If not, see <http://www.gnu.org/licenses/>.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
+# EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+# OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT
+# SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+# TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+# OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+# IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+# ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+# DCC Storage Server - Configuration
+#
+
+###############################################################################
+# Profile - common
+###############################################################################
+
+server:
+  port: 5431
+  compression:
+    enabled: true
+    mime-types: application/json
+  
+s3:
+  secured: true
+  sigV4Enabled: true
+  
+  #amazon
+  endpoint: s3-external-1.amazonaws.com
+
+metadata:
+  useLegacyMode: false
+ 
+bucket:
+  name.object: oicr.icgc
+  name.state: oicr.icgc
+  size.pool: 0
+  size.key: 2 
+
+object:
+  sentinel: heliograph
+  
+collaboratory:
+  upload.directory: upload
+  upload.expiration: 6
+  data.directory: data
+    
+  # COL-131: Change pre-signed URLs TTL to 1 day max
+  download.expiration: 1
+
+upload:
+  retry.limit: 5
+  partsize: 20000000
+  connection.timeout: 15000
+  
+  # Every day at midnight
+  clean.cron: "0 0 0 * * ?" 
+  clean.enabled: true
+
+---
+
+###############################################################################
+# Profile - "ssl"
+# this is the configuration for the service using the self-signed cert created
+# for initial production deployments. key-store-password would still need to
+# be specified in the properties file
+###############################################################################
+
+spring.profiles: ssl
+  
+# Server
+server:
+  ssl:
+    key-store-type: JKS
+    key-store: src/main/cert/service.jks
+    key-alias: object-store-service
+
+---
+
+###############################################################################
+# Profile - "amazon"
+###############################################################################
+
+spring:
+  profiles: amazon
+  profiles.include: prod
+  
+s3:
+  endpoint: s3-external-1.amazonaws.com
+  masterEncryptionKeyId: af628f04-ac12-4b11-bf83-6545fd44ad18
+
+bucket:
+  name.object: oicr.icgc
+  name.state: oicr.icgc
+
+metadata:
+  url: https://virginia.song.icgc.org
+  useLegacyMode: false
+
+---
+
+###############################################################################
+# Profile - "collaboratory"
+###############################################################################
+
+spring:
+  profiles: collaboratory
+
+s3:
+  endpoint: https://object.cancercollaboratory.org:9080
+  masterEncryptionKeyId: 
+
+metadata:
+  url: https://song.cancercollaboratory.org
+  useLegacyMode: false
+
+---
+
+###############################################################################
+# Profile - "azure"
+###############################################################################
+
+spring:
+  profiles: azure
+
+azure:
+  endpointProtocol: https 
+  accountName: oicricgc
+  accountKey: 
+
+bucket:
+  name.object: data
+  policy.upload: UploadPolicy
+  policy.download: DownloadPolicy
+  
+download:
+  partsize: 250000000
+  
+---
+
+###############################################################################
+# Profile - "prod"
+###############################################################################
+
+spring.profiles: prod
+
+s3:
+  secured: true
+
+endpoints:
+  dump.enabled: false
+  env.enabled: false
+  info.enabled: false
+
+# Metadata server
+metadata:
+  url: https://meta.icgc.org
+
+---
+
+###############################################################################
+# Profile - "secure"
+###############################################################################
+
+spring.profiles: secure
+  
+# OAuth authentication server
+auth:
+  server:
+    url: https://localhost:8443/oauth/check_token
+    clientId: resource
+    clientSecret: pass
+    uploadScope: aws.upload
+    downloadScope: aws.download
+    #uploadScope=collab.upload
+    #downloadScope=collab.download
+    #uploadScope=azure.upload
+    #downloadScope=azure.download
+    
+---
+
+###############################################################################
+# Profile - "dev"
+###############################################################################
+
+spring.profiles: dev
+
+s3:
+  secured: false
+  endpoint: localhost:9444/s3
+  accessKey: AKIAIOSFODNN7EXAMPLE 
+  secretKey: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+
+# Server
+server:
+
+bucket:
+  name.object: test.icgc
+  name.state: test.icgc
+  
+upload:
+  clean.enabled: false
+
+---
+
+###############################################################################
+# Profile - "benchmark"
+###############################################################################
+
+spring.profiles: benchmark
+
+# Server
+server:
+  ssl:
+    key-store-type: JKS
+
+s3:
+  secured: false
+  # Sinai Center
+  endpoint: http://www.cancercollaboratory.org:9081

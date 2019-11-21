@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.
+ 
+This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
+You should have received a copy of the GNU General Public License along with
+this program. If not, see <http://www.gnu.org/licenses/>.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
+EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT
+SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+--><project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>bio.overture</groupId>
+    <artifactId>score</artifactId>
+    <version>2.0.1-SNAPSHOT</version>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
+
+  <artifactId>score-test</artifactId>
+
+  <name>${project.artifactId}</name>
+  <description>${project.name}</description>
+
+  <dependencies>
+
+    <!-- Test - S3 --> <!-- Note: needs to be first -->
+    <dependency>
+      <groupId>com.scireum</groupId>
+      <artifactId>s3ninja</artifactId>
+      <version>${s3ninja.version}</version>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <artifactId>slf4j-log4j12</artifactId>
+          <groupId>org.slf4j</groupId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
+    <!-- Test - DCC Storage -->
+    <dependency>
+      <groupId>bio.overture</groupId>
+      <artifactId>score-client</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>bio.overture</groupId>
+      <artifactId>score-server</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- Test - DCC Auth -->
+    <dependency>
+      <groupId>org.icgc.dcc</groupId>
+      <artifactId>dcc-auth-server</artifactId>
+      <version>${dcc-auth.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- Test - DCC Metadata -->
+    <dependency>
+      <groupId>org.icgc.dcc</groupId>
+      <artifactId>dcc-metadata-core</artifactId>
+      <version>${dcc-metadata.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.icgc.dcc</groupId>
+      <artifactId>dcc-metadata-client</artifactId>
+      <version>${dcc-metadata.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.icgc.dcc</groupId>
+      <artifactId>dcc-metadata-server</artifactId>
+      <version>${dcc-metadata.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- Test - Mongo -->
+    <dependency>
+      <groupId>de.flapdoodle.embed</groupId>
+      <artifactId>de.flapdoodle.embed.mongo</artifactId>
+      <scope>test</scope>
+      <version>${embed-mongo.version}</version>
+    </dependency>
+
+  </dependencies>
+
+  <properties>
+    <embed-mongo.version>1.45</embed-mongo.version>
+    <!-- Versions - S3 -->
+    <s3ninja.version>2.7</s3ninja.version>
+  </properties>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>2.16</version><!--$NO-MVN-MAN-VER$-->
+        <configuration>
+          <forkMode>always</forkMode>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+</project>
