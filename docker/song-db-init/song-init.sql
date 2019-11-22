@@ -2,32 +2,18 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 9.6.12
--- Dumped by pg_dump version 9.6.12
+-- Dumped from database version 9.6.15
+-- Dumped by pg_dump version 11.4
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
-SET idle_in_transaction_session_timeout = 0;
 SET client_encoding = 'UTF8';
 SET standard_conforming_strings = on;
 SELECT pg_catalog.set_config('search_path', '', false);
 SET check_function_bodies = false;
+SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
-
---
--- Name: plpgsql; Type: EXTENSION; Schema: -; Owner: 
---
-
-CREATE EXTENSION IF NOT EXISTS plpgsql WITH SCHEMA pg_catalog;
-
-
---
--- Name: EXTENSION plpgsql; Type: COMMENT; Schema: -; Owner: 
---
-
-COMMENT ON EXTENSION plpgsql IS 'PL/pgSQL procedural language';
-
 
 --
 -- Name: uuid-ossp; Type: EXTENSION; Schema: -; Owner: 
@@ -537,6 +523,8 @@ ALTER TABLE ONLY public.analysis_schema ALTER COLUMN id SET DEFAULT nextval('pub
 
 COPY public.analysis (id, study_id, type, state, analysis_schema_id, analysis_data_id) FROM stdin;
 735b65fa-f502-11e9-9811-6d6ef1d32823	ABC123	\N	UNPUBLISHED	1	1
+a22f44d3-097d-11ea-b4b9-374b8c686482	ABC123	\N	UNPUBLISHED	1	2
+a25ae8b4-097d-11ea-b4b9-41f0d4c18919	TEST-CA	\N	UNPUBLISHED	1	3
 \.
 
 
@@ -546,14 +534,9 @@ COPY public.analysis (id, study_id, type, state, analysis_schema_id, analysis_da
 
 COPY public.analysis_data (id, data) FROM stdin;
 1	{"info": {"randomField19": "alternatively, put some extra ANALYSIS fields here"}, "experiment": {"info": {"randomField16": "alternatively, put some extra EXPERIMENT fields here"}, "randomField14": "we can define any EXPERIMENT field. For example, randomField14", "randomField15": "as a second example, we can define another random EXPERIMENT field called randomField15", "variantCallingTool": "silver bullet", "matchedNormalSampleSubmitterId": "sample x24-11a"}, "randomField17": "we can define any ANALYSIS field. For example, randomField17", "randomField18": "as a second example, we can define another random ANALYSIS field called randomField18"}
+2	{"experiment": {"variantCallingTool": "variantFinder", "matchedNormalSampleSubmitterId": "sample-1"}}
+3	{"experiment": {"variantCallingTool": "variantFinder", "matchedNormalSampleSubmitterId": "sample-1"}}
 \.
-
-
---
--- Name: analysis_data_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.analysis_data_id_seq', 1, true);
 
 
 --
@@ -567,18 +550,13 @@ COPY public.analysis_schema (id, version, name, schema) FROM stdin;
 
 
 --
--- Name: analysis_schema_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.analysis_schema_id_seq', 2, true);
-
-
---
 -- Data for Name: donor; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.donor (id, study_id, submitter_id, gender) FROM stdin;
 DO6cbf73d97b258bcaab5263fa193cb53b	ABC123	internal_donor_123456789-00	female
+DOd50f1ccc3184798c98d6ebfb030c48d3	ABC123	d1	female
+DO8ba5c38affdbe69529ce071af4f0a385	TEST-CA	d1	female
 \.
 
 
@@ -589,6 +567,10 @@ DO6cbf73d97b258bcaab5263fa193cb53b	ABC123	internal_donor_123456789-00	female
 COPY public.file (id, analysis_id, study_id, name, size, md5, type, access) FROM stdin;
 5be58fbb-775b-5259-bbbd-555e07fbdf24	735b65fa-f502-11e9-9811-6d6ef1d32823	ABC123	example.vcf.gz	52	9a793e90d0d1e11301ea8da996446e59	VCF	open
 632c29af-c46e-581b-ab43-65e875d86361	735b65fa-f502-11e9-9811-6d6ef1d32823	ABC123	example.vcf.gz.idx	25	c03274816eb4907a92b8e5632cd6eb81	IDX	open
+d0522915-f5b6-584e-8409-c12fa928d089	a22f44d3-097d-11ea-b4b9-374b8c686482	ABC123	controlled.bam	47	91ed4a69ffe462ebb5dc4e6e78b31e38	BAM	controlled
+d4594aa2-4b32-5283-861c-bd5dd7ee6463	a22f44d3-097d-11ea-b4b9-374b8c686482	ABC123	open.bam	41	92439c0cf911b91bfec4243af4284cc0	BAM	open
+576f7386-e626-5d99-ae63-1b3ce9de308b	a25ae8b4-097d-11ea-b4b9-41f0d4c18919	TEST-CA	controlled.bam	44	ac5d500ec64fa7dc287050c553b83f3a	BAM	controlled
+27612507-2070-5761-9dad-a0efeed5315a	a25ae8b4-097d-11ea-b4b9-41f0d4c18919	TEST-CA	open.bam	49	0301ca53c86138baa75b7aa357055405	BAM	open
 \.
 
 
@@ -615,6 +597,17 @@ SP5cabc533f4329c31f2b6adabbf1c9800	Specimen	{"randomField1":"we can define any S
 SA17e38fb4c5969ce8e34c9c209650d50b	Sample	{"randomField7":"we can define any SAMPLE field. For example, randomField7","randomField8":"as a second example, we can define another random SAMPLE field called randomField8","randomField9":"alternatively, put some extra SAMPLE fields here"}
 5be58fbb-775b-5259-bbbd-555e07fbdf24	File	{"randomField10":"we can define any FILE field. For example, randomField10","randomField11":"as a second example, we can define another random FILE field called randomField11","randomField12":"alternatively, put some extra FILE fields here"}
 632c29af-c46e-581b-ab43-65e875d86361	File	{"randomField10":"we can define any FILE field. For example, randomField10","randomField12":"alternatively, put some extra FILE fields here","randomField13":"as a second example, we can define another random FILE field called randomField13"}
+TEST-CA	Study	{}
+DOd50f1ccc3184798c98d6ebfb030c48d3	Donor	{}
+SPf89069248e8e79779a2e5a6b4664c1b9	Specimen	{}
+SA25a049ea62a87b4c6199a0a8339cbc8c	Sample	{}
+d0522915-f5b6-584e-8409-c12fa928d089	File	{}
+d4594aa2-4b32-5283-861c-bd5dd7ee6463	File	{}
+DO8ba5c38affdbe69529ce071af4f0a385	Donor	{}
+SP68237132a4b06f230745d643684ecae0	Specimen	{}
+SA9473039375b7f21f8d983a9afc3e990f	Sample	{}
+576f7386-e626-5d99-ae63-1b3ce9de308b	File	{}
+27612507-2070-5761-9dad-a0efeed5315a	File	{}
 \.
 
 
@@ -624,6 +617,8 @@ SA17e38fb4c5969ce8e34c9c209650d50b	Sample	{"randomField7":"we can define any SAM
 
 COPY public.sample (id, specimen_id, submitter_id, type) FROM stdin;
 SA17e38fb4c5969ce8e34c9c209650d50b	SP5cabc533f4329c31f2b6adabbf1c9800	internal_sample_98024759826836	Total RNA
+SA25a049ea62a87b4c6199a0a8339cbc8c	SPf89069248e8e79779a2e5a6b4664c1b9	sample-2	Total RNA
+SA9473039375b7f21f8d983a9afc3e990f	SP68237132a4b06f230745d643684ecae0	sample-2	Total RNA
 \.
 
 
@@ -633,6 +628,8 @@ SA17e38fb4c5969ce8e34c9c209650d50b	SP5cabc533f4329c31f2b6adabbf1c9800	internal_s
 
 COPY public.sampleset (analysis_id, sample_id) FROM stdin;
 735b65fa-f502-11e9-9811-6d6ef1d32823	SA17e38fb4c5969ce8e34c9c209650d50b
+a22f44d3-097d-11ea-b4b9-374b8c686482	SA25a049ea62a87b4c6199a0a8339cbc8c
+a25ae8b4-097d-11ea-b4b9-41f0d4c18919	SA9473039375b7f21f8d983a9afc3e990f
 \.
 
 
@@ -642,6 +639,8 @@ COPY public.sampleset (analysis_id, sample_id) FROM stdin;
 
 COPY public.specimen (id, donor_id, submitter_id, class, type) FROM stdin;
 SP5cabc533f4329c31f2b6adabbf1c9800	DO6cbf73d97b258bcaab5263fa193cb53b	internal_specimen_9b73gk8s02dk	Tumour	Primary tumour - other
+SPf89069248e8e79779a2e5a6b4664c1b9	DOd50f1ccc3184798c98d6ebfb030c48d3	speciment-2a	Tumour	Primary tumour - other
+SP68237132a4b06f230745d643684ecae0	DO8ba5c38affdbe69529ce071af4f0a385	speciment-2a	Tumour	Primary tumour - other
 \.
 
 
@@ -651,6 +650,7 @@ SP5cabc533f4329c31f2b6adabbf1c9800	DO6cbf73d97b258bcaab5263fa193cb53b	internal_s
 
 COPY public.study (id, name, description, organization) FROM stdin;
 ABC123	\N	\N	\N
+TEST-CA	TEST-CA	meh	sheer chaos
 \.
 
 
@@ -660,6 +660,20 @@ ABC123	\N	\N	\N
 
 COPY public.upload (id, study_id, analysis_id, state, errors, payload, created_at, updated_at) FROM stdin;
 \.
+
+
+--
+-- Name: analysis_data_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.analysis_data_id_seq', 3, true);
+
+
+--
+-- Name: analysis_schema_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.analysis_schema_id_seq', 2, true);
 
 
 --

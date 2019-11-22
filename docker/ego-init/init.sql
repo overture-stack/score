@@ -311,7 +311,7 @@ overture-admin	Admin	APPROVED	f2885e96-f74e-4f7a-b935-fb48b18e761d
 --
 
 COPY public.egouser (id, name, email, type, firstname, lastname, createdat, lastlogin, status, preferredlanguage) FROM stdin;
-c6608c3e-1181-4957-99c4-094493391096	john.doe@example.com	john.doe@example.com	ADMIN	John	Doe	2019-10-22 14:52:10.182	\N	APPROVED	ENGLISH
+c6608c3e-1181-4957-99c4-094493391096	john.doe@example.com	john.doe@example.com	USER	John	Doe	2019-11-20 20:38:33.815	\N	APPROVED	ENGLISH
 \.
 
 
@@ -320,21 +320,21 @@ c6608c3e-1181-4957-99c4-094493391096	john.doe@example.com	john.doe@example.com	A
 --
 
 COPY public.flyway_schema_history (installed_rank, version, description, type, script, checksum, installed_by, installed_on, execution_time, success) FROM stdin;
-1	1	initial database	SQL	V1__initial_database.sql	-556387533	postgres	2019-10-22 13:56:19.790869	72	t
-2	1.1	complete uuid migration	SPRING_JDBC	db.migration.V1_1__complete_uuid_migration	\N	postgres	2019-10-22 13:56:19.889914	123	t
-3	1.2	acl expansion	SQL	V1_2__acl_expansion.sql	-125082215	postgres	2019-10-22 13:56:20.023883	28	t
-4	1.3	string to date	SPRING_JDBC	db.migration.V1_3__string_to_date	\N	postgres	2019-10-22 13:56:20.06	81	t
-5	1.4	score integration	SQL	V1_4__score_integration.sql	323452398	postgres	2019-10-22 13:56:20.151017	16	t
-6	1.5	table renaming	SQL	V1_5__table_renaming.sql	480984865	postgres	2019-10-22 13:56:20.184489	17	t
-7	1.6	add not null constraint	SQL	V1_6__add_not_null_constraint.sql	1562044084	postgres	2019-10-22 13:56:20.209164	12	t
-8	1.7	token modification	SQL	V1_7__token_modification.sql	-11736908	postgres	2019-10-22 13:56:20.257645	7	t
-9	1.8	application types	SQL	V1_8__application_types.sql	-1894533468	postgres	2019-10-22 13:56:20.274734	17	t
-10	1.9	new enum types	SQL	V1_9__new_enum_types.sql	1135272560	postgres	2019-10-22 13:56:20.299724	141	t
-11	1.10	remove apps from apitokens	SQL	V1_10__remove_apps_from_apitokens.sql	-1412739333	postgres	2019-10-22 13:56:20.472035	2	t
-12	1.11	add expiry date api tokens	SQL	V1_11__add_expiry_date_api_tokens.sql	-774407414	postgres	2019-10-22 13:56:20.508888	17	t
-13	1.12	egoapplication unique constraints	SQL	V1_12__egoapplication_unique_constraints.sql	1415229200	postgres	2019-10-22 13:56:20.532667	5	t
-14	1.13	fname lname not null constraints	SQL	V1_13__fname_lname_not_null_constraints.sql	148150980	postgres	2019-10-22 13:56:20.545987	11	t
-15	1.14	indices	SQL	V1_14__indices.sql	1170056158	postgres	2019-10-22 13:56:20.573212	53	t
+1	1	initial database	SQL	V1__initial_database.sql	-556387533	postgres	2019-11-20 20:35:19.523848	54	t
+2	1.1	complete uuid migration	SPRING_JDBC	db.migration.V1_1__complete_uuid_migration	\N	postgres	2019-11-20 20:35:19.591892	75	t
+3	1.2	acl expansion	SQL	V1_2__acl_expansion.sql	-125082215	postgres	2019-11-20 20:35:19.675498	19	t
+4	1.3	string to date	SPRING_JDBC	db.migration.V1_3__string_to_date	\N	postgres	2019-11-20 20:35:19.701898	28	t
+5	1.4	score integration	SQL	V1_4__score_integration.sql	323452398	postgres	2019-11-20 20:35:19.738191	13	t
+6	1.5	table renaming	SQL	V1_5__table_renaming.sql	480984865	postgres	2019-11-20 20:35:19.758578	11	t
+7	1.6	add not null constraint	SQL	V1_6__add_not_null_constraint.sql	1562044084	postgres	2019-11-20 20:35:19.776433	7	t
+8	1.7	token modification	SQL	V1_7__token_modification.sql	-11736908	postgres	2019-11-20 20:35:19.789578	5	t
+9	1.8	application types	SQL	V1_8__application_types.sql	-1894533468	postgres	2019-11-20 20:35:19.801421	13	t
+10	1.9	new enum types	SQL	V1_9__new_enum_types.sql	1135272560	postgres	2019-11-20 20:35:19.821124	84	t
+11	1.10	remove apps from apitokens	SQL	V1_10__remove_apps_from_apitokens.sql	-1412739333	postgres	2019-11-20 20:35:19.915229	2	t
+12	1.11	add expiry date api tokens	SQL	V1_11__add_expiry_date_api_tokens.sql	-774407414	postgres	2019-11-20 20:35:19.923177	11	t
+13	1.12	egoapplication unique constraints	SQL	V1_12__egoapplication_unique_constraints.sql	1415229200	postgres	2019-11-20 20:35:19.940859	4	t
+14	1.13	fname lname not null constraints	SQL	V1_13__fname_lname_not_null_constraints.sql	148150980	postgres	2019-11-20 20:35:19.950402	3	t
+15	1.14	indices	SQL	V1_14__indices.sql	1170056158	postgres	2019-11-20 20:35:19.959073	40	t
 \.
 
 
@@ -351,8 +351,8 @@ COPY public.groupapplication (group_id, application_id) FROM stdin;
 --
 
 COPY public.grouppermission (id, policy_id, group_id, access_level) FROM stdin;
-3cc299f1-4a2f-4394-869a-1edbca963ef8	7978c66c-7bd6-4d7b-a6e2-418ab6714859	f2885e96-f74e-4f7a-b935-fb48b18e761d	WRITE
-cfb2d93e-7744-4406-a21d-a217f5ee44f0	4b7718ce-ad94-4ec5-b0fb-bf91a520a816	f2885e96-f74e-4f7a-b935-fb48b18e761d	WRITE
+9e361c69-7d3e-4144-a638-0ebda207b50a	4b7718ce-ad94-4ec5-b0fb-bf91a520a816	f2885e96-f74e-4f7a-b935-fb48b18e761d	WRITE
+f781e10a-f4b8-4dd1-a9c6-75a9193d91ff	7978c66c-7bd6-4d7b-a6e2-418ab6714859	f2885e96-f74e-4f7a-b935-fb48b18e761d	WRITE
 \.
 
 
@@ -361,8 +361,9 @@ cfb2d93e-7744-4406-a21d-a217f5ee44f0	4b7718ce-ad94-4ec5-b0fb-bf91a520a816	f2885e
 --
 
 COPY public.policy (id, owner, name) FROM stdin;
-7978c66c-7bd6-4d7b-a6e2-418ab6714859	\N	score
 4b7718ce-ad94-4ec5-b0fb-bf91a520a816	\N	song
+7978c66c-7bd6-4d7b-a6e2-418ab6714859	\N	score
+ed5149c4-d8c3-46f8-ab01-b903f82b5fe3	\N	score.TEST-CA
 \.
 
 
@@ -371,7 +372,9 @@ COPY public.policy (id, owner, name) FROM stdin;
 --
 
 COPY public.token (id, name, owner, issuedate, isrevoked, description, expirydate) FROM stdin;
-5408ff40-77d3-4196-b745-e48532e39463	f69b726d-d40f-4261-b105-1ec7e6bf04d5	c6608c3e-1181-4957-99c4-094493391096	2019-10-22 15:39:19.683	f	\N	3020-10-21 15:39:19.683
+f7d708ef-41f8-493f-ad8e-cb0ac97b0688	f69b726d-d40f-4261-b105-1ec7e6bf04d5	c6608c3e-1181-4957-99c4-094493391096	2019-11-20 20:52:08.247	f	\N	2020-11-19 20:52:08.247
+fafaac34-6b01-47ef-9ae6-6d8cb30af5ca	fd0c6c40-254b-4a5f-82e7-cf21a380ccb3	c6608c3e-1181-4957-99c4-094493391096	2019-11-20 20:55:56.186	f	\N	2020-11-19 20:55:56.186
+7df26ca6-801f-4302-a318-6f766d759b1d	1f070fb0-0ee4-4815-8097-b5b065c661cc	c6608c3e-1181-4957-99c4-094493391096	2019-11-20 20:57:38.345	f	\N	2020-11-19 20:57:38.345
 \.
 
 
@@ -380,8 +383,11 @@ COPY public.token (id, name, owner, issuedate, isrevoked, description, expirydat
 --
 
 COPY public.tokenscope (token_id, policy_id, access_level) FROM stdin;
-5408ff40-77d3-4196-b745-e48532e39463	7978c66c-7bd6-4d7b-a6e2-418ab6714859	WRITE
-5408ff40-77d3-4196-b745-e48532e39463	4b7718ce-ad94-4ec5-b0fb-bf91a520a816	WRITE
+f7d708ef-41f8-493f-ad8e-cb0ac97b0688	4b7718ce-ad94-4ec5-b0fb-bf91a520a816	WRITE
+f7d708ef-41f8-493f-ad8e-cb0ac97b0688	7978c66c-7bd6-4d7b-a6e2-418ab6714859	WRITE
+fafaac34-6b01-47ef-9ae6-6d8cb30af5ca	ed5149c4-d8c3-46f8-ab01-b903f82b5fe3	WRITE
+7df26ca6-801f-4302-a318-6f766d759b1d	ed5149c4-d8c3-46f8-ab01-b903f82b5fe3	WRITE
+7df26ca6-801f-4302-a318-6f766d759b1d	4b7718ce-ad94-4ec5-b0fb-bf91a520a816	WRITE
 \.
 
 
@@ -407,6 +413,7 @@ c6608c3e-1181-4957-99c4-094493391096	f2885e96-f74e-4f7a-b935-fb48b18e761d
 --
 
 COPY public.userpermission (id, policy_id, user_id, access_level) FROM stdin;
+a66e447c-0f11-45b4-aaa0-a878b911d688	ed5149c4-d8c3-46f8-ab01-b903f82b5fe3	c6608c3e-1181-4957-99c4-094493391096	WRITE
 \.
 
 

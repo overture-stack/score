@@ -17,13 +17,9 @@
  */
 package bio.overture.score.server.config;
 
-import bio.overture.score.server.security.BasicScopeAuthorizationStrategy;
-import bio.overture.score.server.security.ProjectScopeStrategy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Scope;
 import org.springframework.security.access.expression.method.MethodSecurityExpressionHandler;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.method.configuration.GlobalMethodSecurityConfiguration;
@@ -53,15 +49,6 @@ public class MethodSecurityConfig extends GlobalMethodSecurityConfiguration {
     return handler;
   }
 
-  @Bean
-  public ProjectScopeStrategy projectSecurity() {
-    return new ProjectScopeStrategy();
-  }
 
-  @Bean
-  @Scope("prototype")
-  public BasicScopeAuthorizationStrategy accessSecurity() {
-    return new BasicScopeAuthorizationStrategy();
-  }
 
 }

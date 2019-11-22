@@ -24,11 +24,15 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import bio.overture.score.server.metadata.MetadataService;
+import bio.overture.score.server.security.DownloadScopeAuthorizationStrategy;
 import bio.overture.score.server.security.CachingRemoteTokenServices;
+import bio.overture.score.server.security.UploadScopeAuthorizationStrategy;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import org.springframework.context.annotation.Scope;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -124,4 +128,16 @@ public class SecurityConfig extends ResourceServerConfigurerAdapter {
     // @formatter:on
     log.info("initialization done");
   }
+
+  @Bean
+  public UploadScopeAuthorizationStrategy projectSecurity(MetadataService song) {
+    return new UploadScopeAuthorizationStrategy(uploadScope, song);
+  }
+
+  @Bean
+  @Scope("prototype")
+  public DownloadScopeAuthorizationStrategy accessSecurity(MetadataService song) {
+    return new DownloadScopeAuthorizationStrategy(downloadScope, song);
+  }
 }
+

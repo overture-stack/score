@@ -61,8 +61,17 @@ Port: 5005
 Use module classpath: score-client
 ```
 and in the `Before launch: Activate tool window` section, click the `+` sign, and select `Launch docker before debug`. 
-Then ensure the `Docker configuration` field is set to the name of the previously created **docker image run profile**  and that `Custom Options` is set to `-p 5005:5005`. 
-To run debug, simply run the **remote debug profile** and it will call the **docker image run profile** before launch.
+Then ensure the `Docker configuration` field is set to the name of the previously created **docker image run profile**  and that `Custom Options` is set to `-p 5005:5005`. In order for the debugger to bind to the debug port in time, 
+a delay needs to be introduced after starting the container. To do this, click the `+` sign again, and select `Launch docker before debug`, and select `Run External Tool` and a window will pop-up. Input the following:
+
+```
+Name:      Sleep for 5 seconds
+Program:   /usr/bin/sleep
+Arguments: 5
+```
+and click `OK`.
+
+Finally,  start debugging by simply running the **remote debug profile** and it will call the **docker image run profile** before launch. 
 
 #### Debugging the score-server with IntelliJ
 Since the `score-server` is a server and exposes the 5006 debug port, configuration is much easier. First, start the server with `make clean start-score-server`. Then, create a **remote debug profile** in Intellij with the following configuration:
