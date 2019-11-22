@@ -183,8 +183,6 @@ spec:
             steps {
                 script {
                     repo = "dcc-snapshot/bio/overture"
-	            // ensure that we have snapshot once at the end
-		    version = version.minus("-SNAPSHOT").plus("-SNAPSHOT")
                 }
             }
         }
@@ -199,7 +197,6 @@ spec:
             steps {
                 script {
                     repo = "dcc-release/bio/overture"
-		    version = version.minus("-SNAPSHOT")
                 }
             }
         }
