@@ -20,7 +20,7 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
 
   <groupId>bio.overture</groupId>
   <artifactId>score</artifactId>
-  <version>2.0.1-SNAPSHOT</version>
+  <version>3.14.1592</version>
   <packaging>pom</packaging>
 
   <name>${project.artifactId}</name>
