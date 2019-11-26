@@ -4,11 +4,15 @@
 .apt_generated
 org.eclipse.core.resources.prefs
 org.eclipse.jdt.apt.core.prefs
+.minio.sys
 
 # Intellij IDE
 .idea
 *.iml
 atlassian-ide-plugin.xml
+
+# Sprint Boot
+application-amazon.properties
 
 # Maven
 target/
@@ -71,3 +75,14 @@ logs/
 KeyczarTest.java
 HelperTest.java
 DownloadPartRequest.java
+
+# collaboratory
+service.jks
+application-prod.properties
+
+score-client/deploy/
+.factorypath
+
+.settings
+_build
+.vscode

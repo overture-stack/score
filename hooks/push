@@ -1,0 +1,32 @@
+#!/bin/bash
+echo "Pushing tag $DOCKER_REPO:$SOURCE_COMMIT"
+docker push $DOCKER_REPO:$SOURCE_COMMIT
+
+echo "Tagging image $DOCKER_REPO:$SOURCE_COMMIT with tag $DOCKER_REPO:edge"
+docker tag $DOCKER_REPO:$SOURCE_COMMIT $DOCKER_REPO:edge
+
+echo "Pushing tag $DOCKER_REPO:edge"
+docker push $DOCKER_REPO:edge
+
+regex="^([0-9]+\.[0-9]+\.[0-9]+)$"
+tag=`git describe --tags`
+echo "Extracted TAG=${tag} from SOURCE_BRANCH=${SOURCE_BRANCH}"
+
+if [[ ${tag} =~ $regex ]]; then
+    version="${BASH_REMATCH[1]}"
+    echo "TAG ${TAG} matches the regex: $regex. Tagging and pushing versioned image with version ${version}"
+
+    echo "Tagging image $DOCKER_REPO:$SOURCE_COMMIT with tag $DOCKER_REPO:${version}"
+    docker tag $DOCKER_REPO:$SOURCE_COMMIT $DOCKER_REPO:${version}
+
+    echo "Pushing tag $DOCKER_REPO:${version}"
+    docker push $DOCKER_REPO:${version}
+
+    echo "Tagging image $DOCKER_REPO:$SOURCE_COMMIT with tag $DOCKER_REPO:latest"
+    docker tag $DOCKER_REPO:$SOURCE_COMMIT $DOCKER_REPO:latest
+
+    echo "Pushing tag $DOCKER_REPO:latest"
+    docker push $DOCKER_REPO:latest
+else
+    echo "TAG ${TAG} does not match the regex: $regex. Versioned image not pushed"
+fi

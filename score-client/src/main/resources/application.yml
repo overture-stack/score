@@ -1,0 +1,152 @@
+#
+# Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.
+#
+# This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
+# You should have received a copy of the GNU General Public License along with
+# this program. If not, see <http://www.gnu.org/licenses/>.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
+# EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+# OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT
+# SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+# TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+# OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+# IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+# ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+# DCC Storage Client - Configuration
+#
+
+###############################################################################
+# Profile - common
+###############################################################################
+
+client:
+  ansi: ${ansi:true}
+  silent: ${silent:false}
+  quiet: ${quiet:false}
+  accessToken: "${accessToken:}" # Alias for backwards compatibility
+  connectTimeoutSeconds: 60
+  readTimeoutSeconds: 60
+    
+  ssl:
+    custom: false
+
+kfportal:
+  url: https://arranger.kids-first.io/june_13/graphql
+
+kf:
+  token:
+    url: https://v2i1r42t6d.execute-api.us-east-1.amazonaws.com/beta/token
+  download:
+    url: https://data.kidsfirstdrc.org
+    partSize: 1073741824
+    expiration: 86400
+
+transport:
+  fileFrom: memory
+  memory: 1
+  parallel: 6
+
+storage:
+  url: http://localhost:5431
+  retryNumber: 10
+  retryTimeout: 1	
+
+metadata:
+  url: https://song.cancercollaboratory.org
+  ssl:
+    enabled: true
+    
+portal:
+  url: https://dcc.icgc.org  
+    
+logging:
+  file: target/logs/client.log
+  
+mount:
+  logging: false
+
+token:
+  public-key: MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAlvqX7PDezX7BC0yc14zwJw2qgs5KDyZZvEeNowHCgHLcCtCVZ2JIx+ccUPp1FVudfZpLoboZ3RjT+6oOPHpNilXqUZfT81acCVHhvyJe7FNxdUWKpIIVKM/8bJj1pVkst0YHLBJ3KojZYJCMNUxUkyHM+yGrn9tmSdFBmwJnBLTkSxOrS2bvuZvkjERnoQJCoTm2XBKoCOzEuVPjIeB2KiFcNqiZwhjnCSQGPmg7fyJfQt1vMl+8RST3IXxphf8KKaWMl0rTXQhIHYL23P/tvC2lpJgx0rzgnxkAgFSrCxLstIklFAAg+j7ykivOyynIlCfXGv4cPTq5UqvIB8MBRQIDAQAB
+
+---
+
+###############################################################################
+# Profile - "aws"
+###############################################################################
+
+spring.profiles: aws
+
+storage:
+  url: https://virginia.cloud.icgc.org
+  
+metadata:
+  url: https://virginia.song.icgc.org
+  ssl:
+    enabled: true
+
+client:
+  ssl:
+    custom: false
+    
+---
+
+###############################################################################
+# Profile - "kf"
+###############################################################################
+
+spring.profiles: kf
+
+# Storage server
+storage:
+  url: https://kf.com
+
+
+client:
+  ssl:
+    custom: false
+
+---
+
+###############################################################################
+# Profile - "collab"
+###############################################################################
+
+spring.profiles: collab
+
+# Storage server
+storage:
+  url: https://storage.cancercollaboratory.org
+  
+
+client:    
+  ssl:
+    custom: false  
+
+---
+
+###############################################################################
+# Profile - "oicr"
+###############################################################################
+
+spring.profiles: oicr
+
+# uses storage.url and client.ssl.custom define in common 
+
+
+---
+
+###############################################################################
+# Profile - "debug"
+###############################################################################
+
+spring.profiles: debug
+
+logging:
+  level:
+    org.icgc.dcc.storage: DEBUG
+    springframework.retry: DEBUG
+    springframework.web: DEBUG
+    com.amazonaws.services: DEBUG

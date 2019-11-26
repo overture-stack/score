@@ -1,0 +1,67 @@
+#!/bin/bash -e
+#
+# Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.
+#
+# This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
+# You should have received a copy of the GNU General Public License along with
+# this program. If not, see <http://www.gnu.org/licenses/>.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
+# EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+# OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT
+# SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+# TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+# OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+# IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+# ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+# Description:
+# 	Runs the ICGC DCC storage client to upload/download/slice files in cloud environments
+
+
+# Do Java check
+
+if type -p java 1>/dev/null; then
+#    echo Found Java in PATH
+    _java=java
+elif [[ -n "$JAVA_HOME" ]] && [[ -x "$JAVA_HOME/bin/java" ]];  then
+#    echo Found Java in JAVA_HOME
+    _java="$JAVA_HOME/bin/java"
+else
+    echo "Java not found. The Storage Client requires Oracle JDK 1.8 or higher"
+    exit 1
+fi
+
+if [[ "$_java" ]]; then
+    version=$("$_java" -version 2>&1 | awk -F '"' '/version/ {print $2}')
+    if [[ "$version" > "1.8" ]]; then
+        :
+    else
+        echo Oracle Java 1.8 required for ICGC Storage Client
+        exit 1
+    fi
+
+    open_pattern="openjdk*"
+    impl=$("$_java" -version 2>&1)
+    if [[ $impl =~ $open_pattern ]]; then
+        echo OpenJDK not supported. ICGC Storage Client requires Oracle JDK
+        exit 1
+    fi
+fi
+
+# Binary directory
+BASE_DIR=`dirname $0`/..; export BASE_DIR
+
+# Installation directory
+CLIENT_DIR="$(cd ${BASE_DIR} && pwd -P)"
+
+exec java -Xmx3G \
+	-Dlogging.path=${BASE_DIR}/logs \
+	-Dspring.config.location=${CLIENT_DIR}/conf/ \
+	-Dlogging.config=${CLIENT_DIR}/conf/logback.xml \
+	-Dclient.directory=${CLIENT_DIR} \
+	-Dstorage.profile=${STORAGE_PROFILE:-aws} \
+	-cp ${BASE_DIR}/conf:${BASE_DIR}/lib/icgc-storage-client.jar \
+	org.springframework.boot.loader.JarLauncher \
+	"$@"

@@ -1,0 +1,261 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.
+
+This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
+You should have received a copy of the GNU General Public License along with
+this program. If not, see <http://www.gnu.org/licenses/>.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
+EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT
+SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+--><project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>bio.overture</groupId>
+  <artifactId>score</artifactId>
+  <version>2.0.1</version>
+  <packaging>pom</packaging>
+
+  <name>${project.artifactId}</name>
+  <description>${project.name}</description>
+
+  <modules>
+    <module>score-core</module>
+    <module>score-client</module>
+    <module>score-fs</module>
+    <module>score-server</module>
+    <module>score-test</module>
+    <module>icgc-storage-client</module>
+  </modules>
+
+  <repositories>
+    <!-- DCC -->
+    <repository>
+      <id>dcc-release</id>
+      <url>https://artifacts.oicr.on.ca/artifactory/dcc-release</url>
+    </repository>
+  </repositories>
+
+  <dependencies>
+
+    <!-- Utilities -->
+    <dependency>
+      <groupId>org.projectlombok</groupId>
+      <artifactId>lombok</artifactId>
+      <scope>provided</scope>
+      <version>${lombok.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.google.code.findbugs</groupId>
+      <artifactId>annotations</artifactId>
+      <scope>provided</scope>
+      <version>${findbugs.version}</version>
+    </dependency>
+
+  </dependencies>
+
+  <dependencyManagement>
+    <dependencies>
+      <!-- DCC- Storage -->
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>score-core</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>score-client</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>score-server</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>score-fs</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
+      <!-- Spring -->
+      <dependency>
+        <groupId>org.springframework.security.oauth</groupId>
+        <artifactId>spring-security-oauth2</artifactId>
+        <version>${spring-security-oauth2.version}</version>
+        <exclusions>
+          <exclusion>
+            <artifactId>jackson-mapper-asl</artifactId>
+            <groupId>org.codehaus.jackson</groupId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.springframework.retry</groupId>
+        <artifactId>spring-retry</artifactId>
+        <version>${spring-retry.version}</version>
+      </dependency>
+
+      <!-- Spring Cloud -->
+      <dependency>
+        <groupId>org.springframework.cloud</groupId>
+        <artifactId>spring-cloud-dependencies</artifactId>
+        <version>${spring-cloud.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+
+      <!-- Amazon -->
+      <dependency>
+        <groupId>com.amazonaws</groupId>
+        <artifactId>aws-java-sdk-s3</artifactId>
+        <version>${aws-java-sdk.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.microsoft.azure</groupId>
+        <artifactId>azure-storage</artifactId>
+        <version>${azure-storage.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+
+    </dependencies>
+
+  </dependencyManagement>
+
+  <build>
+    <defaultGoal>install</defaultGoal>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-compiler-plugin</artifactId>
+          <version>${maven-compiler-plugin.version}</version>
+          <inherited>true</inherited>
+          <configuration>
+            <source>${maven-compiler-plugin.source}</source>
+            <target>${maven-compiler-plugin.target}</target>
+            <showWarnings>true</showWarnings>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+  </build>
+
+  <profiles>
+    <!-- Profile that enables static code analysis -->
+    <profile>
+      <id>delombok</id>
+      <properties>
+        <generateSources.skipDelombok>false</generateSources.skipDelombok>
+      </properties>
+    </profile>
+    <profile>
+      <id>jenkins</id>
+      <properties>
+        <test.redirectTestOutputToFile>false</test.redirectTestOutputToFile>
+        <test.useFile>false</test.useFile>
+      </properties>
+    </profile>
+    <profile>
+      <id>release</id>
+      <properties>
+        <package.attach>true</package.attach>
+      </properties>
+    </profile>
+    <profile>
+      <id>code-analysis</id>
+      <properties>
+        <install.skipFindbugs>false</install.skipFindbugs>
+      </properties>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-pmd-plugin</artifactId>
+          </plugin>
+          <plugin>
+            <artifactId>maven-resources-plugin</artifactId>
+            <inherited>false</inherited>
+            <executions>
+              <execution>
+                <phase>compile</phase>
+                <goals>
+                  <goal>copy-resources</goal>
+                </goals>
+                <configuration>
+                  <outputDirectory>${pmd.targetdir}</outputDirectory>
+                  <resources>
+                    <resource>
+                      <directory>${pmd.sourcedir}/config/style</directory>
+                    </resource>
+                  </resources>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+
+  <properties>
+    <jdk.version>11</jdk.version>
+
+    <lombok.version>1.18.4</lombok.version>
+    <findbugs.version>3.0.1u2</findbugs.version>
+
+    <maven-compiler-plugin.version>3.1</maven-compiler-plugin.version>
+    <maven-compiler-plugin.source>${jdk.version}</maven-compiler-plugin.source>
+    <maven-compiler-plugin.target>${jdk.version}</maven-compiler-plugin.target>
+
+    <!-- Versions - DCC -->
+    <dcc-metadata.version>0.0.22</dcc-metadata.version>
+    <dcc-auth.version>4.3.2</dcc-auth.version>
+
+    <!-- Versions - Spring -->
+    <spring-boot.version>2.1.6.RELEASE</spring-boot.version>
+    <spring-retry.version>1.1.2.RELEASE</spring-retry.version>
+    <spring-security-oauth2.version>2.0.7.RELEASE</spring-security-oauth2.version>
+    <spring-cloud.version>Greenwich.SR3</spring-cloud.version>
+
+    <!-- Versions - Amazon -->
+    <aws-java-sdk.version>1.11.219</aws-java-sdk.version>
+
+    <azure-storage.version>4.4.0</azure-storage.version>
+
+    <!-- Versions - Utilities -->
+    <jcommander.version>1.69</jcommander.version>
+    <guava.version>19.0</guava.version>
+    <joda-time.version>2.2</joda-time.version>
+    <jsr305.version>1.3.9</jsr305.version>
+    <logback.version>1.1.7</logback.version>
+    <junit.version>4.12</junit.version>
+
+    <!-- Maven Enforce version  -->
+    <maven-enforcer-plugin.version>1.3.1</maven-enforcer-plugin.version>
+    <maven-enforcer-plugin.versionRange>[1.0.0,)</maven-enforcer-plugin.versionRange>
+    <maven-enforcer-plugin.requireMavenVersion>[3.0.0,)</maven-enforcer-plugin.requireMavenVersion>
+    <maven-enforcer-plugin.requireJavaVersion>[11,)</maven-enforcer-plugin.requireJavaVersion>
+
+    <!-- PMD -->
+    <pmd.sourcedir>${basedir}/src/main/pmd</pmd.sourcedir>
+    <pmd.targetdir>${project.build.directory}</pmd.targetdir>
+
+
+    <fasterxml-jackson.version>2.10.0.pr1</fasterxml-jackson.version>
+  </properties>
+
+</project>
