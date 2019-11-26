@@ -88,7 +88,7 @@ spec:
         stage('Compile & Test') {
             steps {
                 container('jdk') {
-                    sh "./mvnw test package"
+                    sh "./mvnw package"
                 }
             }
         }
