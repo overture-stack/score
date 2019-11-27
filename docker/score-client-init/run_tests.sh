@@ -27,6 +27,11 @@ echo ""
 /data/publish-analysis.sh $token3 TEST-CA a25ae8b4-097d-11ea-b4b9-41f0d4c18919
 /data/publish-analysis.sh $token3 ABC123  a22f44d3-097d-11ea-b4b9-374b8c686482
 
+echo "**************************************************************"
+echo Downloading analysis by analysis id
+echo "**************************************************************"
+/data/download-analysis.sh $token3 TEST-CA a25ae8b4-097d-11ea-b4b9-41f0d4c18919
+
 echo ""
 echo "************************************************************"
 echo "Download test with empty access token -- open access should succeed; closed should fail"

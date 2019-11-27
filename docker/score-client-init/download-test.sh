@@ -17,4 +17,3 @@ echo "download ABC123/controlled"
 download d0522915-f5b6-584e-8409-c12fa928d089
 echo "download ABC123/open"
 download d4594aa2-4b32-5283-861c-bd5dd7ee6463
-

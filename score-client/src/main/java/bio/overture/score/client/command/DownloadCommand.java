@@ -68,7 +68,7 @@ public class DownloadCommand extends RepositoryAccessCommand {
   private List<String> objectId = new ArrayList<>();
   @Parameter(names = "--analysis-id", description = "Analysis to download")
   private String analysisId;
-  @Parameter(names = "--program-id", description = "Program Id for the analysis to download")
+  @Parameter(names = {"--program-id", "--study-id"}, description = "Program Id for the analysis to download")
   private String programId;
 
   // 2) Where to put them

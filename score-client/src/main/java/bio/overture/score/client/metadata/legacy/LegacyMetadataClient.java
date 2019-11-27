@@ -21,6 +21,7 @@ import bio.overture.score.client.metadata.Entity;
 import bio.overture.score.client.metadata.EntityNotFoundException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Lists;
 import com.sun.xml.bind.v2.model.core.TypeRef;
@@ -41,6 +42,7 @@ import java.util.List;
 import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.maxBy;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 
 /**
@@ -125,11 +127,14 @@ public class LegacyMetadataClient {
 
   @SneakyThrows
   public List<String> getObjectIdsByAnalysisId(@NonNull String programId, @NonNull String analysisId) {
-    val result = MAPPER.readValue(serverUrl + "/studies/" + programId + "/analysis/" + analysisId + "files",
-      ObjectNode.class);
-    List<String> results = MAPPER.convertValue(result.path("objectId"),
-      new TypeReference<ArrayList<String>>() {});
-    return results.stream().distinct().collect(toImmutableList());
+    val url = new URL(serverUrl + "/studies/" + programId + "/analysis/" + analysisId + "/files");
+    // TODO: Make this debug again
+    log.error("Fetching analysis files from url '{}'", url);
+    val result = MAPPER.readValue(url, ArrayNode.class);
+    val objectIds=new ArrayList<String>();
+    log.error("Got result {}",result);
+    result.forEach(x-> objectIds.add(x.path("objectId").textValue()));
+    return objectIds;
   }
 
   @SneakyThrows
