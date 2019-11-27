@@ -10,6 +10,7 @@ import com.google.common.collect.ImmutableList;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.apache.commons.lang.NotImplementedException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
@@ -63,6 +64,10 @@ public class KFMetadataService implements MetadataService {
 
   @Override public Optional<Entity> getIndexEntity(Entity entity) {
     return Optional.empty();
+  }
+
+  @Override public List<String> getObjectIdsByAnalysisId(@NonNull String programId, @NonNull String analysisId) {
+    throw new NotImplementedException();
   }
 
 }

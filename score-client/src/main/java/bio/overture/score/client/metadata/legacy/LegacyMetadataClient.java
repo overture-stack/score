@@ -23,6 +23,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Lists;
+import com.sun.xml.bind.v2.model.core.TypeRef;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.SneakyThrows;
@@ -119,6 +120,15 @@ public class LegacyMetadataClient {
 
     // Remove potential duplicates due to inserts on paging:
     // See https://jira.oicr.on.ca/browse/COL-491
+    return results.stream().distinct().collect(toImmutableList());
+  }
+
+  @SneakyThrows
+  public List<String> getObjectIdsByAnalysisId(@NonNull String programId, @NonNull String analysisId) {
+    val result = MAPPER.readValue(serverUrl + "/studies/" + programId + "/analysis/" + analysisId + "files",
+      ObjectNode.class);
+    List<String> results = MAPPER.convertValue(result.path("objectId"),
+      new TypeReference<ArrayList<String>>() {});
     return results.stream().distinct().collect(toImmutableList());
   }
 

@@ -19,6 +19,7 @@ package bio.overture.score.client.metadata.legacy;
 
 import bio.overture.score.client.metadata.Entity;
 import bio.overture.score.client.metadata.MetadataService;
+import lombok.NonNull;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
@@ -48,6 +49,10 @@ public class LegacyMetadataService implements MetadataService {
         .stream()
         .filter(e -> isIndexFile(e, entity.getFileName()))
         .findFirst();
+  }
+
+  @Override public List<String> getObjectIdsByAnalysisId(@NonNull String programId, @NonNull String analysisId) {
+    return legacyMetadataClient.getObjectIdsByAnalysisId(programId, analysisId);
   }
 
   private static boolean isIndexFile(Entity e, String fileName) {
