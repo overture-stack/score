@@ -22,6 +22,7 @@ import bio.overture.score.client.cli.CreatableDirectoryValidator;
 import bio.overture.score.client.cli.ObjectIdListValidator;
 import bio.overture.score.client.download.DownloadRequest;
 import bio.overture.score.client.download.DownloadService;
+import bio.overture.score.client.exception.BadManifestException;
 import bio.overture.score.client.manifest.ManifestResource;
 import bio.overture.score.client.manifest.ManifestService;
 import bio.overture.score.client.metadata.Entity;
@@ -43,6 +44,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import static bio.overture.score.client.cli.Parameters.checkParameter;
 import static java.util.stream.Collectors.toList;
@@ -119,24 +121,20 @@ public class DownloadCommand extends RepositoryAccessCommand {
     validateOutputDirectory();
 
     List<String> objectsToDownload;
-    try {
-      if (!objectId.isEmpty()) {
-        // Ad-hoc list of object id's supplied from command line
-        objectsToDownload = objectId;
-      } else if (analysisId != null && programId != null) {
-        // From a SONG analysis ID
-        objectsToDownload = getIdsFromAnalysis(programId, analysisId);
-      } else {
-        // Manifest based
-        objectsToDownload = getIdsFromManifest(manifestResource);
-      }
-      terminal.printStatus("Downloading...");
-      return downloadObjects(objectsToDownload);
-    } catch(BadManifestException exception) {
-      terminal
-        .printError(exception.getMessage());
-      return FAILURE_STATUS;
+
+    if (!objectId.isEmpty()) {
+      // Ad-hoc list of object id's supplied from command line
+      objectsToDownload = objectId;
+    } else if (analysisId != null && programId != null) {
+      // From a SONG analysis ID
+      objectsToDownload = getIdsFromAnalysis(programId, analysisId);
+    } else {
+      // Manifest based
+      objectsToDownload = getIdsFromManifest(manifestResource);
     }
+    terminal.printStatus("Downloading...");
+    return downloadObjects(objectsToDownload);
+
   }
 
   private List<String> getIdsFromManifest(ManifestResource manifestResource) throws BadManifestException {
@@ -363,12 +361,11 @@ public class DownloadCommand extends RepositoryAccessCommand {
   }
 
   private void validateParms() {
-    checkParameter(objectId != null || manifestResource != null, "One of --object-id or --manifest must be specified");
+    checkParameter(
+      Stream.of(!objectId.isEmpty(), manifestResource != null,analysisId != null && programId != null).
+      filter(i -> i == Boolean.TRUE).count() == 1,
+      "Only one of --object-id, --manifest, or --analysisId may be specified. "
+        + "--studyId may only be used together with --analysisId, and is required if analysisId is specified.");
   }
 }
 
-class BadManifestException extends Exception {
-    BadManifestException(String s) {
-      super(s);
-    }
-}

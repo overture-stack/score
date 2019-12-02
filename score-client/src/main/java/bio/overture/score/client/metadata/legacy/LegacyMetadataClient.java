@@ -20,6 +20,7 @@ package bio.overture.score.client.metadata.legacy;
 import bio.overture.score.client.metadata.Entity;
 import bio.overture.score.client.metadata.EntityNotFoundException;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -38,6 +39,8 @@ import org.springframework.stereotype.Component;
 import java.io.FileNotFoundException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -128,13 +131,14 @@ public class LegacyMetadataClient {
   @SneakyThrows
   public List<String> getObjectIdsByAnalysisId(@NonNull String programId, @NonNull String analysisId) {
     val url = new URL(serverUrl + "/studies/" + programId + "/analysis/" + analysisId + "/files");
-    // TODO: Make this debug again
-    log.error("Fetching analysis files from url '{}'", url);
-    val result = MAPPER.readValue(url, ArrayNode.class);
-    val objectIds=new ArrayList<String>();
-    log.error("Got result {}",result);
-    result.forEach(x-> objectIds.add(x.path("objectId").textValue()));
-    return objectIds;
+
+    log.debug("Fetching analysis files from url '{}'", url);
+
+    return Stream.of(MAPPER.readValue(url, ArrayNode.class)).
+      peek(r -> log.debug("Got result {}", r)).
+      map(x -> x.path("objectId")).
+      map(JsonNode::textValue).
+      collect(toImmutableList());
   }
 
   @SneakyThrows
