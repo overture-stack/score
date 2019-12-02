@@ -22,6 +22,7 @@ import bio.overture.score.client.cli.CreatableDirectoryValidator;
 import bio.overture.score.client.cli.ObjectIdListValidator;
 import bio.overture.score.client.download.DownloadRequest;
 import bio.overture.score.client.download.DownloadService;
+import bio.overture.score.client.exception.BadManifestException;
 import bio.overture.score.client.manifest.ManifestResource;
 import bio.overture.score.client.manifest.ManifestService;
 import bio.overture.score.client.metadata.Entity;
@@ -43,6 +44,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import static bio.overture.score.client.cli.Parameters.checkParameter;
 import static java.util.stream.Collectors.toList;
@@ -61,22 +63,39 @@ public class DownloadCommand extends RepositoryAccessCommand {
   /**
    * Options
    */
-  @Parameter(names = "--output-dir", description = "Path to output directory", required = true, validateValueWith = CreatableDirectoryValidator.class)
-  private File outputDir;
-  @Parameter(names = "--output-layout", description = "Layout of the output-dir. One of 'bundle' (saved according to filename under GNOS bundle id directory), 'filename' (saved according to filename in output directory), or 'id' (saved according to object id in output directory)", converter = OutputLayoutConverter.class)
-  private OutputLayout layout = OutputLayout.FILENAME;
-  @Parameter(names = "--force", description = "Force re-download (override local file)")
-  private boolean force = false;
+  // 1) Which files to download
   @Parameter(names = "--manifest", description = "Manifest id, url, or path to manifest file")
   private ManifestResource manifestResource;
   @Parameter(names = "--object-id", description = "Object id to download", validateValueWith = ObjectIdListValidator.class, variableArity = true)
   private List<String> objectId = new ArrayList<>();
+  @Parameter(names = "--analysis-id", description = "Analysis to download")
+  private String analysisId;
+  @Parameter(names = {"--program-id", "--study-id"}, description = "Program Id for the analysis to download")
+  private String programId;
+
+  // 2) Where to put them
+  @Parameter(names = "--output-dir", description = "Path to output directory", required = true,
+    validateValueWith = CreatableDirectoryValidator.class)
+  private File outputDir;
+
+  // 3) How to name them (default = by their filename)
+  @Parameter(names = "--output-layout",
+    description = "Layout of the output-dir. One of 'bundle' (saved according to filename under GNOS bundle id directory), 'filename' (saved according to filename in output directory), or 'id' (saved according to object id in output directory)", converter = OutputLayoutConverter.class)
+  private OutputLayout layout = OutputLayout.FILENAME;
+
+  // 4) What part of each file do we download (default=all)
   @Parameter(names = "--offset", description = "The byte position in source file to begin download from")
   private long offset = 0;
   @Parameter(names = "--length", description = "The number of bytes to download")
   private long length = -1;
+
+  // 5) How to download files (default = download available index files, don't force re-download of local files,
+  //    validate download against the md5 checksum, and do verify the connection to the repository
+  //    before trying to download files)
   @Parameter(names = "--index", description = "Download file index if available?", arity = 1)
   private boolean index = true;
+  @Parameter(names = "--force", description = "Force re-download (override local file)")
+  private boolean force = false;
   @Parameter(names = "--validate", description = "Perform check of MD5 checksum (if available)", arity = 1)
   private boolean validate = true;
   @Parameter(names = "--verify-connection", description = "Verify connection to repository", arity = 1)
@@ -95,40 +114,53 @@ public class DownloadCommand extends RepositoryAccessCommand {
   @Override
   public int execute() throws Exception {
     validateParms();
+
     if (verifyConnection) {
       verifyRepoConnection();
     }
     validateOutputDirectory();
 
-    terminal.printStatus("Downloading...");
+    List<String> objectsToDownload;
 
-    val listed = objectId.size() > 0;
-    if (listed) {
+    if (!objectId.isEmpty()) {
       // Ad-hoc list of object id's supplied from command line
-      return downloadObjects(objectId);
+      objectsToDownload = objectId;
+    } else if (analysisId != null && programId != null) {
+      // From a SONG analysis ID
+      objectsToDownload = getIdsFromAnalysis(programId, analysisId);
     } else {
       // Manifest based
-      if (manifestResource.isGnosManifest()) {
-        terminal
-          .printError(
-            "Manifest '%s' looks like a GNOS-format manifest file. Please ensure you are using a tab-delimited text file"
-              + " manifest from https://dcc.icgc.org/repositories",
-            manifestResource.getValue());
-        return FAILURE_STATUS;
-      }
-      val manifest = manifestService.getDownloadManifest(manifestResource);
-
-      validateManifest(manifest);
-
-      val entries = manifest.getEntries();
-      if (entries.isEmpty()) {
-        terminal.printError("Manifest '%s' is empty", manifestResource);
-        return FAILURE_STATUS;
-      }
-
-      return downloadObjects(manifest.getEntries().stream().map(entry -> entry.getFileUuid()).collect(toList()));
+      objectsToDownload = getIdsFromManifest(manifestResource);
     }
+    terminal.printStatus("Downloading...");
+    return downloadObjects(objectsToDownload);
+
   }
+
+  private List<String> getIdsFromManifest(ManifestResource manifestResource) throws BadManifestException {
+
+    if (manifestResource.isGnosManifest()) {
+      throw new BadManifestException(format(
+        "Manifest '%s' looks like a GNOS-format manifest file. Please ensure you are using a tab-delimited text file"
+          + " manifest from https://dcc.icgc.org/repositories",
+        manifestResource.getValue()));
+    }
+    val manifest = manifestService.getDownloadManifest(manifestResource);
+
+    validateManifest(manifest);
+
+    val entries = manifest.getEntries();
+    if (entries.isEmpty()) {
+      throw new BadManifestException(format("Manifest '%s' is empty", manifestResource));
+    }
+
+    return manifest.getEntries().stream().map(entry -> entry.getFileUuid()).collect(toList());
+  }
+
+  private List<String> getIdsFromAnalysis(String programId, String analysisId) {
+    return metadataService.getObjectIdsByAnalysisId(programId, analysisId);
+  }
+
 
   private int downloadObjects(List<String> objectIds) throws IOException {
     // Entities are defined in Meta service
@@ -329,6 +361,11 @@ public class DownloadCommand extends RepositoryAccessCommand {
   }
 
   private void validateParms() {
-    checkParameter(objectId != null || manifestResource != null, "One of --object-id or --manifest must be specified");
+    checkParameter(
+      Stream.of(!objectId.isEmpty(), manifestResource != null,analysisId != null && programId != null).
+      filter(i -> i == Boolean.TRUE).count() == 1,
+      "Only one of --object-id, --manifest, or --analysisId may be specified. "
+        + "--studyId may only be used together with --analysisId, and is required if analysisId is specified.");
   }
 }
+
