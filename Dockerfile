@@ -68,11 +68,9 @@ RUN mkdir /usr/lib/jvm \
 
 # Copy client dist from previous docker build staget
 COPY --from=builder $CLIENT_DIST_DIR/* $SCORE_CLIENT_HOME/
-RUN groupadd -r score && useradd -r -g score score
 
 # Set working directory for convenience with interactive usage
 WORKDIR $SCORE_CLIENT_HOME
-USER score
 
 ###############################
 # Score Server
