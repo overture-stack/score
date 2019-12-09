@@ -39,6 +39,7 @@ FROM ubuntu:18.04 as client
 
 ENV JDK_DOWNLOAD_URL https://download.java.net/openjdk/jdk11/ri/openjdk-11+28_linux-x64_bin.tar.gz
 ENV SCORE_CLIENT_HOME /score-client
+ENV PATH /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$SCORE_CLIENT_HOME/bin
 
 # Update apt, add FUSE support and basic command line tools
 RUN \
@@ -67,9 +68,11 @@ RUN mkdir /usr/lib/jvm \
 
 # Copy client dist from previous docker build staget
 COPY --from=builder $CLIENT_DIST_DIR/* $SCORE_CLIENT_HOME/
+RUN groupadd -r score && useradd -r -g score score
 
 # Set working directory for convenience with interactive usage
 WORKDIR $SCORE_CLIENT_HOME
+USER score
 
 ###############################
 # Score Server
