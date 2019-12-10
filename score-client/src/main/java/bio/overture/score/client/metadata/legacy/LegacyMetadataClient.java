@@ -20,9 +20,12 @@ package bio.overture.score.client.metadata.legacy;
 import bio.overture.score.client.metadata.Entity;
 import bio.overture.score.client.metadata.EntityNotFoundException;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Lists;
+import com.sun.xml.bind.v2.model.core.TypeRef;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.SneakyThrows;
@@ -36,10 +39,13 @@ import org.springframework.stereotype.Component;
 import java.io.FileNotFoundException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.maxBy;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 
 /**
@@ -120,6 +126,19 @@ public class LegacyMetadataClient {
     // Remove potential duplicates due to inserts on paging:
     // See https://jira.oicr.on.ca/browse/COL-491
     return results.stream().distinct().collect(toImmutableList());
+  }
+
+  @SneakyThrows
+  public List<String> getObjectIdsByAnalysisId(@NonNull String programId, @NonNull String analysisId) {
+    val url = new URL(serverUrl + "/studies/" + programId + "/analysis/" + analysisId + "/files");
+
+    log.debug("Fetching analysis files from url '{}'", url);
+
+    return Stream.of(MAPPER.readValue(url, ArrayNode.class)).
+      peek(r -> log.debug("Got result {}", r)).
+      map(x -> x.path("objectId")).
+      map(JsonNode::textValue).
+      collect(toImmutableList());
   }
 
   @SneakyThrows

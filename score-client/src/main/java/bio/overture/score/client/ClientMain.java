@@ -20,6 +20,7 @@ package bio.overture.score.client;
 import bio.overture.score.client.cli.ConverterFactory;
 import bio.overture.score.client.cli.Terminal;
 import bio.overture.score.client.command.ClientCommand;
+import bio.overture.score.client.exception.BadManifestException;
 import bio.overture.score.client.metadata.EntityNotFoundException;
 import com.beust.jcommander.*;
 import lombok.Getter;
@@ -146,7 +147,9 @@ public class ClientMain implements CommandLineRunner {
     } catch (EntityNotFoundException e) {
       log.error("Entity not found: ", e);
       terminal.printError("Entity not found: " + e.getMessage());
-
+    } catch(BadManifestException e) {
+      log.error("Bad manifest:", e);
+      terminal.printError(e.getMessage());
       exit(FAILURE_STATUS);
     } catch (Throwable t) {
       log.error("Unknown error: ", t);
