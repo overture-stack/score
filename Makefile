@@ -12,8 +12,8 @@ MVN_EXE := $(shell which mvn)
 # Variables
 DOCKERFILE_NAME := $(shell if [ $(DEMO_MODE) -eq 1 ]; then echo Dockerfile; else echo Dockerfile.dev; fi)
 ROOT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
-MY_UID := $$(id -u))
-MY_GID := $$(id -g))
+MY_UID := $$(id -u)
+MY_GID := $$(id -g)
 THIS_USER := $$(id -u):$$(id -g)
 PROJECT_NAME := $(shell echo $(ROOT_DIR) | sed 's/.*\///g')
 PROJECT_VERSION := $(shell $(MVN_EXE) -f $(ROOT_DIR) help:evaluate -Dexpression=project.version -q -DforceStdout 2>&1  | tail -1)
@@ -38,7 +38,7 @@ RETRY_CMD := $(DOCKER_DIR)/retry-command.sh
 # Commands
 DOCKER_COMPOSE_CMD := echo "*********** DEMO_MODE = $(DEMO_MODE) **************" \
 	&& echo "*********** FORCE = $(FORCE) **************" \
-	&& DOCKERFILE_NAME=$(DOCKERFILE_NAME) $(DOCKER_COMPOSE_EXE) -f $(ROOT_DIR)/docker-compose.yml
+	&& MY_UID=$(MY_UID) MY_GID=$(MY_GID) DOCKERFILE_NAME=$(DOCKERFILE_NAME) $(DOCKER_COMPOSE_EXE) -f $(ROOT_DIR)/docker-compose.yml
 SCORE_CLIENT_CMD := $(DOCKER_COMPOSE_CMD) run --rm -u $(THIS_USER) score-client bin/score-client
 SCORE_CLIENT_TEST := $(DOCKER_COMPOSE_CMD) run --rm -u $(THIS_USER) score-client /data/run_tests.sh
 SCORE_CLIENT_MANIFEST_TEST := $(DOCKER_COMPOSE_CMD) run --rm -u $(THIS_USER) score-client /data/test_manifests.sh
