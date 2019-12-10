@@ -99,6 +99,7 @@ services:
       - "./docker/score-client-init:/data"
       - "./docker/scratch/score-client-logs:/score-client/logs"
     command: bin/score-client
+    user: "$MY_UID:$MY_GID"
   song-db:
     image: "postgres:9.6"
     environment:

@@ -6,4 +6,4 @@ BASH_SCRIPT_DIR=$( dirname  "${BASH_SCRIPT}")
 DOCKERFILE_NAME=Dockerfile.dev \
 	docker-compose \
 	-f ${BASH_SCRIPT_DIR}/../../docker-compose.yml \
-	run --rm score-client bin/score-client $@
+	run --rm score-client score-client $@
