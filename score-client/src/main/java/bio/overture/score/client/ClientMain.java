@@ -111,7 +111,6 @@ public class ClientMain implements CommandLineRunner {
       // Can't use log here because Spring Boot may not have defined its location yet
       err.println("\nUnknown error starting application: ");
       t.printStackTrace();
-
       exit(FAILURE_STATUS);
     }
   }
@@ -238,7 +237,7 @@ public class ClientMain implements CommandLineRunner {
 
   private static String getDefaultProfile() {
     // First try system properties, then environment variables, then default value
-    return System.getProperty("storage.profile", firstNonNull(System.getenv("STORAGE_PROFILE"), "default"));
+    return System.getProperty("storage.profile", firstNonNull(System.getenv("STORAGE_PROFILE"), "aws"));
   }
 
   private static final void exit(int status) {
