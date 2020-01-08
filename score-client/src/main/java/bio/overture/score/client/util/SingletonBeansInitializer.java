@@ -43,7 +43,6 @@ public class SingletonBeansInitializer implements ApplicationContextInitializer<
     for (val singletonBean : singletonBeans) {
       registerBean(applicationContext, singletonBean);
     }
-    configure(applicationContext);
   }
 
   private void registerBean(ConfigurableApplicationContext applicationContext, Object singletonBean) {
@@ -53,12 +52,4 @@ public class SingletonBeansInitializer implements ApplicationContextInitializer<
     factory.registerSingleton(beanName, singletonBean);
   }
 
-  private static void configure(ConfigurableApplicationContext context) {
-    val sources = context.getEnvironment().getPropertySources();
-   for (val s:sources) {
-     if(s.getName().contains("application.properties")) {
-       sources.addAfter("random", s);
-     }
-   }
-  }
 }
