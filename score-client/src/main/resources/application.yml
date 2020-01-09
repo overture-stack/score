@@ -120,7 +120,9 @@ spring.profiles: collab
 storage:
   url: https://storage.cancercollaboratory.org
   
-
+metadata:
+  url: https://song.cancercollaboratory.org
+  
 client:    
   ssl:
     custom: false  

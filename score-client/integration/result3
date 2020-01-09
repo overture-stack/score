@@ -1,8 +1,0 @@
-Starting...                                                                                Running...                                                                                
-> ICGC Storage Client
-
-  Active Configuration: 
-    Profile:          collab
-    Storage URL: https://storage.cancercollaboratory.org
-    Metadata URL:https://example.song.org
-    Access Token:     myToken

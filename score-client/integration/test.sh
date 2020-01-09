@@ -13,14 +13,14 @@ eval . $RUN_DIR/bash_colors.sh
 cd ../target
 
 echo "Extracting client from tarball"
-#tar xf score-client-2.2.1-SNAPSHOT-dist.tar.gz
+tar xf score-client-2.2.1-SNAPSHOT-dist.tar.gz
 
 cd score-client-2.2.1-SNAPSHOT
 echo "Setting up configuration files"
 
-#echo "metadata.url=https://example.song.org" >> ./conf/application.properties
-#echo "storage.url=https://example.score.org" >> ./conf/application.properties
-#echo "accessToken=myToken" >> ./conf/application.properties
+echo "metadata.url=https://example.song.org" >> ./conf/application.properties
+echo "storage.url=https://example.score.org" >> ./conf/application.properties
+echo "accessToken=myToken" >> ./conf/application.properties
 
 export PATH=$PATH:`pwd`/bin
 
