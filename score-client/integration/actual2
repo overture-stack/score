@@ -1,0 +1,5 @@
+  Active Configuration: 
+    Profile:          default
+    Storage URL: https://something.org
+    Metadata URL:https://example.song.org
+    Access Token:     myToken

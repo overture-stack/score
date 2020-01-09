@@ -1,0 +1,5 @@
+  Active Configuration: 
+    Profile:          aws
+    Storage URL: https://something.org
+    Metadata URL:https://virginia.song.icgc.org
+    Access Token:     myToken

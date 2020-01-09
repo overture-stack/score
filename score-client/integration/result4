@@ -1,0 +1,8 @@
+Starting...                                                                                Running...                                                                                
+> ICGC Storage Client
+
+  Active Configuration: 
+    Profile:          aws
+    Storage URL: https://virginia.cloud.icgc.org
+    Metadata URL:https://virginia.song.icgc.org
+    Access Token:     myToken
