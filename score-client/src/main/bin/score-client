@@ -53,7 +53,7 @@ exec java -Xmx3G --illegal-access=deny \
 	-Dspring.config.additional-location=${CLIENT_DIR}/conf/ \
 	-Dlogging.config=${CLIENT_DIR}/conf/logback.xml \
 	-Dclient.directory=${CLIENT_DIR} \
-	-Dstorage.profile=${STORAGE_PROFILE:-aws} \
+	-Dstorage.profile=${STORAGE_PROFILE:-default} \
 	-cp ${BASE_DIR}/conf:${BASE_DIR}/lib/score-client.jar \
 	org.springframework.boot.loader.JarLauncher \
 	"$@"
