@@ -55,7 +55,7 @@ storage:
   retryTimeout: 1	
 
 metadata:
-  url: https://song.cancercollaboratory.org
+  url: https://localhost:2345
   ssl:
     enabled: true
     
