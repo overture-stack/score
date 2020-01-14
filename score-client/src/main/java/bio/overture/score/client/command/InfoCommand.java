@@ -17,7 +17,6 @@
  */
 package bio.overture.score.client.command;
 
-import bio.overture.score.client.config.ClientProperties;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import com.google.common.collect.ImmutableSet;
@@ -46,10 +45,10 @@ public class InfoCommand extends AbstractClientCommand {
    */
   @Value("${storage.url}")
   private String storageUrl;
-  @Value("${storage.profile}")
-  private String storageProfile;
-  @Autowired
-  private ClientProperties properties;
+
+  @Value("${metadata.url}")
+  private String metadataUrl;
+
   @Autowired
   private StandardEnvironment env;
 
@@ -72,7 +71,8 @@ public class InfoCommand extends AbstractClientCommand {
   private void active() {
     terminal.println(terminal.label("  Active Configuration: "));
     terminal.println("    Profile:          " + storageProfile);
-    terminal.println("    Storage Endpoint: " + terminal.url(storageUrl));
+    terminal.println("    Storage URL: " + terminal.url(storageUrl));
+    terminal.println("    Metadata URL:" + terminal.url(metadataUrl));
     terminal.println("    Access Token:     " + properties.getAccessToken());
   }
 
