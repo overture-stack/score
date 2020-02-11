@@ -30,8 +30,7 @@ RUN cd score-client/target \
     && cp -r /tmp/score-client-dist $CLIENT_DIST_DIR \
 	&& mkdir -p $CLIENT_DIST_DIR/logs \
 	&& touch $CLIENT_DIST_DIR/logs/client.log \
-	&& chmod 777 $CLIENT_DIST_DIR/logs/client.log \
-	&& ls -la $CLIENT_DIST_DIR/*
+	&& chmod 777 $CLIENT_DIST_DIR/logs/client.log
 
 ###############################
 # Score Client
@@ -41,13 +40,12 @@ FROM ubuntu:18.04 as client
 ENV JDK_DOWNLOAD_URL https://download.java.net/openjdk/jdk11/ri/openjdk-11+28_linux-x64_bin.tar.gz
 ENV SCORE_CLIENT_HOME /score-client
 ENV PATH /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$SCORE_CLIENT_HOME/bin
-ENV APP_USER score
-ENV APP_UID 9999
-ENV APP_GID 9999
 
-RUN useradd -r -u $APP_UID $APP_USER  \
-    && mkdir $SCORE_CLIENT_HOME \
-    && chown -R $APP_USER:$APP_GROUP $SCORE_CLIENT_HOME
+ENV SCORE_USER score
+ENV SCORE_UID 9999
+ENV SCORE_GID 9999
+
+
 
 # Update apt, add FUSE support and basic command line tools
 RUN \
@@ -59,7 +57,7 @@ RUN \
 RUN mkdir /usr/lib/jvm \
 	&& cd /usr/lib/jvm \
 	&& wget $JDK_DOWNLOAD_URL -O openjdk11.tar.gz \
-    && tar zxvf openjdk11.tar.gz \
+        && tar zxvf openjdk11.tar.gz \
 	&& rm -rf openjdk11.tar.gz \
 	&& echo 'PATH=$PATH:/usr/lib/jvm/jdk-11/bin' >> /etc/environment \
 	&& echo 'JAVA_HOME=/usr/lib/jvm/jdk-11' >> /etc/environment \
@@ -72,11 +70,13 @@ RUN mkdir /usr/lib/jvm \
 	&& update-alternatives --list java \
 	&& update-alternatives --list javac \
 	&& java -version \
+        && groupadd -r -g $SCORE_GID $SCORE_USER  \
+        && useradd -r -u $SCORE_UID -g $SCORE_GID $SCORE_USER  \
+        && mkdir $SCORE_CLIENT_HOME \
+        && chown -R $SCORE_UID:$SCORE_GID $SCORE_CLIENT_HOME
 
 # Copy client dist from previous docker build staget
 COPY --from=builder $CLIENT_DIST_DIR/* $SCORE_CLIENT_HOME/
-
-RUN ls -la $SCORE_CLIENT_HOME
 
 # Set working directory for convenience with interactive usage
 WORKDIR $SCORE_CLIENT_HOME
@@ -90,20 +90,21 @@ FROM openjdk:11.0.3-jre as server
 ENV SCORE_HOME /score-server
 ENV SCORE_LOGS $SCORE_HOME/logs
 ENV JAR_FILE            /score-server.jar
-ENV APP_USER score
-ENV APP_UID 9999
-ENV APP_GID 9999
+ENV SCORE_USER score
+ENV SCORE_UID 9999
+ENV SCORE_GID 9999
 
-RUN useradd -r -u $APP_UID $APP_USER  \
-    && mkdir $SCORE_HOME \
-    && chown -R $APP_USER:$APP_GROUP $SCORE_HOME
-
+RUN groupadd -r -g $SCORE_GID $SCORE_USER  \
+    && useradd -r -u $SCORE_UID -g $SCORE_GID $SCORE_USER  \
+    && mkdir $SCORE_HOME $SCORE_LOGS \
+    && chown -R $SCORE_UID:$SCORE_GID $SCORE_HOME
 
 COPY --from=builder $JAR_FILE $JAR_FILE
 
 WORKDIR $SCORE_HOME
 
-CMD mkdir -p  $SCORE_HOME $SCORE_LOGS \
-    && java -Dlog.path=$SCORE_LOGS \
+USER $SCORE_USER
+
+CMD java -Dlog.path=$SCORE_LOGS \
     -jar $JAR_FILE \
     --spring.config.location=classpath:/application.yml,classpath:/bootstrap.properties
