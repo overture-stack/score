@@ -57,7 +57,7 @@ RUN \
 RUN mkdir /usr/lib/jvm \
 	&& cd /usr/lib/jvm \
 	&& wget $JDK_DOWNLOAD_URL -O openjdk11.tar.gz \
-        && tar zxvf openjdk11.tar.gz \
+	&& tar zxvf openjdk11.tar.gz \
 	&& rm -rf openjdk11.tar.gz \
 	&& echo 'PATH=$PATH:/usr/lib/jvm/jdk-11/bin' >> /etc/environment \
 	&& echo 'JAVA_HOME=/usr/lib/jvm/jdk-11' >> /etc/environment \
@@ -70,10 +70,10 @@ RUN mkdir /usr/lib/jvm \
 	&& update-alternatives --list java \
 	&& update-alternatives --list javac \
 	&& java -version \
-        && groupadd -r -g $SCORE_GID $SCORE_USER  \
-        && useradd -r -u $SCORE_UID -g $SCORE_GID $SCORE_USER  \
-        && mkdir $SCORE_CLIENT_HOME \
-        && chown -R $SCORE_UID:$SCORE_GID $SCORE_CLIENT_HOME
+	&& groupadd -r -g $SCORE_GID $SCORE_USER  \
+	&& useradd -r -u $SCORE_UID -g $SCORE_GID $SCORE_USER  \
+	&& mkdir $SCORE_CLIENT_HOME \
+	&& chown -R $SCORE_UID:$SCORE_GID $SCORE_CLIENT_HOME
 
 # Copy client dist from previous docker build staget
 COPY --from=builder $CLIENT_DIST_DIR/* $SCORE_CLIENT_HOME/
