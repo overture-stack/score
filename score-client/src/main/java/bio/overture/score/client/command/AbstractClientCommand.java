@@ -42,7 +42,7 @@ public abstract class AbstractClientCommand implements ClientCommand {
   protected String storageProfile;
 
   protected void printTitle() {
-    terminal.printStatus("\n" + terminal.label("> ") + terminal.value("ICGC ") + "Storage Client\n\n");
+    terminal.printStatus("\n" + terminal.label("> ") + terminal.value("SCORE ") + "Client\n\n");
   }
 
   protected void validateManifest(final DownloadManifest manifest) {
