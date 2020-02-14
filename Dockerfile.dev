@@ -51,23 +51,33 @@ WORKDIR $SCORE_CLIENT_HOME
 ###############################
 # Score Server
 ###############################
-FROM openjdk:11.0.3-jre as server
+FROM adoptopenjdk/openjdk11:jre-11.0.6_10-alpine as server
 
 # Paths
 ENV SCORE_HOME /score-server
 ENV SCORE_LOGS $SCORE_HOME/logs
-ENV SERVER_JAR_FILE    /score-server.jar
+ENV JAR_FILE    /score-server.jar
+ENV SCORE_USER score
+ENV SCORE_UID 9999
+ENV SCORE_GID 9999
+
+RUN addgroup -S -g $SCORE_GID $SCORE_USER  \
+    && adduser -S -u $SCORE_UID -g $SCORE_GID $SCORE_USER  \
+    && mkdir $SCORE_HOME $SCORE_LOGS \
+    && chown -R $SCORE_UID:$SCORE_GID $SCORE_HOME
 
 # Prepare server jar
 COPY score-server/target/score-server-*-dist.tar.gz  /score-server.tar.gz
+
 RUN tar zxvf score-server.tar.gz -C /tmp \
     && mv -f /tmp/score-server-*  /tmp/score-server-dist  \
-    && cp -f /tmp/score-server-dist/lib/score-server.jar $SERVER_JAR_FILE
+    && cp -f /tmp/score-server-dist/lib/score-server.jar $JAR_FILE
+
+USER $SCORE_USER
 
 WORKDIR $SCORE_HOME
 
-CMD mkdir -p  $SCORE_HOME $SCORE_LOGS \
-    && java -Dlog.path=$SCORE_LOGS \
-    -jar $SERVER_JAR_FILE \
+CMD java -Dlog.path=$SCORE_LOGS \
+    -jar $JAR_FILE \
     --spring.config.location=classpath:/application.yml,classpath:/bootstrap.properties
 
