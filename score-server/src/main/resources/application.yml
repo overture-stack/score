@@ -175,6 +175,7 @@ spring.profiles: secure
 auth:
   server:
     url: https://localhost:8443/oauth/check_token
+    tokenNamme: token
     clientId: resource
     clientSecret: pass
     uploadScope: aws.upload
