@@ -66,7 +66,7 @@ RUN mkdir /usr/lib/jvm \
 	&& mkdir $SCORE_CLIENT_HOME
 
 # Copy client dist from previous docker build staget
-COPY --from=builder $CLIENT_DIST_DIR/* $SCORE_CLIENT_HOME/
+COPY --from=builder $CLIENT_DIST_DIR/ $SCORE_CLIENT_HOME
 
 # Set working directory for convenience with interactive usage
 WORKDIR $SCORE_CLIENT_HOME
