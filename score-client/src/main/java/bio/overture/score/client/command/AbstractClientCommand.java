@@ -37,6 +37,7 @@ public abstract class AbstractClientCommand implements ClientCommand {
   protected ClientProperties properties;
   @Autowired
   protected Terminal terminal;
+
   @Value("${storage.profile}")
   protected String storageProfile;
 
