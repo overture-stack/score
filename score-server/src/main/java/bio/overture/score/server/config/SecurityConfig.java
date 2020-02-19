@@ -98,12 +98,14 @@ public class SecurityConfig extends ResourceServerConfigurerAdapter {
   @Bean
   public RemoteTokenServices remoteTokenServices(
       final @Value("${auth.server.url}") String checkTokenUrl,
+      final @Value("${auth.server.tokenName:token}") String tokenName,
       final @Value("${auth.server.clientId}") String clientId,
       final @Value("${auth.server.clientSecret}") String clientSecret) {
     val remoteTokenServices = new CachingRemoteTokenServices();
     remoteTokenServices.setCheckTokenEndpointUrl(checkTokenUrl);
     remoteTokenServices.setClientId(clientId);
     remoteTokenServices.setClientSecret(clientSecret);
+    remoteTokenServices.setTokenName(tokenName);
     remoteTokenServices.setAccessTokenConverter(accessTokenConverter());
 
     log.debug("using auth server: " + checkTokenUrl);

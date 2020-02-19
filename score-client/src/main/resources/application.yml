@@ -15,7 +15,7 @@
 # IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# DCC Storage Client - Configuration
+# SCORE Client - Configuration
 #
 
 ###############################################################################
@@ -50,12 +50,14 @@ transport:
   parallel: 6
 
 storage:
-  url: http://localhost:5431
+  # default for backwards compatibility
+  url: https://virginia.cloud.icgc.org
   retryNumber: 10
   retryTimeout: 1	
 
 metadata:
-  url: https://localhost:2345
+  # default for backwards compatibility
+  url: https://virginia.song.icgc.org
   ssl:
     enabled: true
     

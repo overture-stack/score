@@ -59,7 +59,8 @@ services:
       S3_ACCESSKEY: minio
       S3_SECRETKEY: minio123
       S3_SIGV4ENABLED: "true"
-      AUTH_SERVER_URL: http://ego-api:8080/o/check_token/
+      AUTH_SERVER_URL: http://ego-api:8080/o/check_api_key/
+      AUTH_SERVER_TOKENNAME: apiKey
       AUTH_SERVER_CLIENTID: score
       AUTH_SERVER_CLIENTSECRET: scoresecret
       AUTH_SERVER_UPLOADSCOPE: score.WRITE
