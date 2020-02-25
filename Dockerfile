@@ -40,16 +40,13 @@ ENV JDK_DOWNLOAD_URL https://download.java.net/openjdk/jdk11/ri/openjdk-11+28_li
 ENV SCORE_CLIENT_HOME /score-client
 ENV PATH /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$SCORE_CLIENT_HOME/bin
 ENV SCORE_USER score
-ENV SCORE_UID 9999
-ENV SCORE_GID 9999
 
 # Add score user, update apt, add FUSE support and basic command line tools
-RUN groupadd -r -g $SCORE_GID $SCORE_USER  \
-    && useradd -r -u $SCORE_UID -g $SCORE_GID $SCORE_USER  \
-    && apt-get update \
-    && apt-get -y upgrade \
+RUN useradd $SCORE_USER  \
+  	&& apt-get update \
+  	&& apt-get -y upgrade \
     && apt-get install -y libfuse-dev fuse curl wget software-properties-common \
-    && mkdir $SCORE_CLIENT_HOME
+	&& mkdir $SCORE_CLIENT_HOME
 
 # Copy client dist from previous docker build staget
 COPY --from=builder $CLIENT_DIST_DIR/ $SCORE_CLIENT_HOME
@@ -71,7 +68,7 @@ RUN mkdir /usr/lib/jvm \
 	&& update-alternatives --list java \
 	&& update-alternatives --list javac \
 	&& java -version \
-	&& chown -R $SCORE_UID:$SCORE_GID $SCORE_CLIENT_HOME
+	&& chown -R $SCORE_USER:$SCORE_USER $SCORE_CLIENT_HOME
 
 # Set working directory for convenience with interactive usage
 WORKDIR $SCORE_CLIENT_HOME
