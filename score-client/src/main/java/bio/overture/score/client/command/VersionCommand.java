@@ -20,7 +20,7 @@ package bio.overture.score.client.command;
 import com.beust.jcommander.Parameters;
 import org.springframework.stereotype.Component;
 
-import static com.google.common.base.Objects.firstNonNull;
+import static com.google.common.base.MoreObjects.firstNonNull;
 import static org.icgc.dcc.common.core.util.VersionUtils.getScmInfo;
 
 @Component

@@ -48,6 +48,7 @@ public class ObjectSpecification {
   @JsonIgnore
   @Getter(onMethod = @__(@JsonIgnore))
   // with regular @JsonIgnore, was still getting serialized
+  @Builder.Default
   private boolean relocated = false;
 
   @JsonIgnore

@@ -40,7 +40,7 @@ import java.util.function.Consumer;
 import static bio.overture.score.client.command.ClientCommand.APPLICATION_NAME;
 import static bio.overture.score.client.command.ClientCommand.FAILURE_STATUS;
 import static bio.overture.score.client.util.SingletonBeansInitializer.singletonBeans;
-import static com.google.common.base.Objects.firstNonNull;
+import static com.google.common.base.MoreObjects.firstNonNull;
 import static java.lang.System.err;
 import static java.lang.System.out;
 

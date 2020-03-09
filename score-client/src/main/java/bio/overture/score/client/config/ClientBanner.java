@@ -40,7 +40,7 @@ import java.util.List;
 import java.util.Map;
 
 import static com.fasterxml.jackson.databind.SerializationFeature.FAIL_ON_EMPTY_BEANS;
-import static com.google.common.base.Objects.firstNonNull;
+import static com.google.common.base.MoreObjects.firstNonNull;
 import static com.google.common.base.Strings.padEnd;
 import static com.google.common.base.Strings.repeat;
 import static org.icgc.dcc.common.core.util.Joiners.WHITESPACE;
