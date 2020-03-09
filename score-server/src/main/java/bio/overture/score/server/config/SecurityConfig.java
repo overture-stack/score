@@ -28,6 +28,7 @@ import bio.overture.score.server.metadata.MetadataService;
 import bio.overture.score.server.security.DownloadScopeAuthorizationStrategy;
 import bio.overture.score.server.security.CachingRemoteTokenServices;
 import bio.overture.score.server.security.UploadScopeAuthorizationStrategy;
+import lombok.NonNull;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -53,6 +54,7 @@ import lombok.extern.slf4j.Slf4j;
  * Resource service configuration file.<br>
  * Protects resources with access token obtained at the authorization server.
  */
+
 @Slf4j
 @Configuration
 @Profile("secure")
@@ -61,19 +63,22 @@ import lombok.extern.slf4j.Slf4j;
 public class SecurityConfig extends ResourceServerConfigurerAdapter {
 
   private TokenExtractor tokenExtractor = new BearerTokenExtractor();
-
   @Value("${auth.server.uploadScope}")
   private String uploadScope;
-
   @Value("${auth.server.downloadScope}")
   private String downloadScope;
 
+  @Value("${auth.server.separator}")
+  private String separator;
+
   @Override
-  public void configure(HttpSecurity http) throws Exception {
+  public void configure(@NonNull HttpSecurity http) throws Exception {
     http.addFilterAfter(new OncePerRequestFilter() {
 
       @Override
-      protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+
+      protected void doFilterInternal(@NonNull HttpServletRequest  request, @NonNull HttpServletResponse response,
+        @NonNull FilterChain filterChain)
           throws ServletException, IOException {
 
         // We don't want to allow access to a resource with no token so clear
@@ -133,13 +138,13 @@ public class SecurityConfig extends ResourceServerConfigurerAdapter {
 
   @Bean
   public UploadScopeAuthorizationStrategy projectSecurity(MetadataService song) {
-    return new UploadScopeAuthorizationStrategy(uploadScope, song);
+    return new UploadScopeAuthorizationStrategy(uploadScope, separator, song);
   }
 
   @Bean
   @Scope("prototype")
   public DownloadScopeAuthorizationStrategy accessSecurity(MetadataService song) {
-    return new DownloadScopeAuthorizationStrategy(downloadScope, song);
+    return new DownloadScopeAuthorizationStrategy(downloadScope, separator, song);
   }
 }
 

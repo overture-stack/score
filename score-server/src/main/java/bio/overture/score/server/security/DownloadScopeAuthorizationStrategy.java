@@ -27,8 +27,9 @@ import java.util.List;
 
 @Slf4j
 public class DownloadScopeAuthorizationStrategy extends UploadScopeAuthorizationStrategy {
-  public DownloadScopeAuthorizationStrategy(String authScope, MetadataService metadataService) {
-      super(authScope, metadataService);
+  public DownloadScopeAuthorizationStrategy(@NonNull String authScope, @NonNull String separator,
+    @NonNull MetadataService metadataService) {
+      super(authScope,separator,metadataService);
   }
 
   @Override

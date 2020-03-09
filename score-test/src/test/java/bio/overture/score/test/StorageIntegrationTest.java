@@ -17,7 +17,7 @@
  */
 package bio.overture.score.test;
 
-import static com.google.common.base.Objects.firstNonNull;
+import static com.google.common.base.MoreObjects.firstNonNull;
 import static bio.overture.score.test.util.SpringBootProcess.bootRun;
 
 import org.junit.After;

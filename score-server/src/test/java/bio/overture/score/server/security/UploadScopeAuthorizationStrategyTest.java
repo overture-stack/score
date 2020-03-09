@@ -35,7 +35,7 @@ import static org.mockito.Mockito.when;
 
 public class UploadScopeAuthorizationStrategyTest {
   private static final String TEST_SCOPE = "test.upload";
-  private static final AuthScope testScope = AuthScope.from(TEST_SCOPE);
+  private static final AuthScope testScope = AuthScope.from(TEST_SCOPE, "[.]");
   private static final String PROJECT1="TEST1-CA";
   private static final String PROJECT2="TEST2-DK";
   private UploadScopeAuthorizationStrategy sut; // "System Under Test"
@@ -49,7 +49,7 @@ public class UploadScopeAuthorizationStrategyTest {
     when(meta.getEntity("1")).thenReturn(e1);
     when(meta.getEntity("2")).thenReturn(e2);
 
-    sut = new UploadScopeAuthorizationStrategy(TEST_SCOPE, meta);
+    sut = new UploadScopeAuthorizationStrategy(TEST_SCOPE, "[.]", meta);
   }
 
   @Test
