@@ -24,7 +24,6 @@ import lombok.val;
 import bio.overture.score.core.model.ObjectKey;
 import bio.overture.score.core.model.ObjectSpecification;
 import bio.overture.score.core.model.Part;
-import bio.overture.score.server.repository.s3.S3FetchedObject;
 
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.Protocol;
@@ -58,12 +57,7 @@ public class ObjectDownloadServiceStubFactory {
     return result;
   }
 
-  public static S3FetchedObject createS3Object() {
-    val result = new S3FetchedObject(null);
-    result.setRelocated(true);
-    return result;
-  }
-
+  @SuppressWarnings( "deprecation" )
   public static AmazonS3 createS3ClientForRadosGW(String endpoint) {
     // Configs copied from S3Config
     // RadosGW doesn't support latest AWS API version: AWSS3V4SignerType
