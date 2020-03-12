@@ -64,9 +64,6 @@ upload:
   clean.cron: "0 0 0 * * ?" 
   clean.enabled: true
 
-auth:
-  server:
-    separator: [.]
 
 ---
 
@@ -188,7 +185,7 @@ auth:
     #downloadScope=collab.download
     #uploadScope=azure.upload
     #downloadScope=azure.download
-    
+    separator: [.]
 ---
 
 ###############################################################################

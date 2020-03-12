@@ -68,7 +68,7 @@ public class SecurityConfig extends ResourceServerConfigurerAdapter {
   @Value("${auth.server.downloadScope}")
   private String downloadScope;
 
-  @Value("${auth.server.separator}")
+  @Value("${auth.server.separator:[.]}")
   private String separator;
 
   @Override
