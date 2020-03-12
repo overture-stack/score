@@ -25,6 +25,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import bio.overture.score.server.metadata.MetadataService;
+import bio.overture.score.server.security.AccessTokenConverterWithExpiry;
 import bio.overture.score.server.security.DownloadScopeAuthorizationStrategy;
 import bio.overture.score.server.security.CachingRemoteTokenServices;
 import bio.overture.score.server.security.UploadScopeAuthorizationStrategy;
@@ -92,7 +93,7 @@ public class SecurityConfig extends ResourceServerConfigurerAdapter {
 
   @Bean
   public AccessTokenConverter accessTokenConverter() {
-    return new DefaultAccessTokenConverter();
+    return new AccessTokenConverterWithExpiry();
   }
 
   @Bean
