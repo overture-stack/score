@@ -11,7 +11,7 @@ public class AccessTokenConverterWithExpiry extends DefaultAccessTokenConverter
 {
   @Override public OAuth2Authentication extractAuthentication(Map<String, ?> map) {
     val exp = map.get("exp");
-    val expiryInSeconds = (exp != null && exp instanceof Integer ) ? (Integer) exp : 0;
+    int expiryInSeconds = exp instanceof Integer ? (Integer) exp : 0;
     return from(super.extractAuthentication(map), expiryInSeconds);
   }
 }
