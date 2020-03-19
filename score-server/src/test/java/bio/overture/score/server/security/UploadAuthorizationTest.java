@@ -9,6 +9,7 @@ import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.security.oauth2.provider.OAuth2Request;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.TreeSet;
 
 import static java.util.Collections.*;
@@ -104,11 +105,10 @@ public class UploadAuthorizationTest {
   }
 
   private Authentication getAuthentication(boolean isExpired, String... scopes) {
-    val request = new OAuth2Request(emptyMap(), "", emptyList(), true,
-      new TreeSet<>(Arrays.asList(scopes)), emptySet(), "", emptySet(), emptyMap());
-
-    return ExpiringOauth2Authentication.from(new OAuth2Authentication(request, null),
-      isExpired ? 0 : 3600);
+    val map = new HashMap<String, Object>();
+    map.put("exp", isExpired ? 0 : 3600);
+    map.put("scope", new TreeSet<>(Arrays.asList(scopes)));
+    return new AccessTokenConverterWithExpiry().extractAuthentication(map);
   }
 
   public UploadScopeAuthorizationStrategy getSut(String accessType) {

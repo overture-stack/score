@@ -5,13 +5,11 @@ import bio.overture.score.server.metadata.MetadataService;
 import lombok.val;
 import org.junit.Test;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.oauth2.provider.OAuth2Authentication;
-import org.springframework.security.oauth2.provider.OAuth2Request;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.TreeSet;
 
-import static java.util.Collections.*;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
@@ -20,11 +18,11 @@ import static org.mockito.Mockito.when;
 public class DownloadAuthorizationTest {
   public static final String TEST_PROJECT = "TEST-CA";
   public static final String GLOBAL_SCOPE = "test.download";
-  public static final String PROJECT_SCOPE="test." + TEST_PROJECT + ".download";
+  public static final String PROJECT_SCOPE = "test." + TEST_PROJECT + ".download";
   public static final String TEST_OBJECT_ID = "123";
   public static final String CONTROLLED_ACCESS = "controlled";
   public static final String OPEN_ACCESS = "open";
-  
+
   @Test
   public void test_authorization_ok_controlled_project_scope() {
     val sut = getSut(CONTROLLED_ACCESS);
@@ -44,7 +42,6 @@ public class DownloadAuthorizationTest {
     val result = sut.authorize(authentication, TEST_OBJECT_ID);
     assertTrue(result);
   }
-
 
   @Test
   public void test_authorization_ok_open_no_scopes() {
@@ -104,11 +101,10 @@ public class DownloadAuthorizationTest {
   }
 
   private Authentication getAuthentication(boolean isExpired, String... scopes) {
-    val request = new OAuth2Request(emptyMap(), "", emptyList(), true,
-      new TreeSet<>(Arrays.asList(scopes)), emptySet(), "", emptySet(), emptyMap());
-
-    return ExpiringOauth2Authentication.from(new OAuth2Authentication(request, null),
-      isExpired ? 0 : 3600);
+    val map = new HashMap<String, Object>();
+    map.put("exp", isExpired ? 0 : 3600);
+    map.put("scope", new TreeSet<>(Arrays.asList(scopes)));
+    return new AccessTokenConverterWithExpiry().extractAuthentication(map);
   }
 
   public DownloadScopeAuthorizationStrategy getSut(String accessType) {
