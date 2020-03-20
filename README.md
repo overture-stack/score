@@ -7,7 +7,6 @@
 <p align="center"><a href="http://www.overture.bio/products/score" target="_blank"><img alt="General Availability" title="General Availability" src="http://www.overture.bio/img/progress-horizontal-GA.svg" width="320" /></a></p>
 
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/201ae314ab3842baad25bc820069e90a)](https://www.codacy.com/app/overture-stack/score?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=overture-stack/score&amp;utm_campaign=Badge_Grade)
-[![CircleCI](https://circleci.com/gh/overture-stack/score/tree/develop.svg?style=svg)](https://circleci.com/gh/overture-stack/score/tree/develop)
 [![Documentation Status](https://readthedocs.org/projects/score-docs/badge/?version=latest)](https://score-docs.readthedocs.io/en/latest/?badge=latest)
 [![Slack](http://slack.overture.bio/badge.svg)](http://slack.overture.bio)
 
