@@ -57,8 +57,7 @@ public class DownloadScopeAuthorizationStrategyTest {
   }
 
   public DownloadScopeAuthorizationStrategy init() {
-    val security = new StudySecurity(STUDY_PREFIX, DOWNLOAD_SUFFIX, SYSTEM_SCOPE);
-    return new DownloadScopeAuthorizationStrategy(security, getMetadataService());
+    return new DownloadScopeAuthorizationStrategy(STUDY_PREFIX, DOWNLOAD_SUFFIX, SYSTEM_SCOPE, getMetadataService());
   }
 
   public MetadataEntity entity(String id, String gnosId, String fileName, String projectCode, String accessType) {
@@ -79,7 +78,6 @@ public class DownloadScopeAuthorizationStrategyTest {
     when(authentication.getExpiry()).thenReturn(isExpired?0:60);
     return authentication;
   }
-
 
   @Test
   public void test_open_missing_scope() {

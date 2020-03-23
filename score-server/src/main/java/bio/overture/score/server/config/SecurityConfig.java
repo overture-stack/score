@@ -18,9 +18,9 @@
 package bio.overture.score.server.config;
 
 import bio.overture.score.server.metadata.MetadataService;
+import bio.overture.score.server.security.AccessTokenConverterWithExpiry;
 import bio.overture.score.server.security.CachingRemoteTokenServices;
 import bio.overture.score.server.security.DownloadScopeAuthorizationStrategy;
-import bio.overture.score.server.security.StudySecurity;
 import bio.overture.score.server.security.UploadScopeAuthorizationStrategy;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -38,7 +38,6 @@ import org.springframework.security.oauth2.config.annotation.web.configuration.R
 import org.springframework.security.oauth2.provider.authentication.BearerTokenExtractor;
 import org.springframework.security.oauth2.provider.authentication.TokenExtractor;
 import org.springframework.security.oauth2.provider.token.AccessTokenConverter;
-import org.springframework.security.oauth2.provider.token.DefaultAccessTokenConverter;
 import org.springframework.security.oauth2.provider.token.RemoteTokenServices;
 import org.springframework.security.web.authentication.preauth.AbstractPreAuthenticatedProcessingFilter;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -63,16 +62,16 @@ public class SecurityConfig extends ResourceServerConfigurerAdapter {
 
   private TokenExtractor tokenExtractor = new BearerTokenExtractor();
 
-  @Value("${auth.server.studyPrefix}")
+  @Value("${auth.server.scope.study.prefix}")
   private String studyPrefix;
 
-  @Value("${auth.server.uploadSuffix}")
+  @Value("${auth.server.scope.upload.suffix}")
   private String uploadSuffix;
 
-  @Value("${auth.server.downloadSuffix}")
+  @Value("${auth.server.scope.download.suffix}")
   private String downloadSuffix;
 
-  @Value("${auth.server.systemScope")
+  @Value("${auth.server.scope.system}")
   private String systemScope;
 
   @Override
@@ -101,7 +100,7 @@ public class SecurityConfig extends ResourceServerConfigurerAdapter {
 
   @Bean
   public AccessTokenConverter accessTokenConverter() {
-    return new DefaultAccessTokenConverter();
+    return new AccessTokenConverterWithExpiry();
   }
 
   @Bean
@@ -144,22 +143,12 @@ public class SecurityConfig extends ResourceServerConfigurerAdapter {
 
   @Bean
   public UploadScopeAuthorizationStrategy projectSecurity(MetadataService song) {
-    val security = studySecurity(uploadSuffix);
-    return new UploadScopeAuthorizationStrategy(security, song);
+    return new UploadScopeAuthorizationStrategy(studyPrefix, uploadSuffix, systemScope, song);
   }
 
   @Bean
   @Scope("prototype")
   public DownloadScopeAuthorizationStrategy accessSecurity(MetadataService song) {
-    val security = studySecurity(downloadSuffix);
-    return new DownloadScopeAuthorizationStrategy(security, song);
-  }
-
-  private StudySecurity studySecurity(String suffix) {
-    return StudySecurity.builder()
-      .studyPrefix(studyPrefix)
-      .studySuffix(suffix)
-      .systemScope(systemScope)
-      .build();
+    return new DownloadScopeAuthorizationStrategy(studyPrefix, uploadSuffix, systemScope, song);
   }
 }

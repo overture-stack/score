@@ -21,19 +21,13 @@ import bio.overture.score.server.exception.NotRetryableException;
 import bio.overture.score.server.metadata.MetadataEntity;
 import bio.overture.score.server.metadata.MetadataService;
 import lombok.val;
-import org.junit.Before;
 import org.junit.Test;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.provider.OAuth2Request;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Set;
 
 import static org.junit.Assert.*;
-import static org.mockito.ArgumentMatchers.isNotNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -56,8 +50,7 @@ public class UploadScopeAuthorizationStrategyTest {
     when(meta.getEntity("1")).thenReturn(e1);
     when(meta.getEntity("2")).thenReturn(e2);
 
-    val security = new StudySecurity(STUDY_PREFIX, UPLOAD_SUFFIX, SYSTEM_SCOPE);
-    return new UploadScopeAuthorizationStrategy(security, meta);
+    return new UploadScopeAuthorizationStrategy(STUDY_PREFIX, UPLOAD_SUFFIX, SYSTEM_SCOPE, meta);
   }
 
   private Authentication getAuthentication(boolean isExpired, Set<String> scopes) {
@@ -67,6 +60,13 @@ public class UploadScopeAuthorizationStrategyTest {
     when(authentication.getOAuth2Request()).thenReturn(request);
     when(authentication.getExpiry()).thenReturn(isExpired?0:60);
     return authentication;
+  }
+
+  @Test
+  public void test_system_scope_expired() {
+    val scopes = Set.of("test.GBM-US.upload", SYSTEM_SCOPE);
+    val authentication = getAuthentication(true, scopes);
+    assertFalse(sut.authorize(authentication, "1"));
   }
 
   @Test
@@ -92,14 +92,23 @@ public class UploadScopeAuthorizationStrategyTest {
   }
 
   @Test
+  public void test_study_scope_expired() {
+    val scopes = Set.of(TEST_SCOPE, STUDY_PREFIX + PROJECT1 + ".upload");
+    val authentication = getAuthentication(true, scopes);
+    assertFalse(sut.authorize(authentication, "1"));
+  }
+
+  @Test
   public void test_study_scope_ok() {
-    val scopes = Set.of(STUDY_PREFIX +PROJECT1+".WRITE", STUDY_PREFIX + PROJECT1 + ".upload");
+    val scopes = Set.of(TEST_SCOPE, STUDY_PREFIX + PROJECT1 + ".upload");
     val authentication = getAuthentication(false, scopes);
     assertTrue(sut.authorize(authentication, "1"));
   }
 
+
+
   @Test
-  public void test_check_project_object_not_found() {
+  public void test_study_scope_unknown_file_fails() {
     val scopes = Set.of("DACO.WRITE", "CLOUD.READ");
     val authentication = getAuthentication(false, scopes);
     Exception exception = null;
@@ -111,5 +120,20 @@ public class UploadScopeAuthorizationStrategyTest {
     assertNotNull(exception);
     assertEquals("java.lang.IllegalArgumentException: Failed to retrieve metadata for objectId: NOT-FOUND",
       exception.getMessage());
+  }
+
+  @Test
+  public void test_project_not_looked_up_for_system_scope() {
+    val scopes = Set.of(SYSTEM_SCOPE, "DACO.WRITE", "CLOUD.READ");
+    val authentication = getAuthentication(false, scopes);
+    Exception exception = null;
+    boolean status=false;
+    try {
+      status=sut.authorize(authentication, "NOT-FOUND");
+    } catch(NotRetryableException e) {
+      exception = e;
+    }
+    assertNull(exception);
+    assertTrue(status);
   }
 }

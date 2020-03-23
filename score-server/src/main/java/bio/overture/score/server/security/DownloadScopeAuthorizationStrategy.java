@@ -26,13 +26,14 @@ import org.springframework.security.core.Authentication;
 
 @Slf4j
 public class DownloadScopeAuthorizationStrategy extends UploadScopeAuthorizationStrategy {
-  public DownloadScopeAuthorizationStrategy(@NonNull StudySecurity security, @NonNull MetadataService metadataService) {
-    super(security, metadataService);
+  public DownloadScopeAuthorizationStrategy(@NonNull String studyPrefix, @NonNull String studySuffix,
+    @NonNull String systemScope, MetadataService metadataService) {
+    super(studyPrefix, studySuffix, systemScope, metadataService);
   }
 
   @Override
   public boolean authorize(Authentication authentication, @NonNull final String fileId) {
-    val fileAccessType = fetchObjectAccessType(fileId);
+    val fileAccessType = fetchFileAccessType(fileId);
     val accessType = new Access(fileAccessType);
 
     if (accessType.isOpen()) {
@@ -42,24 +43,6 @@ public class DownloadScopeAuthorizationStrategy extends UploadScopeAuthorization
     } else {
       val msg = String.format("Invalid access type '%s' found in Metadata record for object id: %s", fileAccessType,
         fileId);
-      log.error(msg);
-      throw new NotRetryableException(new IllegalArgumentException(msg));
-    }
-  }
-
-  /**
-   * Retrieve access type for the given file
-   *
-   * @param fileId The id of the file to get the access type for.
-   * @return The access type of the file.
-   */
-  protected String fetchObjectAccessType(@NonNull final String fileId) {
-    // makes a query to meta service to retrieve project code for the given object id
-    val entity = metadataService.getEntity(fileId);
-    if (entity != null) {
-      return entity.getAccess();
-    } else {
-      val msg = String.format("Failed to retrieve metadata for fileId: %s", fileId);
       log.error(msg);
       throw new NotRetryableException(new IllegalArgumentException(msg));
     }
