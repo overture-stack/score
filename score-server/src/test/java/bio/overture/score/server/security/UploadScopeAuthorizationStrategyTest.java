@@ -23,25 +23,32 @@ import bio.overture.score.server.metadata.MetadataService;
 import lombok.val;
 import org.junit.Before;
 import org.junit.Test;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.provider.OAuth2Request;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Set;
 
 import static org.junit.Assert.*;
+import static org.mockito.ArgumentMatchers.isNotNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class UploadScopeAuthorizationStrategyTest {
-  private static final String TEST_SCOPE = "test.upload";
-  private static final AuthScope testScope = AuthScope.from(TEST_SCOPE, "[.]");
+  private static final String TEST_SCOPE= "PROGRAMDATA-TEST1-CA.WRITE";
+  private static final String STUDY_PREFIX ="PROGRAMDATA-";
+  private static final String UPLOAD_SUFFIX =".WRITE";
+  private static final String SYSTEM_SCOPE ="DCCAdmin.WRITE";
+
   private static final String PROJECT1="TEST1-CA";
   private static final String PROJECT2="TEST2-DK";
-  private UploadScopeAuthorizationStrategy sut; // "System Under Test"
 
-  @Before
-  public void init() {
+  private UploadScopeAuthorizationStrategy sut = init();
+
+  public static UploadScopeAuthorizationStrategy init() {
     val e1 = MetadataEntity.builder().projectCode(PROJECT1).id("1").build();
     val e2 = MetadataEntity.builder().projectCode(PROJECT2).id("2").build();
 
@@ -49,110 +56,55 @@ public class UploadScopeAuthorizationStrategyTest {
     when(meta.getEntity("1")).thenReturn(e1);
     when(meta.getEntity("2")).thenReturn(e2);
 
-    sut = new UploadScopeAuthorizationStrategy(TEST_SCOPE, "[.]", meta);
+    val security = new StudySecurity(STUDY_PREFIX, UPLOAD_SUFFIX, SYSTEM_SCOPE);
+    return new UploadScopeAuthorizationStrategy(security, meta);
+  }
+
+  private Authentication getAuthentication(boolean isExpired, Set<String> scopes) {
+    val request = mock(OAuth2Request.class);
+    when(request.getScope()).thenReturn(scopes);
+    val authentication = mock(ExpiringOauth2Authentication.class);
+    when(authentication.getOAuth2Request()).thenReturn(request);
+    when(authentication.getExpiry()).thenReturn(isExpired?0:60);
+    return authentication;
   }
 
   @Test
-  public void test_extract_scopes_handle_multiple() {
-    val scopeStrs =
-        new HashSet<String>(Arrays.asList("test1.download", "test.download", "test.OTHER-CODE.upload",
-            "test.ALT-CODE.upload", "test.CODE.upload", "test2.download"));
-    val scopes = testScope.matchingScopes(scopeStrs);
-    // should only return scopes of format test.{something}.upload
-    assertEquals(3, scopes.size());
+  public void test_system_scope_ok() {
+    val scopes = Set.of("test.GBM-US.upload", SYSTEM_SCOPE);
+    val authentication = getAuthentication(false, scopes);
+    assertTrue(sut.authorize(authentication, "1"));
   }
 
   @Test
-  public void test_extract_scopes_handle_blanket() {
-    val scopeStrs = new HashSet<String>(Arrays.asList("test.upload"));
-    val scopes = testScope.matchingScopes(scopeStrs);
-    assertEquals(1, scopes.size());
-    assertTrue(scopes.get(0).allowAllProjects());
+  public void test_study_scope_wrong_project() {
+    val scopes = Set.of(STUDY_PREFIX + PROJECT2 + UPLOAD_SUFFIX, "test.PRAD-US.upload");
+    val authentication = getAuthentication(false, scopes);
+
+    assertFalse(sut.authorize(authentication, "1"));
   }
 
   @Test
-  public void test_extract_scopes_handle_project() {
-    val scopeStrs = new HashSet<String>(Arrays.asList("test.PROJ-CODE.upload"));
-    val scopes = testScope.matchingScopes(scopeStrs);
-    assertEquals(1, scopes.size());
-    assertFalse(scopes.get(0).allowAllProjects());
-    assertEquals("PROJ-CODE", scopes.get(0).getProject());
+  public void test_study_scope_wrong_access() {
+    val scopes = Set.of(STUDY_PREFIX +PROJECT1+".READ", STUDY_PREFIX + PROJECT1 + ".upload");
+    val authentication = getAuthentication(false, scopes);
+    assertFalse(sut.authorize(authentication, "1"));
   }
 
   @Test
-  public void test_scope_filtering() {
-    // this represents the list of scopes that are contained in a token
-    val scopeStrs = new HashSet<String>(Arrays.asList(TEST_SCOPE, "test.download", "other.upload", "other.upload"));
-    val scopes = testScope.matchingScopes(scopeStrs);
-    val result = testScope.matchingProjects(scopes);
-    assertEquals(1, result.size());
-  }
-
-  /**
-   * Legacy scope format (system.operation) without a project specifier grants blanket authorization to all projects
-   */
-  @Test
-  public void test_scope_internal_wildcard_representation() {
-    // this represents the list of scopes that are contained in a token
-    val scopeStrs = new HashSet<String>(Arrays.asList(TEST_SCOPE, "test.download", "other.upload", "other.upload"));
-    val scopes = testScope.matchingScopes(scopeStrs);
-    val result = testScope.matchingProjects(scopes);
-    assertTrue(result.containsAll(new ArrayList<String>(Arrays.asList(AuthScope.ALL_PROJECTS))));
-  }
-
-  @Test
-  public void test_check_project_wildcard_short_circuit() throws IOException {
-    val scopeStrs =
-        new HashSet<String>(Arrays.asList("test.GBM-US.upload", "test.IGNORE-THIS.download", "test.BRCA-US.upload",
-            "test.PRAD-US.upload", "test.upload"));
-    val scopes = testScope.matchingScopes(scopeStrs);
-    val projects = testScope.matchingProjects(scopes);
-    assertEquals(4, projects.size());
-
-    // returns access without trying to retrieve project code for object id
-    assertTrue(sut.verify(scopes, "DOESN'T-MATTER"));
-  }
-
-  @Test
-  public void test_check_project_object_wrong_project() {
-    val scopeStrs = new HashSet<String>(Arrays.asList("test.GBM-US.upload",
-      "test.PRAD-US.upload"));
-    val scopes = testScope.matchingScopes(scopeStrs);
-
-    assertFalse(sut.verify(scopes, "1"));
-
-  }
-
-  @Test
-  public void test_check_project_object_wrong_access() {
-    val scopeStrs = new HashSet<String>(Arrays.asList("test."+PROJECT1+".download",
-      "test." + PROJECT2 + ".upload"));
-    val scopes = testScope.matchingScopes(scopeStrs);
-
-    assertFalse(sut.verify(scopes, "1"));
-
-  }
-
-  @Test
-  public void test_check_project_object_right_access() {
-    val scopeStrs = new HashSet<String>(Arrays.asList("test."+PROJECT1+".download",
-      "test." + PROJECT2 + ".UPLOAD"));
-    val scopes = testScope.matchingScopes(scopeStrs);
-
-    assertTrue(sut.verify(scopes, "2"));
-
+  public void test_study_scope_ok() {
+    val scopes = Set.of(STUDY_PREFIX +PROJECT1+".WRITE", STUDY_PREFIX + PROJECT1 + ".upload");
+    val authentication = getAuthentication(false, scopes);
+    assertTrue(sut.authorize(authentication, "1"));
   }
 
   @Test
   public void test_check_project_object_not_found() {
-    val scopeStrs = new HashSet<String>(Arrays.asList("test.GBM-US.upload",
-      "test.PRAD-US.upload"));
-    val scopes = testScope.matchingScopes(scopeStrs);
-
-    // returns access without trying to retrieve project code for object id
+    val scopes = Set.of("DACO.WRITE", "CLOUD.READ");
+    val authentication = getAuthentication(false, scopes);
     Exception exception = null;
     try {
-      sut.verify(scopes, "NOT-FOUND");
+      sut.authorize(authentication, "NOT-FOUND");
     } catch(NotRetryableException e) {
       exception = e;
     }
@@ -160,5 +112,4 @@ public class UploadScopeAuthorizationStrategyTest {
     assertEquals("java.lang.IllegalArgumentException: Failed to retrieve metadata for objectId: NOT-FOUND",
       exception.getMessage());
   }
-
 }

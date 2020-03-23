@@ -20,13 +20,11 @@ package bio.overture.score.server.security;
 import bio.overture.score.server.metadata.MetadataEntity;
 import bio.overture.score.server.metadata.MetadataService;
 import lombok.val;
-import org.junit.Before;
 import org.junit.Test;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.provider.OAuth2Request;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -34,20 +32,33 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class DownloadScopeAuthorizationStrategyTest {
-  private MetadataService metadataService;
-  private DownloadScopeAuthorizationStrategy sut;
+  private static final String TEST_SCOPE= "PROGRAMDATA-TEST1-CA.READ";
+  private static final String STUDY_PREFIX ="PROGRAMDATA-";
+  private static final String DOWNLOAD_SUFFIX =".READ";
+  private static final String SYSTEM_SCOPE ="DCCAdmin.WRITE";
 
-  public static final String TEST_SCOPE = "test.download";
-  public static final AuthScope testScope = AuthScope.from(TEST_SCOPE, "[.]");
+  private static final String OPEN_ACESSS_ID = "123"; // file id of a mock open access file
+  private static final String CONTROLLED_ACCESS_ID="2345";
 
-  @Before
-  public void init() {
-    metadataService = mock(MetadataService.class);
-    sut = new DownloadScopeAuthorizationStrategy(TEST_SCOPE, "[.]", metadataService);
+  private DownloadScopeAuthorizationStrategy sut = init(); // System Under Test
+
+  public MetadataService getMetadataService() {
+    val metadataService = mock(MetadataService.class);
+
+    val openEntity = entity(OPEN_ACESSS_ID, "abc1", "something.bam", "TEST1-CA",
+      "open");
+    when(metadataService.getEntity(OPEN_ACESSS_ID)).thenReturn(openEntity);
+
+    val controlledEntity = entity(CONTROLLED_ACCESS_ID, "abc2", "something-else.bam",
+      "TEST1-CA", "controlled");
+    when(metadataService.getEntity(CONTROLLED_ACCESS_ID)).thenReturn(controlledEntity);
+
+    return metadataService;
   }
 
-  private List<AuthScope> getScopes(String... scopeStrings) {
-    return testScope.matchingScopes(new HashSet<>(Arrays.asList(scopeStrings)));
+  public DownloadScopeAuthorizationStrategy init() {
+    val security = new StudySecurity(STUDY_PREFIX, DOWNLOAD_SUFFIX, SYSTEM_SCOPE);
+    return new DownloadScopeAuthorizationStrategy(security, getMetadataService());
   }
 
   public MetadataEntity entity(String id, String gnosId, String fileName, String projectCode, String accessType) {
@@ -60,80 +71,69 @@ public class DownloadScopeAuthorizationStrategyTest {
     return entity;
   }
 
+  private Authentication getAuthentication(boolean isExpired, Set<String> scopes) {
+    val request = mock(OAuth2Request.class);
+    when(request.getScope()).thenReturn(scopes);
+    val authentication = mock(ExpiringOauth2Authentication.class);
+    when(authentication.getOAuth2Request()).thenReturn(request);
+    when(authentication.getExpiry()).thenReturn(isExpired?0:60);
+    return authentication;
+  }
+
+
   @Test
   public void test_open_missing_scope() {
-    val openEntity = entity("123", "abc", "something.bam", "PROJ-CD",
-      "open");
-    when(metadataService.getEntity("123")).thenReturn(openEntity);
-
-    // no test.download scope
-    val scopes = getScopes("test1.download", "test.OTHER-CODE.upload",
-      "test.ALT-CODE.upload", "test.CODE.upload", "test2.download");
-
-    val result = sut.verify(scopes, "123");
+    val auth = getAuthentication(false, Collections.emptySet());
+    val result = sut.authorize(auth, OPEN_ACESSS_ID);
     assertTrue(result);
   }
 
   @Test
-  public void test_open_no_scopes() {
-    val openEntity = entity("123", "abc", "something.bam", "PROJ-CD",
-      "open");
-    when(metadataService.getEntity("123")).thenReturn(openEntity);
-
-    // no token, means no scopes at all
-    List<AuthScope> scopes = Collections.emptyList();
-
-    val result = sut.verify(scopes, "123");
+  public void test_open_missing_scope_expired() {
+    val auth = getAuthentication(true, Collections.emptySet());
+    val result = sut.authorize(auth, OPEN_ACESSS_ID);
     assertTrue(result);
   }
 
   @Test
-  public void test_controlled_has_blanket_scope() {
-    val controlledEntity = entity("123", "abc", "something.bam", "PROJ-CD",
-      "controlled");
-    when(metadataService.getEntity("123")).thenReturn(controlledEntity);
+  public void test_controlled_has_system_scope() {
+    val scopes = getAuthentication(false, Set.of("collab.read", "cloud.read", SYSTEM_SCOPE,
+      STUDY_PREFIX + "ANOTHER-STUDY-CA"+ DOWNLOAD_SUFFIX));
 
-    val scopes = getScopes("test1.download", "test.download", "test.OTHER-CODE.upload",
-      "test.ALT-CODE.upload", "test.CODE.upload", "test2.download");
-
-    val result = sut.verify(scopes, "123");
+    val result = sut.authorize(scopes, CONTROLLED_ACCESS_ID);
     assertTrue(result);
   }
 
   @Test
-  public void test_controlled_has_project_scope() {
-    val controlledEntity = entity("123", "abc", "something.bam", "PROJ-CD",
-      "controlled");
-    val scopes = getScopes("test1.download", "test.PROJ-CD.download", "test.OTHER-CODE.upload",
-      "test.ALT-CODE.upload", "test.CODE.upload", "test2.download");
-    when(metadataService.getEntity("123")).thenReturn(controlledEntity);
-    val result = sut.verify(scopes, "123");
-    assertTrue(result);
-  }
+  public void test_controlled_has_system_scope_expired() {
+    val scopes = getAuthentication(true, Set.of("collab.read", "cloud.read", SYSTEM_SCOPE,
+      STUDY_PREFIX + "ANOTHER-STUDY-CA"+ DOWNLOAD_SUFFIX));
 
-  @Test
-  public void test_controlled_missing_scope() {
-    val openEntity = entity("123", "abc", "something.bam", "PROJ-CD", "controlled");
-    when(metadataService.getEntity("123")).thenReturn(openEntity);
-
-    // missing test.download scope
-    val scopes = getScopes("test1.download", "test.OTHER-CODE.upload",
-      "test.ALT-CODE.upload", "test.CODE.upload", "test2.download");
-
-    val result = sut.verify(scopes, "123");
+    val result = sut.authorize(scopes, CONTROLLED_ACCESS_ID);
     assertFalse(result);
   }
 
   @Test
-  public void test_controlled_no_scopes() {
-    val controlledEntity = entity("123", "abc", "something.bam", "PROJ-CD",
-      "controlled");
-    when(metadataService.getEntity("123")).thenReturn(controlledEntity);
+  public void test_controlled_missing_scope() {
+    val scopes = getAuthentication(false, Set.of("collab.read", "cloud.read",
+      STUDY_PREFIX + "ANOTHER-STUDY-CA"+ DOWNLOAD_SUFFIX));
 
-    // no token, means no scopes at all
-    List<AuthScope> scopes = Collections.emptyList();
+    val result = sut.authorize(scopes, CONTROLLED_ACCESS_ID);
+    assertFalse(result);
+  }
 
-    val result = sut.verify(scopes, "123");
+
+  @Test
+  public void test_controlled_has_study_scope() {
+    val scopes = getAuthentication(false, Set.of("collab.read", TEST_SCOPE, "other-stuff.download"));
+    val result = sut.authorize(scopes, CONTROLLED_ACCESS_ID);
+    assertTrue(result);
+  }
+
+  @Test
+  public void test_controlled_has_study_scope_expired() {
+    val scopes = getAuthentication(true, Set.of("collab.read", TEST_SCOPE, "other-stuff.download"));
+    val result = sut.authorize(scopes, CONTROLLED_ACCESS_ID);
     assertFalse(result);
   }
 }

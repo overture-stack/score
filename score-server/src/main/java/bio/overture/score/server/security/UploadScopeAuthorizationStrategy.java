@@ -22,35 +22,21 @@ import bio.overture.score.server.metadata.MetadataService;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-
-import java.util.List;
+import org.springframework.security.core.Authentication;
 
 @Slf4j
-public class UploadScopeAuthorizationStrategy extends AbstractScopeAuthorizationStrategy {
+public class UploadScopeAuthorizationStrategy {
   MetadataService metadataService;
+  StudySecurity security;
 
-  public UploadScopeAuthorizationStrategy(String scope, String separator, MetadataService metadataService) {
-    super(AuthScope.from(scope, separator));
+  public UploadScopeAuthorizationStrategy(StudySecurity security, MetadataService metadataService) {
+    this.security = security;
     this.metadataService = metadataService;
   }
 
-  @Override
-  protected boolean verify(@NonNull List<AuthScope> grantedScopes, @NonNull final String objectId) {
-    if (grantedScopes.stream().anyMatch(AuthScope::allowAllProjects)) {
-      log.info("Access granted to blanket scope");
-      return true;
-    }
-
-    val projectCodes = getAuthorizedProjectCodes(grantedScopes);
-    val requiredProjectCode = fetchProjectCode(objectId);
-    val result = projectCodes.contains(requiredProjectCode);
-    log.info("checking for permission to project {} for object id {} ({})", requiredProjectCode, objectId, result);
-
-    return result;
-  }
-
-  protected List<String> getAuthorizedProjectCodes(@NonNull List<AuthScope> grantedScopes) {
-    return getScope().matchingProjects(grantedScopes);
+  public boolean authorize(@NonNull Authentication authentication, @NonNull final String fileId) {
+    val studyId = fetchProjectCode(fileId);
+    return security.authorize(authentication, studyId);
   }
 
   /**
@@ -70,5 +56,4 @@ public class UploadScopeAuthorizationStrategy extends AbstractScopeAuthorization
       throw new NotRetryableException(new IllegalArgumentException(msg));
     }
   }
-
 }
