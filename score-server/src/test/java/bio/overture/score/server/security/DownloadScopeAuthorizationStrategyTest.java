@@ -90,6 +90,7 @@ public class DownloadScopeAuthorizationStrategyTest {
   public void test_open_missing_scope_expired() {
     val auth = getAuthentication(true, Collections.emptySet());
     val result = sut.authorize(auth, OPEN_ACESSS_ID);
+
     assertTrue(result);
   }
 
@@ -119,7 +120,6 @@ public class DownloadScopeAuthorizationStrategyTest {
     val result = sut.authorize(scopes, CONTROLLED_ACCESS_ID);
     assertFalse(result);
   }
-
 
   @Test
   public void test_controlled_has_study_scope() {
