@@ -105,7 +105,19 @@ public class UploadScopeAuthorizationStrategyTest {
     assertTrue(sut.authorize(authentication, "1"));
   }
 
+  @Test
+  public void test_study_and_system_scope_ok() {
+    val scopes = Set.of(TEST_SCOPE, SYSTEM_SCOPE,  STUDY_PREFIX+ PROJECT1 + ".upload");
+    val authentication = getAuthentication(false, scopes);
+    assertTrue(sut.authorize(authentication, "1"));
+  }
 
+  @Test
+  public void test_study_and_system_scope_expired() {
+    val scopes = Set.of(TEST_SCOPE, SYSTEM_SCOPE,  STUDY_PREFIX+ PROJECT1 + ".upload");
+    val authentication = getAuthentication(true, scopes);
+    assertFalse(sut.authorize(authentication, "1"));
+  }
 
   @Test
   public void test_study_scope_unknown_file_fails() {

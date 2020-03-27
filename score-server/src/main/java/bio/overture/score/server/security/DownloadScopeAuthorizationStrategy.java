@@ -23,6 +23,8 @@ import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.security.core.Authentication;
+import static bio.overture.score.server.security.TokenChecker.isExpired;
+import static bio.overture.score.server.util.Scopes.extractGrantedScopes;
 
 @Slf4j
 public class DownloadScopeAuthorizationStrategy extends UploadScopeAuthorizationStrategy {
@@ -32,17 +34,27 @@ public class DownloadScopeAuthorizationStrategy extends UploadScopeAuthorization
   }
 
   @Override
-  public boolean authorize(Authentication authentication, @NonNull final String fileId) {
-    val fileAccessType = fetchFileAccessType(fileId);
+  public boolean authorize(Authentication authentication, @NonNull final String objectId) {
+    if (isExpired(authentication)) {
+      return false;
+    }
+    val grantedScopes = extractGrantedScopes(authentication);
+    log.info("Checking system-level authorization for objectId {}", objectId);
+    if (verifyOneOfSystemScope(grantedScopes)) {
+      return true;
+    }
+    log.info("Checking access control level for objectId {}", objectId);
+    val fileAccessType = fetchFileAccessType(objectId);
     val accessType = new Access(fileAccessType);
-
     if (accessType.isOpen()) {
+      log.info("Access control level is open -- access granted");
       return true;
     } else if (accessType.isControlled()) {
-      return super.authorize(authentication, fileId);
+      log.info("Access control level is controlled -- checking study level authorization.");
+      return verifyOneOfStudyScope(grantedScopes, objectId);
     } else {
       val msg = String.format("Invalid access type '%s' found in Metadata record for object id: %s", fileAccessType,
-        fileId);
+        objectId);
       log.error(msg);
       throw new NotRetryableException(new IllegalArgumentException(msg));
     }

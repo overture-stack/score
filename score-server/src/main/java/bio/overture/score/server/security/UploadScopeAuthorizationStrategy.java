@@ -35,30 +35,26 @@ public class UploadScopeAuthorizationStrategy {
   @NonNull String systemScope;
   @NonNull MetadataService metadataService;
 
-  public boolean authorize(@NonNull Authentication authentication, @NonNull final String fileId) {
+  public boolean authorize(@NonNull Authentication authentication, @NonNull final String objectId) {
     if (isExpired(authentication)) {
       return false;
     }
     val grantedScopes = extractGrantedScopes(authentication);
-    log.info("Checking system-level authorization for fileId {}", fileId);
     if (verifyOneOfSystemScope(grantedScopes)) {
+      log.info("System-level authorization granted");
       return true;
     }
-    log.info("Checking study-level authorization for fileId {}", fileId);
-    return verifyOneOfStudyScope(grantedScopes, fileId);
+    log.info("Checking study-level authorization for objectId {}", objectId);
+    return verifyOneOfStudyScope(grantedScopes, objectId);
   }
 
   public boolean verifyOneOfSystemScope(@NonNull Set<String> grantedScopes) {
     return grantedScopes.stream().anyMatch(s -> s.equalsIgnoreCase(systemScope));
   }
   public boolean verifyOneOfStudyScope(
-      @NonNull Set<String> grantedScopes, @NonNull final String fileId) {
-    return grantedScopes.stream().anyMatch(s -> isScopeMatchStudy(s, fileId));
-  }
-
-  public boolean isScopeMatchStudy(@NonNull String tokenScope, @NonNull String fileId) {
-    val studyId = fetchStudyId(fileId);
-    return getStudyScope(studyId).equals(tokenScope);
+      @NonNull Set<String> grantedScopes, @NonNull final String objectId) {
+    val studyScope = getStudyScope(fetchStudyId(objectId));
+    return grantedScopes.stream().anyMatch(studyScope::equalsIgnoreCase);
   }
 
   public String getStudyScope(@NonNull String studyId) {
@@ -68,16 +64,18 @@ public class UploadScopeAuthorizationStrategy {
   /**
    * Retrieve project code from Metadata Service for specific object id
    *
-   * @param fileId The id of the file that we want to upload/download.
+   * @param objectId The id of the file that we want to upload/download.
    * @return The id of the study that the file part of.
    */
-  protected String fetchStudyId(@NonNull final String fileId) {
+  protected String fetchStudyId(@NonNull final String objectId) {
     // makes a query to meta service to retrieve project code for the given object id
-    val entity = metadataService.getEntity(fileId);
+    val entity = metadataService.getEntity(objectId);
     if (entity != null) {
-      return entity.getProjectCode();
+      val studyId = entity.getProjectCode();
+      log.info("Fetched studyId '{}' for objectId '{}'", studyId, objectId);
+      return studyId;
     } else {
-      val msg = String.format("Failed to retrieve metadata for objectId: %s", fileId);
+      val msg = String.format("Failed to retrieve metadata for objectId: %s", objectId);
       log.error(msg);
       throw new NotRetryableException(new IllegalArgumentException(msg));
     }
@@ -86,16 +84,16 @@ public class UploadScopeAuthorizationStrategy {
   /**
    * Retrieve access type for the given file
    *
-   * @param fileId The id of the file to get the access type for.
+   * @param objectId The id of the file to get the access type for.
    * @return The access type of the file.
    */
-  public String fetchFileAccessType(@NonNull final String fileId) {
+  public String fetchFileAccessType(@NonNull final String objectId) {
     // makes a query to meta service to retrieve project code for the given object id
-    val entity = metadataService.getEntity(fileId);
+    val entity = metadataService.getEntity(objectId);
     if (entity != null) {
       return entity.getAccess();
     } else {
-      val msg = String.format("Failed to retrieve metadata for fileId: %s", fileId);
+      val msg = String.format("Failed to retrieve metadata for objectId: %s", objectId);
       log.error(msg);
       throw new NotRetryableException(new IllegalArgumentException(msg));
     }
