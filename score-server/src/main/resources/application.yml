@@ -64,6 +64,7 @@ upload:
   clean.cron: "0 0 0 * * ?" 
   clean.enabled: true
 
+
 ---
 
 ###############################################################################
@@ -154,11 +155,6 @@ spring.profiles: prod
 s3:
   secured: true
 
-endpoints:
-  dump.enabled: false
-  env.enabled: false
-  info.enabled: false
-
 # Metadata server
 metadata:
   url: https://meta.icgc.org
@@ -175,16 +171,17 @@ spring.profiles: secure
 auth:
   server:
     url: https://localhost:8443/oauth/check_token
-    tokenNamme: token
+    tokenName: token
     clientId: resource
     clientSecret: pass
-    uploadScope: aws.upload
-    downloadScope: aws.download
-    #uploadScope=collab.upload
-    #downloadScope=collab.download
-    #uploadScope=azure.upload
-    #downloadScope=azure.download
-    
+    scope:
+      study:
+        prefix: aws.
+      upload:
+        suffix: .upload
+      download:
+        suffix: .download
+      system: aws.download
 ---
 
 ###############################################################################

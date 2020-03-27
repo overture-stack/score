@@ -46,11 +46,11 @@ public class S3Request {
   String objectId;
 
   public boolean isGet() {
-    return ctx.getRequest().getMethod() == HttpMethod.GET;
+    return ctx.getRequest().method() == HttpMethod.GET;
   }
 
   public boolean isPut() {
-    return ctx.getRequest().getMethod() == HttpMethod.PUT;
+    return ctx.getRequest().method() == HttpMethod.PUT;
   }
 
   public boolean isObject() {

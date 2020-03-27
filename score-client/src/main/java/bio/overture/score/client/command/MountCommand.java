@@ -1,18 +1,18 @@
 /*
- * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.                             
- *                                                                                                               
+ * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.
+ *
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
- * You should have received a copy of the GNU General Public License along with                                  
- * this program. If not, see <http://www.gnu.org/licenses/>.                                                     
- *                                                                                                               
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY                           
- * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES                          
- * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT                           
- * SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,                                
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED                          
- * TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;                               
- * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER                              
- * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
+ * You should have received a copy of the GNU General Public License along with
+ * this program. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
+ * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT
+ * SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+ * TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+ * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 package bio.overture.score.client.command;
@@ -58,7 +58,7 @@ import static bio.overture.score.client.mount.MountService.INTERNAL_MOUNT_OPTION
 import static bio.overture.score.client.util.Formats.formatBytes;
 import static bio.overture.score.client.util.Formats.formatBytesUnits;
 import static bio.overture.score.fs.util.Formats.formatCount;
-import static com.google.common.base.Objects.firstNonNull;
+import static com.google.common.base.MoreObjects.firstNonNull;
 import static com.google.common.collect.Maps.newHashMap;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
@@ -89,7 +89,8 @@ public class MountCommand extends RepositoryAccessCommand {
   private boolean daemonize;
   @Parameter(names = "--verify-connection", description = "Verify connection to repository", arity = 1)
   private boolean verifyConnection = true;
-  @Parameter(names = "--options", description = "The mount options of the file system (e.g. --options user_allow_other,allow_other,fsname=icgc,debug) "
+  @Parameter(names = "--options", description =
+    "The mount options of the file system (e.g. --options user_allow_other,allow_other,fsname=icgc,debug) "
       + "in addition to those specified internally: " + INTERNAL_MOUNT_OPTIONS + ". See " + FUSE_README_URL
       + " for details", converter = MountOptionsConverter.class)
   private Map<String, String> options = newHashMap();
@@ -114,9 +115,9 @@ public class MountCommand extends RepositoryAccessCommand {
   @SuppressFBWarnings(value = "NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE", justification = "JCommander parameter ensures File is valid")
   public int execute() throws Exception {
     checkParameter(mountPoint.canExecute(),
-        "Cannot mount to '%s'. Please check directory permissions and try again", mountPoint);
+      "Cannot mount to '%s'. Please check directory permissions and try again", mountPoint);
     checkParameter(mountPoint.list() != null && mountPoint.list().length == 0,
-        "Cannot mount to '%s'. Please ensure the directory is empty and is not already mounted", mountPoint);
+      "Cannot mount to '%s'. Please ensure the directory is empty and is not already mounted", mountPoint);
 
     // If requested, put into the background
     if (daemonize()) {
@@ -139,7 +140,7 @@ public class MountCommand extends RepositoryAccessCommand {
       //
 
       val tip =
-          cacheMetadata ? "" : " (Tip: use " + terminal.option("--cache-metadata") + " to skip this step next time)";
+        cacheMetadata ? "" : " (Tip: use " + terminal.option("--cache-metadata") + " to skip this step next time)";
 
       log.info("Indexing remote entities...");
       terminal.printStatus(i++, "Indexing remote entities" + tip + ". Please wait");
@@ -155,7 +156,7 @@ public class MountCommand extends RepositoryAccessCommand {
 
       // Filter for objects that have no entities.
       val entityIds = entities.stream().map(Entity::getId).collect(toSet());
-      objects = objects.stream().filter( o -> entityIds.contains(o.getId())).collect(toList());
+      objects = objects.stream().filter(o -> entityIds.contains(o.getId())).collect(toList());
 
       //
       // Check access
@@ -164,7 +165,7 @@ public class MountCommand extends RepositoryAccessCommand {
       log.info("Checking access...");
       terminal.printStatus(i++, "Checking access. Please wait");
       val context =
-          new MountStorageContext(layout, downloadService, entities, objects);
+        new MountStorageContext(layout, downloadService, entities, objects);
       if (!terminal.printWaiting(context::isAuthorized)) {
         terminal.printError("Access denied");
         return FAILURE_STATUS;
@@ -191,7 +192,9 @@ public class MountCommand extends RepositoryAccessCommand {
       //[ERROR] MountCommand.java:[188,28] incompatible types: inference variable T has incompatible bounds
       //[ERROR]     lower bounds: java.lang.Object
       //[ERROR]     lower bounds: void
-      terminal.printWaiting(() -> { mount(context); });
+      terminal.printWaiting(() -> {
+        mount(context);
+      });
       reportMount();
 
       //
@@ -261,28 +264,28 @@ public class MountCommand extends RepositoryAccessCommand {
 
     for (val file : files) {
       terminal.printf(" - %s: %s/%s %s %s %s%n",
-          terminal.ansi("@|blue " + file.getObjectId() + "|@"),
-          terminal.ansi("@|green " + file.getGnosId() + "|@"),
-          terminal.ansi("@|green " + file.getFileName() + "|@"),
-          terminal.ansi("@|bold @|@"),
-          formatBytes(file.getSize()),
-          terminal.ansi("@|bold " + formatBytesUnits(file.getSize()) + "|@"));
+        terminal.ansi("@|blue " + file.getObjectId() + "|@"),
+        terminal.ansi("@|green " + file.getGnosId() + "|@"),
+        terminal.ansi("@|green " + file.getFileName() + "|@"),
+        terminal.ansi("@|bold @|@"),
+        formatBytes(file.getSize()),
+        terminal.ansi("@|bold " + formatBytesUnits(file.getSize()) + "|@"));
 
       totalSize += file.getSize();
     }
 
     terminal.printLine();
     terminal.println(" Total count: " + formatCount(files.size()) +
-        ", Total size: " + formatBytes(totalSize) + " " + formatBytesUnits(totalSize) + "\n");
+      ", Total size: " + formatBytes(totalSize) + " " + formatBytesUnits(totalSize) + "\n");
   }
 
   private void reportMount() {
     val location = terminal.value(mountPoint.getAbsolutePath());
     terminal.printStatus(
-        terminal.label("Successfully mounted file system at " + location + " and is now ready for use."));
+      terminal.label("Successfully mounted file system at " + location + " and is now ready for use."));
 
     terminal.print("\nOpen a new terminal for interaction or relaunch with " + terminal.option("--daemonize")
-        + " to put in background");
+      + " to put in background");
   }
 
   private void reportSummary(MountStorageContext context, Stopwatch watch) {
@@ -302,12 +305,14 @@ public class MountCommand extends RepositoryAccessCommand {
   //
 
   private List<ObjectInfo> resolveObjects() throws IOException {
-    return resolveList("objects", storageService::listObjects, new TypeReference<List<ObjectInfo>>() {});
+    return resolveList("objects", storageService::listObjects, new TypeReference<List<ObjectInfo>>() {
+    });
   }
 
   private List<Entity> resolveEntities() throws IOException {
     return resolveList("entities", () -> metadataServices.getEntities("id", "fileName", "gnosId"),
-        new TypeReference<List<Entity>>() {});
+      new TypeReference<List<Entity>>() {
+      });
   }
 
   @SneakyThrows
@@ -339,12 +344,12 @@ public class MountCommand extends RepositoryAccessCommand {
     validateManifest(manifest);
 
     val objectIds = manifest.getEntries().stream()
-        .flatMap(entry -> Stream.of(entry.getFileUuid(), entry.getIndexFileUuid()))
-        .collect(toSet());
+      .flatMap(entry -> Stream.of(entry.getFileUuid(), entry.getIndexFileUuid()))
+      .collect(toSet());
 
     return objects.stream()
-        .filter(object -> objectIds.contains(object.getId()))
-        .collect(toList());
+      .filter(object -> objectIds.contains(object.getId()))
+      .collect(toList());
   }
 
 }

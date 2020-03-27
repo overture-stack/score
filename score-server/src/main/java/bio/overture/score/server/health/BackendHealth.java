@@ -56,7 +56,7 @@ public class BackendHealth implements HealthIndicator {
      * if (tokens.size() != 1) { builder.outOfService(); } else {
      */
     // check if the aws account can access the bucket
-    boolean foundBucket = true;
+    boolean foundBucket;
 
     /*
      * with bucket pools, all bucket names might have a numeric suffix should be safe to assume that we will have a .0
@@ -69,7 +69,7 @@ public class BackendHealth implements HealthIndicator {
     }
 
     try {
-      foundBucket = s3.doesBucketExist(checkBucketName);
+      foundBucket = s3.doesBucketExistV2(checkBucketName);
     } catch (Exception e) {
       foundBucket = false;
     }

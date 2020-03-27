@@ -17,37 +17,51 @@
  */
 package bio.overture.score.server.security;
 
+import bio.overture.score.server.exception.NotRetryableException;
 import bio.overture.score.server.metadata.MetadataEntity;
 import bio.overture.score.server.metadata.MetadataService;
 import lombok.val;
-import org.junit.Before;
 import org.junit.Test;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.provider.OAuth2Request;
 
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
-import static java.util.Collections.emptyList;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class DownloadScopeAuthorizationStrategyTest {
-  private MetadataService metadataService;
-  private DownloadScopeAuthorizationStrategy sut;
 
-  public static final String TEST_SCOPE = "test.download";
-  public static final AuthScope testScope = AuthScope.from(TEST_SCOPE);
+  private static final String STUDY_PREFIX = "PROGRAMDATA-";
+  private static final String DOWNLOAD_SUFFIX = ".READ";
+  private static final String SYSTEM_SCOPE = "DCCAdmin.WRITE";
+  private static final String TEST_STUDY = "TEST1-CA";
+  private static final String OTHER_STUDY = "TEST2-DK";
 
-  @Before
-  public void init() {
-    metadataService = mock(MetadataService.class);
-    sut = new DownloadScopeAuthorizationStrategy(TEST_SCOPE, metadataService);
+  private static final String OPEN_ACESSS_ID = "123"; // file id of a mock open access file
+  private static final String CONTROLLED_ACCESS_ID = "2345";
+
+  private DownloadScopeAuthorizationStrategy sut = init(); // System Under Test
+
+  public MetadataService getMetadataService() {
+    val metadataService = mock(MetadataService.class);
+
+    val openEntity = entity(OPEN_ACESSS_ID, "abc1", "something.bam", "TEST1-CA",
+      "open");
+    when(metadataService.getEntity(OPEN_ACESSS_ID)).thenReturn(openEntity);
+
+    val controlledEntity = entity(CONTROLLED_ACCESS_ID, "abc2", "something-else.bam",
+      "TEST1-CA", "controlled");
+    when(metadataService.getEntity(CONTROLLED_ACCESS_ID)).thenReturn(controlledEntity);
+
+    return metadataService;
   }
 
-  private List<AuthScope> getScopes(String... scopeStrings) {
-    return testScope.matchingScopes(new HashSet<>(Arrays.asList(scopeStrings)));
+  public DownloadScopeAuthorizationStrategy init() {
+    return new DownloadScopeAuthorizationStrategy(STUDY_PREFIX, DOWNLOAD_SUFFIX, SYSTEM_SCOPE, getMetadataService());
   }
 
   public MetadataEntity entity(String id, String gnosId, String fileName, String projectCode, String accessType) {
@@ -60,68 +74,162 @@ public class DownloadScopeAuthorizationStrategyTest {
     return entity;
   }
 
-  @Test
-  public void test_open_missing_scope() {
-    val openEntity = entity("123", "abc", "something.bam", "PROJ-CD",
-      "open");
-    when(metadataService.getEntity("123")).thenReturn(openEntity);
+  private Authentication getAuthentication(boolean isExpired, Set<String> scopes) {
+    val request = mock(OAuth2Request.class);
+    when(request.getScope()).thenReturn(scopes);
+    val authentication = mock(ExpiringOauth2Authentication.class);
+    when(authentication.getOAuth2Request()).thenReturn(request);
+    when(authentication.getExpiry()).thenReturn(isExpired ? 0 : 60);
+    return authentication;
+  }
 
-    // no test.download scope
-    val scopes = getScopes("test1.download", "test.OTHER-CODE.upload",
-      "test.ALT-CODE.upload", "test.CODE.upload", "test2.download");
+  public String getStudyScope(String study) {
+    return STUDY_PREFIX + study + DOWNLOAD_SUFFIX;
+  }
 
-    val result = sut.verify(scopes, "123");
-    assertTrue(result);
+  public Set<String> getScopes(boolean hasSystem, boolean hasStudy, boolean hasOther) {
+    val scopes = new TreeSet<String>();
+    if (hasSystem) {
+      scopes.add(SYSTEM_SCOPE);
+    }
+    if (hasStudy) {
+      scopes.add(getStudyScope(TEST_STUDY));
+    }
+    if (hasOther) {
+      scopes.add(getStudyScope(OTHER_STUDY));
+    }
+    return scopes;
+  }
+
+  public boolean run_test(boolean isExpired, boolean isOpen, boolean hasSystem, boolean hasStudy, boolean hasOther) {
+    val scopes = getScopes(hasSystem, hasStudy, hasOther);
+    val auth = getAuthentication(isExpired, scopes);
+    return sut.authorize(auth, isOpen ? OPEN_ACESSS_ID : CONTROLLED_ACCESS_ID);
   }
 
   @Test
-  public void test_open_no_scopes() {
-    val openEntity = entity("123", "abc", "something.bam", "PROJ-CD",
-      "open");
-    when(metadataService.getEntity("123")).thenReturn(openEntity);
-
-    // no token, means no scopes at all
-    List<AuthScope> scopes = emptyList();
-
-    val result = sut.verify(scopes, "123");
-    assertTrue(result);
+  public void test_expired_always_fails() {
+    val choices = List.of(false, true);
+    boolean everythingPassed = true;
+    for (val isOpen : choices) {
+      for (val hasSystem : choices) {
+        for (val hasStudy : choices) {
+          for (val hasOther : choices) {
+            val result = run_test(true, isOpen, hasSystem, hasStudy, hasOther);
+            if (result) {
+              System.err.printf("Access allowed with expired token (access control='%s', scopes='%s')",
+                isOpen ? "open" : "controlled", getScopes(hasSystem, hasStudy, hasOther));
+              everythingPassed = false;
+            }
+          }
+        }
+      }
+    }
+    assertTrue(everythingPassed);
   }
 
   @Test
-  public void test_controlled_has_blanket_scope() {
-    val controlledEntity = entity("123", "abc", "something.bam", "PROJ-CD",
-      "controlled");
-    when(metadataService.getEntity("123")).thenReturn(controlledEntity);
-
-    val scopes = getScopes("test1.download", "test.download", "test.OTHER-CODE.upload",
-      "test.ALT-CODE.upload", "test.CODE.upload", "test2.download");
-
-    val result = sut.verify(scopes, "123");
-    assertTrue(result);
+  public void test_non_expired_open_access_always_succeeds() {
+    val choices = List.of(false, true);
+    boolean everythingPassed = true;
+    for (val hasSystem : choices) {
+      for (val hasStudy : choices) {
+        for (val hasOther : choices) {
+          val result = run_test(false, true, hasSystem, hasStudy, hasOther);
+          if (!result) {
+            System.err.printf("Open access wasn't granted to non-expired token (scopes='%s')",
+              getScopes(hasSystem, hasStudy, hasOther));
+            everythingPassed = false;
+          }
+        }
+      }
+    }
+    assertTrue(everythingPassed);
   }
 
   @Test
-  public void test_controlled_has_project_scope() {
-    val controlledEntity = entity("123", "abc", "something.bam", "PROJ-CD",
-      "controlled");
-    val scopes = getScopes("test1.download", "test.PROJ-CD.download", "test.OTHER-CODE.upload",
-      "test.ALT-CODE.upload", "test.CODE.upload", "test2.download");
-    when(metadataService.getEntity("123")).thenReturn(controlledEntity);
-    val result = sut.verify(scopes, "123");
-    assertTrue(result);
+  public void test_controlled_access_no_scopes_fails() {
+    assertFalse(run_test(false, false, false, false, false));
   }
 
   @Test
-  public void test_controlled_missing_scope() {
-    val openEntity = entity("123", "abc", "something.bam", "PROJ-CD", "controlled");
-    when(metadataService.getEntity("123")).thenReturn(openEntity);
-
-    // missing test.download scope
-    val scopes = getScopes("test1.download", "test.OTHER-CODE.upload",
-      "test.ALT-CODE.upload", "test.CODE.upload", "test2.download");
-
-    val result = sut.verify(scopes, "123");
-    assertFalse(result);
+  public void test_controlled_access_wrong_scope_fails() {
+    assertFalse(run_test(false, false, false, false, true));
   }
 
+  @Test
+  public void test_controlled_access_non_expired_study_scope_succeeds() {
+    val choices = List.of(false, true);
+    boolean everythingPassed = true;
+    for (val hasOther : choices) {
+      val result = run_test(false, false, false, true, hasOther);
+      if (!result) {
+        System.err.printf("Access wasn't granted to non-expired token (scopes='%s')",
+          getScopes(false, true, hasOther));
+        everythingPassed = false;
+      }
+    }
+    assertTrue(everythingPassed);
+  }
+
+  @Test
+  public void test_controlled_access_non_expired_system_scope_succeeds() {
+    val choices = List.of(false, true);
+    boolean everythingPassed = true;
+    for (val hasStudy : choices) {
+      for (val hasOther : choices) {
+        val result = run_test(false, false, true, hasStudy, hasOther);
+        if (!result) {
+          System.err.printf("Controlled access wasn't granted to non-expired token (scopes='%s')",
+            getScopes(true, hasStudy, hasOther));
+          everythingPassed = false;
+        }
+      }
+    }
+    assertTrue(everythingPassed);
+  }
+
+  @Test
+  public void test_controlled_study_scope_wrong_access_fails() {
+    val scopes = Set.of(STUDY_PREFIX + TEST_STUDY + ".wrong");
+    val auth = getAuthentication(false, scopes);
+    assertFalse(sut.authorize(auth, CONTROLLED_ACCESS_ID));
+  }
+
+  @Test
+  public void test_controlled_system_scope_wrong_access_fails() {
+    val scopes = Set.of("DCCAdmin.wrong");
+    val auth = getAuthentication(false, scopes);
+    assertFalse(sut.authorize(auth, CONTROLLED_ACCESS_ID));
+  }
+
+  @Test
+  public void test_project_study_object_does_not_exist_fails() {
+    val scopes = Set.of(STUDY_PREFIX + TEST_STUDY + DOWNLOAD_SUFFIX);
+    val auth = getAuthentication(false, scopes);
+    Exception exception = null;
+    try {
+      assertFalse(sut.authorize(auth, "non-existent"));
+    } catch (NotRetryableException e) {
+      exception = e;
+    }
+    assertNotNull(exception);
+    assertEquals("java.lang.IllegalArgumentException: Failed to retrieve metadata for objectId: non-existent",
+      exception.getMessage());
+  }
+
+  @Test
+  public void test_system_scope_object_not_looked_up() {
+    val scopes = Set.of(SYSTEM_SCOPE);
+    val auth = getAuthentication(false, scopes);
+    Exception exception = null;
+    boolean status = false;
+    try {
+      status = sut.authorize(auth, "non-existent");
+    } catch (NotRetryableException e) {
+      exception = e;
+    }
+    assertNull(exception);
+    assertTrue(status);
+  }
 }
