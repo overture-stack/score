@@ -162,7 +162,7 @@ public class DownloadScopeAuthorizationStrategyTest {
     val choices = List.of(false, true);
     boolean everythingPassed = true;
     for (val hasOther : choices) {
-      val result = run_test(false, true, false, true, hasOther);
+      val result = run_test(false, false, false, true, hasOther);
       if (!result) {
         System.err.printf("Access wasn't granted to non-expired token (scopes='%s')",
           getScopes(false, true, hasOther));
