@@ -1,70 +1,79 @@
 /*
- * Copyright (c) 2016 - 2019 The Ontario Institute for Cancer Research. All rights reserved.
- *                                                                                                               
- * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
- * You should have received a copy of the GNU General Public License along with                                  
- * this program. If not, see <http://www.gnu.org/licenses/>.                                                     
- *                                                                                                               
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY                           
- * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES                          
- * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT                           
- * SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,                                
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED                          
- * TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;                               
- * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER                              
- * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
- * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * Copyright (c) 2019. Ontario Institute for Cancer Research
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 package bio.overture.score.server.security;
 
+import java.util.Set;
+
 import bio.overture.score.server.exception.NotRetryableException;
 import bio.overture.score.server.metadata.MetadataService;
-import lombok.NonNull;
+import lombok.*;
 import lombok.extern.slf4j.Slf4j;
-import lombok.val;
+import org.springframework.security.core.Authentication;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.stream.Collectors;
+import static bio.overture.score.server.security.TokenChecker.isExpired;
+import static bio.overture.score.server.util.Scopes.extractGrantedScopes;
 
 @Slf4j
-public class UploadScopeAuthorizationStrategy extends AbstractScopeAuthorizationStrategy {
-  MetadataService metadataService;
+@Data
+public class UploadScopeAuthorizationStrategy {
+  @NonNull String studyPrefix;
+  @NonNull String studySuffix;
+  @NonNull String systemScope;
+  @NonNull MetadataService metadataService;
 
-  public UploadScopeAuthorizationStrategy(String scope, MetadataService metadataService) {
-    super(AuthScope.from(scope));
-    this.metadataService = metadataService;
-  }
-
-  @Override
-  protected boolean verify(@NonNull List<AuthScope> grantedScopes, @NonNull final String objectId) {
-    if (grantedScopes.stream().anyMatch(AuthScope::allowAllProjects)) {
-      log.info("Access granted to blanket scope");
+  public boolean authorize(@NonNull Authentication authentication, @NonNull final String objectId) {
+    if (isExpired(authentication)) {
+      return false;
+    }
+    val grantedScopes = extractGrantedScopes(authentication);
+    if (verifyOneOfSystemScope(grantedScopes)) {
+      log.info("System-level authorization granted");
       return true;
     }
-
-    val projectCodes = getAuthorizedProjectCodes(grantedScopes);
-    val requiredProjectCode = fetchProjectCode(objectId);
-    val result = projectCodes.contains(requiredProjectCode);
-    log.info("checking for permission to project {} for object id {} ({})", requiredProjectCode, objectId, result);
-
-    return result;
+    log.info("Checking study-level authorization for objectId {}", objectId);
+    return verifyOneOfStudyScope(grantedScopes, objectId);
   }
 
-  protected List<String> getAuthorizedProjectCodes(@NonNull List<AuthScope> grantedScopes) {
-    return getScope().matchingProjects(grantedScopes);
+  public boolean verifyOneOfSystemScope(@NonNull Set<String> grantedScopes) {
+    return grantedScopes.stream().anyMatch(s -> s.equalsIgnoreCase(systemScope));
+  }
+  public boolean verifyOneOfStudyScope(
+      @NonNull Set<String> grantedScopes, @NonNull final String objectId) {
+    val studyScope = getStudyScope(fetchStudyId(objectId));
+    return grantedScopes.stream().anyMatch(studyScope::equalsIgnoreCase);
+  }
+
+  public String getStudyScope(@NonNull String studyId) {
+    return studyPrefix + studyId + studySuffix;
   }
 
   /**
    * Retrieve project code from Metadata Service for specific object id
-   * @param objectId
-   * @return project code
+   *
+   * @param objectId The id of the file that we want to upload/download.
+   * @return The id of the study that the file part of.
    */
-  protected String fetchProjectCode(@NonNull final String objectId) {
+  protected String fetchStudyId(@NonNull final String objectId) {
     // makes a query to meta service to retrieve project code for the given object id
     val entity = metadataService.getEntity(objectId);
     if (entity != null) {
-      return entity.getProjectCode();
+      val studyId = entity.getProjectCode();
+      log.info("Fetched studyId '{}' for objectId '{}'", studyId, objectId);
+      return studyId;
     } else {
       val msg = String.format("Failed to retrieve metadata for objectId: %s", objectId);
       log.error(msg);
@@ -72,4 +81,21 @@ public class UploadScopeAuthorizationStrategy extends AbstractScopeAuthorization
     }
   }
 
+  /**
+   * Retrieve access type for the given file
+   *
+   * @param objectId The id of the file to get the access type for.
+   * @return The access type of the file.
+   */
+  public String fetchFileAccessType(@NonNull final String objectId) {
+    // makes a query to meta service to retrieve project code for the given object id
+    val entity = metadataService.getEntity(objectId);
+    if (entity != null) {
+      return entity.getAccess();
+    } else {
+      val msg = String.format("Failed to retrieve metadata for objectId: %s", objectId);
+      log.error(msg);
+      throw new NotRetryableException(new IllegalArgumentException(msg));
+    }
+  }
 }

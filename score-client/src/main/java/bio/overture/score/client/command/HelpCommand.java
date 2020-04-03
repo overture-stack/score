@@ -29,7 +29,7 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 
 import static bio.overture.score.client.cli.Parameters.checkParameter;
-import static com.google.common.base.Objects.firstNonNull;
+import static com.google.common.base.MoreObjects.firstNonNull;
 import static com.google.common.base.Strings.padEnd;
 import static com.google.common.base.Strings.repeat;
 

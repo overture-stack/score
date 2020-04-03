@@ -18,7 +18,7 @@
 package bio.overture.score.test;
 
 import static bio.overture.score.test.util.Assertions.assertDirectories;
-import static com.google.common.base.Objects.firstNonNull;
+import static com.google.common.base.MoreObjects.firstNonNull;
 import static com.google.common.base.Strings.repeat;
 import static com.google.common.util.concurrent.Uninterruptibles.sleepUninterruptibly;
 import static java.util.concurrent.TimeUnit.MINUTES;

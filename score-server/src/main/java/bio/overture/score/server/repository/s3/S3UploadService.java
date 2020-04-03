@@ -142,8 +142,7 @@ public class S3UploadService implements UploadService {
             expirationDate));
       }
 
-      val spec =
-          new ObjectSpecification(objectKey.getKey(), objectId, result.getUploadId(), parts, fileSize, md5, false);
+      val spec = new ObjectSpecification(objectKey.getKey(), objectId, result.getUploadId(), parts, fileSize, md5, false);
 
       // Write out .meta file
       stateStore.create(spec);

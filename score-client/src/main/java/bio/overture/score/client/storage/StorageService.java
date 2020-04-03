@@ -13,7 +13,7 @@ import java.util.List;
 
 public interface StorageService {
 
-  @SneakyThrows List<ObjectInfo> listObjects();
+  List<ObjectInfo> listObjects();
 
   UploadProgress getProgress(String objectId, long fileSize) throws IOException;
 
