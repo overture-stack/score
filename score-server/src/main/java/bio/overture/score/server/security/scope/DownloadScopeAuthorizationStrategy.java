@@ -37,7 +37,7 @@ public class DownloadScopeAuthorizationStrategy extends AbstractScopeAuthorizati
   }
 
   @Override
-  public boolean authorize(Authentication authentication, @NonNull final String objectId) {
+  public boolean authorize(@NonNull Authentication authentication, @NonNull final String objectId) {
     if (isExpired(authentication)) {
       return false;
     }
