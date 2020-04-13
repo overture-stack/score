@@ -15,19 +15,22 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package bio.overture.score.server.security;
+package bio.overture.score.server.security.scope;
 
 import bio.overture.score.server.exception.NotRetryableException;
 import bio.overture.score.server.metadata.MetadataService;
+import bio.overture.score.server.security.Access;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.security.core.Authentication;
+
 import static bio.overture.score.server.security.TokenChecker.isExpired;
 import static bio.overture.score.server.util.Scopes.extractGrantedScopes;
 
 @Slf4j
-public class DownloadScopeAuthorizationStrategy extends UploadScopeAuthorizationStrategy {
+public class DownloadScopeAuthorizationStrategy extends AbstractScopeAuthorizationStrategy {
+
   public DownloadScopeAuthorizationStrategy(@NonNull String studyPrefix, @NonNull String studySuffix,
     @NonNull String systemScope, MetadataService metadataService) {
     super(studyPrefix, studySuffix, systemScope, metadataService);
@@ -59,4 +62,5 @@ public class DownloadScopeAuthorizationStrategy extends UploadScopeAuthorization
       throw new NotRetryableException(new IllegalArgumentException(msg));
     }
   }
+
 }

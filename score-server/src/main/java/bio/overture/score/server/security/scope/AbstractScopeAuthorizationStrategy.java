@@ -14,43 +14,40 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package bio.overture.score.server.security;
-
-import java.util.Set;
+package bio.overture.score.server.security.scope;
 
 import bio.overture.score.server.exception.NotRetryableException;
 import bio.overture.score.server.metadata.MetadataService;
-import lombok.*;
+import lombok.Data;
+import lombok.Getter;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.springframework.security.core.Authentication;
+
+import java.util.Set;
 
 import static bio.overture.score.server.security.TokenChecker.isExpired;
 import static bio.overture.score.server.util.Scopes.extractGrantedScopes;
 
-@Slf4j
-@Data
-public class UploadScopeAuthorizationStrategy {
-  @NonNull String studyPrefix;
-  @NonNull String studySuffix;
-  @NonNull String systemScope;
-  @NonNull MetadataService metadataService;
 
-  public boolean authorize(@NonNull Authentication authentication, @NonNull final String objectId) {
-    if (isExpired(authentication)) {
-      return false;
-    }
-    val grantedScopes = extractGrantedScopes(authentication);
-    if (verifyOneOfSystemScope(grantedScopes)) {
-      log.info("System-level authorization granted");
-      return true;
-    }
-    log.info("Checking study-level authorization for objectId {}", objectId);
-    return verifyOneOfStudyScope(grantedScopes, objectId);
-  }
+@Slf4j
+@Getter
+@RequiredArgsConstructor
+public abstract class AbstractScopeAuthorizationStrategy {
+  @NonNull private final String studyPrefix;
+  @NonNull private final String studySuffix;
+  @NonNull private final String systemScope;
+  @NonNull private final MetadataService metadataService;
+
+  public abstract boolean authorize(Authentication authentication, String objectId);
 
   public boolean verifyOneOfSystemScope(@NonNull Set<String> grantedScopes) {
-    return grantedScopes.stream().anyMatch(s -> s.equalsIgnoreCase(systemScope));
+    return grantedScopes.stream().anyMatch(s -> s.equalsIgnoreCase(getSystemScope()));
   }
+
   public boolean verifyOneOfStudyScope(
       @NonNull Set<String> grantedScopes, @NonNull final String objectId) {
     val studyScope = getStudyScope(fetchStudyId(objectId));
@@ -58,7 +55,7 @@ public class UploadScopeAuthorizationStrategy {
   }
 
   public String getStudyScope(@NonNull String studyId) {
-    return studyPrefix + studyId + studySuffix;
+    return getStudyPrefix()+ studyId + getStudySuffix();
   }
 
   /**
