@@ -175,13 +175,16 @@ auth:
     clientId: resource
     clientSecret: pass
     scope:
-      study:
-        prefix: aws.
-      upload:
-        suffix: .upload
       download:
-        suffix: .download
-      system: aws.download
+        system: aws.download
+        study:
+          prefix: aws.
+          suffix: .download
+      upload:
+        system: aws.upload
+        study:
+          prefix: aws.
+          suffix: .upload
 ---
 
 ###############################################################################

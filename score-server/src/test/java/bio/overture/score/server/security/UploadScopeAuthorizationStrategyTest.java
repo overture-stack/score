@@ -20,6 +20,7 @@ package bio.overture.score.server.security;
 import bio.overture.score.server.exception.NotRetryableException;
 import bio.overture.score.server.metadata.MetadataEntity;
 import bio.overture.score.server.metadata.MetadataService;
+import bio.overture.score.server.security.scope.UploadScopeAuthorizationStrategy;
 import lombok.val;
 import org.junit.Test;
 import org.springframework.security.core.Authentication;

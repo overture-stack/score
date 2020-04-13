@@ -18,13 +18,15 @@
 package bio.overture.score.server.config;
 
 import bio.overture.score.server.metadata.MetadataService;
+import bio.overture.score.server.properties.ScopeProperties;
 import bio.overture.score.server.security.AccessTokenConverterWithExpiry;
 import bio.overture.score.server.security.CachingRemoteTokenServices;
-import bio.overture.score.server.security.DownloadScopeAuthorizationStrategy;
-import bio.overture.score.server.security.UploadScopeAuthorizationStrategy;
+import bio.overture.score.server.security.scope.DownloadScopeAuthorizationStrategy;
+import bio.overture.score.server.security.scope.UploadScopeAuthorizationStrategy;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -62,17 +64,12 @@ public class SecurityConfig extends ResourceServerConfigurerAdapter {
 
   private TokenExtractor tokenExtractor = new BearerTokenExtractor();
 
-  @Value("${auth.server.scope.study.prefix}")
-  private String studyPrefix;
+  private final ScopeProperties scopeProperties;
 
-  @Value("${auth.server.scope.upload.suffix}")
-  private String uploadSuffix;
-
-  @Value("${auth.server.scope.download.suffix}")
-  private String downloadSuffix;
-
-  @Value("${auth.server.scope.system}")
-  private String systemScope;
+  @Autowired
+  public SecurityConfig(@NonNull ScopeProperties scopeProperties) {
+    this.scopeProperties = scopeProperties;
+  }
 
   @Override
   public void configure(@NonNull HttpSecurity http) throws Exception {
@@ -122,10 +119,7 @@ public class SecurityConfig extends ResourceServerConfigurerAdapter {
   }
 
   private void configureAuthorization(HttpSecurity http) throws Exception {
-    log.info("using system scope {}", systemScope);
-    log.info("using study prefix: {}", studyPrefix);
-    log.info("using upload suffix: {}", uploadSuffix);
-    log.info("using download suffix: {}", downloadSuffix);
+    scopeProperties.logScopeProperties();;
 
     // @formatter:off     
     http
@@ -142,13 +136,21 @@ public class SecurityConfig extends ResourceServerConfigurerAdapter {
   }
 
   @Bean
-  public UploadScopeAuthorizationStrategy projectSecurity(MetadataService song) {
-    return new UploadScopeAuthorizationStrategy(studyPrefix, uploadSuffix, systemScope, song);
+  public UploadScopeAuthorizationStrategy projectSecurity(@Autowired MetadataService song) {
+    return new UploadScopeAuthorizationStrategy(
+        scopeProperties.getUpload().getStudy().getPrefix(),
+        scopeProperties.getUpload().getStudy().getSuffix(),
+        scopeProperties.getUpload().getSystem(),
+         song);
   }
 
   @Bean
   @Scope("prototype")
-  public DownloadScopeAuthorizationStrategy accessSecurity(MetadataService song) {
-    return new DownloadScopeAuthorizationStrategy(studyPrefix, uploadSuffix, systemScope, song);
+  public DownloadScopeAuthorizationStrategy accessSecurity(@Autowired MetadataService song) {
+    return new DownloadScopeAuthorizationStrategy(
+        scopeProperties.getDownload().getStudy().getPrefix(),
+        scopeProperties.getDownload().getStudy().getSuffix(),
+        scopeProperties.getDownload().getSystem(),
+        song);
   }
 }
