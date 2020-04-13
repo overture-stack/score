@@ -14,51 +14,45 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package bio.overture.score.server.security;
-
-import java.util.Set;
+package bio.overture.score.server.security.scope;
 
 import bio.overture.score.server.exception.NotRetryableException;
 import bio.overture.score.server.metadata.MetadataService;
-import lombok.*;
+import lombok.Data;
+import lombok.Getter;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.springframework.security.core.Authentication;
+
+import java.util.Set;
 
 import static bio.overture.score.server.security.TokenChecker.isExpired;
 import static bio.overture.score.server.util.Scopes.extractGrantedScopes;
 
+
 @Slf4j
-@Data
-public class UploadScopeAuthorizationStrategy {
-  @NonNull String studyPrefix;
-  @NonNull String studySuffix;
-  @NonNull String systemScope;
-  @NonNull MetadataService metadataService;
+@Getter
+@RequiredArgsConstructor
+public abstract class AbstractScopeAuthorizationStrategy {
 
-  public boolean authorize(@NonNull Authentication authentication, @NonNull final String objectId) {
-    if (isExpired(authentication)) {
-      return false;
-    }
-    val grantedScopes = extractGrantedScopes(authentication);
-    if (verifyOneOfSystemScope(grantedScopes)) {
-      log.info("System-level authorization granted");
-      return true;
-    }
-    log.info("Checking study-level authorization for objectId {}", objectId);
-    return verifyOneOfStudyScope(grantedScopes, objectId);
+  @NonNull private final String studyPrefix;
+  @NonNull private final String studySuffix;
+  @NonNull private final String systemScope;
+  @NonNull private final MetadataService metadataService;
+
+  public abstract boolean authorize(Authentication authentication, String objectId);
+
+  protected boolean verifyOneOfSystemScope(@NonNull Set<String> grantedScopes) {
+    return grantedScopes.stream().anyMatch(s -> s.equalsIgnoreCase(getSystemScope()));
   }
 
-  public boolean verifyOneOfSystemScope(@NonNull Set<String> grantedScopes) {
-    return grantedScopes.stream().anyMatch(s -> s.equalsIgnoreCase(systemScope));
-  }
-  public boolean verifyOneOfStudyScope(
+  protected boolean verifyOneOfStudyScope(
       @NonNull Set<String> grantedScopes, @NonNull final String objectId) {
     val studyScope = getStudyScope(fetchStudyId(objectId));
     return grantedScopes.stream().anyMatch(studyScope::equalsIgnoreCase);
-  }
-
-  public String getStudyScope(@NonNull String studyId) {
-    return studyPrefix + studyId + studySuffix;
   }
 
   /**
@@ -87,7 +81,7 @@ public class UploadScopeAuthorizationStrategy {
    * @param objectId The id of the file to get the access type for.
    * @return The access type of the file.
    */
-  public String fetchFileAccessType(@NonNull final String objectId) {
+  protected String fetchFileAccessType(@NonNull final String objectId) {
     // makes a query to meta service to retrieve project code for the given object id
     val entity = metadataService.getEntity(objectId);
     if (entity != null) {
@@ -97,5 +91,9 @@ public class UploadScopeAuthorizationStrategy {
       log.error(msg);
       throw new NotRetryableException(new IllegalArgumentException(msg));
     }
+  }
+
+  private String getStudyScope(@NonNull String studyId) {
+    return getStudyPrefix()+ studyId + getStudySuffix();
   }
 }
