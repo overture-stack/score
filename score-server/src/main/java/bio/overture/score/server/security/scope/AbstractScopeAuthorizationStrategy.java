@@ -37,6 +37,7 @@ import static bio.overture.score.server.util.Scopes.extractGrantedScopes;
 @Getter
 @RequiredArgsConstructor
 public abstract class AbstractScopeAuthorizationStrategy {
+
   @NonNull private final String studyPrefix;
   @NonNull private final String studySuffix;
   @NonNull private final String systemScope;
@@ -44,18 +45,14 @@ public abstract class AbstractScopeAuthorizationStrategy {
 
   public abstract boolean authorize(Authentication authentication, String objectId);
 
-  public boolean verifyOneOfSystemScope(@NonNull Set<String> grantedScopes) {
+  protected boolean verifyOneOfSystemScope(@NonNull Set<String> grantedScopes) {
     return grantedScopes.stream().anyMatch(s -> s.equalsIgnoreCase(getSystemScope()));
   }
 
-  public boolean verifyOneOfStudyScope(
+  protected boolean verifyOneOfStudyScope(
       @NonNull Set<String> grantedScopes, @NonNull final String objectId) {
     val studyScope = getStudyScope(fetchStudyId(objectId));
     return grantedScopes.stream().anyMatch(studyScope::equalsIgnoreCase);
-  }
-
-  public String getStudyScope(@NonNull String studyId) {
-    return getStudyPrefix()+ studyId + getStudySuffix();
   }
 
   /**
@@ -84,7 +81,7 @@ public abstract class AbstractScopeAuthorizationStrategy {
    * @param objectId The id of the file to get the access type for.
    * @return The access type of the file.
    */
-  public String fetchFileAccessType(@NonNull final String objectId) {
+  protected String fetchFileAccessType(@NonNull final String objectId) {
     // makes a query to meta service to retrieve project code for the given object id
     val entity = metadataService.getEntity(objectId);
     if (entity != null) {
@@ -94,5 +91,9 @@ public abstract class AbstractScopeAuthorizationStrategy {
       log.error(msg);
       throw new NotRetryableException(new IllegalArgumentException(msg));
     }
+  }
+
+  private String getStudyScope(@NonNull String studyId) {
+    return getStudyPrefix()+ studyId + getStudySuffix();
   }
 }
