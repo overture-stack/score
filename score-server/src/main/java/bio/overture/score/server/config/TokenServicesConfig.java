@@ -2,7 +2,7 @@ package bio.overture.score.server.config;
 
 import bio.overture.score.server.security.AccessTokenConverterWithExpiry;
 import bio.overture.score.server.security.CachingRemoteTokenServices;
-import bio.overture.score.server.security.JWTTokenConverter;
+import bio.overture.score.server.security.JWTConverter;
 import bio.overture.score.server.security.MergedServerTokenServices;
 import lombok.NonNull;
 import lombok.SneakyThrows;
@@ -28,11 +28,9 @@ public class TokenServicesConfig {
     private @Value("${auth.server.clientId}") String clientId;
     private @Value("${auth.server.clientSecret}") String clientSecret;
 
-    @Bean
     private AccessTokenConverter accessTokenConverter() {
         return new AccessTokenConverterWithExpiry();
     }
-    @Bean
     private RemoteTokenServices createRemoteTokenServices() {
         val remoteTokenServices = new CachingRemoteTokenServices();
         remoteTokenServices.setCheckTokenEndpointUrl(checkTokenUrl);
@@ -60,7 +58,7 @@ public class TokenServicesConfig {
     @SneakyThrows
     private DefaultTokenServices createJwtTokenServices(String publicKeyUrl) {
         val publicKey = fetchJWTPublicKey(publicKeyUrl);
-        val tokenStore = new JwtTokenStore(new JWTTokenConverter(publicKey));
+        val tokenStore = new JwtTokenStore(new JWTConverter(publicKey));
         val defaultTokenServices = new DefaultTokenServices();
         defaultTokenServices.setTokenStore(tokenStore);
         return defaultTokenServices;
@@ -68,8 +66,8 @@ public class TokenServicesConfig {
     @Bean
     @Profile("jwt")
     public MergedServerTokenServices mergedServerTokenServices(
-            @Value("${auth.jwt.publicKeyUrl}") @NonNull String publicKeyUrl)
-    {
+            @Value("${auth.jwt.publicKeyUrl}") @NonNull String publicKeyUrl
+    ) {
         val jwtTokenServices = createJwtTokenServices(publicKeyUrl);
         val remoteTokenServices = createRemoteTokenServices();
         return new MergedServerTokenServices(jwtTokenServices, remoteTokenServices);
