@@ -61,10 +61,8 @@ public class JWTSecurityTest {
     private final static String EXISTING_OBJECT_ID = "123";
     private final static String EXISTING_GNOS_ID = "123";
 
-    private final static String NEW_OBJECT_ID = "456";
-
     private final static String DOWNLOAD_ENDPOINT = "/download/" + EXISTING_OBJECT_ID + "?offset=0&length=-1";
-    private final static String UPLOAD_ENDPOINT = "/upload/" + NEW_OBJECT_ID + "/uploads?fileSize=1";
+    private final static String UPLOAD_ENDPOINT = "/upload/" + EXISTING_OBJECT_ID + "/uploads?fileSize=1";
 
     // -- Dependencies --
     @Autowired private WebApplicationContext webApplicationContext;
