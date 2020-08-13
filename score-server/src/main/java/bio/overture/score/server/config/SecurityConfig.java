@@ -121,4 +121,6 @@ public class SecurityConfig extends ResourceServerConfigurerAdapter {
         scopeProperties.getDownload().getSystem(),
         song);
   }
+
+  public ScopeProperties getScopeProperties() { return this.scopeProperties; }
 }

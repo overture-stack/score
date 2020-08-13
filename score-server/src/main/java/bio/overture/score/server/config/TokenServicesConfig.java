@@ -1,17 +1,15 @@
 package bio.overture.score.server.config;
 
-import bio.overture.score.server.security.AccessTokenConverterWithExpiry;
-import bio.overture.score.server.security.CachingRemoteTokenServices;
-import bio.overture.score.server.security.JWTConverter;
-import bio.overture.score.server.security.MergedServerTokenServices;
+import bio.overture.score.server.security.*;
 import lombok.NonNull;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import org.springframework.retry.support.RetryTemplate;
 import org.springframework.security.oauth2.provider.token.AccessTokenConverter;
 import org.springframework.security.oauth2.provider.token.DefaultTokenServices;
 import org.springframework.security.oauth2.provider.token.RemoteTokenServices;
@@ -49,27 +47,29 @@ public class TokenServicesConfig {
         return createRemoteTokenServices();
     }
 
-    @SneakyThrows
-    private String fetchJWTPublicKey(String publicKeyUrl) {
-        val restTemplate = new RestTemplate();
-        val response = restTemplate.getForEntity(publicKeyUrl, String.class);
-        return response.getBody();
-    }
-    @SneakyThrows
-    private DefaultTokenServices createJwtTokenServices(String publicKeyUrl) {
-        val publicKey = fetchJWTPublicKey(publicKeyUrl);
+
+    private DefaultTokenServices createJwtTokenServices(String publicKey) {
         val tokenStore = new JwtTokenStore(new JWTConverter(publicKey));
         val defaultTokenServices = new DefaultTokenServices();
         defaultTokenServices.setTokenStore(tokenStore);
         return defaultTokenServices;
     }
     @Bean
+    @Autowired
     @Profile("jwt")
     public MergedServerTokenServices mergedServerTokenServices(
-            @Value("${auth.jwt.publicKeyUrl}") @NonNull String publicKeyUrl
+            @NonNull PublicKeyFetcher publicKeyFetcher
     ) {
-        val jwtTokenServices = createJwtTokenServices(publicKeyUrl);
+        val jwtTokenServices = createJwtTokenServices(publicKeyFetcher.getPublicKey());
         val remoteTokenServices = createRemoteTokenServices();
         return new MergedServerTokenServices(jwtTokenServices, remoteTokenServices);
+    }
+    @Bean
+    @Autowired
+    @Profile("jwt")
+    public PublicKeyFetcher publicKeyFetcher(
+            @Value("${auth.jwt.publicKeyUrl}") @NonNull String publicKeyUrl,
+            @NonNull RetryTemplate retryTemplate) {
+        return new DefaultPublicKeyFetcher(publicKeyUrl, new RestTemplate(), retryTemplate);
     }
 }

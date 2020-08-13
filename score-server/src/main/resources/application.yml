@@ -27,31 +27,31 @@ server:
   compression:
     enabled: true
     mime-types: application/json
-  
+
 s3:
   secured: true
   sigV4Enabled: true
-  
+
   #amazon
   endpoint: s3-external-1.amazonaws.com
 
 metadata:
   useLegacyMode: false
- 
+
 bucket:
   name.object: oicr.icgc
   name.state: oicr.icgc
   size.pool: 0
-  size.key: 2 
+  size.key: 2
 
 object:
   sentinel: heliograph
-  
+
 collaboratory:
   upload.directory: upload
   upload.expiration: 6
   data.directory: data
-    
+
   # COL-131: Change pre-signed URLs TTL to 1 day max
   download.expiration: 1
 
@@ -59,11 +59,23 @@ upload:
   retry.limit: 5
   partsize: 20000000
   connection.timeout: 15000
-  
+
   # Every day at midnight
-  clean.cron: "0 0 0 * * ?" 
+  clean.cron: "0 0 0 * * ?"
   clean.enabled: true
 
+auth:
+  # Connection retries in case of connection failure
+  connection:
+    # Max number of retries
+    maxRetries: 5
+
+    # Initial timeoutMs before the first retry. In milliseconds.
+    initialBackoff: 15000
+
+    # Multiplier that defines value of consequent timeouts before the next retry.
+    # E.g. TIMEOUT(n) = TIMEOUT(n-1) * MULTIPLIER
+    multiplier: 2.0
 
 ---
 
@@ -75,7 +87,7 @@ upload:
 ###############################################################################
 
 spring.profiles: ssl
-  
+
 # Server
 server:
   ssl:
@@ -92,7 +104,7 @@ server:
 spring:
   profiles: amazon
   profiles.include: prod
-  
+
 s3:
   endpoint: s3-external-1.amazonaws.com
   masterEncryptionKeyId: af628f04-ac12-4b11-bf83-6545fd44ad18
@@ -116,7 +128,7 @@ spring:
 
 s3:
   endpoint: https://object.cancercollaboratory.org:9080
-  masterEncryptionKeyId: 
+  masterEncryptionKeyId:
 
 metadata:
   url: https://song.cancercollaboratory.org
@@ -132,18 +144,18 @@ spring:
   profiles: azure
 
 azure:
-  endpointProtocol: https 
+  endpointProtocol: https
   accountName: oicricgc
-  accountKey: 
+  accountKey:
 
 bucket:
   name.object: data
   policy.upload: UploadPolicy
   policy.download: DownloadPolicy
-  
+
 download:
   partsize: 250000000
-  
+
 ---
 
 ###############################################################################
@@ -166,7 +178,7 @@ metadata:
 ###############################################################################
 
 spring.profiles: secure
-  
+
 # OAuth authentication server
 auth:
   server:
@@ -209,7 +221,7 @@ spring.profiles: dev
 s3:
   secured: false
   endpoint: localhost:9444/s3
-  accessKey: AKIAIOSFODNN7EXAMPLE 
+  accessKey: AKIAIOSFODNN7EXAMPLE
   secretKey: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
 
 # Server
@@ -218,7 +230,7 @@ server:
 bucket:
   name.object: test.icgc
   name.state: test.icgc
-  
+
 upload:
   clean.enabled: false
 
