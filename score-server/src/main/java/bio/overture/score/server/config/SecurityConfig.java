@@ -123,4 +123,5 @@ public class SecurityConfig extends ResourceServerConfigurerAdapter {
   }
 
   public ScopeProperties getScopeProperties() { return this.scopeProperties; }
+
 }

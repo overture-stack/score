@@ -21,14 +21,42 @@ import org.springframework.web.client.RestTemplate;
 @Profile("secure")
 public class TokenServicesConfig {
 
-    private @Value("${auth.server.url}") String checkTokenUrl;
-    private @Value("${auth.server.tokenName:token}") String tokenName;
-    private @Value("${auth.server.clientId}") String clientId;
-    private @Value("${auth.server.clientSecret}") String clientSecret;
+    @Value("${auth.server.url}") private String checkTokenUrl;
+    @Value("${auth.server.tokenName:token}") private String tokenName;
+    @Value("${auth.server.clientId}") private String clientId;
+    @Value("${auth.server.clientSecret}") private String clientSecret;
+
+    @Bean
+    @Profile("!jwt")
+    public RemoteTokenServices remoteTokenServices() {
+        return createRemoteTokenServices();
+    }
+
+    @Bean
+    @Autowired
+    @Profile("jwt")
+    public MergedServerTokenServices mergedServerTokenServices(
+            @NonNull PublicKeyFetcher publicKeyFetcher,
+            @NonNull RetryTemplate retryTemplate
+    ) {
+        val jwtTokenServices = createJwtTokenServices(publicKeyFetcher.getPublicKey());
+        val remoteTokenServices = createRemoteTokenServices();
+        return new MergedServerTokenServices(jwtTokenServices, remoteTokenServices, retryTemplate);
+    }
+
+    @Bean
+    @Autowired
+    @Profile("jwt")
+    public PublicKeyFetcher publicKeyFetcher(
+            @Value("${auth.jwt.publicKeyUrl}") @NonNull String publicKeyUrl,
+            @NonNull RetryTemplate retryTemplate) {
+        return new DefaultPublicKeyFetcher(publicKeyUrl, new RestTemplate(), retryTemplate);
+    }
 
     private AccessTokenConverter accessTokenConverter() {
         return new AccessTokenConverterWithExpiry();
     }
+
     private RemoteTokenServices createRemoteTokenServices() {
         val remoteTokenServices = new CachingRemoteTokenServices();
         remoteTokenServices.setCheckTokenEndpointUrl(checkTokenUrl);
@@ -41,12 +69,6 @@ public class TokenServicesConfig {
 
         return remoteTokenServices;
     }
-    @Bean
-    @Profile("!jwt")
-    public RemoteTokenServices remoteTokenServices() {
-        return createRemoteTokenServices();
-    }
-
 
     private DefaultTokenServices createJwtTokenServices(String publicKey) {
         val tokenStore = new JwtTokenStore(new JWTConverter(publicKey));
@@ -54,22 +76,5 @@ public class TokenServicesConfig {
         defaultTokenServices.setTokenStore(tokenStore);
         return defaultTokenServices;
     }
-    @Bean
-    @Autowired
-    @Profile("jwt")
-    public MergedServerTokenServices mergedServerTokenServices(
-            @NonNull PublicKeyFetcher publicKeyFetcher
-    ) {
-        val jwtTokenServices = createJwtTokenServices(publicKeyFetcher.getPublicKey());
-        val remoteTokenServices = createRemoteTokenServices();
-        return new MergedServerTokenServices(jwtTokenServices, remoteTokenServices);
-    }
-    @Bean
-    @Autowired
-    @Profile("jwt")
-    public PublicKeyFetcher publicKeyFetcher(
-            @Value("${auth.jwt.publicKeyUrl}") @NonNull String publicKeyUrl,
-            @NonNull RetryTemplate retryTemplate) {
-        return new DefaultPublicKeyFetcher(publicKeyUrl, new RestTemplate(), retryTemplate);
-    }
+
 }

@@ -9,6 +9,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.retry.support.RetryTemplate;
 import org.springframework.security.oauth2.provider.token.DefaultTokenServices;
 import org.springframework.security.oauth2.provider.token.RemoteTokenServices;
 
@@ -24,9 +25,9 @@ public class MergedServerTokenServicesTest {
     private static final String API_KEY = UUID.randomUUID().toString();
 
     private MergedServerTokenServices mergedServerTokenServices;
+    private RetryTemplate retryTemplate = new RetryTemplate();
     @Mock private RemoteTokenServices remoteTokenServices;
     @Mock private DefaultTokenServices jwtTokenServices;
-
 
     private JWTGenerator jwtGenerator;
 
@@ -36,7 +37,7 @@ public class MergedServerTokenServicesTest {
         val keyGenerator = KeyPairGenerator.getInstance("RSA");
         keyGenerator.initialize(1024);
         jwtGenerator = new JWTGenerator(keyGenerator.generateKeyPair());
-        mergedServerTokenServices = new MergedServerTokenServices(jwtTokenServices, remoteTokenServices);
+        mergedServerTokenServices = new MergedServerTokenServices(jwtTokenServices, remoteTokenServices, retryTemplate);
     }
 
     @Test

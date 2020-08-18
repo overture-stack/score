@@ -38,8 +38,8 @@ public class JWTConverter extends JwtAccessTokenConverter {
         List<String> extractedScopes = new ArrayList<>(Collections.emptyList());
         try {
             if (map.containsKey(CONTEXT)) {
-                val context = (Map<String, Object>) map.get("context");
-                extractedScopes.addAll((Collection<String>) context.get("scope"));
+                val context = (Map<String, Object>) map.get(CONTEXT);
+                extractedScopes.addAll((Collection<String>) context.get(SCOPE));
             }
             if (map.containsKey(SCOPE)) {
                 extractedScopes.addAll((Collection<String>) map.get(SCOPE));

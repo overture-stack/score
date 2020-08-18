@@ -1,6 +1,7 @@
 package bio.overture.score.server.security;
 
-import com.google.common.base.Strings;
+import lombok.RequiredArgsConstructor;
+import org.springframework.retry.support.RetryTemplate;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.oauth2.common.OAuth2AccessToken;
 import org.springframework.security.oauth2.common.exceptions.InvalidTokenException;
@@ -11,20 +12,18 @@ import org.springframework.security.oauth2.provider.token.ResourceServerTokenSer
 
 import java.util.UUID;
 
+import static com.google.common.base.Strings.isNullOrEmpty;
 
+@RequiredArgsConstructor
 public class MergedServerTokenServices implements ResourceServerTokenServices {
     private final DefaultTokenServices jwtTokenService;
     private final RemoteTokenServices remoteTokenServices;
-
-    public MergedServerTokenServices(DefaultTokenServices jwtTokenService, RemoteTokenServices remoteTokenServices) {
-        this.jwtTokenService = jwtTokenService;
-        this.remoteTokenServices = remoteTokenServices;
-    }
+    private final RetryTemplate retryTemplate;
 
     @Override
     public OAuth2Authentication loadAuthentication(String accessToken) throws AuthenticationException, InvalidTokenException {
         if (isApiKey(accessToken)) {
-            return remoteTokenServices.loadAuthentication(accessToken);
+            return retryTemplate.execute(x -> remoteTokenServices.loadAuthentication(accessToken));
         }
         return jwtTokenService.loadAuthentication(accessToken);
     }
@@ -32,13 +31,13 @@ public class MergedServerTokenServices implements ResourceServerTokenServices {
     @Override
     public OAuth2AccessToken readAccessToken(String accessToken) {
         if (isApiKey(accessToken)) {
-            return remoteTokenServices.readAccessToken(accessToken);
+            return retryTemplate.execute(x ->remoteTokenServices.readAccessToken(accessToken));
         }
         return jwtTokenService.readAccessToken(accessToken);
     }
 
     private static boolean isApiKey(String value) {
-        if (Strings.isNullOrEmpty(value)) {
+        if (isNullOrEmpty(value)) {
             return false;
         }
         try {
