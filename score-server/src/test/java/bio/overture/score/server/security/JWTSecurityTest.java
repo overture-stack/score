@@ -31,6 +31,7 @@ import org.springframework.web.context.WebApplicationContext;
 
 import java.security.KeyPair;
 import java.util.List;
+import java.util.Map;
 
 import static bio.overture.score.server.security.JWTSecurityTest.RequestType.DOWNLOAD;
 import static bio.overture.score.server.security.JWTSecurityTest.RequestType.UPLOAD;
@@ -42,6 +43,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
+import static org.springframework.http.HttpStatus.*;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 
 @Slf4j
@@ -63,6 +65,9 @@ public class JWTSecurityTest {
 
     private final static String DOWNLOAD_ENDPOINT = "/download/" + EXISTING_OBJECT_ID + "?offset=0&length=-1";
     private final static String UPLOAD_ENDPOINT = "/upload/" + EXISTING_OBJECT_ID + "/uploads?fileSize=1";
+
+    private final static boolean EXPIRED = true;
+    private final static boolean NOT_EXPIRED = !EXPIRED;
 
     // -- Dependencies --
     @Autowired private WebApplicationContext webApplicationContext;
@@ -88,58 +93,83 @@ public class JWTSecurityTest {
         setMocks();
     }
 
-    @Test
-    public void validateCantDownloadWithNoJwt() {
-        val headers = createHeaderWithJwt("");
-        val res = executeRequest(HttpMethod.GET, DOWNLOAD_ENDPOINT, headers);
-        assertEquals(HttpStatus.UNAUTHORIZED, res.getStatusCode());
+    @Test public void jwtDownloadValidation_validStudyScope_Success() {
+        executeAndAssert(DOWNLOAD, VALID_STUDY, NOT_EXPIRED, OK);
     }
-    @Test
-    public void validateCantDownloadWithExpiredJwt () {
-        val res = getResponseFromRequestWithJwt(DOWNLOAD, true, VALID_SYSTEM, true);
-        assertEquals(HttpStatus.UNAUTHORIZED, res.getStatusCode());
+    @Test public void jwtDownloadValidation_validSystemScope_Success() {
+        executeAndAssert(DOWNLOAD, VALID_STUDY, NOT_EXPIRED, OK);
     }
-    @Test
-    public void validateCantDownloadWithIncorrectAuthScopes() {
-        val res = getResponseFromRequestWithJwt(DOWNLOAD,true, INVALID_STUDY, false);
-        assertEquals(HttpStatus.FORBIDDEN, res.getStatusCode());
+    @Test public void jwtDownloadValidation_validStudyScopeExpired_Unauthorized() {
+        executeAndAssert(DOWNLOAD, VALID_STUDY, EXPIRED, UNAUTHORIZED);
     }
-    @Test
-    public void validateCanDownloadWithValidAuthScopes() {
-        val res = getResponseFromRequestWithJwt(DOWNLOAD, true, VALID_SYSTEM, false);
-        assertEquals(HttpStatus.OK, res.getStatusCode());
+    @Test public void jwtDownloadValidation_validSystemScopeExpired_Unauthorized() {
+        executeAndAssert(DOWNLOAD, VALID_SYSTEM, EXPIRED, UNAUTHORIZED);
+    }
+    @Test public void jwtDownloadValidation_missingScopeField_Forbidden() {
+        executeAndAssert(DOWNLOAD, EMPTY_SCOPE, NOT_EXPIRED, FORBIDDEN);
+    }
+    @Test public void jwtDownloadValidation_missingScopeFieldExpired_Unauthorized() {
+        executeAndAssert(DOWNLOAD, EMPTY_SCOPE, EXPIRED, UNAUTHORIZED);
+    }
+    @Test public void jwtDownloadValidation_invalidSystemScope_Forbidden() {
+        executeAndAssert(DOWNLOAD, INVALID_SYSTEM, NOT_EXPIRED, FORBIDDEN);
+    }
+    @Test public void jwtDownloadValidation_invalidStudyScope_Forbidden() {
+        executeAndAssert(DOWNLOAD, INVALID_STUDY, NOT_EXPIRED, FORBIDDEN);
+    }
+    @Test public void jwtDownloadValidation_invalidSystemScopeExpired_Unauthorized() {
+        executeAndAssert(DOWNLOAD, INVALID_SYSTEM, EXPIRED, UNAUTHORIZED);
+    }
+    @Test public void jwtDownloadValidation_invalidStudyScopeExpired_Unauthorized() {
+        executeAndAssert(DOWNLOAD, INVALID_STUDY, EXPIRED, UNAUTHORIZED);
+    }
+    @Test public void jwtDownloadValidation_malformedAccessToken_Unauthorized() {
+        executeAndAssert(DOWNLOAD, MALFORMED, NOT_EXPIRED, UNAUTHORIZED);
     }
 
-    @Test
-    public void validateCantUploadWithNoJwt() {
-        val headers = createHeaderWithJwt("");
-        val res = executeRequest(HttpMethod.POST, UPLOAD_ENDPOINT, headers);
-        assertEquals(HttpStatus.UNAUTHORIZED, res.getStatusCode());
+    @Test public void jwtUploadValidation_validStudyScope_Success() {
+        executeAndAssert(UPLOAD, VALID_STUDY, NOT_EXPIRED, OK);
     }
-    @Test
-    public void validateCantUploadWithExpiredJwt() {
-        val res = getResponseFromRequestWithJwt(UPLOAD, true, VALID_SYSTEM, true);
-        assertEquals(HttpStatus.UNAUTHORIZED, res.getStatusCode());
+    @Test public void jwtUploadValidation_validSystemScope_Success() {
+        executeAndAssert(UPLOAD, VALID_SYSTEM, NOT_EXPIRED, OK);
     }
-    @Test
-    public void validateCantUploadWithEmptyAuthScopes() {
-        val res = getResponseFromRequestWithJwt(UPLOAD, true, EMPTY_SCOPE, false);
-        assertEquals(HttpStatus.FORBIDDEN, res.getStatusCode());
+    @Test public void jwtUploadValidation_validStudyScopeExpired_Unauthorized() {
+        executeAndAssert(UPLOAD, VALID_STUDY, EXPIRED, UNAUTHORIZED);
     }
-    @Test
-    public void validateCantUploadWithIncorrectAuthScopes() {
-        val res = getResponseFromRequestWithJwt(UPLOAD, true, INVALID_STUDY, false);
-        assertEquals(HttpStatus.FORBIDDEN, res.getStatusCode());
+    @Test public void jwtUploadValidation_validSystemScopeExpired_Unauthorized() {
+        executeAndAssert(UPLOAD, VALID_SYSTEM, EXPIRED, UNAUTHORIZED);
     }
-    @Test
-    public void validateCanUploadWithValidAuthScopes() {
-        val res = getResponseFromRequestWithJwt(UPLOAD, true, VALID_SYSTEM, false);
-        assertEquals(HttpStatus.OK, res.getStatusCode());
+    @Test public void jwtUploadValidation_missingScopeField_Forbidden() {
+        executeAndAssert(UPLOAD, EMPTY_SCOPE, NOT_EXPIRED, FORBIDDEN);
+    }
+    @Test public void jwtUploadValidation_missingScopeFieldExpired_Unauthorized() {
+        executeAndAssert(UPLOAD, EMPTY_SCOPE, EXPIRED, UNAUTHORIZED);
+    }
+    @Test public void jwtUploadValidation_invalidSystemScope_Forbidden() {
+        executeAndAssert(UPLOAD, INVALID_SYSTEM, NOT_EXPIRED, FORBIDDEN);
+    }
+    @Test public void jwtUploadValidation_invalidStudyScope_Forbidden() {
+        executeAndAssert(UPLOAD, INVALID_STUDY, NOT_EXPIRED, FORBIDDEN);
+    }
+    @Test public void jwtUploadValidation_invalidSystemScopeExpired_Unauthorized() {
+        executeAndAssert(UPLOAD, INVALID_SYSTEM, EXPIRED, UNAUTHORIZED);
+    }
+    @Test public void jwtUploadValidation_invalidStudyScopeExpired_Unauthorized() {
+        executeAndAssert(UPLOAD, INVALID_STUDY, EXPIRED, UNAUTHORIZED);
+    }
+    @Test  public void jwtUploadValidation_malformedAccessToken_Unauthorized() {
+        executeAndAssert(UPLOAD, MALFORMED, NOT_EXPIRED, UNAUTHORIZED);
+    }
+
+    private void executeAndAssert(
+            RequestType requestType, ScopeOptions scopeOptions, boolean expired, HttpStatus statusToAssert) {
+        val res = getResponseFromRequestWithJwt(requestType, scopeOptions, expired);
+        assertEquals(statusToAssert, res.getStatusCode());
     }
 
     private  ResponseEntity<String> getResponseFromRequestWithJwt(
-            RequestType requestType, boolean hasContext, ScopeOptions scopeOptions, boolean expired) {
-        val jwtString = generateConstrainedJWTString(hasContext, scopeOptions, requestType, expired);
+            RequestType requestType, ScopeOptions scopeOptions, boolean expired) {
+        val jwtString = generateConstrainedJWTString(scopeOptions, requestType, expired);
 
         val headers = createHeaderWithJwt(jwtString);
 
@@ -174,33 +204,33 @@ public class JWTSecurityTest {
         return ResponseEntity.status(mvcResponse.getStatus()).body(responseObject);
     }
 
+    private final Map<ScopeOptions, List<String>> downloadScopesMap = Map.of(
+            VALID_SYSTEM,   List.of(resolveSystemDownloadScope(), "score.READ", "id.READ"),
+            VALID_STUDY,    List.of(resolveStudyDownloadScope(EXISTING_PROJECT_ID), "id.READ"),
+            INVALID_STUDY,  List.of(resolveStudyDownloadScope(NON_EXISTING_PROJECT_ID), "id.READ")
+    );
+
+    private final Map<ScopeOptions, List<String>> uploadScopesMap = Map.of(
+            VALID_SYSTEM, List.of(resolveSystemUploadScope(), "score.WRITE", "id.WRITE"),
+            VALID_STUDY, List.of(resolveStudyUploadScope(EXISTING_PROJECT_ID), "id.WRITE"),
+            INVALID_STUDY, List.of(resolveStudyUploadScope(NON_EXISTING_PROJECT_ID), "id.WRITE")
+    );
+
     private String generateConstrainedJWTString(
-            boolean hasContext, ScopeOptions scopeOptions, RequestType requestType, boolean expired) {
+            ScopeOptions scopeOptions, RequestType requestType, boolean expired) {
+        if (scopeOptions == ScopeOptions.MALFORMED) { return ""; }
+
         JwtContext context = null;
-        if (hasContext) {
-            if (scopeOptions == VALID_SYSTEM && requestType == DOWNLOAD) {
-                context = buildJwtContext(List.of(resolveSystemDownloadScope(), "score.READ", "id.READ"));
-            } else if (scopeOptions == VALID_SYSTEM && requestType == UPLOAD) {
-                    context = buildJwtContext(List.of(resolveSystemUploadScope(), "score.READ", "id.READ"));
-            } else if (scopeOptions == ScopeOptions.VALID_STUDY && requestType == DOWNLOAD) {
-                context = buildJwtContext(List.of(resolveStudyDownloadScope(EXISTING_PROJECT_ID), "score.WRITE", "id.READ"));
-            } else if (scopeOptions == ScopeOptions.VALID_STUDY && requestType == UPLOAD) {
-                context = buildJwtContext(List.of(resolveStudyUploadScope(EXISTING_PROJECT_ID), "score.WRITE", "id.READ"));
-            } else if (scopeOptions == INVALID_STUDY && requestType == DOWNLOAD)  {
-                context =
-                        buildJwtContext(
-                                List.of(resolveStudyDownloadScope(NON_EXISTING_PROJECT_ID), "song.WRITE", "song.READ"));
-            } else if (scopeOptions == INVALID_STUDY && requestType == UPLOAD) {
-                context =
-                        buildJwtContext(
-                                List.of(resolveStudyUploadScope(NON_EXISTING_PROJECT_ID), "song.WRITE", "song.READ"));
-            } else if (scopeOptions == ScopeOptions.INVALID_SYSTEM) {
-                context = buildJwtContext(List.of("song.READ", "id.READ"));
-            } else if (scopeOptions == ScopeOptions.EMPTY_SCOPE) {
-                context = buildJwtContext(List.of());
-            } else {
-                fail("shouldn't be here");
-            }
+        if (scopeOptions == ScopeOptions.INVALID_SYSTEM) {
+            context = buildJwtContext(List.of("song.READ"));
+        }  else if (scopeOptions == ScopeOptions.EMPTY_SCOPE) {
+            context = buildJwtContext(List.of());
+        } else if (requestType == DOWNLOAD) {
+            context = buildJwtContext(downloadScopesMap.get(scopeOptions));
+        } else if (requestType == UPLOAD) {
+            context = buildJwtContext(uploadScopesMap.get(scopeOptions));
+        } else {
+            fail("shouldn't be here");
         }
 
         String jwtString = null;
@@ -211,20 +241,25 @@ public class JWTSecurityTest {
         }
         return jwtString;
     }
+
     private String resolveSystemDownloadScope() {
         return securityConfig.getScopeProperties().getDownload().getSystem();
     }
+
     private String resolveSystemUploadScope() {
         return securityConfig.getScopeProperties().getUpload().getSystem();
     }
+
     private String resolveStudyDownloadScope(String studyId) {
         val studyDownloadScope = securityConfig.getScopeProperties().getDownload().getStudy();
         return studyDownloadScope.getPrefix() + studyId + studyDownloadScope.getSuffix();
     }
+
     private String resolveStudyUploadScope(String studyId) {
         val studyUploadScope = securityConfig.getScopeProperties().getUpload().getStudy();
         return studyUploadScope.getPrefix() + studyId + studyUploadScope.getSuffix();
     }
+
     private HttpHeaders createHeaderWithJwt(String jwt) {
         val headers = new HttpHeaders();
         headers.add("Authorization", "Bearer " + jwt);
@@ -255,6 +290,7 @@ public class JWTSecurityTest {
         VALID_STUDY,
         INVALID_SYSTEM,
         INVALID_STUDY,
+        MALFORMED,
         EMPTY_SCOPE;
     }
 
