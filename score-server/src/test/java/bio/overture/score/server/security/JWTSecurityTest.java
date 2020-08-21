@@ -57,9 +57,9 @@ public class JWTSecurityTest {
     private final static String CONTROLLED = "controlled";
     private final static String PUBLISHED = "PUBLISHED";
 
-    private final static String NON_EXISTING_PROJECT_ID = "FAKE";
+    private final static String NON_EXISTING_PROJECT_CODE = "FAKE";
 
-    private final static String EXISTING_PROJECT_ID = "TEST";
+    private final static String EXISTING_PROJECT_CODE = "TEST";
     private final static String EXISTING_OBJECT_ID = "123";
     private final static String EXISTING_GNOS_ID = "123";
 
@@ -81,6 +81,8 @@ public class JWTSecurityTest {
     @MockBean private UploadService uploadService;
 
     private JWTGenerator jwtGenerator;
+    private Map<ScopeOptions, List<String>> downloadScopesMap;
+    private Map<ScopeOptions, List<String>> uploadScopesMap;
 
     @Before
     @SneakyThrows
@@ -89,6 +91,18 @@ public class JWTSecurityTest {
         if (mockMvc == null) {
             this.mockMvc =
                     MockMvcBuilders.webAppContextSetup(webApplicationContext).apply(springSecurity()).build();
+
+            downloadScopesMap = Map.of(
+                    VALID_SYSTEM,   List.of(resolveSystemDownloadScope(), "id.READ"),
+                    VALID_STUDY,    List.of(resolveStudyDownloadScope(EXISTING_PROJECT_CODE), "id.READ"),
+                    INVALID_STUDY,  List.of(resolveStudyDownloadScope(NON_EXISTING_PROJECT_CODE), "id.READ")
+            );
+
+            uploadScopesMap = Map.of(
+                    VALID_SYSTEM, List.of(resolveSystemUploadScope(), "id.WRITE"),
+                    VALID_STUDY, List.of(resolveStudyUploadScope(EXISTING_PROJECT_CODE), "id.WRITE"),
+                    INVALID_STUDY, List.of(resolveStudyUploadScope(NON_EXISTING_PROJECT_CODE), "id.WRITE")
+            );
         }
         setMocks();
     }
@@ -97,7 +111,7 @@ public class JWTSecurityTest {
         executeAndAssert(DOWNLOAD, VALID_STUDY, NOT_EXPIRED, OK);
     }
     @Test public void jwtDownloadValidation_validSystemScope_Success() {
-        executeAndAssert(DOWNLOAD, VALID_STUDY, NOT_EXPIRED, OK);
+        executeAndAssert(DOWNLOAD, VALID_SYSTEM, NOT_EXPIRED, OK);
     }
     @Test public void jwtDownloadValidation_validStudyScopeExpired_Unauthorized() {
         executeAndAssert(DOWNLOAD, VALID_STUDY, EXPIRED, UNAUTHORIZED);
@@ -204,18 +218,6 @@ public class JWTSecurityTest {
         return ResponseEntity.status(mvcResponse.getStatus()).body(responseObject);
     }
 
-    private final Map<ScopeOptions, List<String>> downloadScopesMap = Map.of(
-            VALID_SYSTEM,   List.of(resolveSystemDownloadScope(), "score.READ", "id.READ"),
-            VALID_STUDY,    List.of(resolveStudyDownloadScope(EXISTING_PROJECT_ID), "id.READ"),
-            INVALID_STUDY,  List.of(resolveStudyDownloadScope(NON_EXISTING_PROJECT_ID), "id.READ")
-    );
-
-    private final Map<ScopeOptions, List<String>> uploadScopesMap = Map.of(
-            VALID_SYSTEM, List.of(resolveSystemUploadScope(), "score.WRITE", "id.WRITE"),
-            VALID_STUDY, List.of(resolveStudyUploadScope(EXISTING_PROJECT_ID), "id.WRITE"),
-            INVALID_STUDY, List.of(resolveStudyUploadScope(NON_EXISTING_PROJECT_ID), "id.WRITE")
-    );
-
     private String generateConstrainedJWTString(
             ScopeOptions scopeOptions, RequestType requestType, boolean expired) {
         if (scopeOptions == ScopeOptions.MALFORMED) { return ""; }
@@ -271,7 +273,7 @@ public class JWTSecurityTest {
                 MetadataEntity.builder()
                         .id(EXISTING_OBJECT_ID)
                         .fileName("test.bam")
-                        .projectCode(EXISTING_PROJECT_ID)
+                        .projectCode(EXISTING_PROJECT_CODE)
                         .gnosId(EXISTING_GNOS_ID)
                         .access(CONTROLLED).build();
 
