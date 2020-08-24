@@ -19,19 +19,12 @@ package bio.overture.score.server.config;
 
 import bio.overture.score.server.metadata.MetadataService;
 import bio.overture.score.server.properties.ScopeProperties;
-import bio.overture.score.server.security.AccessTokenConverterWithExpiry;
-import bio.overture.score.server.security.CachingRemoteTokenServices;
 import bio.overture.score.server.security.scope.DownloadScopeAuthorizationStrategy;
 import bio.overture.score.server.security.scope.UploadScopeAuthorizationStrategy;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
-import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
-import org.springframework.context.annotation.Scope;
+import org.springframework.context.annotation.*;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -39,8 +32,6 @@ import org.springframework.security.oauth2.config.annotation.web.configuration.E
 import org.springframework.security.oauth2.config.annotation.web.configuration.ResourceServerConfigurerAdapter;
 import org.springframework.security.oauth2.provider.authentication.BearerTokenExtractor;
 import org.springframework.security.oauth2.provider.authentication.TokenExtractor;
-import org.springframework.security.oauth2.provider.token.AccessTokenConverter;
-import org.springframework.security.oauth2.provider.token.RemoteTokenServices;
 import org.springframework.security.web.authentication.preauth.AbstractPreAuthenticatedProcessingFilter;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -95,29 +86,6 @@ public class SecurityConfig extends ResourceServerConfigurerAdapter {
     configureAuthorization(http);
   }
 
-  @Bean
-  public AccessTokenConverter accessTokenConverter() {
-    return new AccessTokenConverterWithExpiry();
-  }
-
-  @Bean
-  public RemoteTokenServices remoteTokenServices(
-    final @Value("${auth.server.url}") String checkTokenUrl,
-    final @Value("${auth.server.tokenName:token}") String tokenName,
-    final @Value("${auth.server.clientId}") String clientId,
-    final @Value("${auth.server.clientSecret}") String clientSecret) {
-    val remoteTokenServices = new CachingRemoteTokenServices();
-    remoteTokenServices.setCheckTokenEndpointUrl(checkTokenUrl);
-    remoteTokenServices.setClientId(clientId);
-    remoteTokenServices.setClientSecret(clientSecret);
-    remoteTokenServices.setTokenName(tokenName);
-    remoteTokenServices.setAccessTokenConverter(accessTokenConverter());
-
-    log.debug("using auth server: " + checkTokenUrl);
-
-    return remoteTokenServices;
-  }
-
   private void configureAuthorization(HttpSecurity http) throws Exception {
     scopeProperties.logScopeProperties();;
 
@@ -153,4 +121,7 @@ public class SecurityConfig extends ResourceServerConfigurerAdapter {
         scopeProperties.getDownload().getSystem(),
         song);
   }
+
+  public ScopeProperties getScopeProperties() { return this.scopeProperties; }
+
 }
