@@ -20,7 +20,7 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
 
   <groupId>bio.overture</groupId>
   <artifactId>score</artifactId>
-  <version>5.0.0</version>
+  <version>5.1.0</version>
   <packaging>pom</packaging>
 
   <name>${project.artifactId}</name>
@@ -100,6 +100,11 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
         <groupId>org.springframework.retry</groupId>
         <artifactId>spring-retry</artifactId>
         <version>${spring-retry.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.springframework.security</groupId>
+        <artifactId>spring-security-jwt</artifactId>
+        <version>${spring-security-jwt.version}</version>
       </dependency>
 
       <!-- Spring Cloud -->
@@ -227,7 +232,8 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
     <!-- Versions - Spring -->
     <spring-boot.version>2.1.6.RELEASE</spring-boot.version>
     <spring-retry.version>1.1.2.RELEASE</spring-retry.version>
-    <spring-security-oauth2.version>2.0.7.RELEASE</spring-security-oauth2.version>
+    <spring-security-oauth2.version>2.3.5.RELEASE</spring-security-oauth2.version>
+    <spring-security-jwt.version>1.1.1.RELEASE</spring-security-jwt.version>
     <spring-cloud.version>Greenwich.SR3</spring-cloud.version>
 
     <!-- Versions - Amazon -->
