@@ -56,7 +56,8 @@ services:
       COLLABORATORY_DATA_DIRECTORY: data
       METADATA_URL: http://song-server:8080
       S3_ENDPOINT:  http://object-storage:9000
-      S3_PRESIGNEDURL_OVERRIDE_HOST: http://localhost:8085
+      # enable this to test s3 host override
+      #S3_PRESIGNEDURL_OVERRIDE_HOST: http://localhost:8085
       S3_ACCESSKEY: minio
       S3_SECRETKEY: minio123
       S3_SIGV4ENABLED: "true"
