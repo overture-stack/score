@@ -23,20 +23,35 @@ import bio.overture.score.core.model.ObjectKey;
 import bio.overture.score.core.model.Part;
 import bio.overture.score.core.util.Parts;
 import bio.overture.score.server.repository.URLGenerator;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.val;
 import org.springframework.http.HttpHeaders;
 
 import com.amazonaws.HttpMethod;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest;
+import org.springframework.util.StringUtils;
 
 /**
  * Amazon specific: To generate presigned url for s3-like object storage
  */
 public class S3URLGenerator implements URLGenerator {
 
-  @Autowired
+
   private AmazonS3 s3Client;
+  private String s3Endpoint;
+  private String preSignedUrlHostOverride;
+
+  public S3URLGenerator(AmazonS3 s3Client,
+                        String s3Endpoint,
+                        String preSignedUrlHostOverride ) {
+    this.s3Client = s3Client;
+    this.s3Endpoint = s3Endpoint;
+    this.preSignedUrlHostOverride = preSignedUrlHostOverride;
+  }
+
+  public S3URLGenerator(AmazonS3 s3Client) {
+    this(s3Client, null, null);
+  }
 
   @Override
   public String getUploadPartUrl(String bucketName, ObjectKey objectKey, String uploadId, Part part, Date expiration) {
@@ -46,7 +61,11 @@ public class S3URLGenerator implements URLGenerator {
     req.addRequestParameter("partNumber", String.valueOf(part.getPartNumber()));
     req.addRequestParameter("uploadId", uploadId);
 
-    return s3Client.generatePresignedUrl(req).toString();
+    val url = s3Client.generatePresignedUrl(req).toString();
+    if (StringUtils.isEmpty(preSignedUrlHostOverride)) {
+      return url;
+    }
+    return url.replace(s3Endpoint, preSignedUrlHostOverride);
   }
 
   @Override
@@ -55,14 +74,21 @@ public class S3URLGenerator implements URLGenerator {
     req.setExpiration(expiration);
 
     req.putCustomRequestHeader(HttpHeaders.RANGE, Parts.getHttpRangeValue(part));
-    return s3Client.generatePresignedUrl(req).toString();
+    val url = s3Client.generatePresignedUrl(req).toString();
+    if (StringUtils.isEmpty(preSignedUrlHostOverride)) {
+      return url;
+    }
+    return url.replace(s3Endpoint, preSignedUrlHostOverride);
   }
 
   @Override
   public String getDownloadUrl(String bucketName, ObjectKey objectKey, Date expiration) {
     GeneratePresignedUrlRequest req = new GeneratePresignedUrlRequest(bucketName, objectKey.getKey(), HttpMethod.GET);
     req.setExpiration(expiration);
-
-    return s3Client.generatePresignedUrl(req).toString();
+    val url = s3Client.generatePresignedUrl(req).toString();
+    if (StringUtils.isEmpty(preSignedUrlHostOverride)) {
+      return url;
+    }
+    return url.replace(s3Endpoint, preSignedUrlHostOverride);
   }
 }

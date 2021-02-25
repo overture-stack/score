@@ -35,6 +35,11 @@ s3:
   #amazon
   endpoint: s3-external-1.amazonaws.com
 
+  # an optional override to replace the s3 endpoint, useful to proxy requests
+  preSignedUrl:
+    override:
+      host:
+
 metadata:
   useLegacyMode: false
 
