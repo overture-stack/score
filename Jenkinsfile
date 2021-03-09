@@ -95,40 +95,6 @@ spec:
             }
         }
 
-// TEST BLOCK START
-// REMOVE before crating PR
-        stage('Testing-changes-in-branch') {
-            when {
-                branch "Add-publish-to-ghcr"
-            }
-            steps {
-                container('docker') {
-                    withCredentials([usernamePassword(credentialsId: 'OvertureDockerHub', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-                        sh 'docker login -u $USERNAME -p $PASSWORD'
-                    }
-                    sh "docker build --target=server --network=host -f Dockerfile . -t ${dockerHubRepo}-server:edge -t ${dockerHubRepo}-server:${commit}"
-                    sh "docker build --target=client --network=host -f Dockerfile . -t ${dockerHubRepo}:edge -t ${dockerHubRepo}:${commit}"
-                    sh "docker push ${dockerHubRepo}-server:${commit}"
-                    sh "docker push ${dockerHubRepo}-server:edge"
-                    sh "docker push ${dockerHubRepo}:${commit}"
-                    sh "docker push ${dockerHubRepo}:edge"
-                }
-
-                container('docker') {
-                    withCredentials([usernamePassword(credentialsId:'OvertureBioGithub', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-                        sh "docker login ${gitHubRegistry} -u $USERNAME -p $PASSWORD"
-                    }
-                    sh "docker build --target=server --network=host -f Dockerfile . -t ${gitHubRegistry}/${gitHubRepo}-server:edge -t ${gitHubRegistry}/${gitHubRepo}-server:${commit}"
-                    sh "docker build --target=client --network=host -f Dockerfile . -t ${gitHubRegistry}/${gitHubRepo}:edge -t ${gitHubRegistry}/${gitHubRepo}:${commit}"
-                    sh "docker push ${gitHubRegistry}/${gitHubRepo}-server:${commit}"
-                    sh "docker push ${gitHubRegistry}/${gitHubRepo}-server:edge"
-                    sh "docker push ${gitHubRegistry}/${gitHubRepo}:${commit}"
-                    sh "docker push ${gitHubRegistry}/${gitHubRepo}:edge"
-                }
-            }
-        }
-// TEST BLOCK END
-
         stage('Build & Publish Develop') {
             when {
                 branch "develop"
@@ -148,7 +114,7 @@ spec:
 
                 container('docker') {
                     withCredentials([usernamePassword(credentialsId:'OvertureBioGithub', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-                        sh 'docker login ${gitHubRegistry} -u $USERNAME -p $PASSWORD'
+                        sh "docker login ${gitHubRegistry} -u $USERNAME -p $PASSWORD"
                     }
                     sh "docker build --target=server --network=host -f Dockerfile . -t ${gitHubRegistry}/${gitHubRepo}-server:edge -t ${gitHubRegistry}/${gitHubRepo}-server:${commit}"
                     sh "docker build --target=client --network=host -f Dockerfile . -t ${gitHubRegistry}/${gitHubRepo}:edge -t ${gitHubRegistry}/${gitHubRepo}:${commit}"
@@ -185,7 +151,7 @@ spec:
 
                 container('docker') {
                     withCredentials([usernamePassword(credentialsId:'OvertureBioGithub', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-                        sh 'docker login ${gitHubRegistry} -u $USERNAME -p $PASSWORD'
+                        sh "docker login ${gitHubRegistry} -u $USERNAME -p $PASSWORD"
                     }
                     sh "docker build --target=server --network=host -f Dockerfile . -t ${gitHubRegistry}/${gitHubRepo}-server:latest -t ${gitHubRegistry}/${gitHubRepo}-server:${commit}"
                     sh "docker build --target=client --network=host -f Dockerfile . -t ${gitHubRegistry}/${gitHubRepo}:latest -t ${gitHubRegistry}/${gitHubRepo}:${commit}"
