@@ -97,7 +97,7 @@ spec:
 
 // TEST BLOCK START
 // REMOVE before crating PR
-        stage('Build & Publish Develop') {
+        stage('Testing-changes-in-branch') {
             when {
                 branch "Add-publish-to-ghcr"
             }
