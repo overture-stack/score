@@ -2,7 +2,9 @@ import groovy.json.JsonOutput
 
 def version = "UNKNOWN"
 def commit = "UNKNOWN"
-def repo = "UNKNOWN"
+def dockerHubRepo = "overture/score"
+def gitHubRegistry = "ghcr.io"
+def gitHubRepo = "overture-stack/score"
 
 def pom(path, target) {
     return [pattern: "${path}/pom.xml", target: "${target}.pom"]
@@ -92,6 +94,41 @@ spec:
                 }
             }
         }
+
+// TEST BLOCK START
+// REMOVE before crating PR
+        stage('Build & Publish Develop') {
+            when {
+                branch "Add-publish-to-ghcr"
+            }
+            steps {
+                container('docker') {
+                    withCredentials([usernamePassword(credentialsId: 'OvertureDockerHub', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+                        sh 'docker login -u $USERNAME -p $PASSWORD'
+                    }
+                    sh "docker build --target=server --network=host -f Dockerfile . -t ${dockerHubRepo}-server:edge -t ${dockerHubRepo}-server:${commit}"
+                    sh "docker build --target=client --network=host -f Dockerfile . -t ${dockerHubRepo}:edge -t ${dockerHubRepo}:${commit}"
+                    sh "docker push ${dockerHubRepo}-server:${commit}"
+                    sh "docker push ${dockerHubRepo}-server:edge"
+                    sh "docker push ${dockerHubRepo}:${commit}"
+                    sh "docker push ${dockerHubRepo}:edge"
+                }
+
+                container('docker') {
+                    withCredentials([usernamePassword(credentialsId:'OvertureBioGithub', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+                        sh 'docker login ${gitHubRegistry} -u $USERNAME -p $PASSWORD'
+                    }
+                    sh "docker build --target=server --network=host -f Dockerfile . -t ${gitHubRegistry}/${gitHubRepo}-server:edge -t ${gitHubRegistry}/${gitHubRepo}-server:${commit}"
+                    sh "docker build --target=client --network=host -f Dockerfile . -t ${gitHubRegistry}/${gitHubRepo}:edge -t ${gitHubRegistry}/${gitHubRepo}:${commit}"
+                    sh "docker push ${gitHubRegistry}/${gitHubRepo}-server:${commit}"
+                    sh "docker push ${gitHubRegistry}/${gitHubRepo}-server:edge"
+                    sh "docker push ${gitHubRegistry}/${gitHubRepo}:${commit}"
+                    sh "docker push ${gitHubRegistry}/${gitHubRepo}:edge"
+                }
+            }
+        }
+// TEST BLOCK END
+
         stage('Build & Publish Develop') {
             when {
                 branch "develop"
@@ -101,12 +138,24 @@ spec:
                     withCredentials([usernamePassword(credentialsId: 'OvertureDockerHub', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
                         sh 'docker login -u $USERNAME -p $PASSWORD'
                     }
-                    sh "docker build --target=server --network=host -f Dockerfile . -t overture/score-server:edge -t overture/score-server:${commit}"
-                    sh "docker build --target=client --network=host -f Dockerfile . -t overture/score:edge -t overture/score:${commit}"
-                    sh "docker push overture/score-server:${commit}"
-                    sh "docker push overture/score-server:edge"
-                    sh "docker push overture/score:${commit}"
-                    sh "docker push overture/score:edge"
+                    sh "docker build --target=server --network=host -f Dockerfile . -t ${dockerHubRepo}-server:edge -t ${dockerHubRepo}-server:${commit}"
+                    sh "docker build --target=client --network=host -f Dockerfile . -t ${dockerHubRepo}:edge -t ${dockerHubRepo}:${commit}"
+                    sh "docker push ${dockerHubRepo}-server:${commit}"
+                    sh "docker push ${dockerHubRepo}-server:edge"
+                    sh "docker push ${dockerHubRepo}:${commit}"
+                    sh "docker push ${dockerHubRepo}:edge"
+                }
+
+                container('docker') {
+                    withCredentials([usernamePassword(credentialsId:'OvertureBioGithub', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+                        sh 'docker login ${gitHubRegistry} -u $USERNAME -p $PASSWORD'
+                    }
+                    sh "docker build --target=server --network=host -f Dockerfile . -t ${gitHubRegistry}/${gitHubRepo}-server:edge -t ${gitHubRegistry}/${gitHubRepo}-server:${commit}"
+                    sh "docker build --target=client --network=host -f Dockerfile . -t ${gitHubRegistry}/${gitHubRepo}:edge -t ${gitHubRegistry}/${gitHubRepo}:${commit}"
+                    sh "docker push ${gitHubRegistry}/${gitHubRepo}-server:${commit}"
+                    sh "docker push ${gitHubRegistry}/${gitHubRepo}-server:edge"
+                    sh "docker push ${gitHubRegistry}/${gitHubRepo}:${commit}"
+                    sh "docker push ${gitHubRegistry}/${gitHubRepo}:edge"
                 }
             }
         }
@@ -118,17 +167,32 @@ spec:
                 container('docker') {
                     withCredentials([usernamePassword(credentialsId: 'OvertureBioGithub', passwordVariable: 'GIT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
                         sh "git tag ${version}"
-                        sh "git push https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/overture-stack/score --tags"
+                        sh "git push https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/${gitHubRepo} --tags"
                     }
+                }
+
+                container('docker') {
                     withCredentials([usernamePassword(credentialsId: 'OvertureDockerHub', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
                         sh 'docker login -u $USERNAME -p $PASSWORD'
                     }
-                    sh "docker build --target=server --network=host -f Dockerfile . -t overture/score-server:latest -t overture/score-server:${version}"
-                    sh "docker build --target=client --network=host -f Dockerfile . -t overture/score:latest -t overture/score:${version}"
-                    sh "docker push overture/score-server:${version}"
-                    sh "docker push overture/score-server:latest"
-                    sh "docker push overture/score:${version}"
-                    sh "docker push overture/score:latest"
+                    sh "docker build --target=server --network=host -f Dockerfile . -t ${dockerHubRepo}-server:latest -t ${dockerHubRepo}-server:${version}"
+                    sh "docker build --target=client --network=host -f Dockerfile . -t ${dockerHubRepo}:latest -t ${dockerHubRepo}:${version}"
+                    sh "docker push ${dockerHubRepo}-server:${version}"
+                    sh "docker push ${dockerHubRepo}-server:latest"
+                    sh "docker push ${dockerHubRepo}:${version}"
+                    sh "docker push ${dockerHubRepo}:latest"
+                }
+
+                container('docker') {
+                    withCredentials([usernamePassword(credentialsId:'OvertureBioGithub', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+                        sh 'docker login ${gitHubRegistry} -u $USERNAME -p $PASSWORD'
+                    }
+                    sh "docker build --target=server --network=host -f Dockerfile . -t ${gitHubRegistry}/${gitHubRepo}-server:latest -t ${gitHubRegistry}/${gitHubRepo}-server:${commit}"
+                    sh "docker build --target=client --network=host -f Dockerfile . -t ${gitHubRegistry}/${gitHubRepo}:latest -t ${gitHubRegistry}/${gitHubRepo}:${commit}"
+                    sh "docker push ${gitHubRegistry}/${gitHubRepo}-server:${commit}"
+                    sh "docker push ${gitHubRegistry}/${gitHubRepo}-server:latest"
+                    sh "docker push ${gitHubRegistry}/${gitHubRepo}:${commit}"
+                    sh "docker push ${gitHubRegistry}/${gitHubRepo}:latest"
                 }
             }
         }
