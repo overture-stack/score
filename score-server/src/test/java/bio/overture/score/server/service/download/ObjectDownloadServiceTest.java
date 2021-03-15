@@ -88,7 +88,7 @@ public class ObjectDownloadServiceTest extends S3DownloadService {
 
     ReflectionTestUtils.setField(service, "dataDir", dataDir);
     ReflectionTestUtils.setField(service, "expiration", 7);
-    ReflectionTestUtils.setField(service, "urlGenerator", new S3URLGenerator());
+    ReflectionTestUtils.setField(service, "urlGenerator", new S3URLGenerator(this.s3Client));
     ReflectionTestUtils.setField(service, "partCalculator", new SimplePartCalculator(20000));
 
     setUpMockService();
@@ -131,7 +131,7 @@ public class ObjectDownloadServiceTest extends S3DownloadService {
     namingService.setBucketKeySize(bucketKeySize);
 
     // Have to stub out half the universe:
-    val urlGen = new S3URLGenerator();
+    val urlGen = new S3URLGenerator(this.s3Client);
     ReflectionTestUtils.setField(urlGen, "s3Client",
         ObjectDownloadServiceStubFactory.createS3ClientForRadosGW(endpointUrl));
     ReflectionTestUtils.setField(service, "urlGenerator", urlGen);
@@ -178,7 +178,7 @@ public class ObjectDownloadServiceTest extends S3DownloadService {
     namingService.setBucketKeySize(bucketKeySize);
 
     // Have to stub out half the universe:
-    val urlGen = new S3URLGenerator();
+    val urlGen = new S3URLGenerator(this.s3Client);
     ReflectionTestUtils.setField(urlGen, "s3Client",
         ObjectDownloadServiceStubFactory.createS3ClientForRadosGW(endpointUrl));
     ReflectionTestUtils.setField(service, "urlGenerator", urlGen);

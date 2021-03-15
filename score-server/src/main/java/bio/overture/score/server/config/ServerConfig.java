@@ -25,6 +25,7 @@ import bio.overture.score.server.repository.UploadStateStore;
 import bio.overture.score.server.repository.s3.S3BucketNamingService;
 import bio.overture.score.server.repository.s3.S3URLGenerator;
 import bio.overture.score.server.repository.s3.S3UploadStateStore;
+import com.amazonaws.services.s3.AmazonS3;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -40,6 +41,12 @@ public class ServerConfig {
   @Value("${upload.partsize}")
   private int partSize;
 
+  @Value("${s3.preSignedUrl.override.host}")
+  private String preSignedUrlsHostOverride;
+
+  @Value("${s3.endpoint}")
+  private String s3Endpoint;
+
   @Bean
   public UploadStateStore stateStore() {
     return new S3UploadStateStore();
@@ -51,8 +58,8 @@ public class ServerConfig {
   }
 
   @Bean
-  public URLGenerator url() {
-    return new S3URLGenerator();
+  public URLGenerator url(AmazonS3 s3Client) {
+    return new S3URLGenerator(s3Client, s3Endpoint, preSignedUrlsHostOverride);
   }
 
   @Bean
