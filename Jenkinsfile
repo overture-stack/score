@@ -155,9 +155,9 @@ spec:
                     }
                     sh "docker build --target=server --network=host -f Dockerfile . -t ${gitHubRegistry}/${gitHubRepo}-server:latest -t ${gitHubRegistry}/${gitHubRepo}-server:${commit}"
                     sh "docker build --target=client --network=host -f Dockerfile . -t ${gitHubRegistry}/${gitHubRepo}:latest -t ${gitHubRegistry}/${gitHubRepo}:${commit}"
-                    sh "docker push ${gitHubRegistry}/${gitHubRepo}-server:${commit}"
+                    sh "docker push ${gitHubRegistry}/${gitHubRepo}-server:${version}"
                     sh "docker push ${gitHubRegistry}/${gitHubRepo}-server:latest"
-                    sh "docker push ${gitHubRegistry}/${gitHubRepo}:${commit}"
+                    sh "docker push ${gitHubRegistry}/${gitHubRepo}:${version}"
                     sh "docker push ${gitHubRegistry}/${gitHubRepo}:latest"
                 }
             }
