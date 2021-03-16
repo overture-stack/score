@@ -153,8 +153,8 @@ spec:
                     withCredentials([usernamePassword(credentialsId:'OvertureBioGithub', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
                         sh "docker login ${gitHubRegistry} -u $USERNAME -p $PASSWORD"
                     }
-                    sh "docker build --target=server --network=host -f Dockerfile . -t ${gitHubRegistry}/${gitHubRepo}-server:latest -t ${gitHubRegistry}/${gitHubRepo}-server:${commit}"
-                    sh "docker build --target=client --network=host -f Dockerfile . -t ${gitHubRegistry}/${gitHubRepo}:latest -t ${gitHubRegistry}/${gitHubRepo}:${commit}"
+                    sh "docker build --target=server --network=host -f Dockerfile . -t ${gitHubRegistry}/${gitHubRepo}-server:latest -t ${gitHubRegistry}/${gitHubRepo}-server:${version}"
+                    sh "docker build --target=client --network=host -f Dockerfile . -t ${gitHubRegistry}/${gitHubRepo}:latest -t ${gitHubRegistry}/${gitHubRepo}:${version}"
                     sh "docker push ${gitHubRegistry}/${gitHubRepo}-server:${version}"
                     sh "docker push ${gitHubRegistry}/${gitHubRepo}-server:latest"
                     sh "docker push ${gitHubRegistry}/${gitHubRepo}:${version}"
