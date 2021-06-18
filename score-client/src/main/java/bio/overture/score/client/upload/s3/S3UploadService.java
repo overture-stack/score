@@ -52,6 +52,8 @@ public class S3UploadService implements UploadService {
   private boolean quiet;
   @Value("${storage.retryNumber}")
   private int retryNumber;
+  @Value("${client.uploadStateParentDirPath}")
+  private String uploadStateParentDirPath;
 
   /**
    * Dependencies.
@@ -104,16 +106,18 @@ public class S3UploadService implements UploadService {
     ObjectSpecification spec = null;
     try {
       spec = storageService.initiateUpload(objectId, file.length(), overwrite, md5);
+
+      // Delete if already present
+      if (overwrite) {
+        UploadStateStore.create(getUploadStateParentDirPath(file), spec, false);
+      }
     } catch (NotRetryableException e) {
       // A NotRetryable exception during initiateUpload should just end whole process
       // a bit of a sleazy hack. Should only be thrown when the Metadata service informs us the supplied
       // object id was never registered/does not exist in Metadata repo
-      throw new NotResumableException(e);
-    }
 
-    // Delete if already present
-    if (overwrite) {
-      UploadStateStore.create(file, spec, false);
+      // being unable to create file for upload state should also end whole process
+      throw new NotResumableException(e);
     }
 
     val progress = new Progress(terminal, quiet, spec.getParts().size(), 0);
@@ -144,7 +148,7 @@ public class S3UploadService implements UploadService {
 
     // See if there is already an upload in progress for this object id. Fetch upload id and send if present. If
     // missing, send null
-    val uploadId = UploadStateStore.fetchUploadId(uploadFile, objectId);
+    val uploadId = UploadStateStore.fetchUploadId(getUploadStateParentDirPath(uploadFile), objectId);
     val progress = storageService.getProgress(objectId, uploadFile.length());
 
     // Compare upload id's
@@ -231,7 +235,15 @@ public class S3UploadService implements UploadService {
   }
 
   private void cleanupState(File uploadFile, String objectId) throws IOException {
-    UploadStateStore.close(UploadStateStore.getContainingDir(uploadFile), objectId);
+    UploadStateStore.close(getUploadStateParentDirPath(uploadFile), objectId);
   }
 
+  private String getUploadStateParentDirPath(File uploadFile) {
+    if (!uploadStateParentDirPath.equals("")) {
+      return uploadStateParentDirPath;
+    } else {
+      val path = UploadStateStore.getContainingDir(uploadFile);
+      return path;
+    }
+  }
 }
