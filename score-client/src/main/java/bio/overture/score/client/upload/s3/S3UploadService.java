@@ -109,7 +109,7 @@ public class S3UploadService implements UploadService {
 
       // Delete if already present
       if (overwrite) {
-        UploadStateStore.create(getUploadStateParentDirPath(file), spec, false);
+        UploadStateStore.create(getUploadStateParentDirPath(file), spec);
       }
     } catch (NotRetryableException e) {
       // A NotRetryable exception during initiateUpload should just end whole process

@@ -46,10 +46,6 @@ public class UploadStateStore extends TransferState {
     return uploadFile.getParent();
   }
 
-  public static void create(@NonNull String uploadStateParentDirPath, @NonNull ObjectSpecification spec, boolean force) throws NotRetryableException {
-    create(uploadStateParentDirPath, spec);
-  }
-
   /**
    * Write upload-id of current upload into state directory (hidden directory next to file being uploaded)
    * @param uploadStateParentDirPath - Path to create temporary upload id directory
