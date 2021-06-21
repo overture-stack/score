@@ -52,8 +52,8 @@ public class S3UploadService implements UploadService {
   private boolean quiet;
   @Value("${storage.retryNumber}")
   private int retryNumber;
-  @Value("${client.uploadStateParentDirPath}")
-  private String uploadStateParentDirPath;
+  @Value("${client.uploadStateDir}")
+  private String uploadStateDir;
 
   /**
    * Dependencies.
@@ -109,7 +109,7 @@ public class S3UploadService implements UploadService {
 
       // Delete if already present
       if (overwrite) {
-        UploadStateStore.create(getUploadStateParentDirPath(file), spec);
+        UploadStateStore.create(getUploadStateDir(file), spec);
       }
     } catch (NotRetryableException e) {
       // A NotRetryable exception during initiateUpload should just end whole process
@@ -148,7 +148,7 @@ public class S3UploadService implements UploadService {
 
     // See if there is already an upload in progress for this object id. Fetch upload id and send if present. If
     // missing, send null
-    val uploadId = UploadStateStore.fetchUploadId(getUploadStateParentDirPath(uploadFile), objectId);
+    val uploadId = UploadStateStore.fetchUploadId(getUploadStateDir(uploadFile), objectId);
     val progress = storageService.getProgress(objectId, uploadFile.length());
 
     // Compare upload id's
@@ -235,15 +235,14 @@ public class S3UploadService implements UploadService {
   }
 
   private void cleanupState(File uploadFile, String objectId) throws IOException {
-    UploadStateStore.close(getUploadStateParentDirPath(uploadFile), objectId);
+    UploadStateStore.close(getUploadStateDir(uploadFile), objectId);
   }
 
-  private String getUploadStateParentDirPath(File uploadFile) {
-    if (!uploadStateParentDirPath.equals("")) {
-      return uploadStateParentDirPath;
+  private String getUploadStateDir(File uploadFile) {
+    if (!uploadStateDir.isEmpty()) {
+      return uploadStateDir;
     } else {
-      val path = UploadStateStore.getContainingDir(uploadFile);
-      return path;
+      return UploadStateStore.getContainingDir(uploadFile);
     }
   }
 }

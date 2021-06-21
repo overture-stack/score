@@ -48,12 +48,12 @@ public class UploadStateStore extends TransferState {
 
   /**
    * Write upload-id of current upload into state directory (hidden directory next to file being uploaded)
-   * @param uploadStateParentDirPath - Path to create temporary upload id directory
+   * @param uploadStateDir - Path to create temporary upload id directory
    * @param spec
    */
-  public static void create(@NonNull String uploadStateParentDirPath, @NonNull ObjectSpecification spec) throws NotRetryableException {
+  public static void create(@NonNull String uploadStateDir, @NonNull ObjectSpecification spec) throws NotRetryableException {
     try {
-      val objectStatePath = getObjectStatePath(uploadStateParentDirPath, spec.getObjectId());
+      val objectStatePath = getObjectStatePath(uploadStateDir, spec.getObjectId());
       val objectStateDir = new File(objectStatePath);
 
       removeDir(objectStateDir, true);
@@ -72,9 +72,9 @@ public class UploadStateStore extends TransferState {
     return "uploadId";
   }
 
-  public static Optional<String> fetchUploadId(@NonNull String uploadStateParentDirPath, @NonNull String objectId) {
+  public static Optional<String> fetchUploadId(@NonNull String uploadStateDir, @NonNull String objectId) {
     Optional<String> result = Optional.empty();
-    val objectStatePath = getObjectStatePath(uploadStateParentDirPath, objectId);
+    val objectStatePath = getObjectStatePath(uploadStateDir, objectId);
     val uploadIdFile = new File(objectStatePath, getStateName());
 
     if (uploadIdFile.exists()) {
@@ -94,12 +94,12 @@ public class UploadStateStore extends TransferState {
     return result;
   }
 
-  public static void close(@NonNull String uploadStateParentDirPath, @NonNull String objectId) throws IOException {
-    val dirToDelete = new File(getObjectStatePath(uploadStateParentDirPath, objectId));
+  public static void close(@NonNull String uploadStateDir, @NonNull String objectId) throws IOException {
+    val dirToDelete = new File(getObjectStatePath(uploadStateDir, objectId));
     deleteDirectoryIfExist(dirToDelete);
   }
 
-  private static String getObjectStatePath(@NonNull String uploadStateParentDirPath, @NonNull String objectId) {
-    return uploadStateParentDirPath +  "/." + objectId;
+  private static String getObjectStatePath(@NonNull String uploadStateDir, @NonNull String objectId) {
+    return uploadStateDir +  "/." + objectId;
   }
 }
