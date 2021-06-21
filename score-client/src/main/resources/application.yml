@@ -29,6 +29,9 @@ client:
   accessToken: "${accessToken:}" # Alias for backwards compatibility
   connectTimeoutSeconds: 60
   readTimeoutSeconds: 60
+  # path of dir with WRITE access for score client upload state files
+  # if empty uses parent dir of current file to upload
+  uploadStateDir: ""
     
   ssl:
     custom: false

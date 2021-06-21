@@ -41,34 +41,24 @@ public class UploadStateStore extends TransferState {
    * /path/to/.<object-id>/uploadid upload state file
    */
 
-  /*
-   * We are using the directory that the upload file is currently located in. Requires read/write access to directory
-   * Otherwise, we need to have user specify a working directory for upload - which is a bit too counter-intuitive.
-   */
   @SneakyThrows
-  public static File getContainingDir(@NonNull final File uploadFile) {
-    val parentPath = Optional.ofNullable(uploadFile.getParent());
-    if (parentPath.isPresent()) {
-      return new File(parentPath.get());
-    }
-    return null;
+  public static String getContainingDir(@NonNull final File uploadFile) {
+    return uploadFile.getParent();
   }
 
   /**
    * Write upload-id of current upload into state directory (hidden directory next to file being uploaded)
-   * @param uploadFile - File we want to upload. Used to determine path to create temporary upload id directory
+   * @param uploadStateDir - Path to create temporary upload id directory
    * @param spec
-   * @param force
    */
-  public static void create(@NonNull File uploadFile, @NonNull ObjectSpecification spec, boolean force) {
-    val filePath = getContainingDir(uploadFile);
-
+  public static void create(@NonNull String uploadStateDir, @NonNull ObjectSpecification spec) throws NotRetryableException {
     try {
-      val uploadStateDir = getObjectStateDir(filePath, spec.getObjectId());
+      val objectStatePath = getObjectStatePath(uploadStateDir, spec.getObjectId());
+      val objectStateDir = new File(objectStatePath);
 
-      removeDir(uploadStateDir, true);
+      removeDir(objectStateDir, true);
 
-      val uploadIdFile = new File(uploadStateDir, getStateName());
+      val uploadIdFile = new File(objectStateDir, getStateName());
       try (PrintWriter out = new PrintWriter(uploadIdFile, StandardCharsets.UTF_8.name())) {
         out.println(spec.getUploadId());
       }
@@ -82,10 +72,10 @@ public class UploadStateStore extends TransferState {
     return "uploadId";
   }
 
-  public static Optional<String> fetchUploadId(@NonNull File uploadFile, @NonNull String objectId) {
-    Optional<String> result = Optional.ofNullable(null);
-    val uploadStateDir = getObjectStateDir(getContainingDir(uploadFile), objectId);
-    val uploadIdFile = new File(uploadStateDir, getStateName());
+  public static Optional<String> fetchUploadId(@NonNull String uploadStateDir, @NonNull String objectId) {
+    Optional<String> result = Optional.empty();
+    val objectStatePath = getObjectStatePath(uploadStateDir, objectId);
+    val uploadIdFile = new File(objectStatePath, getStateName());
 
     if (uploadIdFile.exists()) {
       try (val reader =
@@ -102,5 +92,14 @@ public class UploadStateStore extends TransferState {
       }
     }
     return result;
+  }
+
+  public static void close(@NonNull String uploadStateDir, @NonNull String objectId) throws IOException {
+    val dirToDelete = new File(getObjectStatePath(uploadStateDir, objectId));
+    deleteDirectoryIfExist(dirToDelete);
+  }
+
+  private static String getObjectStatePath(@NonNull String uploadStateDir, @NonNull String objectId) {
+    return uploadStateDir +  "/." + objectId;
   }
 }

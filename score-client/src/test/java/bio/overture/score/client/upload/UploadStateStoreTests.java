@@ -11,8 +11,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class UploadStateStoreTests {
 
-  File getTestResourceRoot() {
-    return new File(getClass().getClassLoader().getResource("fixtures/upload/placeholder-upload-file.txt").getFile());
+  String getTestResourceRoot() {
+    return getClass().getClassLoader().getResource("fixtures/upload/").getPath();
   }
 
   @Test
@@ -31,7 +31,7 @@ public class UploadStateStoreTests {
 
   @Test
   public void test_upload_state_store_containing_dir() throws IOException {
-    val pathString = getTestResourceRoot().getCanonicalPath();
+    val pathString = getTestResourceRoot();
     val testFile = new File(pathString);
     val resultFile = UploadStateStore.getContainingDir(testFile);
     assertThat(resultFile).isNotNull();
