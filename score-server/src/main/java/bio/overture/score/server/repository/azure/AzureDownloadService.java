@@ -31,6 +31,7 @@ import com.microsoft.azure.storage.StorageException;
 import com.microsoft.azure.storage.blob.CloudBlobContainer;
 import com.microsoft.azure.storage.blob.CloudBlockBlob;
 import lombok.Setter;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,6 +41,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
 import java.net.URISyntaxException;
+import java.util.Base64;
 import java.util.List;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -99,8 +101,8 @@ public class AzureDownloadService implements DownloadService {
       }
       fillPartUrls(objectId, parts);
 
-      return new ObjectSpecification(objectId, objectId, objectId, parts, rangeLength, blob.getProperties()
-        .getContentMD5(), false);
+      val md5 = base64ToHexMD5(blob.getProperties().getContentMD5());
+      return new ObjectSpecification(objectId, objectId, objectId, parts, rangeLength, md5, false);
     } catch (StorageException e) {
       log.error("Failed to download objectId: {}, offset: {}, length: {}, forExternalUse: {}: {} ",
         objectId, offset, length, forExternalUse, e);
@@ -145,5 +147,17 @@ public class AzureDownloadService implements DownloadService {
       ObjectKeys.getObjectKey("", sentinelObjectId),
       null);
     return result;
+  }
+
+  @SneakyThrows
+  static String base64ToHexMD5(String content) {
+    val bytes = Base64.getDecoder().decode(content);
+    val output = new StringBuilder();
+    for (val b : bytes) {
+      output.append(String.format("%02x", b));
+    }
+
+    log.trace("Converted MD5 from {} to {}", content, output);
+    return output.toString();
   }
 }
