@@ -49,8 +49,8 @@ public class AzureUploadService implements UploadService {
   @Value("${transport.parallel}")
   private int parallelUploads;
 
-  // This is Azure's maximum 4 MB upload part size
-  private final static int BLOCK_SIZE = 4 * 1024 * 1024;
+  // Azure used to have a 4MiB maximum part size, it has been since increased. Setting to 100MiB for now.
+  private final static int BLOCK_SIZE = 100 * 1024 * 1024;
 
   @Override
   public void upload(File file, String objectId, String md5, boolean redo) throws IOException {
