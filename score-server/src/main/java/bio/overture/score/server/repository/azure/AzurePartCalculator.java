@@ -33,7 +33,7 @@ public class AzurePartCalculator implements PartCalculator {
 
   // Note: Azure has a MAX_NUM_PART = 50000; constraint, but that only applies to uploads
   // which we are currently delegating entirely to the Azure Java SDK.
-  private static final int MAX_PART_SIZE = 4 * 1024 * 1024; // 4 MB
+  private static final int MAX_PART_SIZE = 100 * 1024 * 1024; // 100 MiB
 
   private int partSize = MAX_PART_SIZE;
 
