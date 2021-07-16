@@ -60,14 +60,10 @@ spec:
   - name: docker
     image: docker:18-git
     tty: true
-    volumeMounts:
-    - mountPath: /var/run/docker.sock
-      name: docker-sock
+    env: 
+      - name: DOCKER_HOST 
+        value: tcp://localhost:2375
   volumes:
-  - name: docker-sock
-    hostPath:
-      path: /var/run/docker.sock
-      type: File
   - name: docker-graph-storage 
     emptyDir: {}
   - name: maven-cache
