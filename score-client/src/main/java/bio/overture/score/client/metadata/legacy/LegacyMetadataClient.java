@@ -33,9 +33,10 @@ import lombok.val;
 import org.icgc.dcc.common.core.security.SSLCertificateValidation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestTemplate;
 
-import java.io.FileNotFoundException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -56,6 +57,7 @@ public class LegacyMetadataClient {
    * Constants.
    */
   private static final ObjectMapper MAPPER = new ObjectMapper();
+  private final RestTemplate restTemplate;
 
   /**
    * Configuration.
@@ -63,13 +65,18 @@ public class LegacyMetadataClient {
   @NonNull
   @Getter
   private final String serverUrl;
-  
+
   @Autowired
-  public LegacyMetadataClient(@Value("${metadata.url}") String serverUrl,
-    @Value("${metadata.ssl.enabled}") boolean ssl) {
+  public LegacyMetadataClient(
+          @Value("${metadata.url}") String serverUrl,
+          @Value("${metadata.ssl.enabled}") boolean ssl,
+          @Value("${client.accessToken}") String accessToken) {
     if (!ssl) {
       SSLCertificateValidation.disable();
     }
+
+    this.restTemplate = new RestTemplate();
+    restTemplate.setInterceptors(List.of(createTokenInterceptor(accessToken)));
 
     this.serverUrl = serverUrl;
   }
@@ -93,8 +100,8 @@ public class LegacyMetadataClient {
   @SneakyThrows
   private Entity read(@NonNull String path) {
     try {
-      return MAPPER.readValue(resolveUrl(path), Entity.class);
-    } catch (FileNotFoundException e) {
+      return restTemplate.getForObject(resolveUrl(path).toURI(),  Entity.class);
+    } catch (Exception e) {
       throw new EntityNotFoundException(e.getMessage());
     }
   }
@@ -110,7 +117,7 @@ public class LegacyMetadataClient {
         val url = resolveUrl(path + (path.contains("?") ? "&" : "?") + "size=2000&page=" + pageNumber);
         log.debug("Getting {}...", url);
 
-        val result = MAPPER.readValue(url, ObjectNode.class);
+        val result = restTemplate.getForObject(url.toURI(), ObjectNode.class);
         last = result.path("last").asBoolean();
         List<Entity> page = MAPPER.convertValue(result.path("content"), new TypeReference<ArrayList<Entity>>() {
         });
@@ -118,7 +125,7 @@ public class LegacyMetadataClient {
         results.addAll(page);
         pageNumber++;
       }
-    } catch (FileNotFoundException e) {
+    } catch (Exception e) {
       throw new EntityNotFoundException(e.getMessage());
     }
 
@@ -133,7 +140,7 @@ public class LegacyMetadataClient {
 
     log.debug("Fetching analysis files from url '{}'", url);
 
-    return stream(MAPPER.readValue(url, ArrayNode.class).spliterator(), false).
+    return stream(restTemplate.getForObject(url.toURI(), ArrayNode.class).spliterator(), false).
       peek(r -> log.debug("Got result {}", r)).
       map(x -> x.path("objectId")).
       map(JsonNode::textValue).
@@ -149,4 +156,10 @@ public class LegacyMetadataClient {
     return Stream.of(fields).map(f -> "fields=" + f).collect(joining("&"));
   }
 
+  private ClientHttpRequestInterceptor createTokenInterceptor(String token) {
+    return (request, body, execution) -> {
+      request.getHeaders().set("Authorization", "Bearer " + token);
+      return execution.execute(request, body);
+    };
+  }
 }
