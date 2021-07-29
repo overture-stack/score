@@ -64,17 +64,17 @@ public class LegacyMetadataClient {
   @NonNull
   @Getter
   private final String serverUrl;
-  private final RestTemplate restTemplate;
+  private final RestTemplate serviceTemplate;
   
   @Autowired
   public LegacyMetadataClient(@Value("${metadata.url}") String serverUrl,
     @Value("${metadata.ssl.enabled}") boolean ssl,
-    @Qualifier("serviceTemplate") @NonNull RestTemplate restTemplate) {
+    @Qualifier("serviceTemplate") @NonNull RestTemplate serviceTemplate) {
     if (!ssl) {
       SSLCertificateValidation.disable();
     }
 
-    this.restTemplate = restTemplate;
+    this.serviceTemplate = serviceTemplate;
     this.serverUrl = serverUrl;
   }
 
@@ -97,7 +97,7 @@ public class LegacyMetadataClient {
   @SneakyThrows
   private Entity read(@NonNull String path) {
     try {
-      return restTemplate.getForObject(resolveEntitiesUrl(path).toURI(),  Entity.class);
+      return serviceTemplate.getForObject(resolveEntitiesUrl(path).toURI(),  Entity.class);
     } catch (Exception e) {
       throw new EntityNotFoundException(e.getMessage());
     }
@@ -114,7 +114,7 @@ public class LegacyMetadataClient {
         val url = resolveEntitiesUrl(path + (path.contains("?") ? "&" : "?") + "size=2000&page=" + pageNumber);
         log.debug("Getting {}...", url);
 
-        val result = restTemplate.getForObject(url.toURI(), ObjectNode.class);
+        val result = serviceTemplate.getForObject(url.toURI(), ObjectNode.class);
         last = result.path("last").asBoolean();
         List<Entity> page = MAPPER.convertValue(result.path("content"), new TypeReference<ArrayList<Entity>>() {
         });
