@@ -32,8 +32,8 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.icgc.dcc.common.core.security.SSLCertificateValidation;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
@@ -57,7 +57,6 @@ public class LegacyMetadataClient {
    * Constants.
    */
   private static final ObjectMapper MAPPER = new ObjectMapper();
-  private final RestTemplate restTemplate;
 
   /**
    * Configuration.
@@ -65,19 +64,17 @@ public class LegacyMetadataClient {
   @NonNull
   @Getter
   private final String serverUrl;
-
+  private final RestTemplate restTemplate;
+  
   @Autowired
-  public LegacyMetadataClient(
-          @Value("${metadata.url}") String serverUrl,
-          @Value("${metadata.ssl.enabled}") boolean ssl,
-          @Value("${client.accessToken}") String accessToken) {
+  public LegacyMetadataClient(@Value("${metadata.url}") String serverUrl,
+    @Value("${metadata.ssl.enabled}") boolean ssl,
+    @Qualifier("serviceTemplate") @NonNull RestTemplate restTemplate) {
     if (!ssl) {
       SSLCertificateValidation.disable();
     }
 
-    this.restTemplate = new RestTemplate();
-    restTemplate.setInterceptors(List.of(createTokenInterceptor(accessToken)));
-
+    this.restTemplate = restTemplate;
     this.serverUrl = serverUrl;
   }
 
@@ -100,7 +97,7 @@ public class LegacyMetadataClient {
   @SneakyThrows
   private Entity read(@NonNull String path) {
     try {
-      return restTemplate.getForObject(resolveUrl(path).toURI(),  Entity.class);
+      return restTemplate.getForObject(resolveEntitiesUrl(path).toURI(),  Entity.class);
     } catch (Exception e) {
       throw new EntityNotFoundException(e.getMessage());
     }
@@ -114,7 +111,7 @@ public class LegacyMetadataClient {
 
     try {
       while (!last) {
-        val url = resolveUrl(path + (path.contains("?") ? "&" : "?") + "size=2000&page=" + pageNumber);
+        val url = resolveEntitiesUrl(path + (path.contains("?") ? "&" : "?") + "size=2000&page=" + pageNumber);
         log.debug("Getting {}...", url);
 
         val result = restTemplate.getForObject(url.toURI(), ObjectNode.class);
@@ -140,7 +137,7 @@ public class LegacyMetadataClient {
 
     log.debug("Fetching analysis files from url '{}'", url);
 
-    return stream(restTemplate.getForObject(url.toURI(), ArrayNode.class).spliterator(), false).
+    return stream(MAPPER.readValue(url, ArrayNode.class).spliterator(), false).
       peek(r -> log.debug("Got result {}", r)).
       map(x -> x.path("objectId")).
       map(JsonNode::textValue).
@@ -148,7 +145,7 @@ public class LegacyMetadataClient {
   }
 
   @SneakyThrows
-  private URL resolveUrl(String path) {
+  private URL resolveEntitiesUrl(String path) {
     return new URL(serverUrl + "/entities" + path);
   }
 
@@ -156,10 +153,4 @@ public class LegacyMetadataClient {
     return Stream.of(fields).map(f -> "fields=" + f).collect(joining("&"));
   }
 
-  private ClientHttpRequestInterceptor createTokenInterceptor(String token) {
-    return (request, body, execution) -> {
-      request.getHeaders().set("Authorization", "Bearer " + token);
-      return execution.execute(request, body);
-    };
-  }
 }
