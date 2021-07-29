@@ -239,7 +239,7 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
     <!-- Versions - Amazon -->
     <aws-java-sdk.version>1.11.219</aws-java-sdk.version>
 
-    <azure-storage.version>4.4.0</azure-storage.version>
+    <azure-storage.version>8.6.6</azure-storage.version>
 
     <!-- Versions - Utilities -->
     <jcommander.version>1.69</jcommander.version>
