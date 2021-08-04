@@ -122,6 +122,7 @@ public class AzureUploadService implements UploadService {
 
       val options = new BlobRequestOptions();
       options.setConcurrentRequestCount(parallelUploads);
+      blob.setStreamWriteSizeInBytes(BLOCK_SIZE);
 
       progress.start();
       progress.startTransfer();
