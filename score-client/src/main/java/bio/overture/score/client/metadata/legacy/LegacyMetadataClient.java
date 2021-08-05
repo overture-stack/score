@@ -20,9 +20,7 @@ package bio.overture.score.client.metadata.legacy;
 import bio.overture.score.client.metadata.Entity;
 import bio.overture.score.client.metadata.EntityNotFoundException;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Lists;
 import lombok.Getter;
@@ -83,7 +81,7 @@ public class LegacyMetadataClient {
   }
 
   public List<Entity> findEntities(String... fields) throws EntityNotFoundException {
-    return readAll("/" + (fields.length > 0 ? "?" + resolveFields(fields) : ""));
+    return readAllEntities("/" + (fields.length > 0 ? "?" + resolveFields(fields) : ""));
   }
 
   public List<Entity> findEntitiesByGnosId(@NonNull String gnosId) throws EntityNotFoundException {
@@ -91,7 +89,7 @@ public class LegacyMetadataClient {
   }
 
   public List<Entity> findEntitiesByGnosId(@NonNull String gnosId, String... fields) throws EntityNotFoundException {
-    return readAll("?gnosId=" + gnosId + (fields.length > 0 ? "&" + resolveFields(fields) : ""));
+    return readAllEntities("?gnosId=" + gnosId + (fields.length > 0 ? "&" + resolveFields(fields) : ""));
   }
 
   @SneakyThrows
@@ -104,7 +102,7 @@ public class LegacyMetadataClient {
   }
 
   @SneakyThrows
-  private List<Entity> readAll(@NonNull String path) {
+  private List<Entity> readAllEntities(@NonNull String path) {
     val results = Lists.<Entity>newArrayList();
     boolean last = false;
     int pageNumber = 0;
@@ -137,7 +135,7 @@ public class LegacyMetadataClient {
 
     log.debug("Fetching analysis files via entities endpoint with path '{}'", path);
 
-    return readAll(path).stream()
+    return readAllEntities(path).stream()
       .peek(r -> log.debug("Got result {}", r))
       .map(Entity::getId)
       .collect(toImmutableList());
@@ -151,5 +149,4 @@ public class LegacyMetadataClient {
   private static String resolveFields(String[] fields) {
     return Stream.of(fields).map(f -> "fields=" + f).collect(joining("&"));
   }
-
 }
