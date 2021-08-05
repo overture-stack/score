@@ -133,15 +133,14 @@ public class LegacyMetadataClient {
 
   @SneakyThrows
   public List<String> getObjectIdsByAnalysisId(@NonNull String programId, @NonNull String analysisId) {
-    val url = new URL(serverUrl + "/studies/" + programId + "/analysis/" + analysisId + "/files");
+    val path = "?gnosId=" + analysisId + "&projectCode=" + programId;
 
-    log.debug("Fetching analysis files from url '{}'", url);
+    log.debug("Fetching analysis files via entities endpoint with path '{}'", path);
 
-    return stream(MAPPER.readValue(url, ArrayNode.class).spliterator(), false).
-      peek(r -> log.debug("Got result {}", r)).
-      map(x -> x.path("objectId")).
-      map(JsonNode::textValue).
-      collect(toImmutableList());
+    return readAll(path).stream()
+      .peek(r -> log.debug("Got result {}", r))
+      .map(Entity::getId)
+      .collect(toImmutableList());
   }
 
   @SneakyThrows
