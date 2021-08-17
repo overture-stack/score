@@ -32,10 +32,11 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.icgc.dcc.common.core.security.SSLCertificateValidation;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestTemplate;
 
-import java.io.FileNotFoundException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -63,14 +64,17 @@ public class LegacyMetadataClient {
   @NonNull
   @Getter
   private final String serverUrl;
+  private final RestTemplate serviceTemplate;
   
   @Autowired
   public LegacyMetadataClient(@Value("${metadata.url}") String serverUrl,
-    @Value("${metadata.ssl.enabled}") boolean ssl) {
+    @Value("${metadata.ssl.enabled}") boolean ssl,
+    @Qualifier("serviceTemplate") @NonNull RestTemplate serviceTemplate) {
     if (!ssl) {
       SSLCertificateValidation.disable();
     }
 
+    this.serviceTemplate = serviceTemplate;
     this.serverUrl = serverUrl;
   }
 
@@ -93,8 +97,8 @@ public class LegacyMetadataClient {
   @SneakyThrows
   private Entity read(@NonNull String path) {
     try {
-      return MAPPER.readValue(resolveUrl(path), Entity.class);
-    } catch (FileNotFoundException e) {
+      return serviceTemplate.getForObject(resolveEntitiesUrl(path).toURI(),  Entity.class);
+    } catch (Exception e) {
       throw new EntityNotFoundException(e.getMessage());
     }
   }
@@ -107,10 +111,10 @@ public class LegacyMetadataClient {
 
     try {
       while (!last) {
-        val url = resolveUrl(path + (path.contains("?") ? "&" : "?") + "size=2000&page=" + pageNumber);
+        val url = resolveEntitiesUrl(path + (path.contains("?") ? "&" : "?") + "size=2000&page=" + pageNumber);
         log.debug("Getting {}...", url);
 
-        val result = MAPPER.readValue(url, ObjectNode.class);
+        val result = serviceTemplate.getForObject(url.toURI(), ObjectNode.class);
         last = result.path("last").asBoolean();
         List<Entity> page = MAPPER.convertValue(result.path("content"), new TypeReference<ArrayList<Entity>>() {
         });
@@ -118,7 +122,7 @@ public class LegacyMetadataClient {
         results.addAll(page);
         pageNumber++;
       }
-    } catch (FileNotFoundException e) {
+    } catch (Exception e) {
       throw new EntityNotFoundException(e.getMessage());
     }
 
@@ -141,7 +145,7 @@ public class LegacyMetadataClient {
   }
 
   @SneakyThrows
-  private URL resolveUrl(String path) {
+  private URL resolveEntitiesUrl(String path) {
     return new URL(serverUrl + "/entities" + path);
   }
 
