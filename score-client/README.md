@@ -77,3 +77,6 @@ To enable logging of request bodies and headers, append the following to the com
 
 `--logging.level.org.apache.http=DEBUG`
 
+## Azure
+For azure support, use the `azure` profile. Block sizes for uploads
+can be configured with the `azure.blockSize` property. 

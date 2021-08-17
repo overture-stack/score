@@ -49,8 +49,8 @@ public class AzureUploadService implements UploadService {
   @Value("${transport.parallel}")
   private int parallelUploads;
 
-  // Azure used to have a 4MiB maximum part size, it has been since increased. Setting to 100MiB for now.
-  private final static int BLOCK_SIZE = 100 * 1024 * 1024;
+  @Value("${azure.blockSize:104857600")
+  private int blockSize = 100 * 1024 * 1024;
 
   @Override
   public void upload(File file, String objectId, String md5, boolean redo) throws IOException {
@@ -58,7 +58,7 @@ public class AzureUploadService implements UploadService {
     val spec = storageService.initiateUpload(objectId, file.length(), redo, md5);
 
     // Calculate expected number of parts to track progress against
-    val partInfo = calculateNumBlocks(file.length(), BLOCK_SIZE);
+    val partInfo = calculateNumBlocks(file.length(), blockSize);
 
     // Will contain one Part as far as Storage Service is concerned. There is no need for more than one SAS to be
     // generated for an entire file; each Part does not require its own pre-signed URL.
@@ -83,7 +83,7 @@ public class AzureUploadService implements UploadService {
 
         @Override
         public void eventOccurred(ResponseReceivedEvent eventArg) {
-          long bytesSent = BLOCK_SIZE;
+          long bytesSent = blockSize;
           int partCount = completedParts.incrementAndGet();
 
           if (partCount <= partInfo.getLeft()) {
@@ -99,7 +99,7 @@ public class AzureUploadService implements UploadService {
 
         @Override
         public void eventOccurred(ResponseReceivedEvent eventArg) {
-          long bytesSent = BLOCK_SIZE;
+          long bytesSent = blockSize;
           int partCount = completedParts.incrementAndGet();
 
           if (partCount <= partInfo.getLeft()) {
@@ -122,7 +122,7 @@ public class AzureUploadService implements UploadService {
 
       val options = new BlobRequestOptions();
       options.setConcurrentRequestCount(parallelUploads);
-      blob.setStreamWriteSizeInBytes(BLOCK_SIZE);
+      blob.setStreamWriteSizeInBytes(blockSize);
 
       progress.start();
       progress.startTransfer();

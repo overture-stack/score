@@ -38,7 +38,9 @@ Start the server with the following run profiles enabled: `prod,secure,azure`
 
 ## Client Setup
 Follow the regular client setup of access token and storage and metadata urls.
-However when running the client use azure pofile option:
+However when running the client use azure profile option:
 ```bash
 $ bin/score-client --profile azure ...
 ```
+
+Upload block size for Azure can be configured with the `azure.blockSize` configuration property.
