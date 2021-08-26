@@ -24,6 +24,7 @@ import bio.overture.score.server.repository.ListingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 @Component
@@ -33,7 +34,7 @@ public class ListingController {
   @Autowired
   private ListingService listingService;
 
-  @RequestMapping("/listing")
+  @RequestMapping(value = "/listing", method = RequestMethod.GET)
   public List<ObjectInfo> list() {
     return listingService.getListing();
   }

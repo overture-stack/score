@@ -93,8 +93,11 @@ public class SecurityConfig extends ResourceServerConfigurerAdapter {
     http
       .authorizeRequests()
       .antMatchers("/health").permitAll()
+      .antMatchers("/actuator/health").permitAll()
       .antMatchers("/upload/**").permitAll()
       .antMatchers("/download/**").permitAll()
+      .antMatchers("/swagger**", "/swagger-resources/**", "/v2/api**", "/webjars/**")
+      .permitAll()
       .and()
       
       .authorizeRequests()
