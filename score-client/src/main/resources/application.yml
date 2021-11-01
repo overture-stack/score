@@ -104,6 +104,12 @@ client:
 
 spring.profiles: azure
 
+storage:
+  url: https://score.azure.icgc.overture.bio
+  
+metadata:
+  url: https://song.azure.icgc.overture.bio
+
 azure:
   blockSize: 104857600
 
