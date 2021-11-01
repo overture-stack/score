@@ -49,7 +49,7 @@ public class AzureUploadService implements UploadService {
   @Value("${transport.parallel}")
   private int parallelUploads;
 
-  @Value("${azure.blockSize:104857600")
+  @Value("${azure.blockSize:104857600}")
   private int blockSize = 100 * 1024 * 1024;
 
   @Override
