@@ -1,106 +1,78 @@
-<h1 align="center">SCORe</h1>
+# Score - Genomic File Transfer & Object Storage
 
-<p align="center">Secure Cloud Object Repository</p>
+[<img hspace="5" src="https://img.shields.io/badge/chat-on--slack-blue?style=for-the-badge">](http://slack.overture.bio)
+[<img hspace="5" src="https://img.shields.io/badge/License-gpl--v3.0-blue?style=for-the-badge">](https://github.com/overture-stack/score/blob/develop/LICENSE)
+[<img hspace="5" src="https://img.shields.io/badge/Code%20of%20Conduct-2.1-blue?style=for-the-badge">](code_of_conduct.md)
 
-<p align="center">Formerly known as ICGC Storage and currently used as the storage and transfer system for ICGC cloud based projects against S3 and Azure backends.</p>
+<div>
+<img align="right" width="85vw" src="icon-score.png" alt="score-logo" hspace="30"/>
+</div>
 
-<p align="center"><a href="http://www.overture.bio/products/score" target="_blank"><img alt="General Availability" title="General Availability" src="http://www.overture.bio/img/progress-horizontal-GA.svg" width="320" /></a></p>
+The volume, velocity, and variety of genomic and biomedical data have increased dramatically. With on-premise computing and storage becoming insufficient and collaboration in the cloud becoming more appealing, many researchers require specialized cloud infrastructure tools.
 
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/201ae314ab3842baad25bc820069e90a)](https://www.codacy.com/app/overture-stack/score?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=overture-stack/score&amp;utm_campaign=Badge_Grade)
-[![Documentation Status](https://readthedocs.org/projects/score-docs/badge/?version=latest)](https://score-docs.readthedocs.io/en/latest/?badge=latest)
-[![Slack](http://slack.overture.bio/badge.svg)](http://slack.overture.bio)
+[Score](https://www.overture.bio/documentation/score/) is a research software tool developed for cancer genomics that facilitates the transfer and storage of genomic and biomedical data to and from users within a distributed cloud network.
+
+<!--Score and Song are used in the [Cancer Genome Collaboratory](https://cancercollaboratory.org/)where they manage nearly 1 petabyte of raw and analyzed data (121,000 files).-->
+
+<!--Blockqoute-->
+
+</br>
+
+> 
+> <div>
+> <img align="left" src="ov-logo.png" height="90"/>
+> </div>
+> 
+> *Score is a vital service within the [Overture](https://www.overture.bio/) research software ecosystem. With our genomics data management solutions, scientists can significantly improve the lifecycle of their data and the quality of their research. See our [related products](#related-products) for more information on what Overture can offer.*
+> 
+> 
+
+<!--Blockqoute-->
+
+## Technical Specifications
+
+- Written in JAVA 
+- Supports AWS S3, Azure, Google Cloud, Openstack with Ceph, Minio and all other S3-compliant cloud storage solutions
+- Built-in [Samtools](http://www.htslib.org/) functionality including BAM and CRAM file slicing by genomic region 
+- ACL security using [OAuth 2.0](https://oauth.net/2/) and scopes based on study codes
+- Multipart Uploads and Downloads
+- REST API with [Swagger UI](https://swagger.io/tools/swagger-ui/)
+- [MD5sum](https://www.intel.com/content/www/us/en/support/programmable/articles/000078103.html) validation
 
 ## Documentation
 
-Explore documentation with the Score [Read the Docs](https://score-docs.readthedocs.io/en/develop/introduction.html).
+- See our Developer [wiki](https://github.com/overture-stack/score/wiki)
+- For our user installation guide see our website [here](https://www.overture.bio/documentation/score/installation/installation/)
+- For user guidance see our website [here](https://www.overture.bio/documentation/score/user-guide/admin-ui/)
 
-## Build
+## Support & Contributions
 
-To compile, test and package the system, execute the following from the root of the repository:
+- Filing an [issue](https://github.com/overture-stack/score/issues)
+- Making a [contribution](CONTRIBUTING.md)
+- Connect with us on [Slack](http://slack.overture.bio)
+- Add or Upvote a [feature request](https://github.com/overture-stack/score/issues?q=is%3Aopen+is%3Aissue+label%3Anew-feature+sort%3Areactions-%2B1-desc)
 
-```shell
-mvn
-```
+## Related Products 
 
-## Run
+Score commonly works in tandem with our metadata service, [Song](https://github.com/overture-stack/SONG). As Score facilitates object storage in the cloud, Song runs in parallel validate, link and track genomic data with it's associated metadata. Song is also used to assign granular access controls to data. 
 
-See module-specific documentation below.
+<div>
+  <img align="right" alt="Overture overview" src="https://www.overture.bio/static/124ca0fede460933c64fe4e50465b235/a6d66/system-diagram.png" width="45%" hspace="5">
+</div>
 
-## Modules
-Top level system modules:
+Overture is an ecosystem of research software tools, each with narrow responsibilities, designed to address the adapting needs of genomics research. 
 
-- [Core](score-core/README.md)
-- [Client](score-client/README.md)
-- [File System](score-fs/README.md)
-- [Server](score-server/README.md)
-- [Test](score-test/README.md)
+The Overture **Data Management System** (DMS) is a fully functional and customizable data portal built from a packaged collection of Overtures microservices. For more information on DMS, read our [DMS documentation](https://www.overture.bio/documentation/dms/).
 
-## Development
-Several `make` targets are provided for locally deploying dependent services using docker. 
-By using this, the developer will be able to replicate a live environment for score-server and score-client. 
-It allows the user to develop locally, and test uploads/downloads in an isolated environment.
+See the links below for additional information on our other research software tools:
 
-There are 2 modes:
+</br>
 
-### 1. Development Mode
-The purpose of this mode is to decrease the wait time between building and testing against dependent services.
-This mode will run a `mvn package` if the `*-dist.tar.gz` files are missing, and copy them into a container for them to be run. 
-This method allows for fast developement, since the `mvn package` step is handled on the **Docker host**.
-In addition, the debug ports `5005` and `5006` are exposed for both `score-client` and `score-server`, respectively, allowing developers to debug the docker containers.
-This mode can be enabled using the `DEMO_MODE=0` override. This is the default behaviour if the variable `DEMO_MODE` is not defined.
-
-#### Debugging the score-client with IntelliJ
-Since the JVM debug port is exposed by the `score-client` docker container, IntelliJ can **remotely debug** a running docker container. 
-To do this, a **docker image run profile** must be created with the configuration outputted by the `make intellij-score-client-config` command, which will output a basic upload command, however it can be modified to be any score-client command.
-Then, a **remote debug profile** must be created, with the following config:
-
-```
-Host: localhost
-Port: 5005
-Use module classpath: score-client
-```
-and in the `Before launch: Activate tool window` section, click the `+` sign, and select `Launch docker before debug`. 
-Then ensure the `Docker configuration` field is set to the name of the previously created **docker image run profile**  and that `Custom Options` is set to `-p 5005:5005`. In order for the debugger to bind to the debug port in time, 
-a delay needs to be introduced after starting the container. To do this, click the `+` sign again, and select `Launch docker before debug`, and select `Run External Tool` and a window will pop-up. Input the following:
-
-```
-Name:      Sleep for 5 seconds
-Program:   /usr/bin/sleep
-Arguments: 5
-```
-and click `OK`.
-
-Finally,  start debugging by simply running the **remote debug profile** and it will call the **docker image run profile** before launch. 
-
-#### Debugging the score-server with IntelliJ
-Since the `score-server` is a server and exposes the 5006 debug port, configuration is much easier. First, start the server with `make clean start-score-server`. Then, create a **remote debug profile** in Intellij with the following configuration:
-```
-Host: localhost
-Port: 5006
-Use module classpath: score-server
-```
-and then run it in debug mode. 
-
-
-
-### 2. Demo Mode
-The purpose of this mode is to demo the current `score-server` and `score-client` code by building it in **inside the Docker image**, 
-as opposed to the **Docker host** as is done in Development mode and then running the containers.
-This mode will not run `mvn package` on the Docker host, but instead inside the Docker container.
-This method is very slow, since maven will download dependencies every time a build is triggered, however creates a completely isolated environment for testing.
-This mode can be enabled using the `DEMO_MODE=1` make variable override. For example, to start the score-server, the following command would be run:
-
-```bash
-make start-score-server DEMO_MODE=1
-```
-
-For more information on the different targets, run `make help` or read the comments above each target for a description
-
-
-## Changes
-
-Change log for the user-facing system modules may be found in [CHANGES.md](CHANGES.md).
-
-## License
-
-Copyright and license information may be found in [LICENSE.md](LICENSE.md).
+|Product|Description|
+|---|---|
+|[Ego](https://www.overture.bio/products/ego/)|An authorization and user management service|
+|[Ego UI](https://www.overture.bio/products/ego-ui/)|A UI for managing EGO authentication and authorization services|
+|[Score](https://www.overture.bio/products/score/)| Transfer data quickly and easily to and from any cloud-based storage system|
+|[Song](https://www.overture.bio/products/song/)|Catalog and manage metadata of genomics data spread across cloud storage systems|
+|[Maestro](https://www.overture.bio/products/maestro/)|Organizing your distributed data into a centralized Elasticsearch index|
+|[Arranger](https://www.overture.bio/products/arranger/)|Organize an intuitive data search interface, complete with customizable components, tables, and search terms|
