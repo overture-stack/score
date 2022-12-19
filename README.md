@@ -5,14 +5,10 @@
 [<img hspace="5" src="https://img.shields.io/badge/Code%20of%20Conduct-2.1-blue?style=for-the-badge">](code_of_conduct.md)
 
 <div>
-<img align="right" width="85vw" src="icon-score.png" alt="score-logo" hspace="30"/>
+<img align="right" width="100vw" src="icon-score.png" alt="score-logo" hspace="30"/>
 </div>
 
-The volume, velocity, and variety of genomic and biomedical data have increased dramatically. With on-premise computing and storage becoming insufficient and collaboration in the cloud becoming more appealing, many researchers require specialized cloud infrastructure tools.
-
-[Score](https://www.overture.bio/documentation/score/) is a research software tool developed for cancer genomics that facilitates the transfer and storage of genomic and biomedical data to and from users within a distributed cloud network.
-
-<!--Score and Song are used in the [Cancer Genome Collaboratory](https://cancercollaboratory.org/)where they manage nearly 1 petabyte of raw and analyzed data (121,000 files).-->
+The volume, velocity, and variety of genomics data have risen dramatically, making on-premise computing and storage insufficient and cloud collaboration more appealing. However, researchers need specialized software tools to efficiently manage these large and complex data sets in the cloud. [Score](https://www.overture.bio/documentation/score/) addresses this by facilitating the efficient transfer and storage of genomics data between users in a distributed cloud network.
 
 <!--Blockqoute-->
 
@@ -54,15 +50,15 @@ The volume, velocity, and variety of genomic and biomedical data have increased 
 
 ## Related Products 
 
-Score commonly works in tandem with our metadata service, [Song](https://github.com/overture-stack/SONG). As Score facilitates object storage in the cloud, Song runs in parallel validate, link and track genomic data with it's associated metadata. Song is also used to assign granular access controls to data. 
-
 <div>
   <img align="right" alt="Overture overview" src="https://www.overture.bio/static/124ca0fede460933c64fe4e50465b235/a6d66/system-diagram.png" width="45%" hspace="5">
 </div>
 
 Overture is an ecosystem of research software tools, each with narrow responsibilities, designed to address the adapting needs of genomics research. 
 
-The Overture **Data Management System** (DMS) is a fully functional and customizable data portal built from a packaged collection of Overtures microservices. For more information on DMS, read our [DMS documentation](https://www.overture.bio/documentation/dms/).
+Score commonly works in tandem with our metadata service, [Song](https://github.com/overture-stack/SONG). As Score facilitates object storage in the cloud, Song runs in parallel to validate and track files and associated metadata. 
+
+These tools are part of the Overture **Data Management System** (DMS), a fully functional and customizable data portal built from a packaged collection of Overtures microservices. For more information on DMS, read our [DMS documentation](https://www.overture.bio/documentation/dms/).
 
 See the links below for additional information on our other research software tools:
 
