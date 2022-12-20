@@ -54,7 +54,7 @@ The volume, velocity, and variety of genomics data have risen dramatically, maki
   <img align="right" alt="Overture overview" src="https://www.overture.bio/static/124ca0fede460933c64fe4e50465b235/a6d66/system-diagram.png" width="45%" hspace="5">
 </div>
 
-Overture is an ecosystem of research software tools, each with narrow responsibilities, designed to address the adapting needs of genomics research. 
+Overture is an ecosystem of research software tools, each with narrow responsibilities, designed to address the changing needs of genomics research. 
 
 Score commonly works in tandem with our metadata service, [Song](https://github.com/overture-stack/SONG). As Score facilitates object storage in the cloud, Song runs in parallel to validate and track files and associated metadata. 
 
