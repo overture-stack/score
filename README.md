@@ -8,7 +8,7 @@
 <img align="right" width="100vw" src="icon-score.png" alt="score-logo" hspace="30"/>
 </div>
 
-The volume, velocity, and variety of genomics data have risen dramatically, making on-premise computing and storage insufficient and cloud collaboration more appealing. However, researchers need specialized software tools to efficiently manage these large and complex data sets in the cloud. [Score](https://www.overture.bio/documentation/score/) addresses this by facilitating the efficient transfer and storage of genomics data between users in a distributed cloud network.
+Genomics data volume and velocity have increased dramatically, rendering on-premise storage insufficient and demanding specialized software tools to manage these large and complex data sets in the cloud. [Score](https://www.overture.bio/documentation/score/) addresses this by facilitating the transfer and storage of genomics data to and from a distributed cloud network.
 
 <!--Blockqoute-->
 
