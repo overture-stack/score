@@ -1,11 +1,5 @@
 import groovy.json.JsonOutput
 
-def version = "UNKNOWN"
-def commit = "UNKNOWN"
-def dockerHubRepo = "overture/score"
-def gitHubRegistry = "ghcr.io"
-def gitHubRepo = "overture-stack/score"
-
 def pom(path, target) {
     return [pattern: "${path}/pom.xml", target: "${target}.pom"]
 }
@@ -13,7 +7,7 @@ def pom(path, target) {
 def jar(path, target) {
     return [pattern: "${path}/target/*.jar",
             target         : "${target}.jar",
-            excludePatterns: ["*-exec.jar"]
+            excludePatterns: ['*-exec.jar']
             ]
 }
 
@@ -27,11 +21,7 @@ def runjar(path, target) {
             target : "${target}-exec.jar"]
 }
 
-pipeline {
-    agent {
-        kubernetes {
-            label 'score-executor'
-            yaml """
+String podSpec = '''
 apiVersion: v1
 kind: Pod
 spec:
@@ -39,20 +29,20 @@ spec:
   - name: jdk
     tty: true
     image: openjdk:11
-    env: 
-      - name: DOCKER_HOST 
+    env:
+      - name: DOCKER_HOST
         value: tcp://localhost:2375
     volumeMounts:
       - name: maven-cache
         mountPath: "/root/.m2"
-  - name: dind-daemon 
+  - name: dind-daemon
     image: docker:18.06-dind
-    securityContext: 
-        privileged: true 
+    securityContext:
+        privileged: true
         runAsUser: 0
-    volumeMounts: 
-      - name: docker-graph-storage 
-        mountPath: /var/lib/docker 
+    volumeMounts:
+      - name: docker-graph-storage
+        mountPath: /var/lib/docker
   - name: helm
     image: alpine/helm:2.12.3
     command:
@@ -61,140 +51,230 @@ spec:
   - name: docker
     image: docker:18-git
     tty: true
-    env: 
-    - name: DOCKER_HOST 
+    env:
+    - name: DOCKER_HOST
       value: tcp://localhost:2375
     - name: HOME
       value: /home/jenkins/agent
   securityContext:
     runAsUser: 1000
   volumes:
-  - name: docker-graph-storage 
+  - name: docker-graph-storage
     emptyDir: {}
   - name: maven-cache
     emptyDir: {}
-"""
+'''
+
+pipeline {
+    agent {
+        kubernetes {
+            yaml podSpec
         }
     }
+
+    environment {
+        dockerHubRepo = 'overture/score'
+        gitHubRegistry = 'ghcr.io'
+        gitHubRepo = 'overture-stack/score'
+        chartsServer = 'https://overture-stack.github.io/charts-server/'
+
+        commit = sh(
+            returnStdout: true,
+            script: 'git describe --always'
+        ).trim()
+
+        version = readMavenPom().getVersion()
+    }
+
+    options {
+        timeout(time: 30, unit: 'MINUTES')
+        timestamps()
+    }
+
     stages {
-        stage('Prepare') {
-            steps {
-                script {
-                    commit = sh(returnStdout: true, script: 'git describe --always').trim()
-                }
-                script {
-                    version = readMavenPom().getVersion()
-                }
-                
-            }
-        }
         stage('Compile & Test') {
             steps {
                 container('jdk') {
-                    sh "./mvnw package"
+                    sh './mvnw package'
                 }
             }
         }
 
-        stage('Build & Publish Develop') {
+        stage('Build images') {
             when {
-                branch "develop"
+                anyOf {
+                    branch 'develop'
+                    branch 'master'
+                    branch 'test*'
+                }
             }
             steps {
                 container('docker') {
-                    withCredentials([usernamePassword(credentialsId: 'OvertureDockerHub', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-                        sh 'docker login -u $USERNAME -p $PASSWORD'
-                    }
-                    sh "docker build --target=server --network=host -f Dockerfile . -t ${dockerHubRepo}-server:edge -t ${dockerHubRepo}-server:${commit}"
-                    sh "docker build --target=client --network=host -f Dockerfile . -t ${dockerHubRepo}:edge -t ${dockerHubRepo}:${commit}"
-                    sh "docker push ${dockerHubRepo}-server:${commit}"
-                    sh "docker push ${dockerHubRepo}-server:edge"
-                    sh "docker push ${dockerHubRepo}:${commit}"
-                    sh "docker push ${dockerHubRepo}:edge"
-                }
-
-                container('docker') {
-                    withCredentials([usernamePassword(credentialsId:'OvertureBioGithub', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-                        sh "docker login ${gitHubRegistry} -u $USERNAME -p $PASSWORD"
-                    }
-                    sh "docker build --target=server --network=host -f Dockerfile . -t ${gitHubRegistry}/${gitHubRepo}-server:edge -t ${gitHubRegistry}/${gitHubRepo}-server:${commit}"
-                    sh "docker build --target=client --network=host -f Dockerfile . -t ${gitHubRegistry}/${gitHubRepo}:edge -t ${gitHubRegistry}/${gitHubRepo}:${commit}"
-                    sh "docker push ${gitHubRegistry}/${gitHubRepo}-server:${commit}"
-                    sh "docker push ${gitHubRegistry}/${gitHubRepo}-server:edge"
-                    sh "docker push ${gitHubRegistry}/${gitHubRepo}:${commit}"
-                    sh "docker push ${gitHubRegistry}/${gitHubRepo}:edge"
+                    sh "docker build \
+                        --target server \
+                        --network host \
+                        -f Dockerfile \
+                        -t server:${commit} ."
+                    sh "docker build \
+                        --target client \
+                        --network host \
+                        -f Dockerfile \
+                        -t client:${commit} ."
                 }
             }
         }
+
+        stage('Push images') {
+            when {
+                anyOf {
+                    branch 'develop'
+                    branch 'main'
+                    branch 'test*'
+                }
+            }
+            parallel {
+                stage('...to dockerhub') {
+                    steps {
+                        container('docker') {
+                            withCredentials([usernamePassword(
+                                credentialsId:'OvertureDockerHub',
+                                passwordVariable: 'PASSWORD',
+                                usernameVariable: 'USERNAME'
+                            )]) {
+                                sh "docker login -u $USERNAME -p $PASSWORD"
+
+                                script {
+                                    if (env.BRANCH_NAME ==~ 'master') { // push latest and version tags
+                                        sh "docker tag server:${commit} ${dockerHubRepo}-server:${version}"
+                                        sh "docker push ${dockerHubRepo}-server:${version}"
+
+                                        sh "docker tag client:${commit} ${dockerHubRepo}:${version}"
+                                        sh "docker push ${dockerHubRepo}:${version}"
+
+                                        sh "docker tag server:${commit} ${dockerHubRepo}-server:latest"
+                                        sh "docker push ${dockerHubRepo}-server:latest"
+
+                                        sh "docker tag client:${commit} ${dockerHubRepo}:latest"
+                                        sh "docker push ${dockerHubRepo}:latest"
+                                    } else { // push commit tag
+                                        sh "docker tag server:${commit} ${dockerHubRepo}-server:${commit}"
+                                        sh "docker push ${dockerHubRepo}-server:${commit}"
+
+                                        sh "docker tag client:${commit} ${dockerHubRepo}:${commit}"
+                                        sh "docker push ${dockerHubRepo}:${commit}"
+                                    }
+
+                                    if (env.BRANCH_NAME ==~ 'develop') { // push edge tag
+                                        sh "docker tag server:${commit} ${dockerHubRepo}-server:edge"
+                                        sh "docker push ${dockerHubRepo}-server:edge"
+
+                                        sh "docker tag client:${commit} ${dockerHubRepo}:edge"
+                                        sh "docker push ${dockerHubRepo}:edge"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                stage('...to github') {
+                    steps {
+                        container('docker') {
+                            withCredentials([usernamePassword(
+                                credentialsId:'OvertureBioGithub',
+                                passwordVariable: 'PASSWORD',
+                                usernameVariable: 'USERNAME'
+                            )]) {
+                                sh "docker login ${gitHubRegistry} -u $USERNAME -p $PASSWORD"
+
+                                script {
+                                    if (env.BRANCH_NAME ==~ 'main') { //push edge and commit tags
+                                        sh "docker tag server:${commit} ${gitHubRegistry}/${gitHubRepo}-server:${version}"
+                                        sh "docker push ${gitHubRegistry}/${gitHubRepo}-server:${version}"
+
+                                        sh "docker tag client:${commit} ${gitHubRegistry}/${gitHubRepo}:${version}"
+                                        sh "docker push ${gitHubRegistry}/${gitHubRepo}:${version}"
+
+                                        sh "docker tag server:${commit} ${gitHubRegistry}/${gitHubRepo}-server:latest"
+                                        sh "docker push ${gitHubRegistry}/${gitHubRepo}-server:latest"
+
+                                        sh "docker tag client:${commit} ${gitHubRegistry}/${gitHubRepo}:latest"
+                                        sh "docker push ${gitHubRegistry}/${gitHubRepo}:latest"
+                                    } else { // push commit tag
+                                        sh "docker tag server:${commit} ${gitHubRegistry}/${gitHubRepo}-server:${commit}"
+                                        sh "docker push ${gitHubRegistry}/${gitHubRepo}-server:${commit}"
+
+                                        sh "docker tag client:${commit} ${gitHubRegistry}/${gitHubRepo}:${commit}"
+                                        sh "docker push ${gitHubRegistry}/${gitHubRepo}:${commit}"
+                                    }
+
+                                    if (env.BRANCH_NAME ==~ 'develop') { // push edge tag
+                                        sh "docker tag server:${commit} ${gitHubRegistry}/${gitHubRepo}-server:edge"
+                                        sh "docker push ${gitHubRegistry}/${gitHubRepo}-server:edge"
+
+                                        sh "docker tag client:${commit} ${gitHubRegistry}/${gitHubRepo}:edge"
+                                        sh "docker push ${gitHubRegistry}/${gitHubRepo}:edge"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         stage('Release & tag') {
             when {
-                branch "master"
+                branch 'master'
             }
             steps {
                 container('docker') {
-                    withCredentials([usernamePassword(credentialsId: 'OvertureBioGithub', passwordVariable: 'GIT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
+                    withCredentials([usernamePassword(
+                        credentialsId: 'OvertureBioGithub',
+                        passwordVariable: 'GIT_PASSWORD',
+                        usernameVariable: 'GIT_USERNAME'
+                    )]) {
                         sh "git tag ${version}"
                         sh "git push https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/${gitHubRepo} --tags"
                     }
-                }
-
-                container('docker') {
-                    withCredentials([usernamePassword(credentialsId: 'OvertureDockerHub', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-                        sh 'docker login -u $USERNAME -p $PASSWORD'
-                    }
-                    sh "docker build --target=server --network=host -f Dockerfile . -t ${dockerHubRepo}-server:latest -t ${dockerHubRepo}-server:${version}"
-                    sh "docker build --target=client --network=host -f Dockerfile . -t ${dockerHubRepo}:latest -t ${dockerHubRepo}:${version}"
-                    sh "docker push ${dockerHubRepo}-server:${version}"
-                    sh "docker push ${dockerHubRepo}-server:latest"
-                    sh "docker push ${dockerHubRepo}:${version}"
-                    sh "docker push ${dockerHubRepo}:latest"
-                }
-
-                container('docker') {
-                    withCredentials([usernamePassword(credentialsId:'OvertureBioGithub', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-                        sh "docker login ${gitHubRegistry} -u $USERNAME -p $PASSWORD"
-                    }
-                    sh "docker build --target=server --network=host -f Dockerfile . -t ${gitHubRegistry}/${gitHubRepo}-server:latest -t ${gitHubRegistry}/${gitHubRepo}-server:${version}"
-                    sh "docker build --target=client --network=host -f Dockerfile . -t ${gitHubRegistry}/${gitHubRepo}:latest -t ${gitHubRegistry}/${gitHubRepo}:${version}"
-                    sh "docker push ${gitHubRegistry}/${gitHubRepo}-server:${version}"
-                    sh "docker push ${gitHubRegistry}/${gitHubRepo}-server:latest"
-                    sh "docker push ${gitHubRegistry}/${gitHubRepo}:${version}"
-                    sh "docker push ${gitHubRegistry}/${gitHubRepo}:latest"
                 }
             }
         }
 
         stage('Deploy to Overture QA') {
             when {
-                branch "develop"
+                anyOf {
+                    branch 'develop'
+                    // branch "test"
+                }
             }
             steps {
-				build(job: "/Overture.bio/provision/helm", parameters: [
-						[$class: 'StringParameterValue', name: 'OVERTURE_ENV', value: 'qa' ],
-						[$class: 'StringParameterValue', name: 'OVERTURE_CHART_NAME', value: 'score'],
-						[$class: 'StringParameterValue', name: 'OVERTURE_RELEASE_NAME', value: 'score'],
-						[$class: 'StringParameterValue', name: 'OVERTURE_HELM_CHART_VERSION', value: ''], // use latest
-						[$class: 'StringParameterValue', name: 'OVERTURE_HELM_REPO_URL', value: "https://overture-stack.github.io/charts-server/"],
-						[$class: 'StringParameterValue', name: 'OVERTURE_HELM_REUSE_VALUES', value: "true" ],
-						[$class: 'StringParameterValue', name: 'OVERTURE_ARGS_LINE', value: "--set-string image.tag=${commit}" ]
-				])
+                build(job: '/Overture.bio/provision/helm', parameters: [
+                        [$class: 'StringParameterValue', name: 'OVERTURE_ENV', value: 'qa' ],
+                        [$class: 'StringParameterValue', name: 'OVERTURE_CHART_NAME', value: 'score'],
+                        [$class: 'StringParameterValue', name: 'OVERTURE_RELEASE_NAME', value: 'score'],
+                        [$class: 'StringParameterValue', name: 'OVERTURE_HELM_CHART_VERSION', value: ''], // use latest
+                        [$class: 'StringParameterValue', name: 'OVERTURE_HELM_REPO_URL', value: chartsServer],
+                        [$class: 'StringParameterValue', name: 'OVERTURE_HELM_REUSE_VALUES', value: 'true' ],
+                        [$class: 'StringParameterValue', name: 'OVERTURE_ARGS_LINE', value: "--set-string image.tag=${commit}" ]
+                ])
             }
         }
 
         stage('Deploy to Overture Staging') {
             when {
-                branch "master"
+                branch 'master'
             }
             steps {
-				build(job: "/Overture.bio/provision/helm", parameters: [
-						[$class: 'StringParameterValue', name: 'OVERTURE_ENV', value: 'staging' ],
-						[$class: 'StringParameterValue', name: 'OVERTURE_CHART_NAME', value: 'score'],
-						[$class: 'StringParameterValue', name: 'OVERTURE_RELEASE_NAME', value: 'score'],
-						[$class: 'StringParameterValue', name: 'OVERTURE_HELM_CHART_VERSION', value: ''], // use latest
-						[$class: 'StringParameterValue', name: 'OVERTURE_HELM_REPO_URL', value: "https://overture-stack.github.io/charts-server/"],
-						[$class: 'StringParameterValue', name: 'OVERTURE_HELM_REUSE_VALUES', value: "true" ],
-						[$class: 'StringParameterValue', name: 'OVERTURE_ARGS_LINE', value: "--set-string image.tag=${version}" ]
-				])
+                build(job: '/Overture.bio/provision/helm', parameters: [
+                        [$class: 'StringParameterValue', name: 'OVERTURE_ENV', value: 'staging' ],
+                        [$class: 'StringParameterValue', name: 'OVERTURE_CHART_NAME', value: 'score'],
+                        [$class: 'StringParameterValue', name: 'OVERTURE_RELEASE_NAME', value: 'score'],
+                        [$class: 'StringParameterValue', name: 'OVERTURE_HELM_CHART_VERSION', value: ''], // use latest
+                        [$class: 'StringParameterValue', name: 'OVERTURE_HELM_REPO_URL', value: chartsServer],
+                        [$class: 'StringParameterValue', name: 'OVERTURE_HELM_REUSE_VALUES', value: 'true' ],
+                        [$class: 'StringParameterValue', name: 'OVERTURE_ARGS_LINE', value: "--set-string image.tag=${version}" ]
+                ])
             }
         }
 
@@ -207,7 +287,7 @@ spec:
             }
             steps {
                 script {
-                    repo = "dcc-snapshot/bio/overture"
+                    repo = 'dcc-snapshot/bio/overture'
                 }
             }
         }
@@ -221,7 +301,7 @@ spec:
             }
             steps {
                 script {
-                    repo = "dcc-release/bio/overture"
+                    repo = 'dcc-release/bio/overture'
                 }
             }
         }
@@ -237,13 +317,12 @@ spec:
             }
             steps {
                 script {
-                    
-                    project = "score"
+                    project = 'score'
                     versionName = "$version"
                     subProjects = ['client', 'core', 'fs', 'server', 'test']
 
                     files = []
-                    files.add([pattern: "pom.xml", target: "$repo/$project/$versionName/$project-${versionName}.pom"])
+                    files.add([pattern: 'pom.xml', target: "$repo/$project/$versionName/$project-${versionName}.pom"])
 
                     for (s in subProjects) {
                         name = "${project}-$s"
@@ -266,5 +345,72 @@ spec:
             }
         }
     }
-}
 
+    post {
+        fixed {
+            withCredentials([string(
+                credentialsId: 'OvertureSlackJenkinsWebhookURL',
+                variable: 'fixed_slackChannelURL'
+            )]) {
+                container('node') {
+                    script {
+                        if (env.BRANCH_NAME ==~ /(develop|master|test\S*)/) {
+                            sh "curl \
+                                -X POST \
+                                -H 'Content-type: application/json' \
+                                --data '{ \
+                                    \"text\":\"Build Fixed: ${env.JOB_NAME}#${commit} \
+                                    \n[Build ${env.BUILD_NUMBER}] (${env.BUILD_URL})\" \
+                                }' \
+                                ${fixed_slackChannelURL}"
+                        }
+                    }
+                }
+            }
+        }
+
+        success {
+            withCredentials([string(
+                credentialsId: 'OvertureSlackJenkinsWebhookURL',
+                variable: 'success_slackChannelURL'
+            )]) {
+                container('node') {
+                    script {
+                        if (env.BRANCH_NAME ==~ /(test\S*)/) {
+                            sh "curl \
+                                -X POST \
+                                -H 'Content-type: application/json' \
+                                --data '{ \
+                                    \"text\":\"Build tested: ${env.JOB_NAME}#${commit} \
+                                    \n[Build ${env.BUILD_NUMBER}] (${env.BUILD_URL})\" \
+                                }' \
+                                ${success_slackChannelURL}"
+                        }
+                    }
+                }
+            }
+        }
+
+        unsuccessful {
+            withCredentials([string(
+                credentialsId: 'OvertureSlackJenkinsWebhookURL',
+                variable: 'failed_slackChannelURL'
+            )]) {
+                container('node') {
+                    script {
+                        if (env.BRANCH_NAME ==~ /(develop|master|test\S*)/) {
+                            sh "curl \
+                                -X POST \
+                                -H 'Content-type: application/json' \
+                                --data '{ \
+                                    \"text\":\"Build Failed: ${env.JOB_NAME}#${commit} \
+                                    \n[Build ${env.BUILD_NUMBER}] (${env.BUILD_URL})\" \
+                                }' \
+                                ${failed_slackChannelURL}"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
