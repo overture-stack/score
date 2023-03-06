@@ -128,7 +128,7 @@ pipeline {
             when {
                 anyOf {
                     branch 'develop'
-                    branch 'main'
+                    branch 'master'
                     branch 'test*'
                 }
             }
@@ -188,7 +188,7 @@ pipeline {
                                 sh "docker login ${gitHubRegistry} -u $USERNAME -p $PASSWORD"
 
                                 script {
-                                    if (env.BRANCH_NAME ==~ 'main') { //push edge and commit tags
+                                    if (env.BRANCH_NAME ==~ 'master') { //push edge and commit tags
                                         sh "docker tag server:${commit} ${gitHubRegistry}/${gitHubRepo}-server:${version}"
                                         sh "docker push ${gitHubRegistry}/${gitHubRepo}-server:${version}"
 
