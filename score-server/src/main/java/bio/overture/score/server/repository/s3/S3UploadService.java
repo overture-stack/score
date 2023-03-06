@@ -254,8 +254,9 @@ public class S3UploadService implements UploadService {
     val actualBucketName = bucketNamingService.getObjectBucketName(objectId);
     val actualStateBucketName = bucketNamingService.getStateBucketName(objectId);
 
-    if (stateStore.isCompleted(objectId, uploadId)) {
-      try {
+    try {
+      if (stateStore.isCompleted(objectId, uploadId)) {
+
         val details = stateStore.getUploadStatePartDetails(objectId, uploadId);
         val etags = details.values().stream().map(detail -> detail.getEtag()).collect(Collectors.toList());
         val objectKey = ObjectKeys.getObjectKey(dataDir, objectId);
@@ -266,14 +267,13 @@ public class S3UploadService implements UploadService {
         } catch (AmazonS3Exception e) {
           if (e.getStatusCode() == HttpStatus.NOT_FOUND.value()) {
             log.warn("Object keys don't exist for completing requested Multipart upload." +
-                    "Assuming it is completed as part of an earlier request.");
+                "Assuming it is completed as part of an earlier request.");
             return; // if object keys don't exist - it means it is already finalized, no need to proceed further
           }
 
           log.error("Error completing multipart upload for for objectId {} and uploadId {}", objectId, uploadId);
           throw e;
         }
-
 
         val spec = stateStore.read(objectId, uploadId);
         // Update meta with md5's
@@ -293,20 +293,20 @@ public class S3UploadService implements UploadService {
         log.debug("About to delete working files from state directory");
         stateStore.delete(objectId, uploadId);
         log.debug("Upload for {} (upload id {}) finalized", objectId, uploadId);
-      } catch (AmazonServiceException e) {
-        if (e.getStatusCode() == HttpStatus.NOT_FOUND.value()) {
-          log.warn("Key doesn't exist. Assuming it was deleted.");
-          return; // if object keys not found during any step in finalization - assume it is deleted and ignore the error
-        }
-        log.error("Service problem with objectId: {}, uploadId: {}", objectId, uploadId, e);
-        throw new RetryableException(e);
-      } catch (IOException e) {
-        log.error("Serialization problem with objectId: {}, uploadId: {}", objectId, uploadId, e);
-        throw new InternalUnrecoverableError(e);
+      } else {
+        log.error("Upload cannot be finalized because it is not completed.");
+        throw new NotRetryableException(new IOException("Object cannot be finalized"));
       }
-    } else {
-      log.error("Upload cannot be finalized because it is not completed.");
-      throw new NotRetryableException(new IOException("Object cannot be finalized"));
+    } catch (AmazonServiceException e) {
+      if (e.getStatusCode() == HttpStatus.NOT_FOUND.value()) {
+        log.warn("Key doesn't exist. Assuming it was deleted.");
+        return; // if object keys not found during any step in finalization - assume it is deleted and ignore the error
+      }
+      log.error("Service problem with objectId: {}, uploadId: {}", objectId, uploadId, e);
+      throw new RetryableException(e);
+    } catch (IOException e) { //The IO exception nested in the NotRetryableException above is not caught here
+      log.error("Serialization problem with objectId: {}, uploadId: {}", objectId, uploadId, e);
+      throw new InternalUnrecoverableError(e);
     }
   }
 
