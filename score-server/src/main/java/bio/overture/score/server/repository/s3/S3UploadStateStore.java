@@ -142,6 +142,10 @@ public class S3UploadStateStore implements UploadStateStore {
         return MAPPER.readValue(inputStream, ObjectSpecification.class);
       }
     } catch (AmazonServiceException e) {
+      if (e.getStatusCode() == HttpStatus.NOT_FOUND.value()) {
+        log.warn("Key doesn't exist. Assuming it was deleted.");
+        throw e; // if object keys not found during any step in finalization - assume it is deleted - error rethrown to be caught by the caller.
+      }
       if (e.isRetryable()) {
         throw new RetryableException(e);
       } else {
