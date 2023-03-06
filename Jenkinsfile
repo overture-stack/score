@@ -106,7 +106,6 @@ pipeline {
                     branch 'develop'
                     branch 'master'
                     branch 'test*'
-                    branch 'score_NoSuchKey_issue_#324'
                 }
             }
             steps {
@@ -131,7 +130,6 @@ pipeline {
                     branch 'develop'
                     branch 'main'
                     branch 'test*'
-                    branch 'score_NoSuchKey_issue_#324'
                 }
             }
             parallel {
