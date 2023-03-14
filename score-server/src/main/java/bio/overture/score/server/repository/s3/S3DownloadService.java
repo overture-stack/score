@@ -102,6 +102,7 @@ public class S3DownloadService implements DownloadService {
 
   @Override
   public ObjectSpecification download(String objectId, long offset, long length, boolean forExternalUse, boolean excludeUrls) {
+    log.debug("Entered download method");
     try {
       if (!excludeUrls){
         checkPublishedAnalysisState(metadataService.getEntity(objectId));
@@ -109,8 +110,10 @@ public class S3DownloadService implements DownloadService {
 
       checkArgument(offset > -1L);
 
+      log.debug("Getting Specification for object Id" + objectId);
       // Retrieve our meta file for object id
       val objectSpec = getSpecification(objectId);
+      log.debug("Specification Recieved");
 
       // Short-circuit in default case
       if (!forExternalUse && (offset == 0L && length < 0L)) {
@@ -130,9 +133,10 @@ public class S3DownloadService implements DownloadService {
             + ", offset: " + offset
             + ", length: " + length + ")");
       }
-
+      log.debug("Recieving Object Key...");
       // Construct ObjectSpecification for actual object in /data logical folder
       val objectKey = ObjectKeys.getObjectKey(dataDir, objectId);
+      log.debug("Recieved Object Key");
 
       List<Part> parts;
       if (forExternalUse) {
@@ -142,10 +146,12 @@ public class S3DownloadService implements DownloadService {
         parts = partCalculator.divide(offset, length);
       }
 
+      log.debug("Entering the fillPartUrls method from the download Method");
       fillPartUrls(objectKey, parts, objectSpec.isRelocated(), forExternalUse);
 
       val spec = new ObjectSpecification(objectKey.getKey(), objectId, objectId, parts, length, objectSpec.getObjectMd5(),
           objectSpec.isRelocated());
+      log.debug("End of download Method");
 
       return excludeUrls ? removeUrls(spec) : spec;
 
@@ -192,6 +198,7 @@ public class S3DownloadService implements DownloadService {
       val spec = readSpecification(obj.getS3Object());
       spec.setRelocated(obj.isRelocated());
 
+      log.debug("Entering the fillPartUrls method from the getSpecification Method");
       // We do this now in case we are returning it immediately in download() call
       fillPartUrls(objectKey, spec.getParts(), obj.isRelocated(), false);
 
@@ -282,9 +289,11 @@ public class S3DownloadService implements DownloadService {
 
   private void fillPartUrls(ObjectKey objectKey, List<Part> parts, boolean isRelocated, boolean forExternalUse) {
     // Construct pre-signed URL's for data objects (the /data bucket)
+    log.debug("Entered the method fillPartUrls");
     val expirationDate = getExpirationDate();
 
     for (val part : parts) {
+      log.debug("Setting url for the part" + part.getPartNumber());
       if (forExternalUse) {
         // There should only be one part - don't include RANGE header in pre-signed URL
         part.setUrl(urlGenerator.getDownloadUrl(
