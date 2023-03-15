@@ -78,12 +78,14 @@ public class DownloadController {
       @RequestParam(value = "exclude-urls", defaultValue = "false") boolean excludeUrls,
       @RequestHeader(value = "User-Agent", defaultValue = "unknown") String userAgent,
       HttpServletRequest request) {
-
+    log.debug("Entered the downloadPartialObject in the DownloadController");
     val ipAddress = HttpServletRequests.getIpAddress(request);
 
     log.info("Requesting download of object id {} with access token {} (MD5) from {} and client version {}", objectId,
         identifier(accessToken), ipAddress, userAgent);
-    return downloadService.download(objectId, offset, length, external, excludeUrls);
+    ObjectSpecification objSpecification = downloadService.download(objectId, offset, length, external, excludeUrls);
+    log.debug("End of the downloadPartialObject method");
+    return objSpecification;
   }
 
   protected String identifier(String accessToken) {

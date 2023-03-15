@@ -71,7 +71,10 @@ public class S3BucketNamingService implements BucketNamingService {
    */
   @Override
   public String getObjectBucketName(String objectId, boolean bypass) {
-    return bypass ? objectBucketName : getObjectBucketName(objectId);
+    log.debug("Getting Object bucket name...");
+    String objBucketName =  bypass ? objectBucketName : getObjectBucketName(objectId);
+    log.debug("Object Bucket name is : " + objBucketName);
+    return objBucketName;
   }
 
   /* (non-Javadoc)

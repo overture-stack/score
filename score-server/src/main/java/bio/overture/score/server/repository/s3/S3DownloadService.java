@@ -193,8 +193,10 @@ public class S3DownloadService implements DownloadService {
     try {
       // Retrieve .meta file to get list of pre-signed URL's
       // also returns flag indicating whether the object was not in the expected partitioned bucket
+      log.debug("Fetching object from s3");
       val obj = getObject(objectId, objectMetaKey);
 
+      log.debug("Reading specification from the s3 object");
       val spec = readSpecification(obj.getS3Object());
       spec.setRelocated(obj.isRelocated());
 
