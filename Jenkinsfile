@@ -111,6 +111,7 @@ pipeline {
                     branch 'develop'
                     branch 'master'
                     branch 'test*'
+                    branch 'client-score-server-logs'
                 }
             }
             steps {
@@ -135,6 +136,7 @@ pipeline {
                     branch 'develop'
                     branch 'master'
                     branch 'test*'
+                    branch 'client-score-server-logs'
                 }
             }
             parallel {
