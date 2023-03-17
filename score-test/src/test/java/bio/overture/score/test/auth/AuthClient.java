@@ -29,6 +29,7 @@ import java.nio.charset.StandardCharsets;
 
 import javax.net.ssl.HttpsURLConnection;
 
+import lombok.extern.slf4j.Slf4j;
 import org.icgc.dcc.common.core.security.SSLCertificateValidation;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -40,6 +41,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.val;
 
+@Slf4j
 @RequiredArgsConstructor
 public class AuthClient {
 
@@ -50,6 +52,7 @@ public class AuthClient {
 
   @SneakyThrows
   public String createAccessToken() {
+    log.debug("Entered the createAccessToken method...");
     SSLCertificateValidation.disable();
 
     val url = new URL(

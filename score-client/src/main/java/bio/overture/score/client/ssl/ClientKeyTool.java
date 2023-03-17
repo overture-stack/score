@@ -20,6 +20,7 @@ package bio.overture.score.client.ssl;
 import bio.overture.score.client.config.ClientProperties;
 import lombok.Cleanup;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x500.X500NameBuilder;
@@ -46,6 +47,7 @@ import static com.google.common.base.Preconditions.checkState;
 /**
  * a tool to generate client side certificate
  */
+@Slf4j
 public class ClientKeyTool {
 
   private static final String SHA256_WITH_RSA_ENCRYPTION = "SHA256WithRSAEncryption";
@@ -67,9 +69,12 @@ public class ClientKeyTool {
 
   @SneakyThrows
   public Certificate createIfAbsent() throws KeyStoreException {
+    log.debug("Inside createIfAbsent method");
     KeyStore ks = loadStore();
+    log.debug("Is Key store null? : " + (ks == null ? "true" : "false"));
     Certificate cert = findCertifcate(ks);
     if (!ssl.getKeyStore().exists() || cert == null) {
+      log.debug("Either the certificate or keystore does not exist");
       val keystoreDir = ssl.getKeyStore().getFile().getParentFile();
       checkState(keystoreDir.mkdirs());
 
@@ -84,6 +89,7 @@ public class ClientKeyTool {
 
   @SneakyThrows
   private Certificate findCertifcate(KeyStore keyStore) {
+    log.debug("Inside the findCertificate method...");
     Certificate cert = null;
     if (keyStore.containsAlias(ssl.getKeyAlias())) {
       // validate the certificate if it is still valid
@@ -109,6 +115,7 @@ public class ClientKeyTool {
 
   @SneakyThrows
   private void saveStore(KeyStore ks) {
+    log.debug("Entered the saveStore method");
     @Cleanup
     FileOutputStream fos = new FileOutputStream(ssl.getKeyStore().getFile());
     ks.store(fos, ssl.getKeyStorePassword().toCharArray());
@@ -116,7 +123,9 @@ public class ClientKeyTool {
 
   @SneakyThrows
   private KeyStore loadStore() {
+    log.debug("Entered the loadStore Method");
     KeyStore ks = KeyStore.getInstance(ssl.getKeyStoreType());
+    log.debug("Is Key store null? : " + (ks == null ? "true" : "false"));
     char[] password = ssl.getKeyStorePassword().toCharArray();
     if (ssl.getKeyStore().getFile().exists()) {
       ks.load(ssl.getKeyStore().getInputStream(), password);

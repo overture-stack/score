@@ -23,6 +23,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
+import lombok.extern.slf4j.Slf4j;
 import org.icgc.dcc.common.core.security.SSLCertificateValidation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -42,6 +43,7 @@ import lombok.val;
  * Responsible for interacting with metadata service.
  */
 @Service
+@Slf4j
 public class MetadataClient {
 
   /**
@@ -58,6 +60,7 @@ public class MetadataClient {
 
   @Autowired
   public MetadataClient(@Value("${metadata.url}") String serverUrl, @Value("${metadata.ssl.enabled}") boolean ssl) {
+    log.debug("Is SSL enabled for Metadataclient? " + (ssl ? "true" : "false"));
     if (!ssl) {
       SSLCertificateValidation.disable();
     }
