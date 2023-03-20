@@ -19,6 +19,7 @@ package bio.overture.score.client.ssl;
 
 import lombok.NonNull;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.apache.http.conn.ssl.DefaultHostnameVerifier;
 import org.bouncycastle.asn1.x500.style.BCStyle;
@@ -40,6 +41,7 @@ import java.security.cert.X509Certificate;
  * https://github.com/getoutreach/outreach-platform-sdk/blob/bf1e4a5c90d95a3bca8a6b1204b03c83f8bbf898/java/src/main/java
  * /io/outreach/security/TrustedHostnameVerifier.java
  */
+@Slf4j
 public final class TrustedCnHostnameVerifier implements HostnameVerifier {
 
   /**
@@ -79,8 +81,9 @@ public final class TrustedCnHostnameVerifier implements HostnameVerifier {
 
   @SneakyThrows
   private static X509Certificate getCert(SSLSession session) {
+    log.debug("Entered getCert method....");
     final Certificate[] certs = session.getPeerCertificates();
-
+    log.debug("Total number of peer certificates recieved are: " + certs.length);
     return (X509Certificate) certs[0];
   }
 

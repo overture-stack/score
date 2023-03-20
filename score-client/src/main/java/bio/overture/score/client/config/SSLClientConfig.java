@@ -19,6 +19,7 @@ package bio.overture.score.client.config;
 
 import bio.overture.score.client.ssl.TrustedCnHostnameVerifier;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.apache.http.conn.ssl.DefaultHostnameVerifier;
 import org.apache.http.ssl.SSLContexts;
@@ -35,6 +36,7 @@ import java.security.KeyStore;
  * Configurations for SSL
  */
 @Configuration
+@Slf4j
 public class SSLClientConfig {
 
   @Autowired
@@ -58,10 +60,12 @@ public class SSLClientConfig {
   @Bean
   @SneakyThrows
   public KeyStore trustStore() {
+    log.debug("Entered trustStore Method");
     val ssl = properties.getSsl();
     if (ssl.isCustom()) {
       val is = ssl.getTrustStore().getInputStream();
       val trustStore = KeyStore.getInstance(ssl.getTrustStoreType());
+      log.debug("Is trust store null? : " + (trustStore == null ? "true" : "false"));
       trustStore.load(is, ssl.getTrustStorePassword().toCharArray());
 
       return trustStore;
