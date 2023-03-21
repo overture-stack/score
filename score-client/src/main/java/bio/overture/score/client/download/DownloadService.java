@@ -234,7 +234,8 @@ public class DownloadService {
   private void startNewDownload(DownloadRequest request) {
     log.info("Starting a new download...");
     val objFile = request.getOutputFilePath();
-
+    log.debug("The output path is : " + objFile.getPath());
+    log.debug("The output directory is : " + request.getOutputDir());
     if (objFile.exists()) {
       throw new NotResumableException(new FileAlreadyExistsException(objFile.getPath()));
     }

@@ -233,6 +233,7 @@ public class ScoreStorageService extends AbstractStorageService {
   @Override public ObjectSpecification getDownloadSpecification(String objectId, long offset, long length) throws IOException {
     log.debug("Endpoint: {}", endpoint);
     return retry.execute(ctx -> {
+    log.debug("objectId is : " + objectId + " " + "offset: " + offset + " " + "length: " + length);
       return serviceTemplate.exchange(endpoint + "/download/{object-id}?offset={offset}&length={length}",
           GET,
           defaultEntity(),
