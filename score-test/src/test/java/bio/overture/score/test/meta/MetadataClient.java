@@ -60,7 +60,7 @@ public class MetadataClient {
 
   @Autowired
   public MetadataClient(@Value("${metadata.url}") String serverUrl, @Value("${metadata.ssl.enabled}") boolean ssl) {
-    log.debug("Is SSL enabled for Metadataclient? " + (ssl ? "true" : "false"));
+    log.info("Is SSL enabled for Metadataclient? " + (ssl ? "true" : "false"));
     if (!ssl) {
       SSLCertificateValidation.disable();
     }

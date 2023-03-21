@@ -234,8 +234,8 @@ public class DownloadService {
   private void startNewDownload(DownloadRequest request) {
     log.info("Starting a new download...");
     val objFile = request.getOutputFilePath();
-    log.debug("The output path is : " + objFile.getPath());
-    log.debug("The output directory is : " + request.getOutputDir());
+    log.info("The output path is : " + objFile.getPath());
+    log.info("The output directory is : " + request.getOutputDir());
     if (objFile.exists()) {
       throw new NotResumableException(new FileAlreadyExistsException(objFile.getPath()));
     }
@@ -247,7 +247,7 @@ public class DownloadService {
       log.debug("finished creating {}", dir.toString());
     }
 
-    log.debug("Downloading specification for {}: {}-{}", request.getObjectId(), request.getOffset(),
+    log.info("Downloading specification for {}: {}-{}", request.getObjectId(), request.getOffset(),
         request.getLength());
     val spec = storageService.getDownloadSpecification(request.getObjectId(), request.getOffset(), request.getLength());
     log.info("Finished retrieving download specification file");

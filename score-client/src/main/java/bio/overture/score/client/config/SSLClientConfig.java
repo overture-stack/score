@@ -60,12 +60,12 @@ public class SSLClientConfig {
   @Bean
   @SneakyThrows
   public KeyStore trustStore() {
-    log.debug("Entered trustStore Method");
+    log.info("Entered trustStore Method");
     val ssl = properties.getSsl();
     if (ssl.isCustom()) {
       val is = ssl.getTrustStore().getInputStream();
       val trustStore = KeyStore.getInstance(ssl.getTrustStoreType());
-      log.debug("Is trust store null? : " + (trustStore == null ? "true" : "false"));
+      log.info("Is trust store null? : " + (trustStore == null ? "true" : "false"));
       trustStore.load(is, ssl.getTrustStorePassword().toCharArray());
 
       return trustStore;

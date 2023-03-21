@@ -61,7 +61,7 @@ public final class TrustedCnHostnameVerifier implements HostnameVerifier {
 
   @Override
   public boolean verify(String host, SSLSession session) {
-    log.debug("Entered Verify method...");
+    log.info("Entered Verify method...");
     val cert = getCert(session);
 
     // If trusted, don't verify certificate
@@ -76,15 +76,15 @@ public final class TrustedCnHostnameVerifier implements HostnameVerifier {
   private boolean isTrusted(X509Certificate cert) {
     val cn = getCN(cert);
     val exactMatch = cn.equals(trustedCn);
-    log.debug("Certificate is trusted: " + (exactMatch ? "True" : "False"));
+    log.info("Certificate is trusted: " + (exactMatch ? "True" : "False"));
     return exactMatch;
   }
 
   @SneakyThrows
   private static X509Certificate getCert(SSLSession session) {
-    log.debug("Entered getCert method....");
+    log.info("Entered getCert method....");
     final Certificate[] certs = session.getPeerCertificates();
-    log.debug("Total number of peer certificates recieved are: " + certs.length);
+    log.info("Total number of peer certificates recieved are: " + certs.length);
     return (X509Certificate) certs[0];
   }
 

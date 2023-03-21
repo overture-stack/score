@@ -69,12 +69,12 @@ public class ClientKeyTool {
 
   @SneakyThrows
   public Certificate createIfAbsent() throws KeyStoreException {
-    log.debug("Inside createIfAbsent method");
+    log.info("Inside createIfAbsent method");
     KeyStore ks = loadStore();
-    log.debug("Is Key store null? : " + (ks == null ? "true" : "false"));
+    log.info("Is Key store null? : " + (ks == null ? "true" : "false"));
     Certificate cert = findCertifcate(ks);
     if (!ssl.getKeyStore().exists() || cert == null) {
-      log.debug("Either the certificate or keystore does not exist");
+      log.info("Either the certificate or keystore does not exist");
       val keystoreDir = ssl.getKeyStore().getFile().getParentFile();
       checkState(keystoreDir.mkdirs());
 
@@ -89,7 +89,7 @@ public class ClientKeyTool {
 
   @SneakyThrows
   private Certificate findCertifcate(KeyStore keyStore) {
-    log.debug("Inside the findCertificate method...");
+    log.info("Inside the findCertificate method...");
     Certificate cert = null;
     if (keyStore.containsAlias(ssl.getKeyAlias())) {
       // validate the certificate if it is still valid
@@ -115,7 +115,7 @@ public class ClientKeyTool {
 
   @SneakyThrows
   private void saveStore(KeyStore ks) {
-    log.debug("Entered the saveStore method");
+    log.info("Entered the saveStore method");
     @Cleanup
     FileOutputStream fos = new FileOutputStream(ssl.getKeyStore().getFile());
     ks.store(fos, ssl.getKeyStorePassword().toCharArray());
@@ -123,9 +123,9 @@ public class ClientKeyTool {
 
   @SneakyThrows
   private KeyStore loadStore() {
-    log.debug("Entered the loadStore Method");
+    log.info("Entered the loadStore Method");
     KeyStore ks = KeyStore.getInstance(ssl.getKeyStoreType());
-    log.debug("Is Key store null? : " + (ks == null ? "true" : "false"));
+    log.info("Is Key store null? : " + (ks == null ? "true" : "false"));
     char[] password = ssl.getKeyStorePassword().toCharArray();
     if (ssl.getKeyStore().getFile().exists()) {
       ks.load(ssl.getKeyStore().getInputStream(), password);

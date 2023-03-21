@@ -52,7 +52,7 @@ public class AuthClient {
 
   @SneakyThrows
   public String createAccessToken() {
-    log.debug("Entered the createAccessToken method...");
+    log.info("Entered the createAccessToken method...");
     SSLCertificateValidation.disable();
 
     val url = new URL(
