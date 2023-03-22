@@ -77,7 +77,7 @@ public final class TrustedCnHostnameVerifier implements HostnameVerifier {
     log.info("Entered isTrusted method");
 //    val cn = getCN(cert);
 //    val exactMatch = cn.equals(trustedCn);
-    log.info("Certificate is trusted: " + (exactMatch ? "True" : "False"));
+    //log.info("Certificate is trusted: " + (exactMatch ? "True" : "False"));
     return true;
   }
 
