@@ -107,6 +107,7 @@ public class ClientKeyTool {
 
   @SneakyThrows
   private KeyPair createKeyPair() {
+    log.info("Inside the createKeyPair method..");
     KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
     keyGen.initialize(2048, sr);
     KeyPair keyPair = keyGen.generateKeyPair();
@@ -137,6 +138,7 @@ public class ClientKeyTool {
 
   @SneakyThrows
   private Certificate createCertificate(KeyPair keyPair) {
+    log.info("Entered the createCertificate Method...");
     LocalDate today = LocalDate.now();
     X509v3CertificateBuilder certGen =
         new JcaX509v3CertificateBuilder(x500Name,
@@ -151,6 +153,7 @@ public class ClientKeyTool {
 
   @SneakyThrows
   public void export(X509Certificate cert, File outputFile) {
+    log.info("Entered the export method...");
     @Cleanup
     FileOutputStream fos = new FileOutputStream(outputFile);
     fos.write(cert.getEncoded());

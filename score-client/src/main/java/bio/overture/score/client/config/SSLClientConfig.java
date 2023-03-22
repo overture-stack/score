@@ -70,6 +70,7 @@ public class SSLClientConfig {
 
       return trustStore;
     } else {
+      log.info("Keystore is null...");
       return null;
     }
   }
@@ -77,6 +78,7 @@ public class SSLClientConfig {
   @Bean
   @SneakyThrows
   public SSLContext sslContext() {
+    log.info("Creating SSLContext bean...");
     val ssl = properties.getSsl();
     if (ssl.isCustom()) {
       return SSLContexts.custom().loadTrustMaterial(trustStore(), null).build();
@@ -87,6 +89,7 @@ public class SSLClientConfig {
 
   @Bean
   public HostnameVerifier hostnameVerifier() {
+    log.info("Creating HostnameVerifier bean...");
     val ssl = properties.getSsl();
     if (ssl.isCustom()) {
       return new TrustedCnHostnameVerifier(ssl.getTrustName());
