@@ -233,11 +233,21 @@ public class ScoreStorageService extends AbstractStorageService {
   @Override public ObjectSpecification getDownloadSpecification(String objectId, long offset, long length) throws IOException {
     log.info("Endpoint: {}", endpoint);
     return retry.execute(ctx -> {
-    log.info("objectId is : " + objectId + " " + "offset: " + offset + " " + "length: " + length);
-      return serviceTemplate.exchange(endpoint + "/download/{object-id}?offset={offset}&length={length}",
-          GET,
-          defaultEntity(),
-          ObjectSpecification.class, objectId, offset, length).getBody();
+
+      try {
+        log.info("objectId is : " + objectId + " " + "offset: " + offset + " " + "length: " + length);
+
+        return serviceTemplate.exchange(endpoint + "/download/{object-id}?offset={offset}&length={length}",
+                GET,
+                defaultEntity(),
+                ObjectSpecification.class, objectId, offset, length).getBody();
+      }
+
+      catch(Exception e) {
+         log.info(String.valueOf(e));
+      }
+      log.info("ObjectSpecification is null" );
+      return null;
     });
   }
 
