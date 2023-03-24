@@ -17,6 +17,8 @@
  */
 package bio.overture.score.core.util;
 
+import lombok.extern.slf4j.Slf4j;
+
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
@@ -30,9 +32,11 @@ import javax.net.ssl.X509TrustManager;
 /**
  * define a trust manager that only accept
  */
+@Slf4j
 public class CustomTrustManager implements X509TrustManager {
 
   public CustomTrustManager(String appKeyStoreLocation) throws NoSuchAlgorithmException, KeyStoreException {
+    log.info("Entered the CustomTrustManager constructor");
     TrustManagerFactory trustManagerFactory =
         TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
 
@@ -44,6 +48,7 @@ public class CustomTrustManager implements X509TrustManager {
 
       if (trustManager instanceof X509TrustManager) {
         X509TrustManager x509TrustManager = (X509TrustManager) trustManager;
+        log.info("Accepted Users are: " + x509TrustManager.getAcceptedIssuers());
         System.out.println("\tAccepted issuers count : " + x509TrustManager.getAcceptedIssuers().length);
       }
     }
