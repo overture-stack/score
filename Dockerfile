@@ -57,14 +57,14 @@ RUN mkdir /usr/lib/jvm \
 	&& wget $JDK_DOWNLOAD_URL -O openjdk17.tar.gz \
 	&& tar zxvf openjdk17.tar.gz \
 	&& rm -rf openjdk17.tar.gz \
-	&& echo 'PATH=$PATH:/usr/lib/jvm/jdk-17.0.6/bin' >> /etc/environment \
-	&& echo 'JAVA_HOME=/usr/lib/jvm/jdk-17.0.6' >> /etc/environment \
-	&& rm -rf /usr/lib/jvm/jdk-17.0.6/jmods \
-	&& rm -rf /usr/lib/jvm/jdk-17.0.6 /lib/src.zip \
-	&& update-alternatives --install "/usr/bin/java" "java" "/usr/lib/jvm/jdk-17.0.6/bin/java" 0 \
-	&& update-alternatives --install "/usr/bin/javac" "javac" "/usr/lib/jvm/jdk-17.0.6/bin/javac" 0 \
-	&& update-alternatives --set java /usr/lib/jvm/jdk-17.0.6/bin/java \
-	&& update-alternatives --set javac /usr/lib/jvm/jdk-17.0.6/bin/javac \
+	&& echo 'PATH=$PATH:/usr/lib/jvm/jdk-17/bin' >> /etc/environment \
+	&& echo 'JAVA_HOME=/usr/lib/jvm/jdk-17' >> /etc/environment \
+	&& rm -rf /usr/lib/jvm/jdk-17/jmods \
+	&& rm -rf /usr/lib/jvm/jdk-17/lib/src.zip \
+	&& update-alternatives --install "/usr/bin/java" "java" "/usr/lib/jvm/jdk-17/bin/java" 0 \
+	&& update-alternatives --install "/usr/bin/javac" "javac" "/usr/lib/jvm/jdk-17/bin/javac" 0 \
+	&& update-alternatives --set java /usr/lib/jvm/jdk-17/bin/java \
+	&& update-alternatives --set javac /usr/lib/jvm/jdk-17/bin/javac \
 	&& update-alternatives --list java \
 	&& update-alternatives --list javac \
 	&& java -version \
