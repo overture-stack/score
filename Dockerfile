@@ -36,7 +36,7 @@ RUN cd score-client/target \
 FROM ubuntu:18.04 as client
 
 ENV CLIENT_DIST_DIR    /score-client-dist
-ENV JDK_DOWNLOAD_URL https://download.java.net/openjdk/jdk11/ri/openjdk-11+28_linux-x64_bin.tar.gz
+ENV JDK_DOWNLOAD_URL https://download.java.net/openjdk/jdk17/ri/openjdk-17+35_linux-x64_bin.tar.gz
 ENV SCORE_CLIENT_HOME /score-client
 ENV PATH /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$SCORE_CLIENT_HOME/bin
 ENV SCORE_USER score
