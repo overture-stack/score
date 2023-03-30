@@ -2,7 +2,7 @@
 # Maven builder
 ###############################
 # -alpine-slim image does not support --release flag
-FROM adoptopenjdk/openjdk17:jdk-17-jdk-alpine as builder
+FROM adoptopenjdk/openjdk11:jdk-11.0.6_10-alpine-slim as builder
 
 ENV SERVER_JAR_FILE    /score-server.jar
 ENV CLIENT_DIST_DIR    /score-client-dist
