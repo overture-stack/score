@@ -51,7 +51,7 @@ RUN useradd $SCORE_USER  \
 # Copy client dist from previous docker build staget
 COPY --from=builder $CLIENT_DIST_DIR/ $SCORE_CLIENT_HOME
 
-# Install Open JDK 17, and remove unused things at runtime
+# Install Open JDK 17, and remove unused things at runtime 
 RUN mkdir /usr/lib/jvm \
 	&& cd /usr/lib/jvm \
 	&& wget $JDK_DOWNLOAD_URL -O openjdk17.tar.gz \
