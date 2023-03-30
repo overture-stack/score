@@ -2,7 +2,7 @@
 # Maven builder
 ###############################
 # -alpine-slim image does not support --release flag
-FROM adoptopenjdk/openjdk11:jdk-11.0.6_10-alpine-slim as builder
+FROM adoptopenjdk/openjdk17:jdk-17-jdk-alpine as builder
 
 ENV SERVER_JAR_FILE    /score-server.jar
 ENV CLIENT_DIST_DIR    /score-client-dist
@@ -36,7 +36,7 @@ RUN cd score-client/target \
 FROM ubuntu:18.04 as client
 
 ENV CLIENT_DIST_DIR    /score-client-dist
-ENV JDK_DOWNLOAD_URL https://download.java.net/openjdk/jdk11/ri/openjdk-11+28_linux-x64_bin.tar.gz
+ENV JDK_DOWNLOAD_URL https://download.java.net/openjdk/jdk17/ri/openjdk-17+35_linux-x64_bin.tar.gz
 ENV SCORE_CLIENT_HOME /score-client
 ENV PATH /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$SCORE_CLIENT_HOME/bin
 ENV SCORE_USER score
@@ -51,20 +51,20 @@ RUN useradd $SCORE_USER  \
 # Copy client dist from previous docker build staget
 COPY --from=builder $CLIENT_DIST_DIR/ $SCORE_CLIENT_HOME
 
-# Install Open JDK 11, and remove unused things at runtime 
+# Install Open JDK 17, and remove unused things at runtime
 RUN mkdir /usr/lib/jvm \
 	&& cd /usr/lib/jvm \
-	&& wget $JDK_DOWNLOAD_URL -O openjdk11.tar.gz \
-	&& tar zxvf openjdk11.tar.gz \
-	&& rm -rf openjdk11.tar.gz \
-	&& echo 'PATH=$PATH:/usr/lib/jvm/jdk-11/bin' >> /etc/environment \
-	&& echo 'JAVA_HOME=/usr/lib/jvm/jdk-11' >> /etc/environment \
-	&& rm -rf /usr/lib/jvm/jdk-11/jmods \
-	&& rm -rf /usr/lib/jvm/jdk-11/lib/src.zip \
-	&& update-alternatives --install "/usr/bin/java" "java" "/usr/lib/jvm/jdk-11/bin/java" 0 \
-	&& update-alternatives --install "/usr/bin/javac" "javac" "/usr/lib/jvm/jdk-11/bin/javac" 0 \
-	&& update-alternatives --set java /usr/lib/jvm/jdk-11/bin/java \
-	&& update-alternatives --set javac /usr/lib/jvm/jdk-11/bin/javac \
+	&& wget $JDK_DOWNLOAD_URL -O openjdk17.tar.gz \
+    && tar zxvf openjdk17.tar.gz \
+    && rm -rf openjdk17.tar.gz \
+    && echo 'PATH=$PATH:/usr/lib/jvm/jdk-17/bin' >> /etc/environment \
+    && echo 'JAVA_HOME=/usr/lib/jvm/jdk-17' >> /etc/environment \
+    && rm -rf /usr/lib/jvm/jdk-17/jmods \
+    && rm -rf /usr/lib/jvm/jdk-17/lib/src.zip \
+    && update-alternatives --install "/usr/bin/java" "java" "/usr/lib/jvm/jdk-17/bin/java" 0 \
+    && update-alternatives --install "/usr/bin/javac" "javac" "/usr/lib/jvm/jdk-17/bin/javac" 0 \
+    && update-alternatives --set java /usr/lib/jvm/jdk-17/bin/java \
+    && update-alternatives --set javac /usr/lib/jvm/jdk-17/bin/javac \
 	&& update-alternatives --list java \
 	&& update-alternatives --list javac \
 	&& java -version \
