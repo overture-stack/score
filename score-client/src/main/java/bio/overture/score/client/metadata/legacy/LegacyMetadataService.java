@@ -56,12 +56,17 @@ public class LegacyMetadataService implements MetadataService {
   }
 
   private static boolean isIndexFile(Entity e, String fileName) {
-    return isBaiFile(e, fileName) || isTbiFile(e, fileName) || isIdxFile(e, fileName);
+    return isCraiFile(e, fileName) || isBaiFile(e, fileName) || isTbiFile(e, fileName) || isIdxFile(e, fileName);
   }
 
   private static boolean isTbiFile(Entity e, String fileName) {
     return isMatch(e, fileName + ".tbi");
   }
+
+  private static boolean isCraiFile(Entity e, String fileName) {
+    return isMatch(e, fileName + ".crai");
+  }
+
 
   private static boolean isIdxFile(Entity e, String fileName) {
     return isMatch(e, fileName + ".idx");

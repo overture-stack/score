@@ -364,8 +364,8 @@ public class DownloadCommand extends RepositoryAccessCommand {
     checkParameter(
       Stream.of(!objectId.isEmpty(), manifestResource != null,analysisId != null && programId != null).
       filter(i -> i == Boolean.TRUE).count() == 1,
-      "Only one of --object-id, --manifest, or --analysisId may be specified. "
-        + "--studyId may only be used together with --analysisId, and is required if analysisId is specified.");
+      "Only one of --object-id, --manifest, or --analysis-id may be specified. "
+        + "--study-id may only be used together with --analysis-id, and is required if analysis-id is specified.");
   }
 }
 
