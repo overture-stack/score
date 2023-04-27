@@ -23,6 +23,7 @@ import bio.overture.score.client.command.ClientCommand;
 import bio.overture.score.client.exception.BadManifestException;
 import bio.overture.score.client.metadata.EntityNotFoundException;
 import com.beust.jcommander.*;
+import htsjdk.samtools.util.Log;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -89,6 +90,8 @@ public class ClientMain implements CommandLineRunner {
 
   public static void main(String[] args) {
     try {
+      Log.setGlobalLogLevel(Log.LogLevel.ERROR);
+
       // Bootstrap
       val profiles = bootstrap(args);
 

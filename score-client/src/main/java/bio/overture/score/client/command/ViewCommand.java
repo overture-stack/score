@@ -307,7 +307,8 @@ public class ViewCommand extends RepositoryAccessCommand {
     }
 
     checkParameter(objectId != null || sequenceFile != null || manifestResource != null,
-      "One of --object-id, --input-file or --manifest must be specified");
+      "One of --object-id, --input-file or --manifest must be specified. " +
+              "For CRAM files, please additionally include --reference-file.");
 
     if (objectId == null && sequenceFile == null) {
       checkParameter(manifestResource != null && outputDir != null,

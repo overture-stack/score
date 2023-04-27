@@ -51,7 +51,6 @@ CLIENT_DIR="$(cd ${BASE_DIR} && pwd -P)"
 exec java -Xmx3G \
 	--add-opens=java.base/jdk.internal.ref=ALL-UNNAMED \
 	--add-opens=java.base/java.nio=ALL-UNNAMED \
-	--illegal-access=deny \
 	-Dlogging.path=${BASE_DIR}/logs \
 	-Dspring.config.additional-location=${CLIENT_DIR}/conf/ \
 	-Dlogging.config=${CLIENT_DIR}/conf/logback.xml \
