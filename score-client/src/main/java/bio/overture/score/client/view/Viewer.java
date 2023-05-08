@@ -73,6 +73,9 @@ public class Viewer {
       // Since CRAM is a compressed form of BAM file that saves space by only recording
       // the differences between an individual BAM file and a standard reference file.
       // we need to have the reference file in order to decode the CRAM file.
+      if(referenceFile == null){
+        throw new RuntimeException("CRAM file type detected, an indexed (fai) reference file (fa, fasta) must be provided. Please specify via --reference-file.");
+      }
       val reference = new ReferenceSource(referenceFile);
       val primitiveReader = new CRAMFileReader(inputStream, indexStream,reference, ValidationStringency.DEFAULT_STRINGENCY);
       val reader = new SamReader.PrimitiveSamReaderToSamReaderAdapter(
