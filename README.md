@@ -1,4 +1,4 @@
-# Score - Genomic File Transfer & Object Storage
+# Score - File Transfer & Object Storage
 
 [<img hspace="5" src="https://img.shields.io/badge/chat-on--slack-blue?style=for-the-badge">](http://slack.overture.bio)
 [<img hspace="5" src="https://img.shields.io/badge/License-gpl--v3.0-blue?style=for-the-badge">](https://github.com/overture-stack/score/blob/develop/LICENSE)
@@ -8,7 +8,7 @@
 <img align="right" width="100vw" src="icon-score.png" alt="score-logo" hspace="30"/>
 </div>
 
-Genomics data volume and velocity have increased dramatically, rendering on-premise storage insufficient and demanding specialized software tools to manage these large and complex data sets in the cloud. [Score](https://www.overture.bio/documentation/score/) addresses this by facilitating the transfer and storage of genomics data to and from a distributed cloud network.
+Genomics data volume and velocity have increased dramatically, rendering on-premise storage insufficient and demanding specialized software tools to manage data in the cloud. [Score](https://www.overture.bio/documentation/score/) addresses this by facilitating the transfer and storage of genomics data to and from a cloud network.
 
 <!--Blockqoute-->
 
@@ -17,9 +17,9 @@ Genomics data volume and velocity have increased dramatically, rendering on-prem
 > 
 > <div>
 > <img align="left" src="ov-logo.png" height="90"/>
-> </div>e
+> </div>
 > 
-> *Score is a vital service within the [Overture](https://www.overture.bio/) research software ecosystem. With our genomics data management solutions, scientists can significantly improve the lifecycle of their data and the quality of their research. See our [related products](#related-products) for more information on what Overture can offer.*
+> *Score is a core component within the [Overture](https://www.overture.bio/) research software ecosystem. Overture is a toolkit of modular software components made to build into scalable genomics data management systems. See our [related products](#related-products) for more information on what Overture can offer.*
 > 
 > 
 <!--Blockqoute-->
@@ -36,9 +36,8 @@ Genomics data volume and velocity have increased dramatically, rendering on-prem
 
 ## Documentation
 
-- See our Developer [wiki](https://github.com/overture-stack/score/wiki)
-- For our user installation guide see our website [here](https://www.overture.bio/documentation/score/installation/installation/)
-- For user guidance see our website [here](https://www.overture.bio/documentation/score/user-guide/admin-ui/)
+- :construction: Developer documentation [Wiki](https://github.com/overture-stack/score/wiki) :construction:
+- For user documentation, including installation, configuration and usage guides, can be found on our website [here](https://www.overture.bio/documentation/score/)
 
 ## Support & Contributions
 
@@ -47,27 +46,26 @@ Genomics data volume and velocity have increased dramatically, rendering on-prem
 - Connect with us on [Slack](http://slack.overture.bio)
 - Add or Upvote a [feature request](https://github.com/overture-stack/score/issues?q=is%3Aopen+is%3Aissue+label%3Anew-feature+sort%3Areactions-%2B1-desc)
 
-## Related Products 
+## Related Software 
 
 <div>
   <img align="right" alt="Overture overview" src="https://www.overture.bio/static/124ca0fede460933c64fe4e50465b235/a6d66/system-diagram.png" width="45%" hspace="5">
 </div>
 
-Overture is an ecosystem of research software tools, each with narrow responsibilities, designed to address the changing needs of genomics research. 
+Score commonly works in tandem with our metadata service, [Song](https://github.com/overture-stack/SONG). While Score handles object storage and file transfer, Song validates and tracks all the associated file metadata. 
 
-Score commonly works in tandem with our metadata service, [Song](https://github.com/overture-stack/SONG). As Score facilitates object storage in the cloud, Song runs in parallel to validate and track files and associated metadata. 
+All our core microservices are included in the Overture **Data Management System** (DMS). Built from our core collection of microservices, the DMS offers turnkey installation, configuration, and deployment of Overture software. For more information on the DMS, read our [DMS documentation](https://www.overture.bio/documentation/dms/).
 
-These tools are part of the Overture **Data Management System** (DMS), a fully functional and customizable data portal built from a packaged collection of Overtures microservices. For more information on DMS, read our [DMS documentation](https://www.overture.bio/documentation/dms/).
-
-See the links below for additional information on our other research software tools:
+See the links below for information on our other research software tools:
 
 </br>
 
-|Product|Description|
+|Software|Description|
 |---|---|
 |[Ego](https://www.overture.bio/products/ego/)|An authorization and user management service|
-|[Ego UI](https://www.overture.bio/products/ego-ui/)|A UI for managing EGO authentication and authorization services|
-|[Score](https://www.overture.bio/products/score/)| Transfer data quickly and easily to and from any cloud-based storage system|
-|[Song](https://www.overture.bio/products/song/)|Catalog and manage metadata of genomics data spread across cloud storage systems|
+|[Ego UI](https://www.overture.bio/products/ego-ui/)|A UI for managing Ego authentication and authorization services|
+|[Score](https://www.overture.bio/products/score/)| Transfer data to and from any cloud-based storage system|
+|[Song](https://www.overture.bio/products/song/)|Catalog and manage metadata associated to file data spread across cloud storage systems|
 |[Maestro](https://www.overture.bio/products/maestro/)|Organizing your distributed data into a centralized Elasticsearch index|
-|[Arranger](https://www.overture.bio/products/arranger/)|Organize an intuitive data search interface, complete with customizable components, tables, and search terms|
+|[Arranger](https://www.overture.bio/products/arranger/)|A search API with reusable UI components that build into configurable and functional data portals|
+|[DMS-UI](https://github.com/overture-stack/dms-ui)|A simple web browser UI that integrates Ego and Arranger|
