@@ -36,7 +36,7 @@ Genomics data volume and velocity have increased dramatically, rendering on-prem
 
 ## Documentation
 
-- :construction: Developer documentation [Wiki](https://github.com/overture-stack/score/wiki) :construction:
+- :construction: Developer documentation, including instructions for running Score from source can be found in the [Wiki](https://github.com/overture-stack/score/wiki) :construction:
 - For user documentation, including installation, configuration and usage guides, see the Overture websites [Score documentation page](https://www.overture.bio/documentation/score/)
 
 ## Support & Contributions
