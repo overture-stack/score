@@ -82,11 +82,12 @@ auth:
     # E.g. TIMEOUT(n) = TIMEOUT(n-1) * MULTIPLIER
     multiplier: 2.0
 
+#allowedOrigins can be configured to contain multiple values, all separated by commas
 management:
   endpoints:
     web:
       cors:
-        allowedOrigins: http://example:8080, http://localhost:8081, http://hello:8080
+        allowedOrigins: http://localhost:8081
 
 ---
 
