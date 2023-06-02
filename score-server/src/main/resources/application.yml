@@ -82,6 +82,12 @@ auth:
     # E.g. TIMEOUT(n) = TIMEOUT(n-1) * MULTIPLIER
     multiplier: 2.0
 
+management:
+  endpoints:
+    web:
+      cors:
+        allowedOrigins: http://example:8080, http://localhost:8081, http://hello:8080
+
 ---
 
 ###############################################################################
