@@ -24,7 +24,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 })
 public class ServerMain {
 
-  @Value("${management.endpoints.web.cors.allowedOrigins}")
+  @Value("${server.cors.allowedOrigins}")
   private String[] allowedOrigins;
 
   public static void main(String... args) {

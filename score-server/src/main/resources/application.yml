@@ -27,7 +27,9 @@ server:
   compression:
     enabled: true
     mime-types: application/json
-
+  #allowedOrigins can be configured to contain multiple values, all separated by commas
+  cors:
+    allowedOrigins: http://localhost:8081
 s3:
   secured: true
   sigV4Enabled: true
