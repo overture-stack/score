@@ -76,8 +76,7 @@ public class DownloadStateStore extends TransferState {
     return Files.exists(new File(getObjectStateDir(stateDir, objectId), getSpecificationName()).toPath());
   }
 
-  public ObjectSpecification
-  getProgress(File stateDir, String objectId) throws IOException {
+  public ObjectSpecification getProgress(File stateDir, String objectId) throws IOException {
     log.debug("Loading local progress for {} from {}", objectId, stateDir.toString());
     val spec = loadSpecification(stateDir, objectId);
     log.debug("Completed loading local object specification (meta file)");
