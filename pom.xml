@@ -258,9 +258,9 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
   </profiles>
 
   <properties>
-    <jdk.version>17</jdk.version>
+    <jdk.version>11</jdk.version>
 
-    <lombok.version>1.18.22</lombok.version>
+    <lombok.version>1.18.4</lombok.version>
     <findbugs.version>3.0.1u2</findbugs.version>
 
     <maven-compiler-plugin.version>3.1</maven-compiler-plugin.version>
@@ -295,7 +295,7 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
     <maven-enforcer-plugin.version>1.3.1</maven-enforcer-plugin.version>
     <maven-enforcer-plugin.versionRange>[1.0.0,)</maven-enforcer-plugin.versionRange>
     <maven-enforcer-plugin.requireMavenVersion>[3.0.0,)</maven-enforcer-plugin.requireMavenVersion>
-    <maven-enforcer-plugin.requireJavaVersion>[17,)</maven-enforcer-plugin.requireJavaVersion>
+    <maven-enforcer-plugin.requireJavaVersion>[11,)</maven-enforcer-plugin.requireJavaVersion>
 
     <!-- PMD -->
     <pmd.sourcedir>${basedir}/src/main/pmd</pmd.sourcedir>

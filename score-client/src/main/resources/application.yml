@@ -23,10 +23,10 @@
 ###############################################################################
 
 client:
-  ansi: true
-  silent: false
-  quiet: false
-  accessToken: dd9b5c3e-d07e-4b5e-b34e-2d471ee9c78c
+  ansi: ${ansi:true}
+  silent: ${silent:false}
+  quiet: ${quiet:false}
+  accessToken: "${accessToken:}" # Alias for backwards compatibility
   connectTimeoutSeconds: 60
   readTimeoutSeconds: 60
   # path of dir with WRITE access for score client upload state files
