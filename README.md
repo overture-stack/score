@@ -43,7 +43,7 @@ Genomics data volume and velocity have increased dramatically, rendering on-prem
 
 - Filing an [issue](https://github.com/overture-stack/score/issues)
 - Making a [contribution](CONTRIBUTING.md)
-- Connect with us on [Slack](http://slack.overture.bio)
+- Connect with us on [Slack](https://join.slack.com/t/overture-bio/shared_invite/zt-21tdumtdh-9fP1TFeLepK4~Lc377rOYw)
 - Add or Upvote a [feature request](https://github.com/overture-stack/score/issues?q=is%3Aopen+is%3Aissue+label%3Anew-feature+sort%3Areactions-%2B1-desc)
 
 ## Related Software 
