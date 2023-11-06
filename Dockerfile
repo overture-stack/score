@@ -1,8 +1,8 @@
 ###############################
 # Maven builder
 ###############################
-# -alpine-slim image does not support --release flag
-FROM adoptopenjdk/openjdk11:jdk-11.0.6_10-alpine-slim as builder
+# multi arch image including amd64, arm64, ...
+FROM adoptopenjdk/openjdk11:jre-11.0.6_10 as builder
 
 ENV SERVER_JAR_FILE    /score-server.jar
 ENV CLIENT_DIST_DIR    /score-client-dist
@@ -33,7 +33,7 @@ RUN cd score-client/target \
 ###############################
 # Score Client
 ###############################
-FROM ubuntu:18.04 as client
+FROM --platform=linux/amd64 ubuntu:18.04 as client
 
 ENV CLIENT_DIST_DIR    /score-client-dist
 ENV JDK_DOWNLOAD_URL https://download.java.net/openjdk/jdk17/ri/openjdk-17+35_linux-x64_bin.tar.gz
@@ -76,7 +76,7 @@ WORKDIR $SCORE_CLIENT_HOME
 ###############################
 # Score Server
 ###############################
-FROM adoptopenjdk/openjdk11:jre-11.0.6_10-alpine as server
+FROM adoptopenjdk/openjdk11:jre-11.0.6_10 as server
 
 # Paths
 ENV SCORE_HOME /score-server
@@ -86,8 +86,8 @@ ENV SCORE_USER score
 ENV SCORE_UID 9999
 ENV SCORE_GID 9999
 
-RUN addgroup -S -g $SCORE_GID $SCORE_USER  \
-    && adduser -S -u $SCORE_UID -G $SCORE_USER $SCORE_USER  \
+RUN addgroup --system --gid $SCORE_GID $SCORE_USER  \
+    && adduser --system --uid $SCORE_UID --ingroup $SCORE_USER $SCORE_USER  \
     && mkdir $SCORE_HOME $SCORE_LOGS \
     && chown -R $SCORE_UID:$SCORE_GID $SCORE_HOME
 
