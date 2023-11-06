@@ -33,7 +33,7 @@ RUN cd score-client/target \
 ###############################
 # Score Client
 ###############################
-FROM --platform=linux/amd64 ubuntu:18.04 as client
+FROM --platform=linux/amd64 ubuntu:22.04 as client
 
 ENV CLIENT_DIST_DIR    /score-client-dist
 ENV JDK_DOWNLOAD_URL https://download.java.net/openjdk/jdk17/ri/openjdk-17+35_linux-x64_bin.tar.gz
