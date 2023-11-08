@@ -36,7 +36,7 @@ spec:
       - name: maven-cache
         mountPath: "/root/.m2"
   - name: dind-daemon
-    image: docker:18.06-dind
+    image: docker:20.10-dind
     securityContext:
         privileged: true
         runAsUser: 0
@@ -49,7 +49,7 @@ spec:
     - cat
     tty: true
   - name: docker
-    image: docker:18-git
+    image: docker:20-git
     tty: true
     env:
     - name: DOCKER_HOST
