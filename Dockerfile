@@ -1,8 +1,8 @@
 ###############################
 # Maven builder
 ###############################
-# multi arch image including amd64, arm64, ...
-FROM adoptopenjdk/openjdk11:jre-11.0.6_10 as builder
+# JDK image as builder
+FROM adoptopenjdk/openjdk11:jdk-11.0.6_10-slim as builder
 
 ENV SERVER_JAR_FILE    /score-server.jar
 ENV CLIENT_DIST_DIR    /score-client-dist
