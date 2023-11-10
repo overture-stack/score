@@ -46,6 +46,8 @@ spec:
     env:
     - name: DOCKER_TLS_VERIFY
       value: 0
+    - name: DOCKER_TLS_CERTDIR
+      value: /var/lib/docker/tls
   - name: helm
     image: alpine/helm:2.12.3
     command:
@@ -59,6 +61,8 @@ spec:
       value: tcp://localhost:2375
     - name: HOME
       value: /home/jenkins/agent
+    - name: DOCKER_TLS_CERTDIR
+      value: /var/lib/docker/tls
   - name: curl
     image: curlimages/curl
     command:
