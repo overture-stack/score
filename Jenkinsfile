@@ -30,22 +30,20 @@ spec:
     tty: true
     image: openjdk:11
     env:
-      - name: DOCKER_HOST
-        value: tcp://localhost:2375
+    - name: DOCKER_HOST
+      value: tcp://localhost:2376
     volumeMounts:
-      - name: maven-cache
-        mountPath: "/root/.m2"
+    - name: maven-cache
+      mountPath: "/root/.m2"
   - name: dind-daemon
     image: docker:20.10-dind
     securityContext:
-        privileged: true
-        runAsUser: 0
+      privileged: true
+      runAsUser: 0
     volumeMounts:
-      - name: docker-graph-storage
-        mountPath: /var/lib/docker
+    - name: docker-graph-storage
+      mountPath: /var/lib/docker
     env:
-    - name: DOCKER_TLS_VERIFY
-      value: 0
     - name: DOCKER_TLS_CERTDIR
       value: /var/lib/docker/tls
   - name: helm
@@ -58,11 +56,14 @@ spec:
     tty: true
     env:
     - name: DOCKER_HOST
-      value: tcp://localhost:2375
+      value: tcp://localhost:2376
     - name: HOME
       value: /home/jenkins/agent
     - name: DOCKER_TLS_CERTDIR
       value: /var/lib/docker/tls
+    volumeMounts:
+    - name: docker-graph-storage
+      mountPath: /var/lib/docker
   - name: curl
     image: curlimages/curl
     command:
