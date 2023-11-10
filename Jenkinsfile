@@ -117,6 +117,7 @@ pipeline {
             }
             steps {
                 container('docker') {
+                    sh 'sleep infinity'
                     sh "docker build \
                         --target server \
                         --network host \
