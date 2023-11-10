@@ -112,6 +112,7 @@ pipeline {
                     branch 'develop'
                     branch 'master'
                     branch 'test*'
+                    branch 'dind-tshooting'
                 }
             }
             steps {
