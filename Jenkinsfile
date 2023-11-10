@@ -43,6 +43,9 @@ spec:
     volumeMounts:
       - name: docker-graph-storage
         mountPath: /var/lib/docker
+    env:
+    - name: TLS_VERIFY
+      value: false
   - name: helm
     image: alpine/helm:2.12.3
     command:
