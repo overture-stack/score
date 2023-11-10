@@ -45,7 +45,7 @@ spec:
         mountPath: /var/lib/docker
     env:
     - name: DOCKER_TLS_VERIFY
-      value: false
+      value: 0
   - name: helm
     image: alpine/helm:2.12.3
     command:
