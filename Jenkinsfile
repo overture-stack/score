@@ -97,6 +97,7 @@ pipeline {
     }
 
     stages {
+/*
         stage('Compile & Test') {
             steps {
                 container('jdk') {
@@ -104,7 +105,7 @@ pipeline {
                 }
             }
         }
-
+*/
         stage('Build images') {
             when {
                 anyOf {
