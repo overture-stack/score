@@ -30,8 +30,13 @@ spec:
     tty: true
     image: openjdk:11
     env:
-    - name: DOCKER_HOST
-      value: tcp://localhost:2376
+    - name: DOCKER_TLS_VERIFY
+      value: 1
+    - name: DOCKER_CERT_PATH
+      value: /var/lib/docker/tls/client
+    volumeMounts:
+    - name: docker-graph-storage
+      mountPath: /var/lib/docker
     volumeMounts:
     - name: maven-cache
       mountPath: "/root/.m2"
@@ -55,12 +60,12 @@ spec:
     image: docker:20-git
     tty: true
     env:
-    - name: DOCKER_HOST
-      value: tcp://localhost:2376
     - name: HOME
       value: /home/jenkins/agent
-    - name: DOCKER_TLS_CERTDIR
-      value: /var/lib/docker/tls
+    - name: DOCKER_TLS_VERIFY
+      value: 1
+    - name: DOCKER_CERT_PATH
+      value: /var/lib/docker/tls/client
     volumeMounts:
     - name: docker-graph-storage
       mountPath: /var/lib/docker
