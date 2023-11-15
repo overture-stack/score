@@ -18,6 +18,7 @@ public class BeanUtil<T> {
   @Autowired
   ApplicationContext appContext;
 
+  //this method injects beans dynamically based on score-server active profile
    public Object getBeanForProfile(Class cl){
      List<String> profileList = appContext.getBean("profiles", List.class);
       if(profileList.isEmpty()){
