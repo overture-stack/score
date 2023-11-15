@@ -19,6 +19,7 @@ package bio.overture.score.client.config;
 
 import bio.overture.score.client.upload.UploadService;
 import bio.overture.score.client.upload.s3.S3UploadService;
+import bio.overture.score.client.util.AzurePresignedUrlValidator;
 import bio.overture.score.client.util.PresignedUrlValidator;
 import bio.overture.score.client.util.S3PresignedUrlValidator;
 import org.springframework.context.annotation.Bean;
@@ -26,17 +27,14 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 
 @Configuration
-@Profile({ "!azure" })
 public class S3Config {
 
   @Bean
-  public UploadService uploadService() {
+  public S3UploadService collaboratoryUpload(){
     return new S3UploadService();
   }
-
   @Bean
-  public PresignedUrlValidator urlValidator() {
+  public S3PresignedUrlValidator collaboratoryUrlValidator(){
     return new S3PresignedUrlValidator();
   }
-
 }

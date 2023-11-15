@@ -19,6 +19,7 @@ package bio.overture.score.client.download;
 
 import bio.overture.score.client.exception.NotRetryableException;
 import bio.overture.score.client.state.TransferState;
+import bio.overture.score.client.util.BeanUtil;
 import bio.overture.score.client.util.PresignedUrlValidator;
 import bio.overture.score.core.model.ObjectSpecification;
 import bio.overture.score.core.model.Part;
@@ -27,6 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import javax.annotation.PostConstruct;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
@@ -35,10 +37,15 @@ import java.nio.file.Files;
 @Slf4j
 public class DownloadStateStore extends TransferState {
 
-  @Autowired
   private PresignedUrlValidator urlValidator;
-
+  @Autowired
+  private BeanUtil beanUtil;
   private static final ObjectMapper MAPPER = new ObjectMapper();
+
+  @PostConstruct
+  public void initializeStorageProfile() throws Exception{
+    urlValidator = (PresignedUrlValidator) beanUtil.getBean(PresignedUrlValidator.class);
+  }
 
   public void init(File stateDir, ObjectSpecification spec) {
     log.debug("Download Specification : {}", spec);
