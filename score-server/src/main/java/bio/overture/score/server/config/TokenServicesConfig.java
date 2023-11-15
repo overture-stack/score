@@ -12,7 +12,6 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.retry.support.RetryTemplate;
 import org.springframework.security.oauth2.provider.token.AccessTokenConverter;
 import org.springframework.security.oauth2.provider.token.DefaultTokenServices;
-import org.springframework.security.oauth2.provider.token.RemoteTokenServices;
 import org.springframework.security.oauth2.provider.token.store.JwtTokenStore;
 import org.springframework.web.client.RestTemplate;
 
@@ -28,7 +27,7 @@ public class TokenServicesConfig {
 
     @Bean
     @Profile("!jwt")
-    public RemoteTokenServices remoteTokenServices() {
+    public CustomRemoteTokenService remoteTokenServices() {
         return createRemoteTokenServices();
     }
 
@@ -57,13 +56,13 @@ public class TokenServicesConfig {
         return new AccessTokenConverterWithExpiry();
     }
 
-    private RemoteTokenServices createRemoteTokenServices() {
+    private CustomRemoteTokenService createRemoteTokenServices() {
         val remoteTokenServices = new CachingRemoteTokenServices();
         remoteTokenServices.setCheckTokenEndpointUrl(checkTokenUrl);
         remoteTokenServices.setClientId(clientId);
         remoteTokenServices.setClientSecret(clientSecret);
         remoteTokenServices.setTokenName(tokenName);
-        remoteTokenServices.setAccessTokenConverter(accessTokenConverter());
+        remoteTokenServices.setTokenConverter(accessTokenConverter());
 
         log.debug("using auth server: " + checkTokenUrl);
 
