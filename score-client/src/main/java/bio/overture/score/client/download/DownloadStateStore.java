@@ -44,7 +44,7 @@ public class DownloadStateStore extends TransferState {
 
   @PostConstruct
   public void initializeStorageProfile() throws Exception{
-    urlValidator = (PresignedUrlValidator) beanUtil.getBean(PresignedUrlValidator.class);
+    urlValidator = (PresignedUrlValidator) beanUtil.getBeanForProfile(PresignedUrlValidator.class);
   }
 
   public void init(File stateDir, ObjectSpecification spec) {

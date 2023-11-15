@@ -26,13 +26,14 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 
+// Note: Name the beans as profile-name+class-type to be able to dynamically fetch beans at runtime based on score-server profiles
 @Configuration
 public class AzureConfig {
 
   @Bean
-  public AzureUploadService azureUpload(){
+  public AzureUploadService azureUploadService(){
     return new AzureUploadService();
   }
   @Bean
-  public AzurePresignedUrlValidator azureUrlValidator(){return new AzurePresignedUrlValidator();}
+  public AzurePresignedUrlValidator azurePresignedUrlValidator(){return new AzurePresignedUrlValidator();}
 }

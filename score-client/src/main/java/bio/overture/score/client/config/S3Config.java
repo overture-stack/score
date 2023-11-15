@@ -26,15 +26,16 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 
+// Note: Name the beans as profile-name+class-type to be able to dynamically fetch beans at runtime based on score-server profiles
 @Configuration
 public class S3Config {
 
   @Bean
-  public S3UploadService collaboratoryUpload(){
+  public S3UploadService collaboratoryUploadService(){
     return new S3UploadService();
   }
   @Bean
-  public S3PresignedUrlValidator collaboratoryUrlValidator(){
+  public S3PresignedUrlValidator collaboratoryPresignedUrlValidator(){
     return new S3PresignedUrlValidator();
   }
 }

@@ -77,7 +77,7 @@ public class UploadCommand extends RepositoryAccessCommand {
 
   @PostConstruct
   public void initializeStorageProfile() throws Exception{
-    uploader = (UploadService) beanUtil.getBean(UploadService.class);
+    uploader = (UploadService) beanUtil.getBeanForProfile(UploadService.class);
   }
 
   @Override
