@@ -266,7 +266,7 @@ pipeline {
                 }
             }
             steps {
-                build(job: '/Overture.bio/provision/helm', parameters: [
+                build(job: '/Overture.bio/provision/DeployWithHelm', parameters: [
                         [$class: 'StringParameterValue', name: 'OVERTURE_ENV', value: 'qa' ],
                         [$class: 'StringParameterValue', name: 'OVERTURE_CHART_NAME', value: 'score'],
                         [$class: 'StringParameterValue', name: 'OVERTURE_RELEASE_NAME', value: 'score'],
@@ -283,7 +283,7 @@ pipeline {
                 branch 'master'
             }
             steps {
-                build(job: '/Overture.bio/provision/helm', parameters: [
+                build(job: '/Overture.bio/provision/DeployWithHelm', parameters: [
                         [$class: 'StringParameterValue', name: 'OVERTURE_ENV', value: 'staging' ],
                         [$class: 'StringParameterValue', name: 'OVERTURE_CHART_NAME', value: 'score'],
                         [$class: 'StringParameterValue', name: 'OVERTURE_RELEASE_NAME', value: 'score'],
