@@ -6,6 +6,7 @@ import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -31,6 +32,15 @@ public class ProfileConfig {
   @NonNull
   private String endpoint;
 
+  @Autowired
+  @Value("${isTest}")
+  private boolean isTest = false;
+
+  @Qualifier("clientVersion")
+  @Autowired
+  @NonNull
+  String clientVersion;
+
   @Bean
   public List<String> profiles(){
     List<String> profiles =  getStorageProfile();
@@ -38,6 +48,10 @@ public class ProfileConfig {
   }
 
   private List<String> getStorageProfile() {
+    if(isTest){
+      log.debug("isTrue: "+isTest);
+      return new ArrayList<>(); }
+
     log.debug("get profile endpoint: "+endpoint);
   try{
   List<String> profileList = serviceTemplate.exchange(endpoint + "/profile", HttpMethod.GET, defaultEntity(), List.class).getBody();
@@ -55,8 +69,7 @@ public class ProfileConfig {
 
   private HttpHeaders defaultHeaders() {
     val requestHeaders = new HttpHeaders();
-    requestHeaders.setBearerAuth("fc6fad32-62bf-4d41-a66f-1f88919f9b2c");
-    //requestHeaders.add(HttpHeaders.USER_AGENT, clientVersion);
+    requestHeaders.add(HttpHeaders.USER_AGENT, clientVersion);
     return requestHeaders;
   }
 
