@@ -120,3 +120,13 @@ logging:
     springframework.retry: DEBUG
     springframework.web: DEBUG
     com.amazonaws.services: DEBUG
+
+---
+###############################################################################
+# Profile - "debug"
+###############################################################################
+
+spring.config.activate.on-profile: test
+storage:
+  # default for backwards compatibility
+  url: http://localhost:5431

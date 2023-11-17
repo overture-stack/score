@@ -23,6 +23,7 @@ import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import org.springframework.test.context.ActiveProfiles;
 
 import java.io.File;
 import java.util.UUID;
@@ -31,6 +32,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 @Slf4j
+@ActiveProfiles("test")
 public class ClientMainTest extends AbstractClientMainTest {
 
   @Rule
