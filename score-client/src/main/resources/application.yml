@@ -69,8 +69,6 @@ portal:
     
 logging:
   file: target/logs/client.log
-  level:
-    bio.overture.score.client: DEBUG
   
 mount:
   logging: false
