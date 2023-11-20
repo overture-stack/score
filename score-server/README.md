@@ -29,23 +29,11 @@ To enable logging of request bodies and headers, append the following to the com
 
 Experimental functionality supporting an Azure Blob Storage repository has been added. 
 
-Spring profile: ``azure``
+Score-client dynamically loads storage profile specific implementations (currently S3 or Azure) based on the profile score-server is running on. 
+It does this by calling an endpoint on score-server to fetch the active storage profiles. 
+For older score-server versions where the profile endpoint isn't available, the score-client uses the default (S3) storage profile implementation.
 
-New configuration parameters include:
 
-```yaml
-azure:
-  accountName: 
-  accountKey: 
-
-bucket:
-  name.object: data
-  policy.upload: UploadPolicy
-  policy.download: DownloadPolicy
-  
-download:
-  partsize: 250000000  # 250 MB
-```
 At this time, only a single Azure Blob Storage account (and container) is used. However, since Azure Storage can only store 500 TB per account, the Storage Server will need to manage multiple account/key credentials in the near future.  It may also make sense to have multiple containers per account as well. There are suggestions that having many objects in a single container can impose a performance penalty on some operations.
 
 The Storage Server no longer uses ``.meta`` files to track state in the repository. Object Specifications are dynamically generated on the fly for use on the client (to allow downloads to be resumed). Also, the block upload implementation supplied by Microsoft in the Azure Java SDK supercedes the use of this file. 
