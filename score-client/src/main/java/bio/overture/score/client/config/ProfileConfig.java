@@ -48,7 +48,7 @@ public class ProfileConfig {
   }
 
   private String getStorageProfile() {
-    if(isTest){ return ""; }
+    if(isTest){ return "s3"; }
     log.debug("get profile endpoint: "+endpoint);
   try{
     String storageProfile = serviceTemplate.exchange(endpoint + "/profile", HttpMethod.GET, defaultEntity(), String.class).getBody();
@@ -56,7 +56,7 @@ public class ProfileConfig {
   }catch(NotRetryableException nre ){
     log.error("received exception when getting profiles: " + nre.getMessage());
   }
-  return "collaboratory";
+  return "s3";
   }
 
 

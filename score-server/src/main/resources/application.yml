@@ -31,11 +31,11 @@ server:
   cors:
     allowedOrigins: http://localhost:8081
 s3:
-  secured: true
+  secured: false #true
   sigV4Enabled: true
 
   #amazon
-  endpoint: s3-external-1.amazonaws.com
+  endpoint: https://object.cancercollaboratory.org:9080 #s3-external-1.amazonaws.com
 
   # an optional override to replace the s3 endpoint, useful to proxy requests
   preSignedUrl:
@@ -46,8 +46,8 @@ metadata:
   useLegacyMode: false
 
 bucket:
-  name.object: oicr.icgc
-  name.state: oicr.icgc
+  name.object: score-submission-rdpc-collab-qa #score-rdpc-collab-qa #icgc-argo-collab #oicr.icgc
+  name.state: score-submission-rdpc-collab-qa.state #score-rdpc-collab-qa.state #icgc-argo-collab.state #oicr.icgc
   size.pool: 0
   size.key: 2
 
@@ -64,7 +64,7 @@ collaboratory:
 
 upload:
   retry.limit: 5
-  partsize: 20000000
+  partsize: 1073741824 #20000000
   connection.timeout: 15000
 
   # Every day at midnight
@@ -120,15 +120,15 @@ spring:
   profiles.include: prod
 
 s3:
-  endpoint: s3-external-1.amazonaws.com
+  endpoint: https://object.cancercollaboratory.org:9080 #s3-external-1.amazonaws.com
   masterEncryptionKeyId: af628f04-ac12-4b11-bf83-6545fd44ad18
 
 bucket:
-  name.object: oicr.icgc
-  name.state: oicr.icgc
+  name.object: score-submission-rdpc-collab-qa #score-rdpc-collab-qa #icgc-argo-collab #oicr.icgc
+  name.state: score-submission-rdpc-collab-qa.state #score-rdpc-collab-qa.state #icgc-argo-collab.state #oicr.icgc
 
 metadata:
-  url: https://virginia.song.icgc.org
+  url: https://submission-song.rdpc-qa.cancercollaboratory.org #https://song.rdpc.cancercollaboratory.org #https://virginia.song.icgc.org
   useLegacyMode: false
 
 ---
@@ -141,11 +141,13 @@ spring:
   profiles: collaboratory
 
 s3:
-  endpoint: https://object.cancercollaboratory.org:9080
+  endpoint: https://object.cancercollaboratory.org:9080 #https://object.cancercollaboratory.org:9080
   masterEncryptionKeyId:
+  accessKey: TO1DRTS4H14HJ388I26R #64M75TSW9OQ0BKDG6EDB
+  secretKey: hG1oByzSl0U7SGIiBocNMIdIFLpaMXtmJuCUnRKA #Qdd2c7kUuSWHNYnz49NynQV829waGjPNSw2fYaaZ
 
 metadata:
-  url: https://song.cancercollaboratory.org
+  url: https://submission-song.rdpc-qa.cancercollaboratory.org #https://song.rdpc.cancercollaboratory.org #https://song.cancercollaboratory.org
   useLegacyMode: false
 
 ---
@@ -159,13 +161,14 @@ spring:
 
 azure:
   endpointProtocol: https
-  accountName: oicricgc
-  accountKey:
+  accountName: argordpcdev #oicricgc
+  accountKey: aeVwNiMfJx1p6lBoIqJfOzXDP+YRkPNDdSKR5K/a9NGBUiR4X+M1rzhk+i0p5uMbAVZZ5FG45J/++AStGIgsCQ==
 
 bucket:
-  name.object: data
-  policy.upload: UploadPolicy
-  policy.download: DownloadPolicy
+  name.object: icgc-argo-dev #data
+  name.state: qa.icgc
+  policy.upload: write #UploadPolicy
+  policy.download: readonly #DownloadPolicy
 
 download:
   partsize: 250000000
@@ -183,7 +186,7 @@ s3:
 
 # Metadata server
 metadata:
-  url: https://meta.icgc.org
+  url: https://submission-song.rdpc-qa.cancercollaboratory.org #https://song.rdpc.cancercollaboratory.org #https://meta.icgc.org
 
 ---
 
@@ -196,21 +199,21 @@ spring.profiles: secure
 # OAuth authentication server
 auth:
   server:
-    url: https://localhost:8443/oauth/check_token
-    tokenName: token
-    clientId: resource
-    clientSecret: pass
+    url: https://ego.dev.argo.cancercollaboratory.org/api/o/check_api_key #https://ego.icgc-argo.org/api/o/check_api_key #https://localhost:8443/oauth/check_token
+    tokenName: apiKey #token
+    clientId: score-rdpc-collab #resource
+    clientSecret: hQI71%7fNrCnHmTcyit* #pass
     scope:
       download:
-        system: aws.download
+        system: score.READ #aws.download
         study:
-          prefix: aws.
-          suffix: .download
+          prefix: PROGRAMDATA-   #aws.
+          suffix: .READ #.download
       upload:
-        system: aws.upload
+        system: score.WRITE #aws.upload
         study:
-          prefix: aws.
-          suffix: .upload
+          prefix: PROGRAMDATA- #aws.
+          suffix: .WRITE #.upload
 ---
 
 ###############################################################################
@@ -223,7 +226,7 @@ spring:
 
 auth:
   jwt:
-    publicKeyUrl: "https://localhost:8443/oauth/token/public_key"
+    publicKeyUrl: "https://ego.dev.argo.cancercollaboratory.org/api/oauth/token/public_key" #"https://ego.icgc-argo.org/api/oauth/token/public_key" #"https://localhost:8443/oauth/token/public_key"
 ---
 
 ###############################################################################
@@ -234,7 +237,7 @@ spring.profiles: dev
 
 s3:
   secured: false
-  endpoint: localhost:9444/s3
+  #endpoint: localhost:9444/s3
   accessKey: AKIAIOSFODNN7EXAMPLE
   secretKey: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
 
@@ -265,3 +268,13 @@ s3:
   secured: false
   # Sinai Center
   endpoint: http://www.cancercollaboratory.org:9081
+
+---
+
+spring:
+  profiles:
+    active: azure,prod,jwt,secure #,collaboratory,prod,jwt #, secure,amazon
+
+logging.level:
+  #  org.springframework: debug
+  bio.overture.score.server: info
