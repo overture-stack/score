@@ -20,14 +20,11 @@ public class BeanUtil<T> {
 
   //this method injects beans dynamically based on score-server active profile
    public Object getBeanForProfile(Class cl){
-     List<String> profileList = appContext.getBean("profiles", List.class);
-      if(profileList.isEmpty()){
-        profileList.add("collaboratory");
-      }
+     String profile = appContext.getBean("storageProfile", String.class);
 
      Set<String> beans = appContext.getBeansOfType(cl).keySet();
      return appContext.getBean(beans.stream()
-         .filter(s -> profileList.contains(s.substring(0, s.indexOf(cl.getSimpleName()))))
+         .filter(s -> s.equals(profile+cl.getSimpleName()))
          .collect(Collectors.toList())
          .get(0), cl);
   }

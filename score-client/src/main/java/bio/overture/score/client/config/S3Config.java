@@ -31,11 +31,9 @@ import org.springframework.context.annotation.Profile;
 public class S3Config {
 
   @Bean
-  public S3UploadService collaboratoryUploadService(){
-    return new S3UploadService();
-  }
+  public UploadService s3UploadService(){return new S3UploadService();}
   @Bean
-  public S3PresignedUrlValidator collaboratoryPresignedUrlValidator(){
+  public S3PresignedUrlValidator s3PresignedUrlValidator(){
     return new S3PresignedUrlValidator();
   }
 }

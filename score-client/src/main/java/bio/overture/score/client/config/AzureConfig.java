@@ -31,9 +31,7 @@ import org.springframework.context.annotation.Profile;
 public class AzureConfig {
 
   @Bean
-  public AzureUploadService azureUploadService(){
-    return new AzureUploadService();
-  }
+  public UploadService azUploadService(){ return new AzureUploadService();}
   @Bean
-  public AzurePresignedUrlValidator azurePresignedUrlValidator(){return new AzurePresignedUrlValidator();}
+  public AzurePresignedUrlValidator azPresignedUrlValidator(){return new AzurePresignedUrlValidator();}
 }

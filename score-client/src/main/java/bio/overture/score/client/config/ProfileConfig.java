@@ -42,24 +42,21 @@ public class ProfileConfig {
   String clientVersion;
 
   @Bean
-  public List<String> profiles(){
-    List<String> profiles =  getStorageProfile();
-    return profiles;
+  public String storageProfile(){
+    String profile =  getStorageProfile();
+    return profile;
   }
 
-  private List<String> getStorageProfile() {
-    if(isTest){
-      log.debug("isTrue: "+isTest);
-      return new ArrayList<>(); }
-
+  private String getStorageProfile() {
+    if(isTest){ return ""; }
     log.debug("get profile endpoint: "+endpoint);
   try{
-  List<String> profileList = serviceTemplate.exchange(endpoint + "/profile", HttpMethod.GET, defaultEntity(), List.class).getBody();
-  return profileList;
+    String storageProfile = serviceTemplate.exchange(endpoint + "/profile", HttpMethod.GET, defaultEntity(), String.class).getBody();
+    return storageProfile;
   }catch(NotRetryableException nre ){
     log.error("received exception when getting profiles: " + nre.getMessage());
   }
-  return new ArrayList<>();
+  return "collaboratory";
   }
 
 
