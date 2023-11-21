@@ -91,6 +91,18 @@ management:
       cors:
         allowedOrigins: http://localhost:8081
 
+#  SpringBoot >=2.6 default strategy for matching the request path has been changed
+#  from antpathmatcher to pathpatternparser
+spring:
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
+
+
+logging:
+  level:
+    root: INFO
+    org.springframework.web: INFO
 ---
 
 ###############################################################################
@@ -100,7 +112,10 @@ management:
 # be specified in the properties file
 ###############################################################################
 
-spring.profiles: ssl
+spring:
+  config:
+    activate:
+      on-profile: ssl
 
 # Server
 server:
@@ -116,8 +131,9 @@ server:
 ###############################################################################
 
 spring:
-  profiles: amazon
-  profiles.include: prod
+  config:
+    activate:
+      on-profile: amazon
 
 s3:
   endpoint: s3-external-1.amazonaws.com
@@ -138,7 +154,9 @@ metadata:
 ###############################################################################
 
 spring:
-  profiles: collaboratory
+  config:
+    activate:
+      on-profile: collaboratory
 
 s3:
   endpoint: https://object.cancercollaboratory.org:9080
@@ -155,7 +173,9 @@ metadata:
 ###############################################################################
 
 spring:
-  profiles: azure
+  config:
+    activate:
+      on-profile: azure
 
 azure:
   endpointProtocol: https
@@ -176,7 +196,10 @@ download:
 # Profile - "prod"
 ###############################################################################
 
-spring.profiles: prod
+spring:
+  config:
+    activate:
+      on-profile: prod
 
 s3:
   secured: true
@@ -191,15 +214,33 @@ metadata:
 # Profile - "secure"
 ###############################################################################
 
-spring.profiles: secure
+spring:
+  config:
+    activate:
+      on-profile: secure
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          # EGO public key
+          public-key-location: "https://localhost:8443/oauth/token/public_key"
+          # Keycloak JWK
+          #jwk-set-uri: http://localhost/realms/myrealm/protocol/openid-connect/certs
 
 # OAuth authentication server
 auth:
   server:
+    # check API Key endpoint
     url: https://localhost:8443/oauth/check_token
     tokenName: token
-    clientId: resource
+    clientID: resource
     clientSecret: pass
+    # Define a valid auth provider: ego or keycloak
+    provider: ego
+    # Keycloak config
+    keycloak:
+      host: http://localhost
+      realm: "myrealm"
     scope:
       download:
         system: aws.download
@@ -211,26 +252,17 @@ auth:
         study:
           prefix: aws.
           suffix: .upload
----
 
-###############################################################################
-# Profile - "jwt"
-###############################################################################
-
-spring:
-  profiles: jwt
-  profiles.include: secure
-
-auth:
-  jwt:
-    publicKeyUrl: "https://localhost:8443/oauth/token/public_key"
 ---
 
 ###############################################################################
 # Profile - "dev"
 ###############################################################################
 
-spring.profiles: dev
+spring:
+  config:
+    activate:
+      on-profile: dev
 
 s3:
   secured: false
@@ -254,7 +286,10 @@ upload:
 # Profile - "benchmark"
 ###############################################################################
 
-spring.profiles: benchmark
+spring:
+  config:
+    activate:
+      on-profile: benchmark
 
 # Server
 server:

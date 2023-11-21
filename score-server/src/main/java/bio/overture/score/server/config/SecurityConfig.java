@@ -19,27 +19,31 @@ package bio.overture.score.server.config;
 
 import bio.overture.score.server.metadata.MetadataService;
 import bio.overture.score.server.properties.ScopeProperties;
+import bio.overture.score.server.security.ApiKeyIntrospector;
 import bio.overture.score.server.security.scope.DownloadScopeAuthorizationStrategy;
 import bio.overture.score.server.security.scope.UploadScopeAuthorizationStrategy;
+import lombok.Getter;
 import lombok.NonNull;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.*;
+import org.springframework.http.HttpHeaders;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.AuthenticationManagerResolver;
+import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.config.annotation.web.configuration.EnableResourceServer;
-import org.springframework.security.oauth2.config.annotation.web.configuration.ResourceServerConfigurerAdapter;
-import org.springframework.security.oauth2.provider.authentication.BearerTokenExtractor;
-import org.springframework.security.oauth2.provider.authentication.TokenExtractor;
-import org.springframework.security.web.authentication.preauth.AbstractPreAuthenticatedProcessingFilter;
-import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationProvider;
+import org.springframework.security.oauth2.server.resource.authentication.OpaqueTokenAuthenticationProvider;
+import org.springframework.security.oauth2.server.resource.introspection.OpaqueTokenIntrospector;
 
-import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
+import java.util.UUID;
 
 /**
  * Resource service configuration file.<br>
@@ -50,12 +54,21 @@ import java.io.IOException;
 @Configuration
 @Profile("secure")
 @EnableWebSecurity
-@EnableResourceServer
-public class SecurityConfig extends ResourceServerConfigurerAdapter {
+@Getter
+@Setter
+@ConfigurationProperties("auth.server")
+public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
-  private TokenExtractor tokenExtractor = new BearerTokenExtractor();
+  private String url;
+  private String clientId;
+  private String clientSecret;
+  private String provider;
+  private String tokenName;
 
   private final ScopeProperties scopeProperties;
+
+  @Autowired
+  private JwtDecoder jwtDecoder;
 
   @Autowired
   public SecurityConfig(@NonNull ScopeProperties scopeProperties) {
@@ -64,24 +77,6 @@ public class SecurityConfig extends ResourceServerConfigurerAdapter {
 
   @Override
   public void configure(@NonNull HttpSecurity http) throws Exception {
-    http.addFilterAfter(new OncePerRequestFilter() {
-
-      @Override
-
-      protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response,
-        @NonNull FilterChain filterChain)
-        throws ServletException, IOException {
-
-        // We don't want to allow access to a resource with no token so clear
-        // the security context in case it is actually an OAuth2Authentication
-        if (tokenExtractor.extract(request) == null) {
-          SecurityContextHolder.clearContext();
-        }
-        filterChain.doFilter(request, response);
-      }
-
-    }, AbstractPreAuthenticatedProcessingFilter.class);
-
     http.csrf().disable();
     configureAuthorization(http);
   }
@@ -102,8 +97,23 @@ public class SecurityConfig extends ResourceServerConfigurerAdapter {
       
       .authorizeRequests()
       .anyRequest().authenticated();
+
+    http.oauth2ResourceServer(
+        oauth2 -> oauth2.authenticationManagerResolver(this.tokenAuthenticationManagerResolver()));
     // @formatter:on
     log.info("initialization done");
+  }
+
+  @Bean
+  public AuthenticationManagerResolver<HttpServletRequest> tokenAuthenticationManagerResolver() {
+
+    // Auth Managers for JWT and for ApiKeys. JWT uses the default auth provider,
+    // but OpaqueTokens are handled by the custom ApiKeyIntrospector
+    AuthenticationManager jwt = new ProviderManager(new JwtAuthenticationProvider(jwtDecoder));
+    AuthenticationManager opaqueToken =
+        new ProviderManager(new OpaqueTokenAuthenticationProvider(new ApiKeyIntrospector(url, clientId, clientSecret, tokenName)));
+
+    return (request) -> useJwt(request) ? jwt : opaqueToken;
   }
 
   @Bean
@@ -112,7 +122,8 @@ public class SecurityConfig extends ResourceServerConfigurerAdapter {
         scopeProperties.getUpload().getStudy().getPrefix(),
         scopeProperties.getUpload().getStudy().getSuffix(),
         scopeProperties.getUpload().getSystem(),
-         song);
+        song,
+        provider);
   }
 
   @Bean
@@ -122,9 +133,32 @@ public class SecurityConfig extends ResourceServerConfigurerAdapter {
         scopeProperties.getDownload().getStudy().getPrefix(),
         scopeProperties.getDownload().getStudy().getSuffix(),
         scopeProperties.getDownload().getSystem(),
-        song);
+        song,
+        provider);
   }
 
   public ScopeProperties getScopeProperties() { return this.scopeProperties; }
+
+
+  @Bean
+  public OpaqueTokenIntrospector introspector() {
+    return new ApiKeyIntrospector(url, clientId, clientSecret, tokenName);
+  }
+
+  private boolean useJwt(HttpServletRequest request) {
+    val authorizationHeaderValue = request.getHeader(HttpHeaders.AUTHORIZATION);
+    if (authorizationHeaderValue != null && authorizationHeaderValue.startsWith("Bearer")) {
+      String token = authorizationHeaderValue.substring(7);
+      try {
+        UUID.fromString(token);
+        // able to parse as UUID, so this token matches our EgoApiKey format
+        return false;
+      } catch (IllegalArgumentException e) {
+        // unable to parse as UUID, use our JWT resolvers
+        return true;
+      }
+    }
+    return true;
+  }
 
 }

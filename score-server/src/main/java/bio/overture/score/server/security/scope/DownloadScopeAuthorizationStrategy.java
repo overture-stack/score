@@ -19,29 +19,44 @@ package bio.overture.score.server.security.scope;
 
 import bio.overture.score.server.exception.NotRetryableException;
 import bio.overture.score.server.metadata.MetadataService;
+import bio.overture.score.server.repository.auth.KeycloakAuthorizationService;
 import bio.overture.score.server.security.Access;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 
-import static bio.overture.score.server.security.TokenChecker.isExpired;
+import java.util.Set;
+
 import static bio.overture.score.server.util.Scopes.extractGrantedScopes;
+import static bio.overture.score.server.util.Scopes.extractGrantedScopesFromRpt;
 
 @Slf4j
 public class DownloadScopeAuthorizationStrategy extends AbstractScopeAuthorizationStrategy {
 
+  @Autowired
+  private KeycloakAuthorizationService keycloakAuthorizationService;
+
   public DownloadScopeAuthorizationStrategy(@NonNull String studyPrefix, @NonNull String studySuffix,
-    @NonNull String systemScope, MetadataService metadataService) {
-    super(studyPrefix, studySuffix, systemScope, metadataService);
+    @NonNull String systemScope, MetadataService metadataService, @NonNull String provider) {
+    super(studyPrefix, studySuffix, systemScope, metadataService, provider);
   }
 
   @Override
   public boolean authorize(@NonNull Authentication authentication, @NonNull final String objectId) {
-    if (isExpired(authentication)) {
-      return false;
+    Set<String> grantedScopes;
+
+    if("keycloak".equalsIgnoreCase(this.getProvider()) && authentication instanceof JwtAuthenticationToken) {
+      val authGrants = keycloakAuthorizationService
+          .fetchAuthorizationGrants(((JwtAuthenticationToken) authentication).getToken().getTokenValue());
+
+      grantedScopes = extractGrantedScopesFromRpt(authGrants);
+    } else {
+      grantedScopes = extractGrantedScopes(authentication);
     }
-    val grantedScopes = extractGrantedScopes(authentication);
+
     log.info("Checking system-level authorization for objectId {}", objectId);
     if (verifyOneOfSystemScope(grantedScopes)) {
       return true;

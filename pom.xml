@@ -272,11 +272,11 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
     <dcc-auth.version>4.3.2</dcc-auth.version>
 
     <!-- Versions - Spring -->
-    <spring-boot.version>2.1.6.RELEASE</spring-boot.version>
+    <spring-boot.version>2.6.6</spring-boot.version>
     <spring-retry.version>1.1.2.RELEASE</spring-retry.version>
-    <spring-security-oauth2.version>2.3.5.RELEASE</spring-security-oauth2.version>
+    <spring-security-oauth2.version>2.5.1.RELEASE</spring-security-oauth2.version>
     <spring-security-jwt.version>1.1.1.RELEASE</spring-security-jwt.version>
-    <spring-cloud.version>Greenwich.SR3</spring-cloud.version>
+    <spring-cloud.version>2021.0.8</spring-cloud.version>
 
     <!-- Versions - Amazon -->
     <aws-java-sdk.version>1.11.219</aws-java-sdk.version>

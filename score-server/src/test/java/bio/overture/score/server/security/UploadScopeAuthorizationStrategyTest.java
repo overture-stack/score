@@ -41,6 +41,8 @@ public class UploadScopeAuthorizationStrategyTest {
   private static final String PROJECT1="TEST1-CA";
   private static final String PROJECT2="TEST2-DK";
 
+  private static final String PROVIDER_EGO = "ego";
+
   private UploadScopeAuthorizationStrategy sut = init();
 
   public static UploadScopeAuthorizationStrategy init() {
@@ -51,7 +53,7 @@ public class UploadScopeAuthorizationStrategyTest {
     when(meta.getEntity("1")).thenReturn(e1);
     when(meta.getEntity("2")).thenReturn(e2);
 
-    return new UploadScopeAuthorizationStrategy(STUDY_PREFIX, UPLOAD_SUFFIX, SYSTEM_SCOPE, meta);
+    return new UploadScopeAuthorizationStrategy(STUDY_PREFIX, UPLOAD_SUFFIX, SYSTEM_SCOPE, meta, PROVIDER_EGO);
   }
 
   private Authentication getAuthentication(boolean isExpired, Set<String> scopes) {

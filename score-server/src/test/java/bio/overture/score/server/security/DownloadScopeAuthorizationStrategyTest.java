@@ -45,6 +45,8 @@ public class DownloadScopeAuthorizationStrategyTest {
   private static final String OPEN_ACESSS_ID = "123"; // file id of a mock open access file
   private static final String CONTROLLED_ACCESS_ID = "2345";
 
+  private static final String PROVIDER_EGO = "ego";
+
   private DownloadScopeAuthorizationStrategy sut = init(); // System Under Test
 
   public MetadataService getMetadataService() {
@@ -62,7 +64,7 @@ public class DownloadScopeAuthorizationStrategyTest {
   }
 
   public DownloadScopeAuthorizationStrategy init() {
-    return new DownloadScopeAuthorizationStrategy(STUDY_PREFIX, DOWNLOAD_SUFFIX, SYSTEM_SCOPE, getMetadataService());
+    return new DownloadScopeAuthorizationStrategy(STUDY_PREFIX, DOWNLOAD_SUFFIX, SYSTEM_SCOPE, getMetadataService(), PROVIDER_EGO);
   }
 
   public MetadataEntity entity(String id, String gnosId, String fileName, String projectCode, String accessType) {

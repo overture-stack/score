@@ -18,19 +18,14 @@ package bio.overture.score.server.security.scope;
 
 import bio.overture.score.server.exception.NotRetryableException;
 import bio.overture.score.server.metadata.MetadataService;
-import lombok.Data;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.security.core.Authentication;
 
 import java.util.Set;
-
-import static bio.overture.score.server.security.TokenChecker.isExpired;
-import static bio.overture.score.server.util.Scopes.extractGrantedScopes;
 
 
 @Slf4j
@@ -42,6 +37,7 @@ public abstract class AbstractScopeAuthorizationStrategy {
   @NonNull private final String studySuffix;
   @NonNull private final String systemScope;
   @NonNull private final MetadataService metadataService;
+  @NonNull private final String provider;
 
   public abstract boolean authorize(Authentication authentication, String objectId);
 

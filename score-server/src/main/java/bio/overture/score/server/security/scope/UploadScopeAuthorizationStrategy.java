@@ -17,26 +17,41 @@
 package bio.overture.score.server.security.scope;
 
 import bio.overture.score.server.metadata.MetadataService;
+import bio.overture.score.server.repository.auth.KeycloakAuthorizationService;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 
-import static bio.overture.score.server.security.TokenChecker.isExpired;
+import java.util.Set;
+
 import static bio.overture.score.server.util.Scopes.extractGrantedScopes;
+import static bio.overture.score.server.util.Scopes.extractGrantedScopesFromRpt;
 
 @Slf4j
 public class UploadScopeAuthorizationStrategy extends AbstractScopeAuthorizationStrategy {
 
+  @Autowired
+  private KeycloakAuthorizationService keycloakAuthorizationService;
+
   public UploadScopeAuthorizationStrategy(@NonNull String studyPrefix, @NonNull String studySuffix,
-      @NonNull String systemScope, @NonNull MetadataService metadataService){
-    super(studyPrefix, studySuffix, systemScope, metadataService);
+      @NonNull String systemScope, @NonNull MetadataService metadataService, @NonNull String provider){
+    super(studyPrefix, studySuffix, systemScope, metadataService, provider);
   }
 
   public boolean authorize(@NonNull Authentication authentication, @NonNull final String objectId) {
-    if (isExpired(authentication)) {
-      return false;
+    Set<String> grantedScopes;
+
+    if("keycloak".equalsIgnoreCase(this.getProvider()) && authentication instanceof JwtAuthenticationToken) {
+      val authGrants = keycloakAuthorizationService
+          .fetchAuthorizationGrants(((JwtAuthenticationToken) authentication).getToken().getTokenValue());
+
+      grantedScopes = extractGrantedScopesFromRpt(authGrants);
+    } else {
+      grantedScopes = extractGrantedScopes(authentication);
     }
-    val grantedScopes = extractGrantedScopes(authentication);
+
     if (verifyOneOfSystemScope(grantedScopes)) {
       log.info("System-level upload authorization granted");
       return true;
