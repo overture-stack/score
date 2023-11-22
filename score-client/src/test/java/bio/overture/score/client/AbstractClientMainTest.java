@@ -19,14 +19,14 @@ package bio.overture.score.client;
 
 import lombok.Getter;
 import org.junit.Rule;
-import org.springframework.boot.test.rule.OutputCapture;
+import org.springframework.boot.test.system.OutputCaptureRule;
 
 import java.util.function.Consumer;
 
 public abstract class AbstractClientMainTest {
 
   @Rule
-  public OutputCapture capture = new OutputCapture();
+  public OutputCaptureRule capture = new OutputCaptureRule();
   public ExitCodeCapture exitCodeCapture = new ExitCodeCapture();
 
   protected void executeMain(String... args) {

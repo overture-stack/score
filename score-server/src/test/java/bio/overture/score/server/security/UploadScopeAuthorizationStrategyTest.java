@@ -61,7 +61,7 @@ public class UploadScopeAuthorizationStrategyTest {
     when(request.getScope()).thenReturn(scopes);
     val authentication = mock(ExpiringOauth2Authentication.class);
     when(authentication.getOAuth2Request()).thenReturn(request);
-    when(authentication.getExpiry()).thenReturn(isExpired?0:60);
+    when(authentication.getExpiry()).thenReturn(isExpired?0L:60L);
     return authentication;
   }
 
