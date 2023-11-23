@@ -75,8 +75,7 @@ public class KFStorageClient {
 
   @SneakyThrows
   private <T> ResponseEntity<T> getResponse(Class<T> responseType, String accessToken, String url){
-    //val entity = new HttpEntity<T>(null, buildAuthHeader(accessToken));
-    HttpEntity entity = new HttpEntity<T>(null, buildAuthHeader(accessToken));
+    val entity = new HttpEntity<T>(null, buildAuthHeader(accessToken));
     return retry.execute(ctx -> restTemplate.exchange(new URI(url), HttpMethod.GET, entity, responseType));
   }
 

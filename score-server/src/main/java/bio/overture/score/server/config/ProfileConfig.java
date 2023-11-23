@@ -1,5 +1,6 @@
 package bio.overture.score.server.config;
 
+import bio.overture.score.core.model.StorageProfiles;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,10 +16,9 @@ public class ProfileConfig {
 
   @Bean
   String activeStorageProfile() {
-    Map<String, String> storageProfiles = Map.of("collaboratory", "s3", "azure", "az", "test", "test");
     HashSet<String> activeStorageProfiles = new HashSet(Set.of(environment.getActiveProfiles()));
-    activeStorageProfiles.retainAll(storageProfiles.keySet());
-    return storageProfiles.get(activeStorageProfiles.stream().findFirst().get());
+    activeStorageProfiles.retainAll(StorageProfiles.keySet());
+    return StorageProfiles.getProfileValue(activeStorageProfiles.stream().findFirst().get());
   }
 
 }

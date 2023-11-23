@@ -1,28 +1,24 @@
 package bio.overture.score.client.config;
 
 import bio.overture.score.client.exception.NotRetryableException;
-import bio.overture.score.client.storage.StorageService;
+import bio.overture.score.core.model.StorageProfiles;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.DependsOn;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
-import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 @Configuration
 @Slf4j
+@ConditionalOnProperty(value="isTest", havingValue="false")
 public class ProfileConfig {
 
   @Autowired
@@ -31,6 +27,10 @@ public class ProfileConfig {
   @Value("${storage.url}")
   @NonNull
   private String endpoint;
+
+  @Autowired
+  @Value("${defaultProfile:collaboratory}")
+  private String defaultProfile;
 
   @Autowired
   @Value("${isTest}")
@@ -48,7 +48,6 @@ public class ProfileConfig {
   }
 
   private String getStorageProfile() {
-    if(isTest){ return "s3"; }
     log.debug("get profile endpoint: "+endpoint);
   try{
     String storageProfile = serviceTemplate.exchange(endpoint + "/profile", HttpMethod.GET, defaultEntity(), String.class).getBody();
@@ -56,7 +55,7 @@ public class ProfileConfig {
   }catch(NotRetryableException nre ){
     log.error("received exception when getting profiles: " + nre.getMessage());
   }
-  return "s3";
+  return StorageProfiles.getProfileValue(defaultProfile);
   }
 
 
