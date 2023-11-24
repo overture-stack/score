@@ -80,6 +80,7 @@ public class S3UploadService implements UploadService {
    */
   @Override
   public void upload(File file, String objectId, String md5, final boolean redo) throws IOException {
+    log.debug("Initiating S3 upload");
     boolean tryAgain = redo;
     for (int retry = 0; retry < retryNumber; retry++)
       try {

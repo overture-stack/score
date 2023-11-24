@@ -54,6 +54,7 @@ public class AzureUploadService implements UploadService {
 
   @Override
   public void upload(File file, String objectId, String md5, boolean redo) throws IOException {
+    log.debug("Initiating azure upload");
     // Get object specification from server
     val spec = storageService.initiateUpload(objectId, file.length(), redo, md5);
 

@@ -23,14 +23,17 @@ import bio.overture.score.client.manifest.ManifestResource;
 import bio.overture.score.client.manifest.ManifestService;
 import bio.overture.score.client.manifest.UploadManifest;
 import bio.overture.score.client.upload.UploadService;
+import bio.overture.score.client.util.BeanUtil;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -64,8 +67,18 @@ public class UploadCommand extends RepositoryAccessCommand {
    */
   @Autowired
   private ManifestService manifestService;
-  @Autowired
   private UploadService uploader;
+
+  @Autowired
+  ApplicationContext appContext;
+
+  @Autowired
+  private BeanUtil beanUtil;
+
+  @PostConstruct
+  public void initializeStorageProfile() throws Exception{
+    uploader = (UploadService) beanUtil.getBeanForProfile(UploadService.class);
+  }
 
   @Override
   public int execute() throws Exception {
