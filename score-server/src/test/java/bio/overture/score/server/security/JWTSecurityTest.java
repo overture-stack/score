@@ -21,7 +21,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -51,7 +50,7 @@ import static org.springframework.security.test.web.servlet.setup.SecurityMockMv
 @SpringBootTest
 @ContextConfiguration
 @RunWith(SpringJUnit4ClassRunner.class)
-@ActiveProfiles({"test", "secure", "jwt", "default", "dev"})
+@ActiveProfiles({"test", "secure", "default", "dev"})
 public class JWTSecurityTest {
 
     // -- constants --
@@ -71,8 +70,6 @@ public class JWTSecurityTest {
     private final static boolean NOT_EXPIRED = !EXPIRED;
 
     // -- Dependencies --
-    @MockBean
-    private JwtDecoder jwtDecoder;
     @Autowired private WebApplicationContext webApplicationContext;
     @Autowired private SecurityConfig securityConfig;
     @Autowired private KeyPair keyPair;

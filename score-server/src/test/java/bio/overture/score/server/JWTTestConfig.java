@@ -1,19 +1,21 @@
 package bio.overture.score.server;
 
-import bio.overture.score.server.security.PublicKeyFetcher;
 import lombok.SneakyThrows;
 import lombok.val;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
+import org.springframework.security.oauth2.jose.jws.SignatureAlgorithm;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
-import java.util.Base64;
+import java.security.interfaces.RSAPublicKey;
 
 @Configuration
-@Profile("test & jwt")
+@Profile("test")
 public class JWTTestConfig {
 
   private final KeyPair keyPair;
@@ -32,24 +34,10 @@ public class JWTTestConfig {
   }
 
   @Bean
-  @Primary
-  public PublicKeyFetcher testPublicKeyFetcher() {
-    return this::getPublicKey;
-  }
-
-  public String getPublicKey() {
-    return convertToPublicKeyWithHeader(getDecodedPublicKey());
-  }
-
-  public String getDecodedPublicKey() {
-    return Base64.getEncoder().encodeToString(keyPair().getPublic().getEncoded());
-  }
-
-  private static String convertToPublicKeyWithHeader(String key) {
-    val result = new StringBuilder();
-    result.append("-----BEGIN PUBLIC KEY-----\n");
-    result.append(key);
-    result.append("\n-----END PUBLIC KEY-----");
-    return result.toString();
+  public JwtDecoder jwtDecoder() {
+    return NimbusJwtDecoder
+        .withPublicKey((RSAPublicKey) keyPair.getPublic())
+        .signatureAlgorithm(SignatureAlgorithm.from(String.valueOf(SignatureAlgorithm.RS256)))
+        .build();
   }
 }

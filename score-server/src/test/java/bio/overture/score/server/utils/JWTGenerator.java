@@ -22,7 +22,7 @@ import static java.util.concurrent.TimeUnit.HOURS;
 
 @Slf4j
 @Component
-@Profile({"test", "jwt"})
+@Profile({"test"})
 public class JWTGenerator {
 
   public static final String DEFAULT_ISSUER = "ego";
@@ -62,8 +62,10 @@ public class JWTGenerator {
     long expiry;
     // if ttlMs <= 0 make it expired
     if (ttlMs <= 0) {
-      expiry = nowMs - 10000;
-      nowMs -= 100000L;
+      // expired 1 hour ago
+      expiry = nowMs - HOURS.toMillis(1);
+      // created 2 hours ago
+      nowMs -= HOURS.toMillis(2);
     } else {
       expiry = nowMs + ttlMs;
     }

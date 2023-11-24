@@ -18,14 +18,20 @@ package bio.overture.score.server.security.scope;
 
 import bio.overture.score.server.exception.NotRetryableException;
 import bio.overture.score.server.metadata.MetadataService;
+import bio.overture.score.server.repository.auth.KeycloakAuthorizationService;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 
 import java.util.Set;
+
+import static bio.overture.score.server.util.Scopes.extractGrantedScopes;
+import static bio.overture.score.server.util.Scopes.extractGrantedScopesFromRpt;
 
 
 @Slf4j
@@ -38,6 +44,9 @@ public abstract class AbstractScopeAuthorizationStrategy {
   @NonNull private final String systemScope;
   @NonNull private final MetadataService metadataService;
   @NonNull private final String provider;
+
+  @Autowired
+  private KeycloakAuthorizationService keycloakAuthorizationService;
 
   public abstract boolean authorize(Authentication authentication, String objectId);
 
@@ -91,5 +100,18 @@ public abstract class AbstractScopeAuthorizationStrategy {
 
   private String getStudyScope(@NonNull String studyId) {
     return getStudyPrefix()+ studyId + getStudySuffix();
+  }
+
+  protected Set<String> getGrantedScopes(Authentication authentication){
+    Set<String> grantedScopes;
+    if("keycloak".equalsIgnoreCase(this.getProvider()) && authentication instanceof JwtAuthenticationToken) {
+      val authGrants = keycloakAuthorizationService
+          .fetchAuthorizationGrants(((JwtAuthenticationToken) authentication).getToken().getTokenValue());
+
+      grantedScopes = extractGrantedScopesFromRpt(authGrants);
+    } else {
+      grantedScopes = extractGrantedScopes(authentication);
+    }
+    return grantedScopes;
   }
 }
