@@ -154,7 +154,7 @@ pipeline {
                     steps {
                         container('docker') {
                             withCredentials([usernamePassword(
-                                credentialsId:'OvertureDockerHub',
+                                credentialsId:'OvertureBioDockerHub',
                                 passwordVariable: 'PASSWORD',
                                 usernameVariable: 'USERNAME'
                             )]) {
