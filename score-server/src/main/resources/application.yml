@@ -27,7 +27,9 @@ server:
   compression:
     enabled: true
     mime-types: application/json
-
+  #allowedOrigins can be configured to contain multiple values, all separated by commas
+  cors:
+    allowedOrigins: http://localhost:8081
 s3:
   secured: true
   sigV4Enabled: true
@@ -81,6 +83,13 @@ auth:
     # Multiplier that defines value of consequent timeouts before the next retry.
     # E.g. TIMEOUT(n) = TIMEOUT(n-1) * MULTIPLIER
     multiplier: 2.0
+
+#allowedOrigins can be configured to contain multiple values, all separated by commas
+management:
+  endpoints:
+    web:
+      cors:
+        allowedOrigins: http://localhost:8081
 
 ---
 

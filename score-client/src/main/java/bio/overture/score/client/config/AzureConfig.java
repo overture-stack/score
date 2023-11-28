@@ -19,24 +19,19 @@ package bio.overture.score.client.config;
 
 import bio.overture.score.client.upload.UploadService;
 import bio.overture.score.client.upload.azure.AzureUploadService;
+import bio.overture.score.client.upload.s3.S3UploadService;
 import bio.overture.score.client.util.AzurePresignedUrlValidator;
 import bio.overture.score.client.util.PresignedUrlValidator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 
+// Note: Name the beans as profile-name+class-type to be able to dynamically fetch beans at runtime based on score-server profiles
 @Configuration
-@Profile("azure")
 public class AzureConfig {
 
   @Bean
-  public UploadService uploadService() {
-    return new AzureUploadService();
-  }
-
+  public UploadService azUploadService(){ return new AzureUploadService();}
   @Bean
-  public PresignedUrlValidator urlValidator() {
-    return new AzurePresignedUrlValidator();
-  }
-
+  public AzurePresignedUrlValidator azPresignedUrlValidator(){return new AzurePresignedUrlValidator();}
 }

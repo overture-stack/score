@@ -43,6 +43,7 @@ import org.springframework.stereotype.Service;
 import java.net.URISyntaxException;
 import java.util.Base64;
 import java.util.List;
+import java.util.Objects;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -101,7 +102,12 @@ public class AzureDownloadService implements DownloadService {
       }
       fillPartUrls(objectId, parts);
 
-      val md5 = base64ToHexMD5(blob.getProperties().getContentMD5());
+      String contentMd5 = blob.getProperties().getContentMD5();
+      String md5 = null;
+      if(Objects.nonNull(contentMd5)) {
+        md5 = base64ToHexMD5(contentMd5);
+      }
+
       return new ObjectSpecification(objectId, objectId, objectId, parts, rangeLength, md5, false);
     } catch (StorageException e) {
       log.error("Failed to download objectId: {}, offset: {}, length: {}, forExternalUse: {}: {} ",
