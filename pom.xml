@@ -71,17 +71,6 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
               <enabled>true</enabled>
           </snapshots>
       </repository>
-      <repository>
-          <id>conjars</id>
-          <url>http://conjars.org/repo</url>
-          <releases>
-              <enabled>false</enabled>
-          </releases>
-          <snapshots>
-              <enabled>false</enabled>
-          </snapshots>
-      </repository>
-
   </repositories>
 
   <dependencies>

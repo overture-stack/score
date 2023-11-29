@@ -1,0 +1,9 @@
+<settings>
+    <mirrors>
+        <mirror>
+            <id>conjars.org</id>
+            <url>https://conjars.wensel.net/repo/</url>
+            <mirrorOf>conjars.org</mirrorOf>
+        </mirror>
+    </mirrors>
+</settings>
