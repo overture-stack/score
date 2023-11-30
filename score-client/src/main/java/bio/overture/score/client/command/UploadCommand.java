@@ -28,6 +28,8 @@ import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Profile;
@@ -46,6 +48,7 @@ import static bio.overture.score.client.cli.Parameters.checkParameter;
 @Profile("!kf")
 public class UploadCommand extends RepositoryAccessCommand {
 
+  private Logger session = LoggerFactory.getLogger("session");
   /**
    * Options.
    */
@@ -103,6 +106,8 @@ public class UploadCommand extends RepositoryAccessCommand {
         uploadFile(objectId, file, checksum);
       }
     } else {
+      session.info("Upload Command Class Parameters : file ::::"+file+"   objectId ::::::"+objectId+"     manifestResource   ::::::"+manifestResource+"   md5 ::::"+md5);
+      terminal.println("Upload Command Class Parameters : file ::::"+file+"   objectId ::::::"+objectId+"     manifestResource   ::::::"+manifestResource+"   md5 ::::"+md5);
       checkParameter(file != null, "--file must be specified if --object-id is specified");
       checkParameter(md5 != null, "--md5 must be specified if --object-id is specified");
       uploadFile(objectId, file, md5);

@@ -34,6 +34,8 @@ import com.google.common.io.Files;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -59,6 +61,8 @@ public class DownloadCommand extends RepositoryAccessCommand {
   public enum OutputLayout {
     BUNDLE, FILENAME, ID
   }
+
+  private Logger session = LoggerFactory.getLogger("session");
 
   /**
    * Options
@@ -148,7 +152,8 @@ public class DownloadCommand extends RepositoryAccessCommand {
     val manifest = manifestService.getDownloadManifest(manifestResource);
 
     validateManifest(manifest);
-
+    session.info("Download Command Class Parameters : manifest.getEntries() ::::"+manifest.getEntries());
+    terminal.println("Download Command Class Parameters : manifest.getEntries() ::::"+manifest.getEntries());
     val entries = manifest.getEntries();
     if (entries.isEmpty()) {
       throw new BadManifestException(format("Manifest '%s' is empty", manifestResource));
@@ -165,7 +170,10 @@ public class DownloadCommand extends RepositoryAccessCommand {
   private int downloadObjects(List<String> objectIds) throws IOException {
     // Entities are defined in Meta service
     val entities = resolveEntities(objectIds);
-
+    terminal
+            .printLine()
+            .println("Downloading objects size ::::"+objectIds.size())
+            .printLine();
     if (!verifyLocalAvailableSpace(entities)) {
       return FAILURE_STATUS;
     }
@@ -178,6 +186,14 @@ public class DownloadCommand extends RepositoryAccessCommand {
     if (layout != OutputLayout.ID) {
       entitySet = filterEntities(entities);
     }
+    terminal
+            .printLine()
+            .println("Filtered Entites ::::"+entitySet.size())
+            .printLine();
+    terminal
+            .printLine()
+            .println("Force value ::::"+force)
+            .printLine();
 
     // If --force is specified, delete all the old files first, so that we can resume later if the new downloads fail.
     if (force) {
@@ -200,7 +216,10 @@ public class DownloadCommand extends RepositoryAccessCommand {
       val builder = DownloadRequest.builder();
       val request = builder.outputDir(outputDir).entity(entity).objectId(entity.getId()).offset(offset).length(length)
         .validate(validate).build();
-
+      terminal
+              .printLine()
+              .println("Request payload ::::"+request.toString())
+              .printLine();
       // only try to re-download a file that exists if --force was specified on the command line
       val target = getLayoutTarget(entity);
       if (target.exists()) {

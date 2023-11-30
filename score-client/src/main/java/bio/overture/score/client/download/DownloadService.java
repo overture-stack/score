@@ -155,6 +155,10 @@ public class DownloadService {
     log.debug("Attempting to resume download for {}", request.toString());
     ObjectSpecification spec = null;
     try {
+      terminal
+              .printLine()
+              .println("Request payload in Download Service ::::"+request.toString())
+              .printLine();
       spec = downloadStateStore.getProgress(request.getOutputDir(), request.getObjectId());
     } catch (NotRetryableException e) {
       log.info("New download: {} because {}", request.getObjectId(), e.getMessage());

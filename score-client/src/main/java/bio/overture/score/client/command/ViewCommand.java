@@ -305,7 +305,8 @@ public class ViewCommand extends RepositoryAccessCommand {
         terminal.println("When --stdout specified, output format forced to SAM.");
       }
     }
-
+    session.info("View Command Class parameters : objectId ::::"+objectId+"   sequenceFile ::::"+sequenceFile+"   manifestResource  ::::"+manifestResource);
+    terminal.println("View Command Class parameters : objectId ::::"+objectId+"   sequenceFile ::::"+sequenceFile+"   manifestResource  ::::"+manifestResource);
     checkParameter(objectId != null || sequenceFile != null || manifestResource != null,
       "One of --object-id, --input-file or --manifest must be specified. " +
               "For CRAM files, please additionally include --reference-file.");
