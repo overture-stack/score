@@ -17,6 +17,9 @@
  */
 package bio.overture.score.server.security.scope;
 
+import static bio.overture.score.server.security.TokenChecker.isExpired;
+import static bio.overture.score.server.util.Scopes.extractGrantedScopes;
+
 import bio.overture.score.server.exception.NotRetryableException;
 import bio.overture.score.server.metadata.MetadataService;
 import bio.overture.score.server.security.Access;
@@ -25,14 +28,14 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.security.core.Authentication;
 
-import static bio.overture.score.server.security.TokenChecker.isExpired;
-import static bio.overture.score.server.util.Scopes.extractGrantedScopes;
-
 @Slf4j
 public class DownloadScopeAuthorizationStrategy extends AbstractScopeAuthorizationStrategy {
 
-  public DownloadScopeAuthorizationStrategy(@NonNull String studyPrefix, @NonNull String studySuffix,
-    @NonNull String systemScope, MetadataService metadataService) {
+  public DownloadScopeAuthorizationStrategy(
+      @NonNull String studyPrefix,
+      @NonNull String studySuffix,
+      @NonNull String systemScope,
+      MetadataService metadataService) {
     super(studyPrefix, studySuffix, systemScope, metadataService);
   }
 
@@ -56,11 +59,12 @@ public class DownloadScopeAuthorizationStrategy extends AbstractScopeAuthorizati
       log.info("Access control level is controlled -- checking study level authorization.");
       return verifyOneOfStudyScope(grantedScopes, objectId);
     } else {
-      val msg = String.format("Invalid access type '%s' found in Metadata record for object id: %s", fileAccessType,
-        objectId);
+      val msg =
+          String.format(
+              "Invalid access type '%s' found in Metadata record for object id: %s",
+              fileAccessType, objectId);
       log.error(msg);
       throw new NotRetryableException(new IllegalArgumentException(msg));
     }
   }
-
 }

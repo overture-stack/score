@@ -1,18 +1,18 @@
 /*
- * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.                             
- *                                                                                                               
+ * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.
+ *
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
- * You should have received a copy of the GNU General Public License along with                                  
- * this program. If not, see <http://www.gnu.org/licenses/>.                                                     
- *                                                                                                               
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY                           
- * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES                          
- * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT                           
- * SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,                                
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED                          
- * TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;                               
- * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER                              
- * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
+ * You should have received a copy of the GNU General Public License along with
+ * this program. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
+ * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT
+ * SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+ * TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+ * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 package bio.overture.score.fs.util;
@@ -41,7 +41,6 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -110,29 +109,40 @@ public class LoggingFileSystemProvider extends FileSystemProvider {
   }
 
   @Override
-  public FileChannel newFileChannel(Path path, Set<? extends OpenOption> options, FileAttribute<?>... attrs)
-      throws IOException {
-    log.info("newFileChannel(path={}, options={}, attrs={})", path, options, Arrays.toString(attrs));
+  public FileChannel newFileChannel(
+      Path path, Set<? extends OpenOption> options, FileAttribute<?>... attrs) throws IOException {
+    log.info(
+        "newFileChannel(path={}, options={}, attrs={})", path, options, Arrays.toString(attrs));
     return delegate.newFileChannel(path, options, attrs);
   }
 
   @Override
-  public AsynchronousFileChannel newAsynchronousFileChannel(Path path, Set<? extends OpenOption> options,
-      ExecutorService executor, FileAttribute<?>... attrs) throws IOException {
-    log.info("newAsynchronousFileChannel(path={}, options={}, executor={}. attrs={})", path, options, executor,
+  public AsynchronousFileChannel newAsynchronousFileChannel(
+      Path path,
+      Set<? extends OpenOption> options,
+      ExecutorService executor,
+      FileAttribute<?>... attrs)
+      throws IOException {
+    log.info(
+        "newAsynchronousFileChannel(path={}, options={}, executor={}. attrs={})",
+        path,
+        options,
+        executor,
         Arrays.toString(attrs));
     return delegate.newAsynchronousFileChannel(path, options, executor, attrs);
   }
 
   @Override
-  public SeekableByteChannel newByteChannel(Path path, Set<? extends OpenOption> options, FileAttribute<?>... attrs)
-      throws IOException {
-    log.info("newByteChannel(path={}, options={}, attrs={})", path, options, Arrays.toString(attrs));
+  public SeekableByteChannel newByteChannel(
+      Path path, Set<? extends OpenOption> options, FileAttribute<?>... attrs) throws IOException {
+    log.info(
+        "newByteChannel(path={}, options={}, attrs={})", path, options, Arrays.toString(attrs));
     return delegate.newByteChannel(path, options, attrs);
   }
 
   @Override
-  public DirectoryStream<Path> newDirectoryStream(Path dir, Filter<? super Path> filter) throws IOException {
+  public DirectoryStream<Path> newDirectoryStream(Path dir, Filter<? super Path> filter)
+      throws IOException {
     log.info("newDirectoryStream(dir={}, filter={})", dir, filter);
     return delegate.newDirectoryStream(dir, filter);
   }
@@ -144,7 +154,8 @@ public class LoggingFileSystemProvider extends FileSystemProvider {
   }
 
   @Override
-  public void createSymbolicLink(Path link, Path target, FileAttribute<?>... attrs) throws IOException {
+  public void createSymbolicLink(Path link, Path target, FileAttribute<?>... attrs)
+      throws IOException {
     log.info("createSymbolicLink(link={}, attrs={})", link, Arrays.toString(attrs));
     delegate.createSymbolicLink(link, target, attrs);
   }
@@ -210,28 +221,34 @@ public class LoggingFileSystemProvider extends FileSystemProvider {
   }
 
   @Override
-  public <V extends FileAttributeView> V getFileAttributeView(Path path, Class<V> type, LinkOption... options) {
+  public <V extends FileAttributeView> V getFileAttributeView(
+      Path path, Class<V> type, LinkOption... options) {
     log.info("checkAccess(path={}, type={}, options={})", path, type, Arrays.toString(options));
     return delegate.getFileAttributeView(path, type, options);
   }
 
   @Override
-  public <A extends BasicFileAttributes> A readAttributes(Path path, Class<A> type, LinkOption... options)
-      throws IOException {
+  public <A extends BasicFileAttributes> A readAttributes(
+      Path path, Class<A> type, LinkOption... options) throws IOException {
     log.info("readAttributes(path={}, type={}, options={})", path, type, Arrays.toString(options));
     return delegate.readAttributes(path, type, options);
   }
 
   @Override
-  public Map<String, Object> readAttributes(Path path, String attributes, LinkOption... options) throws IOException {
-    log.info("readAttributes(path={}, attributes={}, options={})", path, attributes, Arrays.toString(options));
+  public Map<String, Object> readAttributes(Path path, String attributes, LinkOption... options)
+      throws IOException {
+    log.info(
+        "readAttributes(path={}, attributes={}, options={})",
+        path,
+        attributes,
+        Arrays.toString(options));
     return delegate.readAttributes(path, attributes, options);
   }
 
   @Override
-  public void setAttribute(Path path, String attribute, Object value, LinkOption... options) throws IOException {
+  public void setAttribute(Path path, String attribute, Object value, LinkOption... options)
+      throws IOException {
     log.info("setAttribute(path={}, value={}, options={})", path, value, Arrays.toString(options));
     delegate.setAttribute(path, attribute, value, options);
   }
-
 }

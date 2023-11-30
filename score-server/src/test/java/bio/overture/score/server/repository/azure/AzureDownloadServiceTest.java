@@ -13,5 +13,4 @@ public class AzureDownloadServiceTest extends TestCase {
 
     assertEquals("882f579c3ce2390bcac3278e4947ca22", converted);
   }
-
 }

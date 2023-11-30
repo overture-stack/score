@@ -1,46 +1,43 @@
 /*
- * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.                             
- *                                                                                                               
+ * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.
+ *
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
- * You should have received a copy of the GNU General Public License along with                                  
- * this program. If not, see <http://www.gnu.org/licenses/>.                                                     
- *                                                                                                               
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY                           
- * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES                          
- * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT                           
- * SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,                                
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED                          
- * TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;                               
- * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER                              
- * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
+ * You should have received a copy of the GNU General Public License along with
+ * this program. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
+ * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT
+ * SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+ * TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+ * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 package bio.overture.score.client.transport;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 import bio.overture.score.client.progress.Progress;
 import bio.overture.score.client.progress.ProgressDataChannel;
 import bio.overture.score.client.storage.StorageService;
 import bio.overture.score.core.model.DataChannel;
 import bio.overture.score.core.model.Part;
+import java.io.File;
+import java.util.List;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.File;
-import java.util.List;
-
-import static com.google.common.base.Preconditions.checkNotNull;
-
-/**
- * A data transport for sequential upload
- */
+/** A data transport for sequential upload */
 @Slf4j
 public class SequentialPartObjectTransport implements Transport {
 
-  final private StorageService proxy;
-  final private Progress progress;
-  final private List<Part> parts;
-  final private String objectId;
-  final private String uploadId;
+  private final StorageService proxy;
+  private final Progress progress;
+  private final List<Part> parts;
+  private final String objectId;
+  private final String uploadId;
 
   private SequentialPartObjectTransport(SequentialBuilder builder) {
     this.proxy = builder.proxy;
@@ -57,7 +54,8 @@ public class SequentialPartObjectTransport implements Transport {
     for (Part part : parts) {
       log.debug("processing part: {}", part);
       DataChannel channel =
-          new ProgressDataChannel(new FileDataChannel(file, part.getOffset(), part.getPartSize(), null), progress);
+          new ProgressDataChannel(
+              new FileDataChannel(file, part.getOffset(), part.getPartSize(), null), progress);
 
       boolean resend = false;
       if (part.getMd5() != null) {
@@ -88,7 +86,6 @@ public class SequentialPartObjectTransport implements Transport {
   @Override
   public void receive(File file) {
     throw new AssertionError("Please implement it");
-
   }
 
   public static Transport.Builder builder() {
@@ -106,7 +103,5 @@ public class SequentialPartObjectTransport implements Transport {
       checkNotNull(progressBar);
       return new SequentialPartObjectTransport(this);
     }
-
   }
-
 }

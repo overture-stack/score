@@ -1,31 +1,28 @@
 /*
- * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.                             
- *                                                                                                               
+ * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.
+ *
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
- * You should have received a copy of the GNU General Public License along with                                  
- * this program. If not, see <http://www.gnu.org/licenses/>.                                                     
- *                                                                                                               
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY                           
- * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES                          
- * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT                           
- * SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,                                
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED                          
- * TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;                               
- * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER                              
- * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
+ * You should have received a copy of the GNU General Public License along with
+ * this program. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
+ * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT
+ * SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+ * TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+ * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 package bio.overture.score.test;
 
 import static bio.overture.score.test.util.Assertions.assertDirectories;
+import static bio.overture.score.test.util.SpringBootProcess.bootRun;
 import static com.google.common.base.MoreObjects.firstNonNull;
 import static com.google.common.base.Strings.repeat;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static org.assertj.core.api.Assertions.assertThat;
-import static bio.overture.score.test.util.SpringBootProcess.bootRun;
-
-import java.io.File;
-import java.util.List;
 
 import bio.overture.score.test.auth.AuthClient;
 import bio.overture.score.test.fs.FileSystem;
@@ -34,6 +31,10 @@ import bio.overture.score.test.meta.MetadataClient;
 import bio.overture.score.test.mongo.Mongo;
 import bio.overture.score.test.s3.S3;
 import bio.overture.score.test.util.Port;
+import java.io.File;
+import java.util.List;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -41,16 +42,12 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
-
 @Slf4j
 public class PartitionedBucketFallbackIntegrationTest {
 
-  /**
-   * Configuration.
-   */
+  /** Configuration. */
   protected final int authPort = 8443;
+
   protected final int metadataPort = 8444;
   protected final int storagePort = 5431;
 
@@ -61,10 +58,9 @@ public class PartitionedBucketFallbackIntegrationTest {
   final int numBucketPartitions = 5;
   final int bucketKeyLength = 2;
 
-  /**
-   * State.
-   */
+  /** State. */
   final Mongo mongo = new Mongo();
+
   final S3 s3 = new S3();
   protected final FileSystem fs = new FileSystem(new File("target/test"), gnosId);
 
@@ -72,8 +68,7 @@ public class PartitionedBucketFallbackIntegrationTest {
   Process metaServer;
   Process storageServer;
 
-  @Rule
-  public TemporaryFolder s3Root = new TemporaryFolder();
+  @Rule public TemporaryFolder s3Root = new TemporaryFolder();
 
   public PartitionedBucketFallbackIntegrationTest() {
     super();
@@ -135,7 +130,8 @@ public class PartitionedBucketFallbackIntegrationTest {
   }
 
   Process storageServer() {
-    int debugPort = Integer.parseInt(firstNonNull(System.getProperty("storage.server.debugPort"), "-1"));
+    int debugPort =
+        Integer.parseInt(firstNonNull(System.getProperty("storage.server.debugPort"), "-1"));
 
     return bootRun(
         resolveJarFile("score-server"),
@@ -155,7 +151,8 @@ public class PartitionedBucketFallbackIntegrationTest {
   }
 
   Process storageClient(String accessToken, String... args) {
-    int debugPort = Integer.parseInt(firstNonNull(System.getProperty("storage.client.debugPort"), "-1"));
+    int debugPort =
+        Integer.parseInt(firstNonNull(System.getProperty("storage.client.debugPort"), "-1"));
 
     return bootRun(
         resolveJarFile("score-client"),
@@ -195,7 +192,8 @@ public class PartitionedBucketFallbackIntegrationTest {
     bucket.mkdir();
 
     if (!bucket.exists()) {
-      throw new RuntimeException("Unable to create working directory " + s3Root.getAbsolutePath() + name);
+      throw new RuntimeException(
+          "Unable to create working directory " + s3Root.getAbsolutePath() + name);
     }
   }
 
@@ -215,10 +213,15 @@ public class PartitionedBucketFallbackIntegrationTest {
     //
 
     banner("Registering...");
-    val register = metadataClient(accessToken,
-        "-i", fs.getUploadsDir() + "/" + gnosId,
-        "-m", "manifest.txt",
-        "-o", fs.getRootDir().toString());
+    val register =
+        metadataClient(
+            accessToken,
+            "-i",
+            fs.getUploadsDir() + "/" + gnosId,
+            "-m",
+            "manifest.txt",
+            "-o",
+            fs.getRootDir().toString());
     register.waitFor(1, MINUTES);
 
     assertThat(register.exitValue()).isEqualTo(0);
@@ -229,12 +232,13 @@ public class PartitionedBucketFallbackIntegrationTest {
 
     banner("Uploading...");
     for (int status = 0; status < 2; status++) {
-      val upload = storageClient(accessToken,
-          "upload",
-          "--manifest", "src/test/resources/upload-manifest.txt");
+      val upload =
+          storageClient(
+              accessToken, "upload", "--manifest", "src/test/resources/upload-manifest.txt");
       // "--manifest", fs.getRootDir() + "/manifest.txt");
       upload.waitFor(10, MINUTES);
-      assertThat(upload.exitValue()).isEqualTo(status); // First time 0, second time 1 since no --force
+      assertThat(upload.exitValue())
+          .isEqualTo(status); // First time 0, second time 1 since no --force
     }
 
     //
@@ -249,9 +253,7 @@ public class PartitionedBucketFallbackIntegrationTest {
     //
 
     banner("URLing " + entities.get(0));
-    val url = storageClient(accessToken,
-        "url",
-        "--object-id", entities.get(0).getId());
+    val url = storageClient(accessToken, "url", "--object-id", entities.get(0).getId());
     url.waitFor(1, MINUTES);
     assertThat(url.exitValue()).isEqualTo(0);
 
@@ -266,11 +268,16 @@ public class PartitionedBucketFallbackIntegrationTest {
         continue;
       }
 
-      val download = storageClient(accessToken,
-          "download",
-          "--object-id", entity.getId(),
-          "--output-layout", "bundle",
-          "--output-dir", fs.getDownloadsDir().toString());
+      val download =
+          storageClient(
+              accessToken,
+              "download",
+              "--object-id",
+              entity.getId(),
+              "--output-layout",
+              "bundle",
+              "--output-dir",
+              fs.getDownloadsDir().toString());
       download.waitFor(1, MINUTES);
 
       assertThat(download.exitValue()).isEqualTo(0);
@@ -284,18 +291,23 @@ public class PartitionedBucketFallbackIntegrationTest {
 
     val bamFile = getBamFile(entities);
     banner("Viewing " + bamFile);
-    val view = storageClient(accessToken,
-        "view",
-        "--header-only",
-        "--input-file",
-        new File(new File(fs.getDownloadsDir(), bamFile.getGnosId()), bamFile.getFileName()).toString(),
-        "--output-format", "sam");
+    val view =
+        storageClient(
+            accessToken,
+            "view",
+            "--header-only",
+            "--input-file",
+            new File(new File(fs.getDownloadsDir(), bamFile.getGnosId()), bamFile.getFileName())
+                .toString(),
+            "--output-format",
+            "sam");
     view.waitFor(1, MINUTES);
     assertThat(view.exitValue()).isEqualTo(0);
   }
 
   Process authServer() {
-    int debugPort = Integer.parseInt(firstNonNull(System.getProperty("auth.server.debugPort"), "-1"));
+    int debugPort =
+        Integer.parseInt(firstNonNull(System.getProperty("auth.server.debugPort"), "-1"));
 
     return bootRun(
         org.icgc.dcc.auth.server.ServerMain.class,
@@ -308,7 +320,8 @@ public class PartitionedBucketFallbackIntegrationTest {
   }
 
   Process metadataServer() {
-    int debugPort = Integer.parseInt(firstNonNull(System.getProperty("meta.server.debugPort"), "-1"));
+    int debugPort =
+        Integer.parseInt(firstNonNull(System.getProperty("meta.server.debugPort"), "-1"));
 
     return bootRun(
         "dcc-metadata-server",
@@ -325,7 +338,8 @@ public class PartitionedBucketFallbackIntegrationTest {
   }
 
   private Process metadataClient(String accessToken, String... args) {
-    int debugPort = Integer.parseInt(firstNonNull(System.getProperty("meta.client.debugPort"), "-1"));
+    int debugPort =
+        Integer.parseInt(firstNonNull(System.getProperty("meta.client.debugPort"), "-1"));
 
     return bootRun(
         "dcc-metadata-client",
@@ -343,7 +357,10 @@ public class PartitionedBucketFallbackIntegrationTest {
   }
 
   private static Entity getBamFile(List<Entity> entities) {
-    return entities.stream().filter(entity -> entity.getFileName().endsWith(".bam")).findFirst().get();
+    return entities.stream()
+        .filter(entity -> entity.getFileName().endsWith(".bam"))
+        .findFirst()
+        .get();
   }
 
   static boolean isBaiFile(Entity entity) {
@@ -352,7 +369,9 @@ public class PartitionedBucketFallbackIntegrationTest {
 
   static File resolveJarFile(String artifactId) {
     val targetDir = new File("../" + artifactId + "/target");
-    return targetDir.listFiles((File file, String name) -> name.startsWith(artifactId) && name.endsWith(".jar"))[0];
+    return targetDir
+        .listFiles(
+            (File file, String name) -> name.startsWith(artifactId) && name.endsWith(".jar"))[0];
   }
 
   static void waitForPort(int port) {
@@ -366,5 +385,4 @@ public class PartitionedBucketFallbackIntegrationTest {
     log.info(repeat("#", 100));
     log.info("");
   }
-
 }

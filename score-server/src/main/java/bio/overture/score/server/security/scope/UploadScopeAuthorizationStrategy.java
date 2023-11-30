@@ -16,19 +16,22 @@
  */
 package bio.overture.score.server.security.scope;
 
+import static bio.overture.score.server.security.TokenChecker.isExpired;
+import static bio.overture.score.server.util.Scopes.extractGrantedScopes;
+
 import bio.overture.score.server.metadata.MetadataService;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 
-import static bio.overture.score.server.security.TokenChecker.isExpired;
-import static bio.overture.score.server.util.Scopes.extractGrantedScopes;
-
 @Slf4j
 public class UploadScopeAuthorizationStrategy extends AbstractScopeAuthorizationStrategy {
 
-  public UploadScopeAuthorizationStrategy(@NonNull String studyPrefix, @NonNull String studySuffix,
-      @NonNull String systemScope, @NonNull MetadataService metadataService){
+  public UploadScopeAuthorizationStrategy(
+      @NonNull String studyPrefix,
+      @NonNull String studySuffix,
+      @NonNull String systemScope,
+      @NonNull MetadataService metadataService) {
     super(studyPrefix, studySuffix, systemScope, metadataService);
   }
 
@@ -44,5 +47,4 @@ public class UploadScopeAuthorizationStrategy extends AbstractScopeAuthorization
     log.info("Checking study-level authorization for objectId {}", objectId);
     return verifyOneOfStudyScope(grantedScopes, objectId);
   }
-
 }

@@ -1,18 +1,18 @@
 /*
- * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.                             
- *                                                                                                               
+ * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.
+ *
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
- * You should have received a copy of the GNU General Public License along with                                  
- * this program. If not, see <http://www.gnu.org/licenses/>.                                                     
- *                                                                                                               
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY                           
- * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES                          
- * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT                           
- * SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,                                
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED                          
- * TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;                               
- * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER                              
- * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
+ * You should have received a copy of the GNU General Public License along with
+ * this program. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
+ * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT
+ * SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+ * TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+ * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 package bio.overture.score.fs.util;
@@ -30,35 +30,30 @@ import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
 import java.util.Arrays;
 import java.util.LinkedList;
-
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
 
 /**
- * @see https://github.com/semiosis/glusterfs-java-filesystem/blob/f6fbaa27f15d8226f06ca34c51dadc91486e49af/glusterfs-
- * java-filesystem/src/main/java/com/peircean/glusterfs/GlusterPath.java
+ * @see
+ *     https://github.com/semiosis/glusterfs-java-filesystem/blob/f6fbaa27f15d8226f06ca34c51dadc91486e49af/glusterfs-
+ *     java-filesystem/src/main/java/com/peircean/glusterfs/GlusterPath.java
  */
 @Getter
 @RequiredArgsConstructor
 @EqualsAndHashCode(exclude = "pathString")
 public abstract class GenericPath<T extends FileSystem> implements Path {
 
-  /**
-   * Dependencies.
-   */
+  /** Dependencies. */
   protected final T fileSystem;
 
-  /**
-   * Metadata.
-   */
+  /** Metadata. */
   protected final String[] parts;
+
   protected final boolean absolute;
 
-  /**
-   * State.
-   */
+  /** State. */
   protected String pathString;
 
   public GenericPath(T fileSystem, String path) {
@@ -133,9 +128,9 @@ public abstract class GenericPath<T extends FileSystem> implements Path {
     if (absolute && otherPath.isAbsolute() && otherPath.getParts()[0].isEmpty()) {
       return true;
     }
-    String[] thisSuffix = Arrays.copyOfRange(parts, parts.length - otherPath.getParts().length, parts.length);
-    return ((!otherPath.isAbsolute())
-        && (Arrays.equals(thisSuffix, otherPath.getParts())));
+    String[] thisSuffix =
+        Arrays.copyOfRange(parts, parts.length - otherPath.getParts().length, parts.length);
+    return ((!otherPath.isAbsolute()) && (Arrays.equals(thisSuffix, otherPath.getParts())));
   }
 
   @Override
@@ -175,7 +170,8 @@ public abstract class GenericPath<T extends FileSystem> implements Path {
   @Override
   public Path relativize(Path path) {
     if (!fileSystem.equals(path.getFileSystem())) {
-      throw new IllegalArgumentException("Can not relativize other path because it's on a different filesystem");
+      throw new IllegalArgumentException(
+          "Can not relativize other path because it's on a different filesystem");
     }
 
     if (!this.isAbsolute() || !path.isAbsolute()) {
@@ -242,13 +238,15 @@ public abstract class GenericPath<T extends FileSystem> implements Path {
   }
 
   @Override
-  public WatchKey register(WatchService watchService, WatchEvent.Kind<?>[] kinds, WatchEvent.Modifier... modifiers)
+  public WatchKey register(
+      WatchService watchService, WatchEvent.Kind<?>[] kinds, WatchEvent.Modifier... modifiers)
       throws IOException {
     throw new UnsupportedOperationException();
   }
 
   @Override
-  public WatchKey register(WatchService watchService, WatchEvent.Kind<?>... kinds) throws IOException {
+  public WatchKey register(WatchService watchService, WatchEvent.Kind<?>... kinds)
+      throws IOException {
     throw new UnsupportedOperationException();
   }
 
@@ -258,7 +256,8 @@ public abstract class GenericPath<T extends FileSystem> implements Path {
       throw new ClassCastException();
     }
     if (!fileSystem.equals(path.getFileSystem())) {
-      throw new IllegalArgumentException("Can not compare other path because it's on a different filesystem");
+      throw new IllegalArgumentException(
+          "Can not compare other path because it's on a different filesystem");
     }
     GenericPath<?> other = (GenericPath<?>) path;
     String[] otherParts = other.getParts();
@@ -288,5 +287,4 @@ public abstract class GenericPath<T extends FileSystem> implements Path {
       return sb.toString();
     }
   }
-
 }

@@ -1,21 +1,28 @@
 /*
- * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.                             
- *                                                                                                               
+ * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.
+ *
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
- * You should have received a copy of the GNU General Public License along with                                  
- * this program. If not, see <http://www.gnu.org/licenses/>.                                                     
- *                                                                                                               
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY                           
- * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES                          
- * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT                           
- * SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,                                
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED                          
- * TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;                               
- * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER                              
- * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
+ * You should have received a copy of the GNU General Public License along with
+ * this program. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
+ * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT
+ * SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+ * TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+ * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 package bio.overture.score.server.service.download;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.when;
 
 import bio.overture.score.core.util.ObjectKeys;
 import bio.overture.score.core.util.SimplePartCalculator;
@@ -29,6 +36,8 @@ import bio.overture.score.server.repository.s3.S3URLGenerator;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.s3.AmazonS3;
 import com.google.common.base.Splitter;
+import java.net.URL;
+import java.util.regex.Pattern;
 import lombok.val;
 import org.junit.Before;
 import org.junit.Test;
@@ -40,16 +49,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import java.net.URL;
-import java.util.regex.Pattern;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.when;
-
 @RunWith(MockitoJUnitRunner.class)
 @ContextConfiguration(classes = ServerConfig.class)
 public class ObjectDownloadServiceTest extends S3DownloadService {
@@ -58,17 +57,13 @@ public class ObjectDownloadServiceTest extends S3DownloadService {
   private String objectBucketName = "oicr.icgc";
   private String stateBucketName = "oicr.icgc.state";
   private String dataDir = "data";
-  private String objectId = "a82efa12-9aac-558b-9f51-beb21b7a2298"; // length 1 : 10; length2 : 168; length 3 : 2690
+  private String objectId =
+      "a82efa12-9aac-558b-9f51-beb21b7a2298"; // length 1 : 10; length2 : 168; length 3 : 2690
 
-  /**
-   * Dependencies.
-   */
-  @Mock
-  AmazonS3 s3Client;
+  /** Dependencies. */
+  @Mock AmazonS3 s3Client;
 
-  /**
-   * SUT
-   */
+  /** SUT */
   S3DownloadService service = new S3DownloadService();
 
   S3BucketNamingService namingService = new S3BucketNamingService();
@@ -94,10 +89,11 @@ public class ObjectDownloadServiceTest extends S3DownloadService {
     setUpMockService();
   }
 
-  public void setUpMockService(){
+  public void setUpMockService() {
     mockService = mock(MetadataService.class);
     service.setMetadataService(mockService);
-    metadataEntity = MetadataEntity.builder()
+    metadataEntity =
+        MetadataEntity.builder()
             .id(objectId)
             .fileName("file_1")
             .access("open")
@@ -113,8 +109,9 @@ public class ObjectDownloadServiceTest extends S3DownloadService {
     // stubbing appears before the actual execution
     val firstException = new AmazonServiceException("Didn't find Object Id in bucket");
     firstException.setStatusCode(HttpStatus.NOT_FOUND.value());
-    when(s3Client.getObject(Mockito.any())).thenThrow(firstException, firstException); // stubs first two calls to
-                                                                                       // s3Client.getObject()
+    when(s3Client.getObject(Mockito.any()))
+        .thenThrow(firstException, firstException); // stubs first two calls to
+    // s3Client.getObject()
     service.download(objectId, 0, 1000, false, false);
   }
 
@@ -132,16 +129,20 @@ public class ObjectDownloadServiceTest extends S3DownloadService {
 
     // Have to stub out half the universe:
     val urlGen = new S3URLGenerator(this.s3Client);
-    ReflectionTestUtils.setField(urlGen, "s3Client",
-        ObjectDownloadServiceStubFactory.createS3ClientForRadosGW(endpointUrl));
+    ReflectionTestUtils.setField(
+        urlGen, "s3Client", ObjectDownloadServiceStubFactory.createS3ClientForRadosGW(endpointUrl));
     ReflectionTestUtils.setField(service, "urlGenerator", urlGen);
 
-    //Added linient strictness to get around org.mockito.exceptions.misusing.UnnecessaryStubbingException
+    // Added linient strictness to get around
+    // org.mockito.exceptions.misusing.UnnecessaryStubbingException
     Mockito.lenient().when(s3Client.getObject(Mockito.any())).thenThrow(firstException);
 
-    val parts = ObjectDownloadServiceStubFactory.createParts(5); // based on 104857600 size / 20971520 part size
-    val os = ObjectDownloadServiceStubFactory.createObjectSpecification(objectId,
-        ObjectKeys.getObjectKey(dataDir, objectId), 104857600);
+    val parts =
+        ObjectDownloadServiceStubFactory.createParts(
+            5); // based on 104857600 size / 20971520 part size
+    val os =
+        ObjectDownloadServiceStubFactory.createObjectSpecification(
+            objectId, ObjectKeys.getObjectKey(dataDir, objectId), 104857600);
     os.setParts(parts);
 
     os.setRelocated(true); // this is the main test input
@@ -179,16 +180,20 @@ public class ObjectDownloadServiceTest extends S3DownloadService {
 
     // Have to stub out half the universe:
     val urlGen = new S3URLGenerator(this.s3Client);
-    ReflectionTestUtils.setField(urlGen, "s3Client",
-        ObjectDownloadServiceStubFactory.createS3ClientForRadosGW(endpointUrl));
+    ReflectionTestUtils.setField(
+        urlGen, "s3Client", ObjectDownloadServiceStubFactory.createS3ClientForRadosGW(endpointUrl));
     ReflectionTestUtils.setField(service, "urlGenerator", urlGen);
 
-    //Added linient strictness to get around org.mockito.exceptions.misusing.UnnecessaryStubbingException
+    // Added linient strictness to get around
+    // org.mockito.exceptions.misusing.UnnecessaryStubbingException
     Mockito.lenient().when(s3Client.getObject(Mockito.any())).thenThrow(firstException);
 
-    val parts = ObjectDownloadServiceStubFactory.createParts(5); // based on 104857600 size / 20971520 part size
-    val os = ObjectDownloadServiceStubFactory.createObjectSpecification(objectId,
-        ObjectKeys.getObjectKey(dataDir, objectId), 104857600);
+    val parts =
+        ObjectDownloadServiceStubFactory.createParts(
+            5); // based on 104857600 size / 20971520 part size
+    val os =
+        ObjectDownloadServiceStubFactory.createObjectSpecification(
+            objectId, ObjectKeys.getObjectKey(dataDir, objectId), 104857600);
     os.setParts(parts);
 
     os.setRelocated(false); // this is the main test input
@@ -207,7 +212,8 @@ public class ObjectDownloadServiceTest extends S3DownloadService {
       path = path.substring(1, path.length() - 1);
     }
     val bucket = Splitter.on('/').trimResults().omitEmptyStrings().split(path).iterator().next();
-    assertTrue((objectBucketName.length() < bucket.length()) && (bucket.startsWith(objectBucketName)));
+    assertTrue(
+        (objectBucketName.length() < bucket.length()) && (bucket.startsWith(objectBucketName)));
 
     // assert that bucket name ends in a .number
     val pattern = Pattern.compile(".+\\.\\d+$");

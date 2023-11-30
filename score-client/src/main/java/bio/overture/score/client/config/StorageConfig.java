@@ -21,19 +21,16 @@ public class StorageConfig {
   @Value("${kf.download.partSize}")
   private int partSize;
 
-  @Autowired
-  private DownloadStateStore downloadStateStore;
+  @Autowired private DownloadStateStore downloadStateStore;
 
   @Autowired
   @Qualifier("dataTemplate")
   private RestTemplate dataTemplate;
 
-  @Autowired
-  RetryTemplate retry;
+  @Autowired RetryTemplate retry;
 
   @Bean
-  public SimplePartCalculator partCalculator(){
-    return  new SimplePartCalculator(partSize);
+  public SimplePartCalculator partCalculator() {
+    return new SimplePartCalculator(partSize);
   }
-
 }
