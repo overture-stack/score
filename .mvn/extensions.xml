@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<extensions>
+    <extension>
+        <groupId>com.github.gzm55.maven</groupId>
+        <artifactId>project-settings-extension</artifactId>
+        <version>0.1.1</version>
+    </extension>
+</extensions>
