@@ -1,65 +1,61 @@
 /*
- * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.                             
- *                                                                                                               
+ * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.
+ *
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
- * You should have received a copy of the GNU General Public License along with                                  
- * this program. If not, see <http://www.gnu.org/licenses/>.                                                     
- *                                                                                                               
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY                           
- * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES                          
- * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT                           
- * SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,                                
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED                          
- * TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;                               
- * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER                              
- * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
+ * You should have received a copy of the GNU General Public License along with
+ * this program. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
+ * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT
+ * SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+ * TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+ * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 package bio.overture.score.test;
 
 import static bio.overture.score.test.util.Assertions.assertDirectories;
+import static bio.overture.score.test.util.SpringBootProcess.bootRun;
 import static com.google.common.base.MoreObjects.firstNonNull;
 import static com.google.common.base.Strings.repeat;
 import static com.google.common.util.concurrent.Uninterruptibles.sleepUninterruptibly;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
-import static bio.overture.score.test.util.SpringBootProcess.bootRun;
-
-import bio.overture.score.test.fs.FileSystem;
-import bio.overture.score.test.s3.S3;
-import bio.overture.score.test.s3.S3Request;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
-
-import java.io.File;
-import java.util.List;
-import java.util.function.Consumer;
 
 import bio.overture.score.test.auth.AuthClient;
+import bio.overture.score.test.fs.FileSystem;
 import bio.overture.score.test.meta.Entity;
 import bio.overture.score.test.meta.MetadataClient;
 import bio.overture.score.test.mongo.Mongo;
+import bio.overture.score.test.s3.S3;
+import bio.overture.score.test.s3.S3Request;
 import bio.overture.score.test.util.Port;
+import java.io.File;
+import java.util.List;
+import java.util.function.Consumer;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.junit.Rule;
 import org.junit.rules.TemporaryFolder;
 
 @Slf4j
 public abstract class AbstractStorageIntegrationTest {
 
-  /**
-   * Configuration.
-   */
+  /** Configuration. */
   protected final int authPort = 8443;
+
   protected final int metadataPort = 8444;
   protected final int storagePort = 5431;
 
   final String gnosId = "9cedfd57-1ef4-43c0-871c-709bdc87586e";
 
-  /**
-   * State.
-   */
+  /** State. */
   final Mongo mongo = new Mongo();
+
   final S3 s3 = new S3();
 
   protected FileSystem fs;
@@ -68,8 +64,7 @@ public abstract class AbstractStorageIntegrationTest {
   Process metaServer;
   Process storageServer;
 
-  @Rule
-  public TemporaryFolder s3Root = new TemporaryFolder();
+  @Rule public TemporaryFolder s3Root = new TemporaryFolder();
 
   public AbstractStorageIntegrationTest() {
     super();
@@ -140,10 +135,15 @@ public abstract class AbstractStorageIntegrationTest {
     //
 
     banner("Registering...");
-    val register = metadataClient(accessToken,
-        "-i", fs.getUploadsDir() + "/" + gnosId,
-        "-m", "src/test/resources/register-manifest.txt",
-        "-o", fs.getRootDir().toString());
+    val register =
+        metadataClient(
+            accessToken,
+            "-i",
+            fs.getUploadsDir() + "/" + gnosId,
+            "-m",
+            "src/test/resources/register-manifest.txt",
+            "-o",
+            fs.getRootDir().toString());
     register.waitFor(1, MINUTES);
 
     assertThat(register.exitValue()).isEqualTo(0);
@@ -154,13 +154,17 @@ public abstract class AbstractStorageIntegrationTest {
 
     banner("Uploading...");
     for (int status = 0; status < 2; status++) {
-      val upload = storageClient(accessToken,
-          "upload",
-          "--verify-connection",
-          "false",
-          "--manifest", fs.getRootDir() + "/" + gnosId); // GNOS id from manifest file
+      val upload =
+          storageClient(
+              accessToken,
+              "upload",
+              "--verify-connection",
+              "false",
+              "--manifest",
+              fs.getRootDir() + "/" + gnosId); // GNOS id from manifest file
       upload.waitFor(3, MINUTES);
-      assertThat(upload.exitValue()).isEqualTo(status); // First time 0, second time 1 since no --force
+      assertThat(upload.exitValue())
+          .isEqualTo(status); // First time 0, second time 1 since no --force
     }
 
     //
@@ -175,9 +179,7 @@ public abstract class AbstractStorageIntegrationTest {
     //
 
     banner("URLing " + entities.get(0));
-    val url = storageClient(accessToken,
-        "url",
-        "--object-id", entities.get(0).getId());
+    val url = storageClient(accessToken, "url", "--object-id", entities.get(0).getId());
     url.waitFor(1, MINUTES);
     assertThat(url.exitValue()).isEqualTo(0);
 
@@ -193,13 +195,18 @@ public abstract class AbstractStorageIntegrationTest {
         continue;
       }
 
-      val download = storageClient(accessToken,
-          "download",
-          "--verify-connection",
-          "false",
-          "--object-id", entity.getId(),
-          "--output-layout", "bundle",
-          "--output-dir", fs.getDownloadsDir().toString());
+      val download =
+          storageClient(
+              accessToken,
+              "download",
+              "--verify-connection",
+              "false",
+              "--object-id",
+              entity.getId(),
+              "--output-layout",
+              "bundle",
+              "--output-dir",
+              fs.getDownloadsDir().toString());
       download.waitFor(1, MINUTES);
 
       assertThat(download.exitValue()).isEqualTo(0);
@@ -213,14 +220,18 @@ public abstract class AbstractStorageIntegrationTest {
 
     val bamFile = getBamFile(entities);
     banner("Viewing " + bamFile);
-    val view = storageClient(accessToken,
-        "view",
-        "--verify-connection",
-        "false",
-        "--header-only",
-        "--input-file",
-        new File(new File(fs.getDownloadsDir(), bamFile.getGnosId()), bamFile.getFileName()).toString(),
-        "--output-format", "sam");
+    val view =
+        storageClient(
+            accessToken,
+            "view",
+            "--verify-connection",
+            "false",
+            "--header-only",
+            "--input-file",
+            new File(new File(fs.getDownloadsDir(), bamFile.getGnosId()), bamFile.getFileName())
+                .toString(),
+            "--output-format",
+            "sam");
     view.waitFor(1, MINUTES);
     assertThat(view.exitValue()).isEqualTo(0);
 
@@ -229,7 +240,8 @@ public abstract class AbstractStorageIntegrationTest {
   }
 
   Process authServer() {
-    int debugPort = Integer.parseInt(firstNonNull(System.getProperty("auth.server.debugPort"), "-1"));
+    int debugPort =
+        Integer.parseInt(firstNonNull(System.getProperty("auth.server.debugPort"), "-1"));
 
     return bootRun(
         "dcc-auth-server",
@@ -246,7 +258,8 @@ public abstract class AbstractStorageIntegrationTest {
   }
 
   Process metadataServer() {
-    int debugPort = Integer.parseInt(firstNonNull(System.getProperty("meta.server.debugPort"), "-1"));
+    int debugPort =
+        Integer.parseInt(firstNonNull(System.getProperty("meta.server.debugPort"), "-1"));
 
     return bootRun(
         "dcc-metadata-server",
@@ -263,7 +276,8 @@ public abstract class AbstractStorageIntegrationTest {
   }
 
   private Process metadataClient(String accessToken, String... args) {
-    int debugPort = Integer.parseInt(firstNonNull(System.getProperty("meta.client.debugPort"), "-1"));
+    int debugPort =
+        Integer.parseInt(firstNonNull(System.getProperty("meta.client.debugPort"), "-1"));
 
     return bootRun(
         "dcc-metadata-client",
@@ -281,7 +295,10 @@ public abstract class AbstractStorageIntegrationTest {
   }
 
   static Entity getBamFile(List<Entity> entities) {
-    return entities.stream().filter(entity -> entity.getFileName().endsWith(".bam")).findFirst().get();
+    return entities.stream()
+        .filter(entity -> entity.getFileName().endsWith(".bam"))
+        .findFirst()
+        .get();
   }
 
   Consumer<S3Request> delayDownload(String objectId, int delaySeconds) {
@@ -291,7 +308,10 @@ public abstract class AbstractStorageIntegrationTest {
         s3.reset();
 
         // Delay
-        log.info("\n\n\n*** Delaying response for {} seconds... request = {}\n\n\n", delaySeconds, request);
+        log.info(
+            "\n\n\n*** Delaying response for {} seconds... request = {}\n\n\n",
+            delaySeconds,
+            request);
         sleepUninterruptibly(delaySeconds, SECONDS);
         log.info("\n\n\n*** Delay complete\n\n\n");
       }
@@ -313,5 +333,4 @@ public abstract class AbstractStorageIntegrationTest {
     log.info(repeat("#", 100));
     log.info("");
   }
-
 }

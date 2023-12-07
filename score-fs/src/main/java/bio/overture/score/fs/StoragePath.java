@@ -1,22 +1,24 @@
 /*
- * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.                             
- *                                                                                                               
+ * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.
+ *
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
- * You should have received a copy of the GNU General Public License along with                                  
- * this program. If not, see <http://www.gnu.org/licenses/>.                                                     
- *                                                                                                               
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY                           
- * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES                          
- * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT                           
- * SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,                                
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED                          
- * TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;                               
- * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER                              
- * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
+ * You should have received a copy of the GNU General Public License along with
+ * this program. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
+ * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT
+ * SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+ * TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+ * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 package bio.overture.score.fs;
 
+import bio.overture.score.core.model.IndexFileType;
+import bio.overture.score.fs.util.GenericPath;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -24,15 +26,12 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
-
-import bio.overture.score.core.model.IndexFileType;
-import bio.overture.score.fs.util.GenericPath;
-
 import lombok.val;
 
 /**
- * @see https://github.com/semiosis/glusterfs-java-filesystem/blob/f6fbaa27f15d8226f06ca34c51dadc91486e49af/glusterfs-
- * java-filesystem/src/main/java/com/peircean/glusterfs/GlusterPath.java
+ * @see
+ *     https://github.com/semiosis/glusterfs-java-filesystem/blob/f6fbaa27f15d8226f06ca34c51dadc91486e49af/glusterfs-
+ *     java-filesystem/src/main/java/com/peircean/glusterfs/GlusterPath.java
  */
 public class StoragePath extends GenericPath<StorageFileSystem> {
 
@@ -123,7 +122,8 @@ public class StoragePath extends GenericPath<StorageFileSystem> {
           return null;
         }
       } else {
-        return new StoragePath(fileSystem, Arrays.copyOfRange(parts, 0, parts.length - 1), absolute);
+        return new StoragePath(
+            fileSystem, Arrays.copyOfRange(parts, 0, parts.length - 1), absolute);
       }
     } else if (layout == StorageFileLayout.OBJECT_ID) {
       if (parts.length <= 1) {
@@ -133,7 +133,8 @@ public class StoragePath extends GenericPath<StorageFileSystem> {
           return null;
         }
       } else {
-        return new StoragePath(fileSystem, Arrays.copyOfRange(parts, 0, parts.length - 1), absolute);
+        return new StoragePath(
+            fileSystem, Arrays.copyOfRange(parts, 0, parts.length - 1), absolute);
       }
     }
 
@@ -169,8 +170,12 @@ public class StoragePath extends GenericPath<StorageFileSystem> {
 
   @Override
   public Path getName(int i) {
-    if (i < 0 || i >= parts.length
-        || (0 == i && parts.length <= 1 && layout == StorageFileLayout.BUNDLE && getGnosId().isEmpty())) {
+    if (i < 0
+        || i >= parts.length
+        || (0 == i
+            && parts.length <= 1
+            && layout == StorageFileLayout.BUNDLE
+            && getGnosId().isEmpty())) {
       throw new IllegalArgumentException("Invalid name index");
     }
     return createPath(fileSystem, Arrays.copyOfRange(parts, 0, i + 1), absolute);
@@ -179,8 +184,10 @@ public class StoragePath extends GenericPath<StorageFileSystem> {
   @Override
   public Path subpath(int i, int i2) {
     if ((0 == i && parts.length <= 1 && layout == StorageFileLayout.BUNDLE && getGnosId().isEmpty())
-        || i < 0 || i2 < 0
-        || i >= parts.length || i2 > parts.length
+        || i < 0
+        || i2 < 0
+        || i >= parts.length
+        || i2 > parts.length
         || i > i2) {
       throw new IllegalArgumentException("invalid indices");
     }
@@ -191,7 +198,8 @@ public class StoragePath extends GenericPath<StorageFileSystem> {
   public Path resolve(Path path) {
     val otherPath = (StoragePath) path;
     if (!fileSystem.equals(otherPath.getFileSystem())) {
-      throw new IllegalArgumentException("Can not resolve other path because it's on a different filesystem");
+      throw new IllegalArgumentException(
+          "Can not resolve other path because it's on a different filesystem");
     }
 
     if (otherPath.isAbsolute() || (absolute && parts.length == 1 && getGnosId().isEmpty())) {
@@ -237,7 +245,8 @@ public class StoragePath extends GenericPath<StorageFileSystem> {
   }
 
   @Override
-  protected GenericPath<?> createPath(StorageFileSystem fileSystem, String[] parts, boolean absolute) {
+  protected GenericPath<?> createPath(
+      StorageFileSystem fileSystem, String[] parts, boolean absolute) {
     return new StoragePath(fileSystem, parts, absolute);
   }
 
@@ -245,5 +254,4 @@ public class StoragePath extends GenericPath<StorageFileSystem> {
   protected GenericPath<?> createPath(StorageFileSystem fileSystem, String path) {
     return new StoragePath(fileSystem, path);
   }
-
 }

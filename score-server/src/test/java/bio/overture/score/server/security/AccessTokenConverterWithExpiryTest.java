@@ -1,13 +1,12 @@
 package bio.overture.score.server.security;
 
-import lombok.val;
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Set;
 import java.util.TreeMap;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import lombok.val;
+import org.junit.Test;
 
 public class AccessTokenConverterWithExpiryTest {
   @Test

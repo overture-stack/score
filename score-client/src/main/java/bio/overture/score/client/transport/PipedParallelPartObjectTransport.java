@@ -1,18 +1,18 @@
 /*
- * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.                             
- *                                                                                                               
+ * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.
+ *
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
- * You should have received a copy of the GNU General Public License along with                                  
- * this program. If not, see <http://www.gnu.org/licenses/>.                                                     
- *                                                                                                               
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY                           
- * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES                          
- * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT                           
- * SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,                                
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED                          
- * TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;                               
- * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER                              
- * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
+ * You should have received a copy of the GNU General Public License along with
+ * this program. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
+ * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT
+ * SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+ * TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+ * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 package bio.overture.score.client.transport;
@@ -23,17 +23,14 @@ import bio.overture.score.core.model.Part;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteSource;
 import com.google.common.io.Files;
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
-
 import java.io.File;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.util.concurrent.*;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 
-/**
- * A data transport using piped input channels for parallel upload
- */
+/** A data transport using piped input channels for parallel upload */
 @Slf4j
 public class PipedParallelPartObjectTransport extends ParallelPartObjectTransport {
 
@@ -53,20 +50,23 @@ public class PipedParallelPartObjectTransport extends ParallelPartObjectTranspor
       final PipedOutputStream pos = new PipedOutputStream();
       final PipedInputStream pis = new PipedInputStream(pos, (int) part.getPartSize());
 
-      results.add(executor.submit(new Callable<Part>() {
+      results.add(
+          executor.submit(
+              new Callable<Part>() {
 
-        @Override
-        public Part call() throws Exception {
-          DataChannel dataChannel =
-              new ProgressDataChannel(new PipedDataChannel(pis, 0, part.getPartSize(), null), progress);
-          progress.startTransfer();
-          proxy.uploadPart(dataChannel, part, objectId, uploadId);
-          // progress.incrementByteWritten(part.getPartSize());
-          progress.incrementParts(1);
-          memory.addAndGet(part.getPartSize());
-          return part;
-        }
-      }));
+                @Override
+                public Part call() throws Exception {
+                  DataChannel dataChannel =
+                      new ProgressDataChannel(
+                          new PipedDataChannel(pis, 0, part.getPartSize(), null), progress);
+                  progress.startTransfer();
+                  proxy.uploadPart(dataChannel, part, objectId, uploadId);
+                  // progress.incrementByteWritten(part.getPartSize());
+                  progress.incrementParts(1);
+                  memory.addAndGet(part.getPartSize());
+                  return part;
+                }
+              }));
 
       ByteSource source = Files.asByteSource(file);
       source.slice(part.getOffset(), part.getPartSize()).copyTo(pos);
@@ -89,7 +89,6 @@ public class PipedParallelPartObjectTransport extends ParallelPartObjectTranspor
       throw e;
     }
     progress.end(false);
-
   }
 
   public static LocalParallelBuilder builder() {
@@ -103,7 +102,5 @@ public class PipedParallelPartObjectTransport extends ParallelPartObjectTranspor
       checkArgumentsNotNull();
       return new PipedParallelPartObjectTransport(this);
     }
-
   }
-
 }

@@ -18,24 +18,22 @@
 
 package bio.overture.score.client.encryption;
 
-import lombok.NonNull;
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
-import lombok.val;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-
-import javax.annotation.PostConstruct;
-import javax.crypto.BadPaddingException;
-import javax.crypto.Cipher;
-import javax.crypto.IllegalBlockSizeException;
 import java.io.UnsupportedEncodingException;
 import java.security.*;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
 import java.util.Optional;
-
+import javax.annotation.PostConstruct;
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import lombok.NonNull;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
@@ -44,9 +42,10 @@ public class TokenEncryptionService {
   Constants
   */
   private static final String KEY_ALGORITHM = "RSA";
+
   /*
-    Dependencies
-   */
+   Dependencies
+  */
   @Value("${token.public-key}")
   private String encodedPubKey;
 
@@ -57,28 +56,27 @@ public class TokenEncryptionService {
 
   @PostConstruct
   @SneakyThrows
-  private void init(){
+  private void init() {
     val keyFactory = KeyFactory.getInstance(KEY_ALGORITHM);
     try {
-      val decodedPub =  Base64.getDecoder().decode(encodedPubKey);
+      val decodedPub = Base64.getDecoder().decode(encodedPubKey);
       X509EncodedKeySpec pubKeySpec = new X509EncodedKeySpec(decodedPub);
       val publicKey = keyFactory.generatePublic(pubKeySpec);
       cipher = Cipher.getInstance(KEY_ALGORITHM);
       cipher.init(Cipher.PUBLIC_KEY, publicKey);
-    } catch (InvalidKeySpecException specEx){
+    } catch (InvalidKeySpecException specEx) {
       log.error("Error loading keys:{}", specEx);
     }
   }
 
-
-  public Optional<String> encryptAccessToken(@NonNull String accessToken){
+  public Optional<String> encryptAccessToken(@NonNull String accessToken) {
     try {
-      val encryptedBytes = Base64.getEncoder().encode(cipher.doFinal(accessToken.getBytes("UTF-8")));
-      return Optional.of(new String(encryptedBytes,"UTF-8"));
-    } catch (IllegalBlockSizeException | BadPaddingException | UnsupportedEncodingException e ) {
+      val encryptedBytes =
+          Base64.getEncoder().encode(cipher.doFinal(accessToken.getBytes("UTF-8")));
+      return Optional.of(new String(encryptedBytes, "UTF-8"));
+    } catch (IllegalBlockSizeException | BadPaddingException | UnsupportedEncodingException e) {
       log.error("Error encrypting Access token:{}", e);
       return Optional.empty();
     }
   }
 }
-

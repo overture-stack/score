@@ -1,5 +1,7 @@
 package bio.overture.score.server.config;
 
+import static springfox.documentation.builders.RequestHandlerSelectors.basePackage;
+
 import lombok.Getter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -10,8 +12,6 @@ import springfox.documentation.spi.DocumentationType;
 import springfox.documentation.spring.web.paths.RelativePathProvider;
 import springfox.documentation.spring.web.plugins.Docket;
 import springfox.documentation.swagger2.annotations.EnableSwagger2;
-
-import static springfox.documentation.builders.RequestHandlerSelectors.basePackage;
 
 @EnableSwagger2
 @Configuration
@@ -35,27 +35,25 @@ public class SwaggerConfig {
   @Bean
   public Docket api() {
     return new Docket(DocumentationType.SWAGGER_2)
-      .apiInfo(apiInfo())
-      .select()
-      .apis(basePackage("bio.overture.score.server.controller"))
-      .build()
-      .host(swaggerHost)
-      .pathProvider(
-        new RelativePathProvider(null) {
-          @Override
-          public String getApplicationBasePath() {
-            return basePath;
-          }
-        });
+        .apiInfo(apiInfo())
+        .select()
+        .apis(basePackage("bio.overture.score.server.controller"))
+        .build()
+        .host(swaggerHost)
+        .pathProvider(
+            new RelativePathProvider(null) {
+              @Override
+              public String getApplicationBasePath() {
+                return basePath;
+              }
+            });
   }
 
   private ApiInfo apiInfo() {
     return new ApiInfoBuilder()
-      .title("Score API")
-      .description(
-        "Score API reference for developers.")
-      .version(serverVersion)
-      .build();
+        .title("Score API")
+        .description("Score API reference for developers.")
+        .version(serverVersion)
+        .build();
   }
-
 }

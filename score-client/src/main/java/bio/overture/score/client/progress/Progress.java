@@ -1,41 +1,34 @@
 package bio.overture.score.client.progress;
 
-import bio.overture.score.client.cli.Terminal;
-import com.google.common.base.Stopwatch;
-import lombok.extern.slf4j.Slf4j;
-import lombok.val;
-
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
-
 import static bio.overture.score.client.util.Formats.*;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
-/**
- * Progress bar for keeping track of the upload/download progress.
- */
+import bio.overture.score.client.cli.Terminal;
+import com.google.common.base.Stopwatch;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+
+/** Progress bar for keeping track of the upload/download progress. */
 @Slf4j
 public class Progress {
 
-  /**
-   * Constants.
-   */
+  /** Constants. */
   private static final long DISPLAY_INTERVAL = 1L;
 
-  /**
-   * Configuration.
-   */
+  /** Configuration. */
   private final boolean quiet;
+
   private final int totalParts;
   private final int totalChecksumParts;
 
-  /**
-   * State - Metrics.
-   */
+  /** State - Metrics. */
   private final AtomicInteger completedParts = new AtomicInteger(0);
+
   private volatile long partsPercent;
 
   private final AtomicInteger completedChecksumParts = new AtomicInteger(0);
@@ -47,16 +40,13 @@ public class Progress {
   private final AtomicLong bytesWritten = new AtomicLong(0);
   private volatile long bytesWrittenPerSec;
 
-  /**
-   * State - Other.
-   */
+  /** State - Other. */
   private final Stopwatch stopwatch = Stopwatch.createUnstarted();
+
   private volatile ScheduledExecutorService progressMonitor;
   private volatile boolean isTransferStarted;
 
-  /**
-   * Dependencies.
-   */
+  /** Dependencies. */
   private final Terminal terminal;
 
   public Progress(Terminal terminal, boolean quiet, int totalParts, int completedParts) {
@@ -70,7 +60,8 @@ public class Progress {
 
   public void start() {
     progressMonitor = Executors.newSingleThreadScheduledExecutor();
-    progressMonitor.scheduleWithFixedDelay(this::display, DISPLAY_INTERVAL, DISPLAY_INTERVAL, SECONDS);
+    progressMonitor.scheduleWithFixedDelay(
+        this::display, DISPLAY_INTERVAL, DISPLAY_INTERVAL, SECONDS);
   }
 
   public synchronized void startTransfer() {
@@ -103,17 +94,24 @@ public class Progress {
 
   public void end(boolean incomplete) {
     if (incomplete) {
-      terminal
-          .println(terminal.error("Data transfer has been interrupted. Some parts are missing. Waiting to retry..."));
+      terminal.println(
+          terminal.error(
+              "Data transfer has been interrupted. Some parts are missing. Waiting to retry..."));
     }
 
     terminal
         .println(
-            terminal.label("Total execution time") + ": " + terminal.value(String.format("%15s", stopwatch.toString())))
-        .println(terminal.label("Total bytes read    ") + ": "
-            + terminal.value(String.format("%15s", formatCount(bytesRead.get()))))
-        .println(terminal.label("Total bytes written ") + ": "
-            + terminal.value(String.format("%15s", formatCount(bytesWritten.get()))));
+            terminal.label("Total execution time")
+                + ": "
+                + terminal.value(String.format("%15s", stopwatch.toString())))
+        .println(
+            terminal.label("Total bytes read    ")
+                + ": "
+                + terminal.value(String.format("%15s", formatCount(bytesRead.get()))))
+        .println(
+            terminal.label("Total bytes written ")
+                + ": "
+                + terminal.value(String.format("%15s", formatCount(bytesWritten.get()))));
   }
 
   public void incrementParts(int partCount) {
@@ -137,9 +135,10 @@ public class Progress {
       return;
     }
 
-    val bar = new StringBuilder("\r")
-        .append(terminal.value(String.format("%3s", partsPercent)))
-        .append("% [");
+    val bar =
+        new StringBuilder("\r")
+            .append(terminal.value(String.format("%3s", partsPercent)))
+            .append("% [");
 
     val scale = 0.5f;
 
@@ -154,8 +153,7 @@ public class Progress {
       }
     }
 
-    bar
-        .append("] ")
+    bar.append("] ")
         .append(" ")
         .append(terminal.label("Parts"))
         .append(": ")
@@ -178,8 +176,7 @@ public class Progress {
         .append("/s");
 
     val padding = 4;
-    for (int i = 0; i < padding; i++)
-      bar.append(" ");
+    for (int i = 0; i < padding; i++) bar.append(" ");
 
     terminal.print(bar.toString());
   }
@@ -187,5 +184,4 @@ public class Progress {
   private long duration() {
     return stopwatch.elapsed(MILLISECONDS) + 1;
   }
-
 }

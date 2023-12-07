@@ -1,7 +1,6 @@
 /**
  * Adapted from https://docs.aws.amazon.com/AmazonS3/latest/dev/ShareObjectPreSignedURLJavaSDK.html
  */
-
 package bio.overture.score.client.command;
 
 import com.amazonaws.AmazonServiceException;
@@ -12,10 +11,9 @@ import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest;
-import lombok.AllArgsConstructor;
-
 import java.io.IOException;
 import java.net.URL;
+import lombok.AllArgsConstructor;
 
 @AllArgsConstructor
 public class PresignedURLGenerator {
@@ -23,13 +21,14 @@ public class PresignedURLGenerator {
   private String credentialsFile;
 
   public URL generateUrl(String bucketName, String objectKey) throws IOException {
-    String signingRegion="";
+    String signingRegion = "";
     try {
-      AmazonS3 s3Client = AmazonS3ClientBuilder
-        .standard()
-        .withCredentials(new ProfileCredentialsProvider(credentialsFile, "test"))
-        .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(endpoint,signingRegion))
-        .build();
+      AmazonS3 s3Client =
+          AmazonS3ClientBuilder.standard()
+              .withCredentials(new ProfileCredentialsProvider(credentialsFile, "test"))
+              .withEndpointConfiguration(
+                  new AwsClientBuilder.EndpointConfiguration(endpoint, signingRegion))
+              .build();
 
       // Set the presigned URL to expire after one hour.
       java.util.Date expiration = new java.util.Date();
@@ -39,11 +38,11 @@ public class PresignedURLGenerator {
 
       // Generate the presigned URL.
       GeneratePresignedUrlRequest generatePresignedUrlRequest =
-        new GeneratePresignedUrlRequest(bucketName, objectKey)
-          .withMethod(HttpMethod.GET)
-          .withExpiration(expiration);
+          new GeneratePresignedUrlRequest(bucketName, objectKey)
+              .withMethod(HttpMethod.GET)
+              .withExpiration(expiration);
       URL url = s3Client.generatePresignedUrl(generatePresignedUrlRequest);
-      return(url);
+      return (url);
     } catch (AmazonServiceException e) {
       // The call was transmitted successfully, but Amazon S3 couldn't process
       // it, so it returned an error response.

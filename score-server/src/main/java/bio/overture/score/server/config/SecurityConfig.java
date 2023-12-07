@@ -21,6 +21,11 @@ import bio.overture.score.server.metadata.MetadataService;
 import bio.overture.score.server.properties.ScopeProperties;
 import bio.overture.score.server.security.scope.DownloadScopeAuthorizationStrategy;
 import bio.overture.score.server.security.scope.UploadScopeAuthorizationStrategy;
+import java.io.IOException;
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,17 +40,10 @@ import org.springframework.security.oauth2.provider.authentication.TokenExtracto
 import org.springframework.security.web.authentication.preauth.AbstractPreAuthenticatedProcessingFilter;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-
 /**
  * Resource service configuration file.<br>
  * Protects resources with access token obtained at the authorization server.
  */
-
 @Slf4j
 @Configuration
 @Profile("secure")
@@ -64,44 +62,50 @@ public class SecurityConfig extends ResourceServerConfigurerAdapter {
 
   @Override
   public void configure(@NonNull HttpSecurity http) throws Exception {
-    http.addFilterAfter(new OncePerRequestFilter() {
+    http.addFilterAfter(
+        new OncePerRequestFilter() {
 
-      @Override
+          @Override
+          protected void doFilterInternal(
+              @NonNull HttpServletRequest request,
+              @NonNull HttpServletResponse response,
+              @NonNull FilterChain filterChain)
+              throws ServletException, IOException {
 
-      protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response,
-        @NonNull FilterChain filterChain)
-        throws ServletException, IOException {
-
-        // We don't want to allow access to a resource with no token so clear
-        // the security context in case it is actually an OAuth2Authentication
-        if (tokenExtractor.extract(request) == null) {
-          SecurityContextHolder.clearContext();
-        }
-        filterChain.doFilter(request, response);
-      }
-
-    }, AbstractPreAuthenticatedProcessingFilter.class);
+            // We don't want to allow access to a resource with no token so clear
+            // the security context in case it is actually an OAuth2Authentication
+            if (tokenExtractor.extract(request) == null) {
+              SecurityContextHolder.clearContext();
+            }
+            filterChain.doFilter(request, response);
+          }
+        },
+        AbstractPreAuthenticatedProcessingFilter.class);
 
     http.csrf().disable();
     configureAuthorization(http);
   }
 
   private void configureAuthorization(HttpSecurity http) throws Exception {
-    scopeProperties.logScopeProperties();;
+    scopeProperties.logScopeProperties();
+    ;
 
-    // @formatter:off     
-    http
-      .authorizeRequests()
-      .antMatchers("/health").permitAll()
-      .antMatchers("/actuator/health").permitAll()
-      .antMatchers("/upload/**").permitAll()
-      .antMatchers("/download/**").permitAll()
-      .antMatchers("/swagger**", "/swagger-resources/**", "/v2/api**", "/webjars/**")
-      .permitAll()
-      .and()
-      
-      .authorizeRequests()
-      .anyRequest().authenticated();
+    // @formatter:off
+    http.authorizeRequests()
+        .antMatchers("/health")
+        .permitAll()
+        .antMatchers("/actuator/health")
+        .permitAll()
+        .antMatchers("/upload/**")
+        .permitAll()
+        .antMatchers("/download/**")
+        .permitAll()
+        .antMatchers("/swagger**", "/swagger-resources/**", "/v2/api**", "/webjars/**")
+        .permitAll()
+        .and()
+        .authorizeRequests()
+        .anyRequest()
+        .authenticated();
     // @formatter:on
     log.info("initialization done");
   }
@@ -112,7 +116,7 @@ public class SecurityConfig extends ResourceServerConfigurerAdapter {
         scopeProperties.getUpload().getStudy().getPrefix(),
         scopeProperties.getUpload().getStudy().getSuffix(),
         scopeProperties.getUpload().getSystem(),
-         song);
+        song);
   }
 
   @Bean
@@ -125,6 +129,7 @@ public class SecurityConfig extends ResourceServerConfigurerAdapter {
         song);
   }
 
-  public ScopeProperties getScopeProperties() { return this.scopeProperties; }
-
+  public ScopeProperties getScopeProperties() {
+    return this.scopeProperties;
+  }
 }

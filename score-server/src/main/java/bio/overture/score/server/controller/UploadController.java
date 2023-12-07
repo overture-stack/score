@@ -1,33 +1,35 @@
 /*
- * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.                             
- *                                                                                                               
+ * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.
+ *
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
- * You should have received a copy of the GNU General Public License along with                                  
- * this program. If not, see <http://www.gnu.org/licenses/>.                                                     
- *                                                                                                               
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY                           
- * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES                          
- * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT                           
- * SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,                                
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED                          
- * TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;                               
- * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER                              
- * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
+ * You should have received a copy of the GNU General Public License along with
+ * this program. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
+ * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT
+ * SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+ * TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+ * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 package bio.overture.score.server.controller;
 
+import bio.overture.score.core.model.ObjectSpecification;
+import bio.overture.score.core.model.UploadProgress;
+import bio.overture.score.server.repository.UploadService;
+import bio.overture.score.server.security.TokenHasher;
+import bio.overture.score.server.util.HttpServletRequests;
+import com.google.common.base.Stopwatch;
 import java.io.IOException;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
-
 import javax.servlet.http.HttpServletRequest;
-
-import bio.overture.score.core.model.ObjectSpecification;
-import bio.overture.score.core.model.UploadProgress;
-import bio.overture.score.server.util.HttpServletRequests;
-import bio.overture.score.server.repository.UploadService;
-import bio.overture.score.server.security.TokenHasher;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpHeaders;
@@ -45,31 +47,23 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.google.common.base.Stopwatch;
-
-import lombok.Setter;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
-
-/**
- * A controller to expose RESTful API for upload
- */
+/** A controller to expose RESTful API for upload */
 @Setter
 @RestController
 @RequestMapping("/upload")
 @Slf4j
-@Profile({ "prod", "default", "debug" })
+@Profile({"prod", "default", "debug"})
 public class UploadController {
 
-  @Autowired
-  UploadService uploadService;
+  @Autowired UploadService uploadService;
 
   @ProjectCodeScoped
   @RequestMapping(method = RequestMethod.POST, value = "/{object-id}/uploads")
   public @ResponseBody ObjectSpecification initializeMultipartUpload(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "object-id") String objectId,
-      @RequestParam(value = "overwrite", required = false, defaultValue = "false") boolean overwrite,
+      @RequestParam(value = "overwrite", required = false, defaultValue = "false")
+          boolean overwrite,
       @RequestParam(value = "fileSize", required = true) long fileSize,
       @RequestParam(value = "md5", required = false) String md5,
       @RequestHeader(value = "User-Agent", defaultValue = "unknown") String userAgent,
@@ -105,7 +99,10 @@ public class UploadController {
         "Initiating delete of object id {} part# {} (upload id {}); with access token {} from {} using client version {}",
         objectId,
         partNumber,
-        uploadId, TokenHasher.hashToken(accessToken), ipAddress, userAgent);
+        uploadId,
+        TokenHasher.hashToken(accessToken),
+        ipAddress,
+        userAgent);
     uploadService.deletePart(objectId, uploadId, partNumber);
   }
 
@@ -156,7 +153,8 @@ public class UploadController {
 
   @ProjectCodeScoped
   @RequestMapping(method = RequestMethod.GET, value = "/{object-id}")
-  public @ResponseBody Boolean isObjectExist(@RequestHeader(HttpHeaders.AUTHORIZATION) final String accessToken,
+  public @ResponseBody Boolean isObjectExist(
+      @RequestHeader(HttpHeaders.AUTHORIZATION) final String accessToken,
       @PathVariable("object-id") String objectId) {
     return uploadService.exists(objectId);
   }
@@ -164,7 +162,8 @@ public class UploadController {
   @ProjectCodeScoped
   @RequestMapping(method = RequestMethod.DELETE, value = "/{object-id}")
   @ResponseStatus(value = HttpStatus.OK)
-  public void cancelUpload(@RequestHeader(HttpHeaders.AUTHORIZATION) final String accessToken,
+  public void cancelUpload(
+      @RequestHeader(HttpHeaders.AUTHORIZATION) final String accessToken,
       @PathVariable("object-id") String objectId) {
     uploadService.cancelUpload(objectId, uploadService.getUploadId(objectId));
   }
@@ -172,8 +171,7 @@ public class UploadController {
   @ProjectCodeScoped
   @RequestMapping(method = RequestMethod.POST, value = "/cancel")
   @ResponseStatus(value = HttpStatus.OK)
-  public void cancelAll()
-      throws IOException {
+  public void cancelAll() throws IOException {
     uploadService.cancelUploads();
   }
 
@@ -189,20 +187,19 @@ public class UploadController {
 
   /**
    * Exception handler specific to the Spring Security processing in this controller
+   *
    * @return Error if Spring Security policies are violated
    */
-  @ExceptionHandler({ AccessDeniedException.class })
-  public ResponseEntity<Object> handleAccessDeniedException(HttpServletRequest req, AccessDeniedException ex) {
+  @ExceptionHandler({AccessDeniedException.class})
+  public ResponseEntity<Object> handleAccessDeniedException(
+      HttpServletRequest req, AccessDeniedException ex) {
     log.error("Token missing required scope to update project");
-    return new ResponseEntity<Object>("Token missing required scope to update project", new HttpHeaders(),
-        HttpStatus.FORBIDDEN);
+    return new ResponseEntity<Object>(
+        "Token missing required scope to update project", new HttpHeaders(), HttpStatus.FORBIDDEN);
   }
 
-  /**
-   * Method Security Meta Annotation
-   */
+  /** Method Security Meta Annotation */
   @Retention(RetentionPolicy.RUNTIME)
   @PreAuthorize("@projectSecurity.authorize(authentication,#objectId)")
-  public @interface ProjectCodeScoped {
-  }
+  public @interface ProjectCodeScoped {}
 }
