@@ -2,11 +2,10 @@ package bio.overture.score.server.util;
 
 import static lombok.AccessLevel.PRIVATE;
 
-import java.util.*;
-
 import bio.overture.score.server.security.KeycloakPermission;
 import com.nimbusds.jose.shaded.json.JSONArray;
 import com.nimbusds.jose.shaded.json.JSONObject;
+import java.util.*;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -35,15 +34,17 @@ public class Scopes {
   public static Set<String> extractGrantedScopesFromRpt(List<KeycloakPermission> permissionList) {
     Set<String> grantedScopes = new HashSet();
 
-    permissionList
-        .stream()
+    permissionList.stream()
         .filter(perm -> perm.getScopes() != null)
-        .forEach(permission -> {
-          permission.getScopes().stream().forEach(scope -> {
-            val fullScope = permission.getRsname() + "." + scope;
-            grantedScopes.add(fullScope);
-          });
-        });
+        .forEach(
+            permission -> {
+              permission.getScopes().stream()
+                  .forEach(
+                      scope -> {
+                        val fullScope = permission.getRsname() + "." + scope;
+                        grantedScopes.add(fullScope);
+                      });
+            });
 
     return grantedScopes;
   }

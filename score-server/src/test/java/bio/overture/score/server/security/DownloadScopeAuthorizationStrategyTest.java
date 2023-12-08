@@ -17,9 +17,12 @@
  */
 package bio.overture.score.server.security;
 
+import static bio.overture.score.server.utils.JwtContext.buildJwtContext;
+import static java.util.concurrent.TimeUnit.HOURS;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 
 import bio.overture.score.server.config.SecurityConfig;
 import bio.overture.score.server.exception.NotRetryableException;
@@ -28,13 +31,16 @@ import bio.overture.score.server.metadata.MetadataService;
 import bio.overture.score.server.repository.DownloadService;
 import bio.overture.score.server.repository.UploadService;
 import bio.overture.score.server.security.scope.DownloadScopeAuthorizationStrategy;
-import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
 import bio.overture.score.server.utils.JWTGenerator;
 import bio.overture.score.server.utils.JwtContext;
 import com.nimbusds.jose.shaded.json.JSONArray;
 import com.nimbusds.jose.shaded.json.JSONObject;
+import java.security.KeyPair;
+import java.time.Instant;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 import lombok.SneakyThrows;
 import lombok.val;
 import org.junit.Before;
@@ -52,14 +58,6 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
-
-import java.security.KeyPair;
-import java.time.Instant;
-import java.util.Map;
-
-import static bio.overture.score.server.utils.JwtContext.buildJwtContext;
-import static java.util.concurrent.TimeUnit.HOURS;
-import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 
 @SpringBootTest
 @ContextConfiguration
@@ -79,18 +77,15 @@ public class DownloadScopeAuthorizationStrategyTest {
   private static final String PROVIDER_EGO = "ego";
 
   // -- Dependencies --
-  @Autowired
-  private WebApplicationContext webApplicationContext;
+  @Autowired private WebApplicationContext webApplicationContext;
   @Autowired private SecurityConfig securityConfig;
   @Autowired private KeyPair keyPair;
 
   private JWTGenerator jwtGenerator;
   private MockMvc mockMvc;
-  @MockBean
-  private MetadataService metadataService;
+  @MockBean private MetadataService metadataService;
   @MockBean private DownloadService downloadService;
   @MockBean private UploadService uploadService;
-
 
   @Before
   @SneakyThrows
@@ -118,7 +113,8 @@ public class DownloadScopeAuthorizationStrategyTest {
   }
 
   public DownloadScopeAuthorizationStrategy init() {
-    return new DownloadScopeAuthorizationStrategy(STUDY_PREFIX, DOWNLOAD_SUFFIX, SYSTEM_SCOPE, getMetadataService(), PROVIDER_EGO);
+    return new DownloadScopeAuthorizationStrategy(
+        STUDY_PREFIX, DOWNLOAD_SUFFIX, SYSTEM_SCOPE, getMetadataService(), PROVIDER_EGO);
   }
 
   public MetadataEntity entity(
@@ -139,17 +135,18 @@ public class DownloadScopeAuthorizationStrategyTest {
     long issuedAtMs = Instant.now().toEpochMilli();
     long expiresAtMs = issuedAtMs + HOURS.toMillis(5); // expires in 5 hours from now
 
-    Jwt jwt = Jwt
-        .withTokenValue(jwtString)
-        .header("typ","JWT")
-        .issuedAt(Instant.ofEpochMilli(issuedAtMs))
-        .expiresAt(Instant.ofEpochMilli(expiresAtMs))
-        .claims((claims) -> {
-          JSONArray scopeJsonArray = new JSONArray();
-          scopeJsonArray.addAll(scopes);
-          claims.put("context", new JSONObject(Map.of("scope", scopeJsonArray)));
-        })
-        .build();
+    Jwt jwt =
+        Jwt.withTokenValue(jwtString)
+            .header("typ", "JWT")
+            .issuedAt(Instant.ofEpochMilli(issuedAtMs))
+            .expiresAt(Instant.ofEpochMilli(expiresAtMs))
+            .claims(
+                (claims) -> {
+                  JSONArray scopeJsonArray = new JSONArray();
+                  scopeJsonArray.addAll(scopes);
+                  claims.put("context", new JSONObject(Map.of("scope", scopeJsonArray)));
+                })
+            .build();
 
     return new JwtAuthenticationToken(jwt);
   }

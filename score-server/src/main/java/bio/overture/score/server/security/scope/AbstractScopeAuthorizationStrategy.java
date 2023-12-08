@@ -16,6 +16,9 @@
  */
 package bio.overture.score.server.security.scope;
 
+import static bio.overture.score.server.util.Scopes.extractGrantedScopes;
+import static bio.overture.score.server.util.Scopes.extractGrantedScopesFromRpt;
+
 import bio.overture.score.server.exception.NotRetryableException;
 import bio.overture.score.server.metadata.MetadataService;
 import bio.overture.score.server.repository.auth.KeycloakAuthorizationService;
@@ -29,10 +32,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 
-import static bio.overture.score.server.util.Scopes.extractGrantedScopes;
-import static bio.overture.score.server.util.Scopes.extractGrantedScopesFromRpt;
-
-
 @Slf4j
 @Getter
 @RequiredArgsConstructor
@@ -44,8 +43,7 @@ public abstract class AbstractScopeAuthorizationStrategy {
   @NonNull private final MetadataService metadataService;
   @NonNull private final String provider;
 
-  @Autowired
-  private KeycloakAuthorizationService keycloakAuthorizationService;
+  @Autowired private KeycloakAuthorizationService keycloakAuthorizationService;
 
   public abstract boolean authorize(Authentication authentication, String objectId);
 
@@ -101,11 +99,13 @@ public abstract class AbstractScopeAuthorizationStrategy {
     return getStudyPrefix() + studyId + getStudySuffix();
   }
 
-  protected Set<String> getGrantedScopes(Authentication authentication){
+  protected Set<String> getGrantedScopes(Authentication authentication) {
     Set<String> grantedScopes;
-    if("keycloak".equalsIgnoreCase(this.getProvider()) && authentication instanceof JwtAuthenticationToken) {
-      val authGrants = keycloakAuthorizationService
-          .fetchAuthorizationGrants(((JwtAuthenticationToken) authentication).getToken().getTokenValue());
+    if ("keycloak".equalsIgnoreCase(this.getProvider())
+        && authentication instanceof JwtAuthenticationToken) {
+      val authGrants =
+          keycloakAuthorizationService.fetchAuthorizationGrants(
+              ((JwtAuthenticationToken) authentication).getToken().getTokenValue());
 
       grantedScopes = extractGrantedScopesFromRpt(authGrants);
     } else {

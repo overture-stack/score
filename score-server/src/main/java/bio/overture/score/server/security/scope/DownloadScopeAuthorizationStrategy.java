@@ -20,19 +20,21 @@ package bio.overture.score.server.security.scope;
 import bio.overture.score.server.exception.NotRetryableException;
 import bio.overture.score.server.metadata.MetadataService;
 import bio.overture.score.server.security.Access;
+import java.util.Set;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.security.core.Authentication;
 
-import java.util.Set;
-
-
 @Slf4j
 public class DownloadScopeAuthorizationStrategy extends AbstractScopeAuthorizationStrategy {
 
-  public DownloadScopeAuthorizationStrategy(@NonNull String studyPrefix, @NonNull String studySuffix,
-    @NonNull String systemScope, MetadataService metadataService, @NonNull String provider) {
+  public DownloadScopeAuthorizationStrategy(
+      @NonNull String studyPrefix,
+      @NonNull String studySuffix,
+      @NonNull String systemScope,
+      MetadataService metadataService,
+      @NonNull String provider) {
     super(studyPrefix, studySuffix, systemScope, metadataService, provider);
   }
 

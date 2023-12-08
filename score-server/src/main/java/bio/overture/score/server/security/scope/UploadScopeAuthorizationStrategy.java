@@ -17,18 +17,20 @@
 package bio.overture.score.server.security.scope;
 
 import bio.overture.score.server.metadata.MetadataService;
+import java.util.Set;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 
-import java.util.Set;
-
-
 @Slf4j
 public class UploadScopeAuthorizationStrategy extends AbstractScopeAuthorizationStrategy {
 
-  public UploadScopeAuthorizationStrategy(@NonNull String studyPrefix, @NonNull String studySuffix,
-      @NonNull String systemScope, @NonNull MetadataService metadataService, @NonNull String provider){
+  public UploadScopeAuthorizationStrategy(
+      @NonNull String studyPrefix,
+      @NonNull String studySuffix,
+      @NonNull String systemScope,
+      @NonNull MetadataService metadataService,
+      @NonNull String provider) {
     super(studyPrefix, studySuffix, systemScope, metadataService, provider);
   }
 

@@ -22,6 +22,7 @@ import bio.overture.score.server.properties.ScopeProperties;
 import bio.overture.score.server.security.ApiKeyIntrospector;
 import bio.overture.score.server.security.scope.DownloadScopeAuthorizationStrategy;
 import bio.overture.score.server.security.scope.UploadScopeAuthorizationStrategy;
+import java.util.UUID;
 import javax.servlet.http.HttpServletRequest;
 import lombok.Getter;
 import lombok.NonNull;
@@ -42,8 +43,6 @@ import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationProvider;
 import org.springframework.security.oauth2.server.resource.authentication.OpaqueTokenAuthenticationProvider;
 import org.springframework.security.oauth2.server.resource.introspection.OpaqueTokenIntrospector;
-
-import java.util.UUID;
 
 /**
  * Resource service configuration file.<br>
@@ -66,8 +65,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
   private final ScopeProperties scopeProperties;
 
-  @Autowired
-  private JwtDecoder jwtDecoder;
+  @Autowired private JwtDecoder jwtDecoder;
 
   @Autowired
   public SecurityConfig(@NonNull ScopeProperties scopeProperties) {
@@ -84,18 +82,21 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     scopeProperties.logScopeProperties();
 
     // @formatter:off
-    http
-      .authorizeRequests()
-      .antMatchers("/health").permitAll()
-      .antMatchers("/actuator/health").permitAll()
-      .antMatchers("/upload/**").permitAll()
-      .antMatchers("/download/**").permitAll()
-      .antMatchers("/swagger**", "/swagger-resources/**", "/v2/api**", "/webjars/**")
-      .permitAll()
-      .and()
-
-      .authorizeRequests()
-      .anyRequest().authenticated();
+    http.authorizeRequests()
+        .antMatchers("/health")
+        .permitAll()
+        .antMatchers("/actuator/health")
+        .permitAll()
+        .antMatchers("/upload/**")
+        .permitAll()
+        .antMatchers("/download/**")
+        .permitAll()
+        .antMatchers("/swagger**", "/swagger-resources/**", "/v2/api**", "/webjars/**")
+        .permitAll()
+        .and()
+        .authorizeRequests()
+        .anyRequest()
+        .authenticated();
 
     http.oauth2ResourceServer(
         oauth2 -> oauth2.authenticationManagerResolver(this.tokenAuthenticationManagerResolver()));
@@ -110,7 +111,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     // but OpaqueTokens are handled by the custom ApiKeyIntrospector
     AuthenticationManager jwt = new ProviderManager(new JwtAuthenticationProvider(jwtDecoder));
     AuthenticationManager opaqueToken =
-        new ProviderManager(new OpaqueTokenAuthenticationProvider(new ApiKeyIntrospector(url, clientId, clientSecret, tokenName)));
+        new ProviderManager(
+            new OpaqueTokenAuthenticationProvider(
+                new ApiKeyIntrospector(url, clientId, clientSecret, tokenName)));
 
     return (request) -> useJwt(request) ? jwt : opaqueToken;
   }
@@ -139,7 +142,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
   public ScopeProperties getScopeProperties() {
     return this.scopeProperties;
   }
-
 
   @Bean
   public OpaqueTokenIntrospector introspector() {

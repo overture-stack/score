@@ -1,13 +1,12 @@
 package bio.overture.score.server.config;
 
+import java.net.URI;
 import lombok.Getter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.util.UriComponentsBuilder;
-
-import java.net.URI;
 
 @Configuration
 @Getter
@@ -25,14 +24,14 @@ public class KeycloakConfig {
   private static final String UMA_GRANT_TYPE = "urn:ietf:params:oauth:grant-type:uma-ticket";
   private static final String UMA_RESPONSE_MODE = "permissions";
 
-  public URI permissionUrl(){
+  public URI permissionUrl() {
     return UriComponentsBuilder.fromHttpUrl(host)
         .pathSegment("realms", realm, "protocol/openid-connect/token")
         .build()
         .toUri();
   }
 
-  public MultiValueMap<String, String> getUmaParams(){
+  public MultiValueMap<String, String> getUmaParams() {
     MultiValueMap<String, String> map = new LinkedMultiValueMap<>();
     map.add("grant_type", UMA_GRANT_TYPE);
     map.add("audience", uma_audience);

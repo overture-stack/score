@@ -17,6 +17,12 @@
  */
 package bio.overture.score.server.security;
 
+import static bio.overture.score.server.utils.JwtContext.buildJwtContext;
+import static java.util.concurrent.TimeUnit.HOURS;
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
+
 import bio.overture.score.server.config.SecurityConfig;
 import bio.overture.score.server.exception.NotRetryableException;
 import bio.overture.score.server.metadata.MetadataEntity;
@@ -28,6 +34,10 @@ import bio.overture.score.server.utils.JWTGenerator;
 import bio.overture.score.server.utils.JwtContext;
 import com.nimbusds.jose.shaded.json.JSONArray;
 import com.nimbusds.jose.shaded.json.JSONObject;
+import java.security.KeyPair;
+import java.time.Instant;
+import java.util.Map;
+import java.util.Set;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -46,17 +56,6 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
-
-import java.security.KeyPair;
-import java.time.Instant;
-import java.util.Map;
-import java.util.Set;
-
-import static bio.overture.score.server.utils.JwtContext.buildJwtContext;
-import static java.util.concurrent.TimeUnit.HOURS;
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
-import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 
 @Slf4j
 @SpringBootTest
@@ -86,8 +85,6 @@ public class UploadScopeAuthorizationStrategyTest {
   @MockBean private DownloadService downloadService;
   @MockBean private UploadService uploadService;
 
-
-
   @Before
   @SneakyThrows
   public void beforeEachTest() {
@@ -108,11 +105,13 @@ public class UploadScopeAuthorizationStrategyTest {
     when(meta.getEntity("1")).thenReturn(e1);
     when(meta.getEntity("2")).thenReturn(e2);
 
-    return new UploadScopeAuthorizationStrategy(STUDY_PREFIX, UPLOAD_SUFFIX, SYSTEM_SCOPE, meta, PROVIDER_EGO);
+    return new UploadScopeAuthorizationStrategy(
+        STUDY_PREFIX, UPLOAD_SUFFIX, SYSTEM_SCOPE, meta, PROVIDER_EGO);
   }
 
   @SneakyThrows
-  private Authentication getAuthentication(Set<String> scopes) {;
+  private Authentication getAuthentication(Set<String> scopes) {
+    ;
 
     JwtContext jwtContext = buildJwtContext(scopes);
     String jwtString = jwtGenerator.generateJwtWithContext(jwtContext, false);
@@ -120,17 +119,18 @@ public class UploadScopeAuthorizationStrategyTest {
     long issuedAtMs = Instant.now().toEpochMilli();
     long expiresAtMs = issuedAtMs + HOURS.toMillis(5); // expires in 5 hours from now
 
-    Jwt jwt = Jwt
-        .withTokenValue(jwtString)
-        .header("typ","JWT")
-        .issuedAt(Instant.ofEpochMilli(issuedAtMs))
-        .expiresAt(Instant.ofEpochMilli(expiresAtMs))
-        .claims((claims) -> {
-          JSONArray scopeJsonArray = new JSONArray();
-          scopeJsonArray.addAll(scopes);
-          claims.put("context", new JSONObject(Map.of("scope", scopeJsonArray)));
-        })
-        .build();
+    Jwt jwt =
+        Jwt.withTokenValue(jwtString)
+            .header("typ", "JWT")
+            .issuedAt(Instant.ofEpochMilli(issuedAtMs))
+            .expiresAt(Instant.ofEpochMilli(expiresAtMs))
+            .claims(
+                (claims) -> {
+                  JSONArray scopeJsonArray = new JSONArray();
+                  scopeJsonArray.addAll(scopes);
+                  claims.put("context", new JSONObject(Map.of("scope", scopeJsonArray)));
+                })
+            .build();
 
     return new JwtAuthenticationToken(jwt);
   }
@@ -152,7 +152,7 @@ public class UploadScopeAuthorizationStrategyTest {
 
   @Test
   public void test_study_scope_wrong_access() {
-    val scopes = Set.of(STUDY_PREFIX +PROJECT1+".READ", STUDY_PREFIX + PROJECT1 + ".upload");
+    val scopes = Set.of(STUDY_PREFIX + PROJECT1 + ".READ", STUDY_PREFIX + PROJECT1 + ".upload");
     val authentication = getAuthentication(scopes);
     assertFalse(sut.authorize(authentication, "1"));
   }
@@ -166,7 +166,7 @@ public class UploadScopeAuthorizationStrategyTest {
 
   @Test
   public void test_study_and_system_scope_ok() {
-    val scopes = Set.of(TEST_SCOPE, SYSTEM_SCOPE,  STUDY_PREFIX+ PROJECT1 + ".upload");
+    val scopes = Set.of(TEST_SCOPE, SYSTEM_SCOPE, STUDY_PREFIX + PROJECT1 + ".upload");
     val authentication = getAuthentication(scopes);
     assertTrue(sut.authorize(authentication, "1"));
   }

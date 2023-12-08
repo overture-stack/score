@@ -1,7 +1,12 @@
 package bio.overture.score.server.security;
 
+import static org.springframework.http.HttpStatus.Series.CLIENT_ERROR;
+import static org.springframework.http.HttpStatus.Series.SERVER_ERROR;
+
 import bio.overture.score.server.util.JsonUtils;
 import com.fasterxml.jackson.databind.JsonNode;
+import java.io.IOException;
+import java.util.*;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -24,12 +29,6 @@ import org.springframework.web.client.ResponseErrorHandler;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import java.io.IOException;
-import java.util.*;
-
-import static org.springframework.http.HttpStatus.Series.CLIENT_ERROR;
-import static org.springframework.http.HttpStatus.Series.SERVER_ERROR;
-
 @Slf4j
 @AllArgsConstructor
 public class ApiKeyIntrospector implements OpaqueTokenIntrospector {
@@ -47,10 +46,7 @@ public class ApiKeyIntrospector implements OpaqueTokenIntrospector {
     formData.add(tokenName, token);
 
     // URI format
-    val uriWithToken =
-        UriComponentsBuilder.fromHttpUrl(introspectionUri)
-            .build()
-            .toUri();
+    val uriWithToken = UriComponentsBuilder.fromHttpUrl(introspectionUri).build().toUri();
 
     // Get response from Auth Server
     val template = new RestTemplate();
@@ -61,8 +57,8 @@ public class ApiKeyIntrospector implements OpaqueTokenIntrospector {
 
     // Ensure response was OK
     if ((response.getStatusCode() != HttpStatus.OK
-        && response.getStatusCode() != HttpStatus.MULTI_STATUS
-        && response.getStatusCode() != HttpStatus.UNAUTHORIZED)
+            && response.getStatusCode() != HttpStatus.MULTI_STATUS
+            && response.getStatusCode() != HttpStatus.UNAUTHORIZED)
         || !response.hasBody()) {
       throw new OAuth2IntrospectionException("Bad Response from Ego Server");
     }
@@ -96,17 +92,17 @@ public class ApiKeyIntrospector implements OpaqueTokenIntrospector {
       return false;
     }
 
-    if(response.has("exp") && response.get("exp").asLong() == 0){
+    if (response.has("exp") && response.get("exp").asLong() == 0) {
       log.debug("Token is expired. Rejecting token.");
       return false;
     }
 
-    if(response.has("revoked") && response.get("revoked").asBoolean() == true){
+    if (response.has("revoked") && response.get("revoked").asBoolean() == true) {
       log.debug("Token is revoked. Rejecting token.");
       return false;
     }
 
-    if(response.has("valid") && response.get("valid").asBoolean() == false){
+    if (response.has("valid") && response.get("valid").asBoolean() == false) {
       log.debug("Check Token response 'valid' field is false. Rejecting token.");
       return false;
     }
@@ -134,21 +130,17 @@ public class ApiKeyIntrospector implements OpaqueTokenIntrospector {
     return new OAuth2IntrospectionAuthenticatedPrincipal(claims, authorities);
   }
 
-  public class RestTemplateResponseErrorHandler
-      implements ResponseErrorHandler {
+  public class RestTemplateResponseErrorHandler implements ResponseErrorHandler {
 
     @Override
-    public boolean hasError(ClientHttpResponse httpResponse)
-        throws IOException {
+    public boolean hasError(ClientHttpResponse httpResponse) throws IOException {
 
-      return (
-          httpResponse.getStatusCode().series() == CLIENT_ERROR
-              || httpResponse.getStatusCode().series() == SERVER_ERROR);
+      return (httpResponse.getStatusCode().series() == CLIENT_ERROR
+          || httpResponse.getStatusCode().series() == SERVER_ERROR);
     }
 
     @Override
-    public void handleError(ClientHttpResponse httpResponse)
-        throws IOException {
+    public void handleError(ClientHttpResponse httpResponse) throws IOException {
 
       if (httpResponse.getStatusCode().series() == CLIENT_ERROR) {
         // throw 401 HTTP error code
