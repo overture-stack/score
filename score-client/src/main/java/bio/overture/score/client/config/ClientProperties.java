@@ -5,21 +5,18 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
 
-/**
- * Configurations for user profile and preferences
- */
+/** Configurations for user profile and preferences */
 @Data
 @Component
 @ConfigurationProperties(prefix = "client")
 public class ClientProperties {
 
-  /**
-   * Constants.
-   */
+  /** Constants. */
   private static final int DEFAULT_LIMIT = 10;
 
   /** OAuth2 access token for ICGC authorization server */
   private String accessToken;
+
   private String encryptedAccessToken;
 
   private String home;
@@ -55,7 +52,5 @@ public class ClientProperties {
     private String keyStoreType;
     private String keyStorePassword;
     private String keyAlias;
-
   }
-
 }

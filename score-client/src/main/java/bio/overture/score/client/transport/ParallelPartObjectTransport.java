@@ -1,21 +1,23 @@
 /*
- * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.                             
- *                                                                                                               
+ * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.
+ *
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
- * You should have received a copy of the GNU General Public License along with                                  
- * this program. If not, see <http://www.gnu.org/licenses/>.                                                     
- *                                                                                                               
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY                           
- * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES                          
- * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT                           
- * SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,                                
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED                          
- * TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;                               
- * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER                              
- * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
+ * You should have received a copy of the GNU General Public License along with
+ * this program. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
+ * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT
+ * SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+ * TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+ * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 package bio.overture.score.client.transport;
+
+import static com.google.common.base.Preconditions.checkState;
 
 import bio.overture.score.client.download.Downloads;
 import bio.overture.score.client.progress.Progress;
@@ -26,9 +28,6 @@ import bio.overture.score.core.model.Part;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Ordering;
-import lombok.*;
-import lombok.extern.slf4j.Slf4j;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -39,12 +38,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
+import lombok.*;
+import lombok.extern.slf4j.Slf4j;
 
-import static com.google.common.base.Preconditions.checkState;
-
-/**
- * The default transport for parallel upload
- */
+/** The default transport for parallel upload */
 @Slf4j
 @AllArgsConstructor
 public class ParallelPartObjectTransport implements Transport {
@@ -52,17 +49,17 @@ public class ParallelPartObjectTransport implements Transport {
   private static final int MIN_WORKER = 1;
   private static final long MIN_MEMORY = 1024L * 1024L;
 
-  final protected StorageService proxy;
-  final protected int nThreads;
-  final protected int queueSize;
-  final protected Progress progress;
-  final protected List<Part> parts;
-  final protected String objectId;
-  final protected String uploadId;
-  final protected Mode mode;
-  final protected AtomicLong memory;
-  final protected int maxUploadDuration;
-  final protected boolean checksum;
+  protected final StorageService proxy;
+  protected final int nThreads;
+  protected final int queueSize;
+  protected final Progress progress;
+  protected final List<Part> parts;
+  protected final String objectId;
+  protected final String uploadId;
+  protected final Mode mode;
+  protected final AtomicLong memory;
+  protected final int maxUploadDuration;
+  protected final boolean checksum;
 
   protected ParallelPartObjectTransport(RemoteParallelBuilder builder) {
 
@@ -87,28 +84,32 @@ public class ParallelPartObjectTransport implements Transport {
     ImmutableList.Builder<Future<Part>> results = ImmutableList.builder();
     progress.start();
     for (final Part part : parts) {
-      results.add(executor.submit(new Callable<Part>() {
+      results.add(
+          executor.submit(
+              new Callable<Part>() {
 
-        @Override
-        public Part call() throws Exception {
-          DataChannel channel =
-              new ProgressDataChannel(new FileDataChannel(file, part.getOffset(), part.getPartSize(), null), progress);
-          if (part.isCompleted()) {
-            if (isCorrupted(channel, part, file)) {
-              progress.startTransfer();
-              proxy.uploadPart(channel, part, objectId, uploadId);
-            }
-            progress.incrementChecksumParts();
-          } else {
-            progress.startTransfer();
-            proxy.uploadPart(channel, part, objectId, uploadId);
-            progress.incrementParts(1);
-          }
-          // progress.incrementByteWritten(part.getPartSize());
-          // progress.incrementByteRead(part.getPartSize());
-          return part;
-        }
-      }));
+                @Override
+                public Part call() throws Exception {
+                  DataChannel channel =
+                      new ProgressDataChannel(
+                          new FileDataChannel(file, part.getOffset(), part.getPartSize(), null),
+                          progress);
+                  if (part.isCompleted()) {
+                    if (isCorrupted(channel, part, file)) {
+                      progress.startTransfer();
+                      proxy.uploadPart(channel, part, objectId, uploadId);
+                    }
+                    progress.incrementChecksumParts();
+                  } else {
+                    progress.startTransfer();
+                    proxy.uploadPart(channel, part, objectId, uploadId);
+                    progress.incrementParts(1);
+                  }
+                  // progress.incrementByteWritten(part.getPartSize());
+                  // progress.incrementByteRead(part.getPartSize());
+                  return part;
+                }
+              }));
     }
 
     executor.shutdown();
@@ -139,31 +140,37 @@ public class ParallelPartObjectTransport implements Transport {
 
     progress.start();
     for (final Part part : parts) {
-      results.add(executor.submit(new Callable<Part>() {
+      results.add(
+          executor.submit(
+              new Callable<Part>() {
 
-        @Override
-        public Part call() throws Exception {
-          DataChannel channel =
-              new ProgressDataChannel(
-                  new FileDataChannel(getPartFile(outputDir, part), part.getOffset(), part.getPartSize(), null),
-                  progress);
+                @Override
+                public Part call() throws Exception {
+                  DataChannel channel =
+                      new ProgressDataChannel(
+                          new FileDataChannel(
+                              getPartFile(outputDir, part),
+                              part.getOffset(),
+                              part.getPartSize(),
+                              null),
+                          progress);
 
-          if (part.isCompleted()) {
-            if (checksum && isCorrupted(channel, part, outputDir)) {
-              progress.startTransfer();
-              proxy.downloadPart(channel, part, objectId, outputDir);
-            }
-            progress.incrementChecksumParts();
-          } else {
-            progress.startTransfer();
-            proxy.downloadPart(channel, part, objectId, outputDir);
-            progress.incrementParts(1);
-          }
-          // progress.incrementByteRead(part.getPartSize());
-          // progress.incrementByteWritten(part.getPartSize());
-          return part;
-        }
-      }));
+                  if (part.isCompleted()) {
+                    if (checksum && isCorrupted(channel, part, outputDir)) {
+                      progress.startTransfer();
+                      proxy.downloadPart(channel, part, objectId, outputDir);
+                    }
+                    progress.incrementChecksumParts();
+                  } else {
+                    progress.startTransfer();
+                    proxy.downloadPart(channel, part, objectId, outputDir);
+                    progress.incrementParts(1);
+                  }
+                  // progress.incrementByteRead(part.getPartSize());
+                  // progress.incrementByteWritten(part.getPartSize());
+                  return part;
+                }
+              }));
     }
 
     executor.shutdown();
@@ -184,7 +191,10 @@ public class ParallelPartObjectTransport implements Transport {
         cleanup(parts, outputDir);
       } catch (Throwable e) {
         // No rethrow because the download is successful but deleting the part files are not
-        log.warn("Fail to clean up part files for object id: {} at path: {}", objectId, outputDir.getAbsolutePath());
+        log.warn(
+            "Fail to clean up part files for object id: {} at path: {}",
+            objectId,
+            outputDir.getAbsolutePath());
         log.warn("Please delete the temporary files at {}", outputDir.getAbsolutePath());
       }
     } catch (Throwable e) {
@@ -209,12 +219,11 @@ public class ParallelPartObjectTransport implements Transport {
     log.debug("Part is corrupted: {}", part);
 
     switch (mode) {
-    case UPLOAD:
-      proxy.deleteUploadPart(objectId, uploadId, part);
-      break;
-    case DOWNLOAD:
-      proxy.deleteDownloadPart(outputDir, objectId, part);
-
+      case UPLOAD:
+        proxy.deleteUploadPart(objectId, uploadId, part);
+        break;
+      case DOWNLOAD:
+        proxy.deleteDownloadPart(outputDir, objectId, part);
     }
     channel.reset();
     return true;
@@ -279,13 +288,13 @@ public class ParallelPartObjectTransport implements Transport {
       nThreads = nThreads < MIN_WORKER ? MIN_WORKER : nThreads;
       memory = memory < MIN_MEMORY ? MIN_MEMORY : memory;
       maxUploadDuration = maxUploadDuration < 1 ? Integer.MAX_VALUE : maxUploadDuration;
-
     }
   }
 
   private void mergeToFile(List<Part> parts, File outputDir) throws IOException {
     // appending parts to objectFile
-    try (RandomAccessFile fos = new RandomAccessFile(Downloads.getDownloadFile(outputDir, objectId), "rw")) {
+    try (RandomAccessFile fos =
+        new RandomAccessFile(Downloads.getDownloadFile(outputDir, objectId), "rw")) {
       fos.setLength(Downloads.calculateTotalSize(parts));
       FileChannel target = fos.getChannel();
       for (Part part : parts) {
@@ -301,5 +310,4 @@ public class ParallelPartObjectTransport implements Transport {
   private File getPartFile(File outDir, Part part) {
     return new File(outDir, "." + objectId + "-" + String.valueOf(part.getPartNumber()));
   }
-
 }

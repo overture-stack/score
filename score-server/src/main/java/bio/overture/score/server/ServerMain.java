@@ -12,16 +12,15 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-/**
- * Application entry point.
- */
-@SpringBootApplication(exclude = {
-    SecurityAutoConfiguration.class,
-    ManagementWebSecurityAutoConfiguration.class,
-    DataSourceAutoConfiguration.class,
-    DataSourceTransactionManagerAutoConfiguration.class,
-    HibernateJpaAutoConfiguration.class
-})
+/** Application entry point. */
+@SpringBootApplication(
+    exclude = {
+      SecurityAutoConfiguration.class,
+      ManagementWebSecurityAutoConfiguration.class,
+      DataSourceAutoConfiguration.class,
+      DataSourceTransactionManagerAutoConfiguration.class,
+      HibernateJpaAutoConfiguration.class
+    })
 public class ServerMain {
 
   @Value("${server.cors.allowedOrigins}")
@@ -36,9 +35,10 @@ public class ServerMain {
     return new WebMvcConfigurer() {
       @Override
       public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/**")
-                .allowedOrigins(allowedOrigins)
-                .allowedMethods("PUT", "DELETE", "GET", "POST");
+        registry
+            .addMapping("/**")
+            .allowedOrigins(allowedOrigins)
+            .allowedMethods("PUT", "DELETE", "GET", "POST");
       }
     };
   }

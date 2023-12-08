@@ -22,6 +22,7 @@ import bio.overture.score.server.properties.ScopeProperties;
 import bio.overture.score.server.security.ApiKeyIntrospector;
 import bio.overture.score.server.security.scope.DownloadScopeAuthorizationStrategy;
 import bio.overture.score.server.security.scope.UploadScopeAuthorizationStrategy;
+import javax.servlet.http.HttpServletRequest;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
@@ -42,14 +43,12 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 import org.springframework.security.oauth2.server.resource.authentication.OpaqueTokenAuthenticationProvider;
 import org.springframework.security.oauth2.server.resource.introspection.OpaqueTokenIntrospector;
 
-import javax.servlet.http.HttpServletRequest;
 import java.util.UUID;
 
 /**
  * Resource service configuration file.<br>
  * Protects resources with access token obtained at the authorization server.
  */
-
 @Slf4j
 @Configuration
 @Profile("secure")
@@ -82,9 +81,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
   }
 
   private void configureAuthorization(HttpSecurity http) throws Exception {
-    scopeProperties.logScopeProperties();;
+    scopeProperties.logScopeProperties();
 
-    // @formatter:off     
+    // @formatter:off
     http
       .authorizeRequests()
       .antMatchers("/health").permitAll()
@@ -94,7 +93,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
       .antMatchers("/swagger**", "/swagger-resources/**", "/v2/api**", "/webjars/**")
       .permitAll()
       .and()
-      
+
       .authorizeRequests()
       .anyRequest().authenticated();
 
@@ -137,7 +136,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         provider);
   }
 
-  public ScopeProperties getScopeProperties() { return this.scopeProperties; }
+  public ScopeProperties getScopeProperties() {
+    return this.scopeProperties;
+  }
 
 
   @Bean
@@ -160,5 +161,4 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     }
     return true;
   }
-
 }

@@ -1,21 +1,24 @@
 /*
- * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.                             
- *                                                                                                               
+ * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.
+ *
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
- * You should have received a copy of the GNU General Public License along with                                  
- * this program. If not, see <http://www.gnu.org/licenses/>.                                                     
- *                                                                                                               
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY                           
- * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES                          
- * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT                           
- * SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,                                
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED                          
- * TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;                               
- * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER                              
- * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
+ * You should have received a copy of the GNU General Public License along with
+ * this program. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
+ * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT
+ * SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+ * TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+ * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 package bio.overture.score.client.download;
+
+import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.collect.Iterables.getOnlyElement;
 
 import bio.overture.score.client.cli.Terminal;
 import bio.overture.score.client.exception.NotResumableException;
@@ -29,15 +32,6 @@ import bio.overture.score.core.model.ObjectSpecification;
 import bio.overture.score.core.model.Part;
 import bio.overture.score.core.util.MD5s;
 import com.google.common.io.BaseEncoding;
-import lombok.NonNull;
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
-import lombok.val;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
-
-import javax.annotation.PostConstruct;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -49,33 +43,32 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.Set;
-
-import static com.google.common.base.Preconditions.checkState;
-import static com.google.common.collect.Iterables.getOnlyElement;
+import javax.annotation.PostConstruct;
+import lombok.NonNull;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
 public class DownloadService {
 
-  /**
-   * Configuration.
-   */
+  /** Configuration. */
   @Value("${client.quiet}")
   private boolean quiet;
+
   @Value("${storage.retryNumber}")
   private int retryNumber;
 
-  /**
-   * Dependencies.
-   */
-  @Autowired
-  private StorageService storageService;
-  @Autowired
-  private DownloadStateStore downloadStateStore;
-  @Autowired
-  private Transport.Builder transportBuilder;
-  @Autowired
-  private Terminal terminal;
+  /** Dependencies. */
+  @Autowired private StorageService storageService;
+
+  @Autowired private DownloadStateStore downloadStateStore;
+  @Autowired private Transport.Builder transportBuilder;
+  @Autowired private Terminal terminal;
 
   @PostConstruct
   public void setup() {
@@ -88,7 +81,9 @@ public class DownloadService {
   }
 
   /**
-   * This method returns a pre-signed URL for downloading the blob associated with the objectId S3 key.
+   * This method returns a pre-signed URL for downloading the blob associated with the objectId S3
+   * key.
+   *
    * @param objectId
    * @param offset
    * @param length
@@ -97,14 +92,15 @@ public class DownloadService {
   @SneakyThrows
   public URL getUrl(@NonNull String objectId, long offset, long length) {
     val spec = storageService.getExternalDownloadSpecification(objectId, offset, length);
-    val file = getOnlyElement(spec.getParts()); // Throws IllegalArgumentException if more than one part
+    val file =
+        getOnlyElement(spec.getParts()); // Throws IllegalArgumentException if more than one part
 
     return new URL(file.getUrl());
   }
 
   /**
    * The only public method for client to call to download data from remote storage.
-   * 
+   *
    * @param downloadRequest
    * @param redo
    * @throws IOException
@@ -128,7 +124,9 @@ public class DownloadService {
       } catch (NotRetryableException e) {
         log.warn(
             "Download failed during last execution. Checking data integrity. Please wait...", e);
-        if (storageService.isDownloadDataRecoverable(downloadRequest.getOutputDir(), downloadRequest.getObjectId(),
+        if (storageService.isDownloadDataRecoverable(
+            downloadRequest.getOutputDir(),
+            downloadRequest.getObjectId(),
             downloadRequest.getOutputFilePath().length())) {
           redo = false;
         } else {
@@ -150,8 +148,7 @@ public class DownloadService {
     }
   }
 
-  private void resumeIfPossible(DownloadRequest request, boolean checksum)
-      throws IOException {
+  private void resumeIfPossible(DownloadRequest request, boolean checksum) throws IOException {
     log.debug("Attempting to resume download for {}", request.toString());
     ObjectSpecification spec = null;
     try {
@@ -173,9 +170,18 @@ public class DownloadService {
     val completedParts = numCompletedParts(spec.getParts());
     val remainingParts = totalParts - completedParts;
 
-    log.info("Total parts: {}, completed parts: {}, remaining parts: {}", totalParts, completedParts, remainingParts);
+    log.info(
+        "Total parts: {}, completed parts: {}, remaining parts: {}",
+        totalParts,
+        completedParts,
+        remainingParts);
     val progress = new Progress(terminal, quiet, totalParts, completedParts);
-    downloadParts(spec.getParts(), request.getOutputDir(), request.getObjectId(), request.getObjectId(), progress,
+    downloadParts(
+        spec.getParts(),
+        request.getOutputDir(),
+        request.getObjectId(),
+        request.getObjectId(),
+        progress,
         checksum);
 
     if (request.isValidate()) {
@@ -185,9 +191,7 @@ public class DownloadService {
     }
   }
 
-  /**
-   * Calculate the number of completed parts
-   */
+  /** Calculate the number of completed parts */
   private int numCompletedParts(List<Part> parts) {
 
     int completedTotal = 0;
@@ -195,12 +199,9 @@ public class DownloadService {
       if (part.getMd5() != null) completedTotal++;
     }
     return completedTotal;
-
   }
 
-  /**
-   * Calculate the total size of completed parts
-   */
+  /** Calculate the total size of completed parts */
   @SuppressWarnings("unused")
   private long completedPartsUsedSpace(List<Part> parts) {
     long completedSize = 0;
@@ -209,11 +210,11 @@ public class DownloadService {
       if (part.getMd5() != null) completedSize += part.getPartSize();
     }
     return completedSize;
-
   }
 
   /**
-   * Computes space requirements for download and ensure there is sufficient space locally to store it
+   * Computes space requirements for download and ensure there is sufficient space locally to store
+   * it
    */
   @SneakyThrows
   public long getSpaceRequired(Set<Entity> entities) {
@@ -227,9 +228,7 @@ public class DownloadService {
     return total;
   }
 
-  /**
-   * Start a download given the object id
-   */
+  /** Start a download given the object id */
   @SneakyThrows
   private void startNewDownload(DownloadRequest request) {
     log.info("Starting a new download...");
@@ -246,9 +245,14 @@ public class DownloadService {
       log.debug("finished creating {}", dir.toString());
     }
 
-    log.debug("Downloading specification for {}: {}-{}", request.getObjectId(), request.getOffset(),
+    log.debug(
+        "Downloading specification for {}: {}-{}",
+        request.getObjectId(),
+        request.getOffset(),
         request.getLength());
-    val spec = storageService.getDownloadSpecification(request.getObjectId(), request.getOffset(), request.getLength());
+    val spec =
+        storageService.getDownloadSpecification(
+            request.getObjectId(), request.getOffset(), request.getLength());
     log.info("Finished retrieving download specification file");
 
     // *****
@@ -260,24 +264,28 @@ public class DownloadService {
 
     // TODO: Assign session id
     val progress = new Progress(terminal, quiet, spec.getParts().size(), 0);
-    downloadParts(spec.getParts(), dir, request.getObjectId(), request.getObjectId(), progress, false);
+    downloadParts(
+        spec.getParts(), dir, request.getObjectId(), request.getObjectId(), progress, false);
 
     if (request.isValidate()) {
       terminal.printStatus("Verifying checksum...");
       log.info("Beginning MD5 checksum calculation for {}", request.getOutputFilePath().toString());
       doMd5Checksum(request, spec);
     }
-
   }
 
-  /**
-   * start downloading parts using a specific configured data transport
-   */
+  /** start downloading parts using a specific configured data transport */
   @SneakyThrows
-  private void downloadParts(List<Part> parts, File file, String objectId, String sessionId, Progress progressBar,
+  private void downloadParts(
+      List<Part> parts,
+      File file,
+      String objectId,
+      String sessionId,
+      Progress progressBar,
       boolean checksum) {
     log.debug("Setting up download of parts");
-    transportBuilder.withProxy(storageService)
+    transportBuilder
+        .withProxy(storageService)
         .withProgressBar(progressBar)
         .withParts(parts)
         .withObjectId(objectId)
@@ -300,7 +308,9 @@ public class DownloadService {
     try {
       check = MD5s.isEqual(downloadedMd5, spec.getObjectMd5());
     } catch (IllegalArgumentException e) {
-      log.error("MD5's not recognized as either HEX or BASE64: of downloaded file: {}, spec file: {}", downloadedMd5,
+      log.error(
+          "MD5's not recognized as either HEX or BASE64: of downloaded file: {}, spec file: {}",
+          downloadedMd5,
           spec.getObjectMd5());
       throw new NotRetryableException(e);
     }
@@ -308,8 +318,10 @@ public class DownloadService {
     if (check) {
       log.info("MD5 for {} validated correctly", outputFile.getAbsolutePath());
     } else {
-      val msg = String.format("MD5 for %s was %s but was expecting %s", outputFile.getAbsolutePath(), downloadedMd5,
-          spec.getObjectMd5());
+      val msg =
+          String.format(
+              "MD5 for %s was %s but was expecting %s",
+              outputFile.getAbsolutePath(), downloadedMd5, spec.getObjectMd5());
       log.error(msg);
       terminal.printWarn(msg);
       throw new RetryableException(msg);
@@ -348,5 +360,4 @@ public class DownloadService {
   private String decodeDigest(byte[] digest) {
     return BaseEncoding.base16().lowerCase().encode(digest);
   }
-
 }

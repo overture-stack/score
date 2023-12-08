@@ -1,18 +1,18 @@
 /*
- * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.                             
- *                                                                                                               
+ * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.
+ *
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
- * You should have received a copy of the GNU General Public License along with                                  
- * this program. If not, see <http://www.gnu.org/licenses/>.                                                     
- *                                                                                                               
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY                           
- * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES                          
- * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT                           
- * SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,                                
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED                          
- * TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;                               
- * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER                              
- * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
+ * You should have received a copy of the GNU General Public License along with
+ * this program. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
+ * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT
+ * SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+ * TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+ * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 package bio.overture.score.server.security;
@@ -64,13 +64,13 @@ import static org.springframework.security.test.web.servlet.setup.SecurityMockMv
 @RunWith(SpringJUnit4ClassRunner.class)
 @ActiveProfiles({"test", "secure", "default", "dev"})
 public class UploadScopeAuthorizationStrategyTest {
-  private static final String TEST_SCOPE= "PROGRAMDATA-TEST1-CA.WRITE";
-  private static final String STUDY_PREFIX ="PROGRAMDATA-";
-  private static final String UPLOAD_SUFFIX =".WRITE";
-  private static final String SYSTEM_SCOPE ="DCCAdmin.WRITE";
+  private static final String TEST_SCOPE = "PROGRAMDATA-TEST1-CA.WRITE";
+  private static final String STUDY_PREFIX = "PROGRAMDATA-";
+  private static final String UPLOAD_SUFFIX = ".WRITE";
+  private static final String SYSTEM_SCOPE = "DCCAdmin.WRITE";
 
-  private static final String PROJECT1="TEST1-CA";
-  private static final String PROJECT2="TEST2-DK";
+  private static final String PROJECT1 = "TEST1-CA";
+  private static final String PROJECT2 = "TEST2-DK";
 
   private static final String PROVIDER_EGO = "ego";
 
@@ -178,12 +178,13 @@ public class UploadScopeAuthorizationStrategyTest {
     Exception exception = null;
     try {
       sut.authorize(authentication, "NOT-FOUND");
-    } catch(NotRetryableException e) {
+    } catch (NotRetryableException e) {
       exception = e;
     }
     assertNotNull(exception);
-    assertEquals("java.lang.IllegalArgumentException: Failed to retrieve metadata for objectId: NOT-FOUND",
-      exception.getMessage());
+    assertEquals(
+        "java.lang.IllegalArgumentException: Failed to retrieve metadata for objectId: NOT-FOUND",
+        exception.getMessage());
   }
 
   @Test
@@ -191,10 +192,10 @@ public class UploadScopeAuthorizationStrategyTest {
     val scopes = Set.of(SYSTEM_SCOPE, "DACO.WRITE", "CLOUD.READ");
     val authentication = getAuthentication(scopes);
     Exception exception = null;
-    boolean status=false;
+    boolean status = false;
     try {
-      status=sut.authorize(authentication, "NOT-FOUND");
-    } catch(NotRetryableException e) {
+      status = sut.authorize(authentication, "NOT-FOUND");
+    } catch (NotRetryableException e) {
       exception = e;
     }
     assertNull(exception);

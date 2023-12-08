@@ -43,5 +43,4 @@ public class UploadScopeAuthorizationStrategy extends AbstractScopeAuthorization
     log.info("Checking study-level authorization for objectId {}", objectId);
     return verifyOneOfStudyScope(grantedScopes, objectId);
   }
-
 }

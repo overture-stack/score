@@ -1,11 +1,10 @@
 package bio.overture.score.server.utils;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import lombok.*;
-
-import java.util.Collection;
-
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import java.util.Collection;
+import lombok.*;
 
 @Data
 @Builder

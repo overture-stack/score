@@ -1,18 +1,18 @@
 /*
- * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.                             
- *                                                                                                               
+ * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.
+ *
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
- * You should have received a copy of the GNU General Public License along with                                  
- * this program. If not, see <http://www.gnu.org/licenses/>.                                                     
- *                                                                                                               
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY                           
- * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES                          
- * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT                           
- * SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,                                
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED                          
- * TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;                               
- * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER                              
- * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
+ * You should have received a copy of the GNU General Public License along with
+ * this program. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
+ * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT
+ * SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+ * TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+ * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 package bio.overture.score.server.repository.s3;
@@ -21,13 +21,6 @@ import static org.apache.commons.lang.StringUtils.removeEnd;
 import static org.apache.commons.lang.StringUtils.removeStart;
 import static org.apache.commons.lang.StringUtils.substringAfter;
 import static org.apache.commons.lang.StringUtils.substringBetween;
-
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.function.Consumer;
 
 import bio.overture.score.core.model.CompletedPart;
 import bio.overture.score.core.model.ObjectSpecification;
@@ -40,10 +33,6 @@ import bio.overture.score.server.repository.BucketNamingService;
 import bio.overture.score.server.repository.UploadPartDetail;
 import bio.overture.score.server.repository.UploadPartDetail.UploadPartDetailBuilder;
 import bio.overture.score.server.repository.UploadStateStore;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
-
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.AmazonS3Exception;
@@ -57,49 +46,50 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Maps;
-
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Consumer;
 import lombok.NonNull;
 import lombok.Setter;
 import lombok.SneakyThrows;
-import lombok.val;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 
-/**
- * Stores and retrieves the state of a upload's progress.
- */
+/** Stores and retrieves the state of a upload's progress. */
 @Slf4j
 @Setter
 public class S3UploadStateStore implements UploadStateStore {
 
-  /**
-   * Constants.
-   */
+  /** Constants. */
   private static final String UPLOAD_SEPARATOR = "_";
+
   private static final String DIRECTORY_SEPARATOR = "/";
   private static final String META = ".meta";
   private static final String PART = "part";
   private static final Integer MAX_KEYS = 5000;
   private static final ObjectMapper MAPPER = new ObjectMapper();
 
-  /**
-   * Configuration.
-   */
+  /** Configuration. */
   @Value("${collaboratory.data.directory}")
   private String dataDir;
+
   @Value("${collaboratory.upload.directory}")
   private String uploadDir;
 
-  /**
-   * Dependencies.
-   */
-  @Autowired
-  private AmazonS3 s3Client;
-  @Autowired
-  private BucketNamingService bucketNamingService;
+  /** Dependencies. */
+  @Autowired private AmazonS3 s3Client;
+
+  @Autowired private BucketNamingService bucketNamingService;
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.icgc.dcc.storage.server.service.upload.UploadStateStore#create(org.icgc.dcc.storage.core.model.
    * ObjectSpecification)
    */
@@ -126,7 +116,7 @@ public class S3UploadStateStore implements UploadStateStore {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.icgc.dcc.storage.server.service.upload.UploadStateStore#read(java.lang.String, java.lang.String)
    */
   @Override
@@ -135,7 +125,8 @@ public class S3UploadStateStore implements UploadStateStore {
     val uploadStateKey = getUploadStateKey(objectId, uploadId, META);
 
     try {
-      val request = new GetObjectRequest(bucketNamingService.getStateBucketName(objectId), uploadStateKey);
+      val request =
+          new GetObjectRequest(bucketNamingService.getStateBucketName(objectId), uploadStateKey);
       val obj = s3Client.getObject(request);
 
       try (val inputStream = obj.getObjectContent()) {
@@ -144,7 +135,8 @@ public class S3UploadStateStore implements UploadStateStore {
     } catch (AmazonServiceException e) {
       if (e.getStatusCode() == HttpStatus.NOT_FOUND.value()) {
         log.warn("Key doesn't exist. Assuming it was deleted.");
-        throw e; // if object keys not found during any step in finalization - assume it is deleted - error rethrown to be caught by the caller.
+        throw e; // if object keys not found during any step in finalization - assume it is deleted
+        // - error rethrown to be caught by the caller.
       }
       if (e.isRetryable()) {
         throw new RetryableException(e);
@@ -159,7 +151,7 @@ public class S3UploadStateStore implements UploadStateStore {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.icgc.dcc.storage.server.service.upload.UploadStateStore#delete(java.lang.String, java.lang.String)
    */
   @Override
@@ -169,7 +161,9 @@ public class S3UploadStateStore implements UploadStateStore {
 
       // Delete the meta file
       val spec = read(objectId, uploadId);
-      log.debug("About to delete (bucket) {} / (uploadStateKey) {}", bucketNamingService.getStateBucketName(objectId),
+      log.debug(
+          "About to delete (bucket) {} / (uploadStateKey) {}",
+          bucketNamingService.getStateBucketName(objectId),
           uploadStateKey);
       deleteObject(objectId, uploadStateKey);
 
@@ -178,7 +172,12 @@ public class S3UploadStateStore implements UploadStateStore {
         try {
           deletePart(objectId, uploadId, part.getPartNumber());
         } catch (Exception e) {
-          log.warn("Error deleting objectId: {}, uploadId: {} part: {} : {}", objectId, uploadId, part, e);
+          log.warn(
+              "Error deleting objectId: {}, uploadId: {} part: {} : {}",
+              objectId,
+              uploadId,
+              part,
+              e);
         }
       }
     } catch (Exception e) {
@@ -190,7 +189,7 @@ public class S3UploadStateStore implements UploadStateStore {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.icgc.dcc.storage.server.service.upload.UploadStateStore#deletePart(java.lang.String, java.lang.String,
    * int)
    */
@@ -199,34 +198,34 @@ public class S3UploadStateStore implements UploadStateStore {
     val partName = formatUploadPartName(partNumber, "");
     val uploadStateKey = getUploadStateKey(objectId, uploadId, partName);
 
-    log.debug("About to deleteObject in bucket {} ", bucketNamingService.getStateBucketName(objectId));
+    log.debug(
+        "About to deleteObject in bucket {} ", bucketNamingService.getStateBucketName(objectId));
     eachObjectSummary(
-        objectId,
-        uploadStateKey,
-        objectSummary -> deleteObject(objectId,objectSummary.getKey()));
+        objectId, uploadStateKey, objectSummary -> deleteObject(objectId, objectSummary.getKey()));
   }
 
-
   /* Deletes object only if it is available
-     A connection reset might cause this request to be re-issued from the client and object might actually be
-     deleted as a result of the original request
-     DCC-5673: https://jira.oicr.on.ca/browse/DCC-5673
-     */
-  void deleteObject(String objectId, String objectKey){
+  A connection reset might cause this request to be re-issued from the client and object might actually be
+  deleted as a result of the original request
+  DCC-5673: https://jira.oicr.on.ca/browse/DCC-5673
+  */
+  void deleteObject(String objectId, String objectKey) {
 
     // if object keys don't exist - it means it is already deleted, no need to delete again
     // it does add an additional step before deletion of every part;
-    // an alternative way would be to directly catch a "NOT FOUND" exception from s3Client.deleteObject
-    // but that also throws a null pointer exception and we cannot assume all Null pointer exceptions
+    // an alternative way would be to directly catch a "NOT FOUND" exception from
+    // s3Client.deleteObject
+    // but that also throws a null pointer exception and we cannot assume all Null pointer
+    // exceptions
     // mean that object has already been deleted.
-    if(!isPartAvailable(objectId,objectKey)) return;
+    if (!isPartAvailable(objectId, objectKey)) return;
     // delete object if still available
-    s3Client.deleteObject(bucketNamingService.getStateBucketName(objectId),objectKey);
+    s3Client.deleteObject(bucketNamingService.getStateBucketName(objectId), objectKey);
   }
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.icgc.dcc.storage.server.service.upload.UploadStateStore#markCompletedParts(java.lang.String,
    * java.lang.String, java.util.List)
    */
@@ -242,10 +241,11 @@ public class S3UploadStateStore implements UploadStateStore {
       sortPartsByNumber(parts);
       val partIterator = parts.iterator();
 
-      val request = new ListObjectsRequest()
-          .withBucketName(bucketName)
-          .withMaxKeys(MAX_KEYS)
-          .withPrefix(getUploadStateKey(objectId, uploadId, PART));
+      val request =
+          new ListObjectsRequest()
+              .withBucketName(bucketName)
+              .withMaxKeys(MAX_KEYS)
+              .withPrefix(getUploadStateKey(objectId, uploadId, PART));
 
       ObjectListing objectListing = null;
       do {
@@ -265,15 +265,19 @@ public class S3UploadStateStore implements UploadStateStore {
         request.setMarker(objectListing.getNextMarker());
       } while (objectListing.isTruncated());
     } catch (AmazonServiceException e) {
-      log.error("Failed to mark completed parts for object metadata for objectId: {}, uploadId: {}, parts: {}",
-          objectId, uploadId, parts, e);
+      log.error(
+          "Failed to mark completed parts for object metadata for objectId: {}, uploadId: {}, parts: {}",
+          objectId,
+          uploadId,
+          parts,
+          e);
       throw new RetryableException(e);
     }
   }
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.icgc.dcc.storage.server.service.upload.UploadStateStore#isCompleted(java.lang.String, java.lang.String)
    */
   @Override
@@ -283,10 +287,11 @@ public class S3UploadStateStore implements UploadStateStore {
     sortPartsByNumber(spec.getParts());
     val partIterator = spec.getParts().iterator();
 
-    val request = new ListObjectsRequest()
-        .withBucketName(bucketNamingService.getStateBucketName(objectId))
-        .withMaxKeys(MAX_KEYS)
-        .withPrefix(getUploadStateKey(objectId, uploadId, PART));
+    val request =
+        new ListObjectsRequest()
+            .withBucketName(bucketNamingService.getStateBucketName(objectId))
+            .withMaxKeys(MAX_KEYS)
+            .withPrefix(getUploadStateKey(objectId, uploadId, PART));
 
     if (partIterator.hasNext()) {
       Part part = partIterator.next();
@@ -315,14 +320,20 @@ public class S3UploadStateStore implements UploadStateStore {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.icgc.dcc.storage.server.service.upload.UploadStateStore#finalizeUploadPart(java.lang.String,
    * java.lang.String, int, java.lang.String, java.lang.String)
    */
   @Override
-  public void finalizeUploadPart(String objectId, String uploadId, int partNumber, String md5, String eTag) {
+  public void finalizeUploadPart(
+      String objectId, String uploadId, int partNumber, String md5, String eTag) {
     try {
-      log.debug("Finalizing part for object id: {}, upload id: {}, md5: {}, eTag: {}", objectId, uploadId, md5, eTag);
+      log.debug(
+          "Finalizing part for object id: {}, upload id: {}, md5: {}, eTag: {}",
+          objectId,
+          uploadId,
+          md5,
+          eTag);
       val json = MAPPER.writeValueAsString(new CompletedPart(partNumber, md5, eTag));
       val partName = formatUploadPartName(partNumber, json);
 
@@ -331,7 +342,8 @@ public class S3UploadStateStore implements UploadStateStore {
       ByteArrayInputStream data = new ByteArrayInputStream(new byte[0]);
       val uploadStateKey = getUploadStateKey(objectId, uploadId, partName);
 
-      s3Client.putObject(bucketNamingService.getStateBucketName(objectId), uploadStateKey, data, meta);
+      s3Client.putObject(
+          bucketNamingService.getStateBucketName(objectId), uploadStateKey, data, meta);
     } catch (AmazonServiceException e) {
       // TODO: Log args
       log.error("Storage failed", e);
@@ -340,39 +352,50 @@ public class S3UploadStateStore implements UploadStateStore {
       // TODO: Log
       throw new NotRetryableException(e);
     } catch (IOException e) {
-      log.error("Failed to finalize upload part: {}, uploadId: {}, partNumber: {}",
-          objectId, uploadId, partNumber, e);
+      log.error(
+          "Failed to finalize upload part: {}, uploadId: {}, partNumber: {}",
+          objectId,
+          uploadId,
+          partNumber,
+          e);
       throw new InternalUnrecoverableError();
     }
   }
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.icgc.dcc.storage.server.service.upload.UploadStateStore#getUploadStatePartDetails(java.lang.String,
    * java.lang.String)
    */
   @Override
   @SneakyThrows
-  public Map<Integer, UploadPartDetail> getUploadStatePartDetails(String objectId, String uploadId) {
+  public Map<Integer, UploadPartDetail> getUploadStatePartDetails(
+      String objectId, String uploadId) {
     val uploadStateKey = getUploadStateKey(objectId, uploadId, PART);
-    val details = Maps.<Integer, UploadPartDetail> newHashMap();
+    val details = Maps.<Integer, UploadPartDetail>newHashMap();
 
-    eachObjectSummary(objectId, uploadStateKey, (objectSummary) -> {
-      CompletedPart part = readCompletedPart(objectId, uploadId, objectSummary);
+    eachObjectSummary(
+        objectId,
+        uploadStateKey,
+        (objectSummary) -> {
+          CompletedPart part = readCompletedPart(objectId, uploadId, objectSummary);
 
-      PartETag etag = new PartETag(part.getPartNumber(), part.getEtag());
-      UploadPartDetailBuilder detailBuilder =
-          UploadPartDetail.builder().etag(etag).partNumber(part.getPartNumber()).md5(part.getMd5());
-      details.put(part.getPartNumber(), detailBuilder.build());
-    });
+          PartETag etag = new PartETag(part.getPartNumber(), part.getEtag());
+          UploadPartDetailBuilder detailBuilder =
+              UploadPartDetail.builder()
+                  .etag(etag)
+                  .partNumber(part.getPartNumber())
+                  .md5(part.getMd5());
+          details.put(part.getPartNumber(), detailBuilder.build());
+        });
 
     return details;
   }
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.icgc.dcc.storage.server.service.upload.UploadStateStore#getUploadId(java.lang.String)
    */
   @Override
@@ -381,11 +404,12 @@ public class S3UploadStateStore implements UploadStateStore {
     val uploadStateKeyPrefix = getUploadStateKey(objectId, "" /* blank uploadId */);
 
     val bucketName = bucketNamingService.getStateBucketName(objectId);
-    val request = new ListObjectsRequest()
-        .withBucketName(bucketName)
-        .withMaxKeys(MAX_KEYS)
-        .withDelimiter(getDirectorySeparator())
-        .withPrefix(uploadStateKeyPrefix);
+    val request =
+        new ListObjectsRequest()
+            .withBucketName(bucketName)
+            .withMaxKeys(MAX_KEYS)
+            .withDelimiter(getDirectorySeparator())
+            .withPrefix(uploadStateKeyPrefix);
 
     try {
       ObjectListing objectListing;
@@ -407,34 +431,44 @@ public class S3UploadStateStore implements UploadStateStore {
       } while (objectListing.isTruncated());
     } catch (AmazonServiceException e) {
       log.error("Amazon returned error during listObjects() call");
-      log.error("List Objects failed on bucket: {} with prefix: {}. Does bucket exist?", bucketName,
+      log.error(
+          "List Objects failed on bucket: {} with prefix: {}. Does bucket exist?",
+          bucketName,
           uploadStateKeyPrefix);
       throw new NotRetryableException(e);
     }
 
-    // This exception gets returned to client: indicates no upload currently in process for this object id
+    // This exception gets returned to client: indicates no upload currently in process for this
+    // object id
     log.warn("Upload Id not found for object ID: {}", objectId);
     throw new IdNotFoundException("Upload ID not found for object ID: " + objectId);
   }
 
   @SneakyThrows
-  private CompletedPart readCompletedPart(String objectId, String uploadId, S3ObjectSummary objectSummary) {
+  private CompletedPart readCompletedPart(
+      String objectId, String uploadId, S3ObjectSummary objectSummary) {
     try {
       val json = extractJson(objectSummary.getKey(), objectId, uploadId);
       val part = MAPPER.readValue(json, CompletedPart.class);
       return part;
     } catch (JsonParseException | JsonMappingException e) {
-      log.error("Failed to read completed parts for objectId: {}, uploadId: {}, objectSummary: {}: {}",
-          objectId, uploadId, objectSummary.getKey(), e);
+      log.error(
+          "Failed to read completed parts for objectId: {}, uploadId: {}, objectSummary: {}: {}",
+          objectId,
+          uploadId,
+          objectSummary.getKey(),
+          e);
       throw new NotRetryableException(e);
     }
   }
 
-  private void eachObjectSummary(String objectId, String prefix, Consumer<S3ObjectSummary> callback) {
-    val request = new ListObjectsRequest()
-        .withBucketName(bucketNamingService.getStateBucketName(objectId))
-        .withMaxKeys(MAX_KEYS)
-        .withPrefix(prefix);
+  private void eachObjectSummary(
+      String objectId, String prefix, Consumer<S3ObjectSummary> callback) {
+    val request =
+        new ListObjectsRequest()
+            .withBucketName(bucketNamingService.getStateBucketName(objectId))
+            .withMaxKeys(MAX_KEYS)
+            .withPrefix(prefix);
 
     try {
       ObjectListing objectListing;
@@ -460,12 +494,12 @@ public class S3UploadStateStore implements UploadStateStore {
     // key for the .meta file
     val uploadStateKey = getUploadStateKey(objectId, uploadId, META);
 
-    return isPartAvailable(objectId,uploadStateKey);
+    return isPartAvailable(objectId, uploadStateKey);
   }
 
   /*
-  * Is the part file actually there for the upload id?
-  */
+   * Is the part file actually there for the upload id?
+   */
   boolean isPartAvailable(String objectId, String uploadStateKey) {
     try {
       // This is actually how you are supposed to test for existence of a file
@@ -475,7 +509,10 @@ public class S3UploadStateStore implements UploadStateStore {
         return false;
       }
 
-      log.error("Error checking for part for objectId {} and uploadstatekey {}", objectId, uploadStateKey);
+      log.error(
+          "Error checking for part for objectId {} and uploadstatekey {}",
+          objectId,
+          uploadStateKey);
       throw new RetryableException(e);
     }
 
@@ -532,11 +569,8 @@ public class S3UploadStateStore implements UploadStateStore {
     return Boolean.getBoolean("s3ninja") ? "_" : DIRECTORY_SEPARATOR;
   }
 
-  /**
-   * Formats a part name in lexicographical order.
-   */
+  /** Formats a part name in lexicographical order. */
   public static String formatUploadPartName(int partNumber, String json) {
     return String.format("%s-%08x|%s", PART, (0xFFFFFFFF & partNumber), json);
   }
-
 }

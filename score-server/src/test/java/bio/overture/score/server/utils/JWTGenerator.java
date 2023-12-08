@@ -1,9 +1,16 @@
 package bio.overture.score.server.utils;
 
+import static bio.overture.score.server.utils.JsonUtils.toJson;
+import static bio.overture.score.server.utils.JsonUtils.toMap;
+import static java.util.Objects.isNull;
+import static java.util.concurrent.TimeUnit.HOURS;
+
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import java.security.KeyPair;
+import java.util.Date;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -11,14 +18,6 @@ import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
-
-import java.security.KeyPair;
-import java.util.Date;
-
-import static bio.overture.score.server.utils.JsonUtils.toJson;
-import static bio.overture.score.server.utils.JsonUtils.toMap;
-import static java.util.Objects.isNull;
-import static java.util.concurrent.TimeUnit.HOURS;
 
 @Slf4j
 @Component

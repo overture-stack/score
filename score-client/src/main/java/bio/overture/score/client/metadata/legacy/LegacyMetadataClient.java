@@ -17,12 +17,19 @@
  */
 package bio.overture.score.client.metadata.legacy;
 
+import static java.util.stream.Collectors.joining;
+import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
+
 import bio.overture.score.client.metadata.Entity;
 import bio.overture.score.client.metadata.EntityNotFoundException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Lists;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Stream;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.SneakyThrows;
@@ -35,39 +42,24 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Stream;
-
-import static java.util.stream.Collectors.joining;
-import static java.util.stream.StreamSupport.stream;
-import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
-
-/**
- * Responsible for interacting with metadata service.
- */
+/** Responsible for interacting with metadata service. */
 @Slf4j
 @Component
 public class LegacyMetadataClient {
 
-  /**
-   * Constants.
-   */
+  /** Constants. */
   private static final ObjectMapper MAPPER = new ObjectMapper();
 
-  /**
-   * Configuration.
-   */
-  @NonNull
-  @Getter
-  private final String serverUrl;
+  /** Configuration. */
+  @NonNull @Getter private final String serverUrl;
+
   private final RestTemplate serviceTemplate;
-  
+
   @Autowired
-  public LegacyMetadataClient(@Value("${metadata.url}") String serverUrl,
-    @Value("${metadata.ssl.enabled}") boolean ssl,
-    @Qualifier("serviceTemplate") @NonNull RestTemplate serviceTemplate) {
+  public LegacyMetadataClient(
+      @Value("${metadata.url}") String serverUrl,
+      @Value("${metadata.ssl.enabled}") boolean ssl,
+      @Qualifier("serviceTemplate") @NonNull RestTemplate serviceTemplate) {
     if (!ssl) {
       SSLCertificateValidation.disable();
     }
@@ -88,14 +80,16 @@ public class LegacyMetadataClient {
     return findEntitiesByGnosId(gnosId, new String[] {});
   }
 
-  public List<Entity> findEntitiesByGnosId(@NonNull String gnosId, String... fields) throws EntityNotFoundException {
-    return readAllEntities("?gnosId=" + gnosId + (fields.length > 0 ? "&" + resolveFields(fields) : ""));
+  public List<Entity> findEntitiesByGnosId(@NonNull String gnosId, String... fields)
+      throws EntityNotFoundException {
+    return readAllEntities(
+        "?gnosId=" + gnosId + (fields.length > 0 ? "&" + resolveFields(fields) : ""));
   }
 
   @SneakyThrows
   private Entity read(@NonNull String path) {
     try {
-      return serviceTemplate.getForObject(resolveEntitiesUrl(path).toURI(),  Entity.class);
+      return serviceTemplate.getForObject(resolveEntitiesUrl(path).toURI(), Entity.class);
     } catch (Exception e) {
       throw new EntityNotFoundException(e.getMessage());
     }
@@ -109,13 +103,15 @@ public class LegacyMetadataClient {
 
     try {
       while (!last) {
-        val url = resolveEntitiesUrl(path + (path.contains("?") ? "&" : "?") + "size=2000&page=" + pageNumber);
+        val url =
+            resolveEntitiesUrl(
+                path + (path.contains("?") ? "&" : "?") + "size=2000&page=" + pageNumber);
         log.debug("Getting {}...", url);
 
         val result = serviceTemplate.getForObject(url.toURI(), ObjectNode.class);
         last = result.path("last").asBoolean();
-        List<Entity> page = MAPPER.convertValue(result.path("content"), new TypeReference<ArrayList<Entity>>() {
-        });
+        List<Entity> page =
+            MAPPER.convertValue(result.path("content"), new TypeReference<ArrayList<Entity>>() {});
 
         results.addAll(page);
         pageNumber++;
@@ -130,15 +126,16 @@ public class LegacyMetadataClient {
   }
 
   @SneakyThrows
-  public List<String> getObjectIdsByAnalysisId(@NonNull String programId, @NonNull String analysisId) {
+  public List<String> getObjectIdsByAnalysisId(
+      @NonNull String programId, @NonNull String analysisId) {
     val path = "?gnosId=" + analysisId + "&projectCode=" + programId;
 
     log.debug("Fetching analysis files via entities endpoint with path '{}'", path);
 
     return readAllEntities(path).stream()
-      .peek(r -> log.debug("Got result {}", r))
-      .map(Entity::getId)
-      .collect(toImmutableList());
+        .peek(r -> log.debug("Got result {}", r))
+        .map(Entity::getId)
+        .collect(toImmutableList());
   }
 
   @SneakyThrows

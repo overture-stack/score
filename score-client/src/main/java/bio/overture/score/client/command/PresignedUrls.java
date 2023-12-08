@@ -1,8 +1,7 @@
 package bio.overture.score.client.command;
 
-import lombok.AllArgsConstructor;
-
 import java.net.URL;
+import lombok.AllArgsConstructor;
 
 @AllArgsConstructor
 public class PresignedUrls {

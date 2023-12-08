@@ -1,5 +1,6 @@
 package bio.overture.score.server.properties;
 
+import javax.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -8,8 +9,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
-
-import javax.validation.constraints.NotBlank;
 
 @Slf4j
 @Getter
@@ -26,7 +25,7 @@ public class ScopeProperties {
   @Getter
   @Setter
   @NoArgsConstructor
-  public static class  ScopePermissionProperties{
+  public static class ScopePermissionProperties {
     @NotBlank private String system;
     private final StudyPermissionProperties study = new StudyPermissionProperties();
 
@@ -37,16 +36,14 @@ public class ScopeProperties {
       @NotBlank private String prefix;
       @NotBlank private String suffix;
     }
-
   }
 
-  public void logScopeProperties(){
-    log.info("Using uploadSystemScope: {}",upload.getSystem());
-    log.info("Using uploadStudyScopePrefix: {}",upload.getStudy().getPrefix());
-    log.info("Using uploadStudyScopeSuffix: {}",upload.getStudy().getSuffix());
-    log.info("Using downloadSystemScope: {}",download.getSystem());
-    log.info("Using downloadStudyScopePrefix: {}",download.getStudy().getPrefix());
-    log.info("Using downloadStudyScopeSuffix: {}",download.getStudy().getSuffix());
+  public void logScopeProperties() {
+    log.info("Using uploadSystemScope: {}", upload.getSystem());
+    log.info("Using uploadStudyScopePrefix: {}", upload.getStudy().getPrefix());
+    log.info("Using uploadStudyScopeSuffix: {}", upload.getStudy().getSuffix());
+    log.info("Using downloadSystemScope: {}", download.getSystem());
+    log.info("Using downloadStudyScopePrefix: {}", download.getStudy().getPrefix());
+    log.info("Using downloadStudyScopeSuffix: {}", download.getStudy().getSuffix());
   }
-
 }

@@ -1,0 +1,10 @@
+<settings>
+    <mirrors>
+        <!-- This is a long term mirror repo as the original conjars.org repo is dead. Info:  https://conjars.wensel.net/  -->
+        <mirror>
+            <id>conjars.org</id>
+            <url>https://conjars.wensel.net/repo/</url>
+            <mirrorOf>conjars.org</mirrorOf>
+        </mirror>
+    </mirrors>
+</settings>

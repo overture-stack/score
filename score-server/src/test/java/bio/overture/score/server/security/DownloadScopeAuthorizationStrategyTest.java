@@ -17,6 +17,10 @@
  */
 package bio.overture.score.server.security;
 
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import bio.overture.score.server.config.SecurityConfig;
 import bio.overture.score.server.exception.NotRetryableException;
 import bio.overture.score.server.metadata.MetadataEntity;
@@ -24,6 +28,9 @@ import bio.overture.score.server.metadata.MetadataService;
 import bio.overture.score.server.repository.DownloadService;
 import bio.overture.score.server.repository.UploadService;
 import bio.overture.score.server.security.scope.DownloadScopeAuthorizationStrategy;
+import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 import bio.overture.score.server.utils.JWTGenerator;
 import bio.overture.score.server.utils.JwtContext;
 import com.nimbusds.jose.shaded.json.JSONArray;
@@ -48,16 +55,10 @@ import org.springframework.web.context.WebApplicationContext;
 
 import java.security.KeyPair;
 import java.time.Instant;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
 
 import static bio.overture.score.server.utils.JwtContext.buildJwtContext;
 import static java.util.concurrent.TimeUnit.HOURS;
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 
 @SpringBootTest
@@ -106,12 +107,11 @@ public class DownloadScopeAuthorizationStrategyTest {
   public MetadataService getMetadataService() {
     val metadataService = mock(MetadataService.class);
 
-    val openEntity = entity(OPEN_ACESSS_ID, "abc1", "something.bam", "TEST1-CA",
-      "open");
+    val openEntity = entity(OPEN_ACESSS_ID, "abc1", "something.bam", "TEST1-CA", "open");
     when(metadataService.getEntity(OPEN_ACESSS_ID)).thenReturn(openEntity);
 
-    val controlledEntity = entity(CONTROLLED_ACCESS_ID, "abc2", "something-else.bam",
-      "TEST1-CA", "controlled");
+    val controlledEntity =
+        entity(CONTROLLED_ACCESS_ID, "abc2", "something-else.bam", "TEST1-CA", "controlled");
     when(metadataService.getEntity(CONTROLLED_ACCESS_ID)).thenReturn(controlledEntity);
 
     return metadataService;
@@ -121,7 +121,8 @@ public class DownloadScopeAuthorizationStrategyTest {
     return new DownloadScopeAuthorizationStrategy(STUDY_PREFIX, DOWNLOAD_SUFFIX, SYSTEM_SCOPE, getMetadataService(), PROVIDER_EGO);
   }
 
-  public MetadataEntity entity(String id, String gnosId, String fileName, String projectCode, String accessType) {
+  public MetadataEntity entity(
+      String id, String gnosId, String fileName, String projectCode, String accessType) {
     val entity = new MetadataEntity();
     entity.setId(id);
     entity.setGnosId(gnosId);
@@ -186,8 +187,9 @@ public class DownloadScopeAuthorizationStrategyTest {
         for (val hasOther : choices) {
           val result = run_test(true, hasSystem, hasStudy, hasOther);
           if (!result) {
-            System.err.printf("Open access wasn't granted to non-expired token (scopes='%s')",
-              getScopes(hasSystem, hasStudy, hasOther));
+            System.err.printf(
+                "Open access wasn't granted to non-expired token (scopes='%s')",
+                getScopes(hasSystem, hasStudy, hasOther));
             everythingPassed = false;
           }
         }
@@ -213,8 +215,9 @@ public class DownloadScopeAuthorizationStrategyTest {
     for (val hasOther : choices) {
       val result = run_test(false, false, true, hasOther);
       if (!result) {
-        System.err.printf("Access wasn't granted to non-expired token (scopes='%s')",
-          getScopes(false, true, hasOther));
+        System.err.printf(
+            "Access wasn't granted to non-expired token (scopes='%s')",
+            getScopes(false, true, hasOther));
         everythingPassed = false;
       }
     }
@@ -229,8 +232,9 @@ public class DownloadScopeAuthorizationStrategyTest {
       for (val hasOther : choices) {
         val result = run_test(false, true, hasStudy, hasOther);
         if (!result) {
-          System.err.printf("Controlled access wasn't granted to non-expired token (scopes='%s')",
-            getScopes(true, hasStudy, hasOther));
+          System.err.printf(
+              "Controlled access wasn't granted to non-expired token (scopes='%s')",
+              getScopes(true, hasStudy, hasOther));
           everythingPassed = false;
         }
       }
@@ -263,8 +267,9 @@ public class DownloadScopeAuthorizationStrategyTest {
       exception = e;
     }
     assertNotNull(exception);
-    assertEquals("java.lang.IllegalArgumentException: Failed to retrieve metadata for objectId: non-existent",
-      exception.getMessage());
+    assertEquals(
+        "java.lang.IllegalArgumentException: Failed to retrieve metadata for objectId: non-existent",
+        exception.getMessage());
   }
 
   @Test

@@ -1,5 +1,7 @@
 package bio.overture.score.server;
 
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
 import lombok.SneakyThrows;
 import lombok.val;
 import org.springframework.context.annotation.Bean;
@@ -10,8 +12,6 @@ import org.springframework.security.oauth2.jose.jws.SignatureAlgorithm;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
 import java.security.interfaces.RSAPublicKey;
 
 @Configuration

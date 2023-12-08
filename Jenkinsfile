@@ -30,19 +30,26 @@ spec:
     tty: true
     image: openjdk:11
     env:
-      - name: DOCKER_HOST
-        value: tcp://localhost:2375
+      - name: DOCKER_TLS_VERIFY
+        value: 1
+      - name: DOCKER_CERT_PATH
+        value: /var/lib/docker/tls/client
     volumeMounts:
+      - name: docker-graph-storage
+        mountPath: /var/lib/docker
       - name: maven-cache
         mountPath: "/root/.m2"
   - name: dind-daemon
     image: docker:20.10-dind
     securityContext:
-        privileged: true
-        runAsUser: 0
+      privileged: true
+      runAsUser: 0
     volumeMounts:
       - name: docker-graph-storage
         mountPath: /var/lib/docker
+    env:
+      - name: DOCKER_TLS_CERTDIR
+        value: /var/lib/docker/tls
   - name: helm
     image: alpine/helm:2.12.3
     command:
@@ -52,10 +59,15 @@ spec:
     image: docker:20-git
     tty: true
     env:
-    - name: DOCKER_HOST
-      value: tcp://localhost:2375
     - name: HOME
       value: /home/jenkins/agent
+    - name: DOCKER_TLS_VERIFY
+      value: 1
+    - name: DOCKER_CERT_PATH
+      value: /var/lib/docker/tls/client
+    volumeMounts:
+    - name: docker-graph-storage
+      mountPath: /var/lib/docker
   - name: curl
     image: curlimages/curl
     command:
@@ -92,7 +104,7 @@ pipeline {
     }
 
     options {
-        timeout(time: 30, unit: 'MINUTES')
+        timeout(time: 2, unit: 'HOURS')
         timestamps()
     }
 
@@ -142,7 +154,7 @@ pipeline {
                     steps {
                         container('docker') {
                             withCredentials([usernamePassword(
-                                credentialsId:'OvertureDockerHub',
+                                credentialsId:'OvertureBioDockerHub',
                                 passwordVariable: 'PASSWORD',
                                 usernameVariable: 'USERNAME'
                             )]) {
@@ -254,7 +266,7 @@ pipeline {
                 }
             }
             steps {
-                build(job: '/Overture.bio/provision/helm', parameters: [
+                build(job: '/Overture.bio/provision/DeployWithHelm', parameters: [
                         [$class: 'StringParameterValue', name: 'OVERTURE_ENV', value: 'qa' ],
                         [$class: 'StringParameterValue', name: 'OVERTURE_CHART_NAME', value: 'score'],
                         [$class: 'StringParameterValue', name: 'OVERTURE_RELEASE_NAME', value: 'score'],
@@ -271,7 +283,7 @@ pipeline {
                 branch 'master'
             }
             steps {
-                build(job: '/Overture.bio/provision/helm', parameters: [
+                build(job: '/Overture.bio/provision/DeployWithHelm', parameters: [
                         [$class: 'StringParameterValue', name: 'OVERTURE_ENV', value: 'staging' ],
                         [$class: 'StringParameterValue', name: 'OVERTURE_CHART_NAME', value: 'score'],
                         [$class: 'StringParameterValue', name: 'OVERTURE_RELEASE_NAME', value: 'score'],

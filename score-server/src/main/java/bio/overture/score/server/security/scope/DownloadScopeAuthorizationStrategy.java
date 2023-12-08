@@ -55,8 +55,10 @@ public class DownloadScopeAuthorizationStrategy extends AbstractScopeAuthorizati
       log.info("Access control level is controlled -- checking study level authorization.");
       return verifyOneOfStudyScope(grantedScopes, objectId);
     } else {
-      val msg = String.format("Invalid access type '%s' found in Metadata record for object id: %s", fileAccessType,
-        objectId);
+      val msg =
+          String.format(
+              "Invalid access type '%s' found in Metadata record for object id: %s",
+              fileAccessType, objectId);
       log.error(msg);
       throw new NotRetryableException(new IllegalArgumentException(msg));
     }

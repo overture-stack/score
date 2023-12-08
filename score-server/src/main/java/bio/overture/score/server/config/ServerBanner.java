@@ -1,18 +1,18 @@
 /*
- * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.                             
- *                                                                                                               
+ * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.
+ *
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
- * You should have received a copy of the GNU General Public License along with                                  
- * this program. If not, see <http://www.gnu.org/licenses/>.                                                     
- *                                                                                                               
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY                           
- * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES                          
- * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT                           
- * SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,                                
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED                          
- * TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;                               
- * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER                              
- * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
+ * You should have received a copy of the GNU General Public License along with
+ * this program. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
+ * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT
+ * SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+ * TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+ * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 package bio.overture.score.server.config;
@@ -24,19 +24,20 @@ import static com.google.common.base.Strings.repeat;
 import static org.icgc.dcc.common.core.util.Joiners.WHITESPACE;
 import static org.icgc.dcc.common.core.util.VersionUtils.getScmInfo;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 import java.io.File;
 import java.lang.management.ManagementFactory;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-
 import javax.annotation.PostConstruct;
-
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import lombok.val;
 import lombok.extern.slf4j.Slf4j;
-
+import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.env.RandomValuePropertySource;
 import org.springframework.core.env.EnumerablePropertySource;
@@ -44,21 +45,13 @@ import org.springframework.core.env.StandardEnvironment;
 import org.springframework.core.env.SystemEnvironmentPropertySource;
 import org.springframework.stereotype.Component;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
-
 @Slf4j
 @Component
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
 public class ServerBanner {
 
-  /**
-   * Dependencies.
-   */
-  @NonNull
-  private final StandardEnvironment env;
+  /** Dependencies. */
+  @NonNull private final StandardEnvironment env;
 
   private static final ObjectMapper MAPPER = new ObjectMapper();
 
@@ -88,7 +81,8 @@ public class ServerBanner {
   private static void log(StandardEnvironment env) {
     log.info("{}:", env);
     for (val source : env.getPropertySources()) {
-      if (source instanceof SystemEnvironmentPropertySource || source instanceof RandomValuePropertySource) {
+      if (source instanceof SystemEnvironmentPropertySource
+          || source instanceof RandomValuePropertySource) {
         // Skip because this will cause issues with terminal display or is useless
         continue;
       }
@@ -96,7 +90,8 @@ public class ServerBanner {
       log.info("         {}:", source.getName());
       if (source instanceof EnumerablePropertySource) {
         val enumerable = (EnumerablePropertySource<?>) source;
-        for (val propertyName : Sets.newTreeSet(ImmutableSet.copyOf(enumerable.getPropertyNames()))) {
+        for (val propertyName :
+            Sets.newTreeSet(ImmutableSet.copyOf(enumerable.getPropertyNames()))) {
           log.info("            - {}: {}", propertyName, enumerable.getProperty(propertyName));
         }
       }
@@ -104,8 +99,9 @@ public class ServerBanner {
   }
 
   private static Map<String, Object> convert(Object values) {
-    return MAPPER.configure(FAIL_ON_EMPTY_BEANS, false).convertValue(values,
-        new TypeReference<Map<String, Object>>() {});
+    return MAPPER
+        .configure(FAIL_ON_EMPTY_BEANS, false)
+        .convertValue(values, new TypeReference<Map<String, Object>>() {});
   }
 
   private static String line() {
@@ -121,7 +117,8 @@ public class ServerBanner {
   }
 
   private String getJarName() {
-    return new File(getClass().getProtectionDomain().getCodeSource().getLocation().getPath()).getName();
+    return new File(getClass().getProtectionDomain().getCodeSource().getLocation().getPath())
+        .getName();
   }
 
   private static String getVersion() {
@@ -135,5 +132,4 @@ public class ServerBanner {
   private static Package getPackage() {
     return ServerConfig.class.getPackage();
   }
-
 }
