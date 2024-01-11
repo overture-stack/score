@@ -232,9 +232,9 @@ auth:
   server:
     # check API Key endpoint
     url: https://localhost:8443/oauth/check_token
-    tokenName: token
-    clientID: resource
-    clientSecret: pass
+    tokenName: apiToken
+    clientID: score
+    clientSecret: scoresecret
     # Define a valid auth provider: ego or keycloak
     provider: ego
     # Keycloak config
@@ -243,15 +243,15 @@ auth:
       realm: "myrealm"
     scope:
       download:
-        system: aws.download
+        system: score.READ
         study:
-          prefix: aws.
-          suffix: .download
+          prefix: PROGRAMDATA-
+          suffix: .READ
       upload:
-        system: aws.upload
+        system: score.WRITE
         study:
-          prefix: aws.
-          suffix: .upload
+          prefix: PROGRAMDATA-
+          suffix: .WRITE
 
 ---
 
@@ -266,19 +266,23 @@ spring:
 
 s3:
   secured: false
-  endpoint: localhost:9444/s3
-  accessKey: AKIAIOSFODNN7EXAMPLE
-  secretKey: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+  endpoint: http://localhost:8085
+  accessKey: minio
+  secretKey: minio123
 
 # Server
 server:
+  port: 8087
 
 bucket:
-  name.object: test.icgc
-  name.state: test.icgc
+  name.object: test.icgc.test
+  name.state: test.icgc.test
 
 upload:
   clean.enabled: false
+
+metadata:
+  url: http://localhost:8080
 
 ---
 
