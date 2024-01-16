@@ -1,6 +1,5 @@
 package bio.overture.score.client.config;
 
-import bio.overture.score.client.exception.NotRetryableException;
 import bio.overture.score.core.model.StorageProfiles;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -54,8 +53,8 @@ public class ProfileConfig {
               .exchange(endpoint + "/profile", HttpMethod.GET, defaultEntity(), String.class)
               .getBody();
       return storageProfile;
-    } catch (NotRetryableException nre) {
-      log.error("received exception when getting profiles: " + nre.getMessage());
+    } catch (Exception e) {
+      log.error("received exception when getting profiles: " + e.getMessage());
     }
     return StorageProfiles.getProfileValue(defaultProfile);
   }
