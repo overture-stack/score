@@ -11,7 +11,7 @@ Welcome to the Operational Documentation for setting up and managing the Score S
     - [Start the Server](#start-the-server)
   - [Docker for Score](#docker-for-score)
     - [Start score-server and all dependencies](#start-score-server-and-all-dependencies)
-    - [Start the score-server (Mac M1 Users)](#start-the-score-server-mac-m1-users)
+    - [Start the score-server (Apple Silicon Users)](#start-the-score-server-mac-m1-users)
     - [Stop score-server and clean up](#stop-score-server-and-clean-up)
 - [Integrating Keycloak](#integrating-keycloak)
   - [Standalone](#standalone)
@@ -76,9 +76,9 @@ To start score-server and all dependencies, use the following command:
 make clean start-score-server
 ```
 
-#### Start the score-server (Mac M1 Users)
+#### Start the score-server (Apple Silicon Users)
 
-On a Mac M1 you must set the Docker BuildKit environment variable to the legacy builder.
+If using Apple Silicon you must set the Docker BuildKit environment variable to the legacy builder.
 
 ```bash
 DOCKER_BUILDKIT=0 make clean start-score-server
