@@ -1,0 +1,51 @@
+# Score Developer Documentation
+
+---
+
+**Navigation**
+- [Operation](./operation/operation.md)
+- [Contribution](./contribution/contribution.md) 
+
+---
+
+# Background
+
+Score's primary function is to facilitate the secure upload and download of file data to and from an object storage provider. 
+
+Score specializes in data transfer, leaving metadata complexities to its companion application, <a href="https://github.com/overture-stack/score" target="_blank" rel="noopener noreferrer">Song</a>. Song manages metadata validation and tracking, maintaining a separate repository from object storage. Together, Score and Song provide an efficient solution for distributed data organization.
+
+## High Performance Transfers
+
+Score offers a high-performance multipart transfer system with several advantages:
+
+- Enables segmented file downloads, allowing for pause and resume functionality
+- Automatically resumes file transfers if interrupted, for instance, due to connection issues
+- Utilizes parallelization for efficient and rapid file uploads and downloads
+
+## Data Integrity
+
+- Score guarantees file transfer authenticity by conducting <a href="https://www.ietf.org/rfc/rfc1321.txt" target="_blank" rel="noopener noreferrer">MD5 validations</a> on all file uploads and downloads
+
+## BAM & CRAM Slicing
+
+- Score client incorporates <a href="http://www.htslib.org/" target="_blank" rel="noopener noreferrer">samtools</a> features, enabling viewing of reads from BAM files
+- Provides the capability to slice BAM and CRAM files by genomic regions using command line tools
+
+## The Score Client
+
+The Score Client is a user-friendly CLI tool designed to streamline the process of interacting with Score and Song. Key features of the Score Client include:
+
+- **File Management:** Users can efficiently upload and download files using manifest files retrieved from data portals
+- **File Metadata Handling:** The Score Client facilitates the uploading of file metadata, including object IDs and md5 checksums to Song, ensuring that data is consistently tracked and accessible
+- **Integration with Object Storage:** Compatible with S3-compliant object storage providers including AWS, Azure, and Google Cloud
+
+For comprehensive details on the commands and usage of the Score Client, please refer to the [Score Client Reference Documentation](www.overture.bio/documentation/score/user-guide/commands/).
+
+---
+
+**Navigation**
+
+- [Operation](./operation/operation.md)
+- [Contribution](./contribution/contribution.md) 
+
+---
