@@ -33,10 +33,6 @@ Score offers a high-performance multipart transfer system with several advantage
 
 ## The Score Client
 
-The Score Client, a command-line tool, simplifies interactions with Score's REST API endpoints. With score client, users can efficiently upload and download files, and access various Score-related parameters. For detailed information on score client commands, refer to our <a href="www.overture.bio/documentation/score/user-guide/commands/" target="_blank" rel="noopener noreferrer">score client reference documentation</a>.
-
-## The Score Client
-
 The Score Client is a user-friendly CLI tool designed to streamline the process of interacting with Score and Song. Key features of the Score Client include:
 
 - **File Management:** Users can efficiently upload and download files using manifest files retrieved from data portals
