@@ -17,22 +17,52 @@
  */
 package bio.overture.score.server.security;
 
+import static bio.overture.score.server.utils.JwtContext.buildJwtContext;
+import static java.util.concurrent.TimeUnit.HOURS;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 
+import bio.overture.score.server.config.SecurityConfig;
 import bio.overture.score.server.exception.NotRetryableException;
 import bio.overture.score.server.metadata.MetadataEntity;
 import bio.overture.score.server.metadata.MetadataService;
+import bio.overture.score.server.repository.DownloadService;
+import bio.overture.score.server.repository.UploadService;
 import bio.overture.score.server.security.scope.DownloadScopeAuthorizationStrategy;
+import bio.overture.score.server.utils.JWTGenerator;
+import bio.overture.score.server.utils.JwtContext;
+import com.nimbusds.jose.shaded.json.JSONArray;
+import com.nimbusds.jose.shaded.json.JSONObject;
+import java.security.KeyPair;
+import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import lombok.SneakyThrows;
 import lombok.val;
+import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.oauth2.provider.OAuth2Request;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
 
+@SpringBootTest
+@ContextConfiguration
+@RunWith(SpringJUnit4ClassRunner.class)
+@ActiveProfiles({"test", "secure", "default", "dev"})
 public class DownloadScopeAuthorizationStrategyTest {
 
   private static final String STUDY_PREFIX = "PROGRAMDATA-";
@@ -43,6 +73,29 @@ public class DownloadScopeAuthorizationStrategyTest {
 
   private static final String OPEN_ACESSS_ID = "123"; // file id of a mock open access file
   private static final String CONTROLLED_ACCESS_ID = "2345";
+
+  private static final String PROVIDER_EGO = "ego";
+
+  // -- Dependencies --
+  @Autowired private WebApplicationContext webApplicationContext;
+  @Autowired private SecurityConfig securityConfig;
+  @Autowired private KeyPair keyPair;
+
+  private JWTGenerator jwtGenerator;
+  private MockMvc mockMvc;
+  @MockBean private MetadataService metadataService;
+  @MockBean private DownloadService downloadService;
+  @MockBean private UploadService uploadService;
+
+  @Before
+  @SneakyThrows
+  public void beforeEachTest() {
+    jwtGenerator = new JWTGenerator(keyPair);
+    if (mockMvc == null) {
+      this.mockMvc =
+          MockMvcBuilders.webAppContextSetup(webApplicationContext).apply(springSecurity()).build();
+    }
+  }
 
   private DownloadScopeAuthorizationStrategy sut = init(); // System Under Test
 
@@ -61,7 +114,7 @@ public class DownloadScopeAuthorizationStrategyTest {
 
   public DownloadScopeAuthorizationStrategy init() {
     return new DownloadScopeAuthorizationStrategy(
-        STUDY_PREFIX, DOWNLOAD_SUFFIX, SYSTEM_SCOPE, getMetadataService());
+        STUDY_PREFIX, DOWNLOAD_SUFFIX, SYSTEM_SCOPE, getMetadataService(), PROVIDER_EGO);
   }
 
   public MetadataEntity entity(
@@ -75,13 +128,27 @@ public class DownloadScopeAuthorizationStrategyTest {
     return entity;
   }
 
-  private Authentication getAuthentication(boolean isExpired, Set<String> scopes) {
-    val request = mock(OAuth2Request.class);
-    when(request.getScope()).thenReturn(scopes);
-    val authentication = mock(ExpiringOauth2Authentication.class);
-    when(authentication.getOAuth2Request()).thenReturn(request);
-    when(authentication.getExpiry()).thenReturn(isExpired ? 0 : 60);
-    return authentication;
+  private Authentication getAuthentication(Set<String> scopes) {
+    JwtContext jwtContext = buildJwtContext(scopes);
+    String jwtString = jwtGenerator.generateJwtWithContext(jwtContext, false);
+
+    long issuedAtMs = Instant.now().toEpochMilli();
+    long expiresAtMs = issuedAtMs + HOURS.toMillis(5); // expires in 5 hours from now
+
+    Jwt jwt =
+        Jwt.withTokenValue(jwtString)
+            .header("typ", "JWT")
+            .issuedAt(Instant.ofEpochMilli(issuedAtMs))
+            .expiresAt(Instant.ofEpochMilli(expiresAtMs))
+            .claims(
+                (claims) -> {
+                  JSONArray scopeJsonArray = new JSONArray();
+                  scopeJsonArray.addAll(scopes);
+                  claims.put("context", new JSONObject(Map.of("scope", scopeJsonArray)));
+                })
+            .build();
+
+    return new JwtAuthenticationToken(jwt);
   }
 
   public String getStudyScope(String study) {
@@ -102,33 +169,10 @@ public class DownloadScopeAuthorizationStrategyTest {
     return scopes;
   }
 
-  public boolean run_test(
-      boolean isExpired, boolean isOpen, boolean hasSystem, boolean hasStudy, boolean hasOther) {
+  public boolean run_test(boolean isOpen, boolean hasSystem, boolean hasStudy, boolean hasOther) {
     val scopes = getScopes(hasSystem, hasStudy, hasOther);
-    val auth = getAuthentication(isExpired, scopes);
+    val auth = getAuthentication(scopes);
     return sut.authorize(auth, isOpen ? OPEN_ACESSS_ID : CONTROLLED_ACCESS_ID);
-  }
-
-  @Test
-  public void test_expired_always_fails() {
-    val choices = List.of(false, true);
-    boolean everythingPassed = true;
-    for (val isOpen : choices) {
-      for (val hasSystem : choices) {
-        for (val hasStudy : choices) {
-          for (val hasOther : choices) {
-            val result = run_test(true, isOpen, hasSystem, hasStudy, hasOther);
-            if (result) {
-              System.err.printf(
-                  "Access allowed with expired token (access control='%s', scopes='%s')",
-                  isOpen ? "open" : "controlled", getScopes(hasSystem, hasStudy, hasOther));
-              everythingPassed = false;
-            }
-          }
-        }
-      }
-    }
-    assertTrue(everythingPassed);
   }
 
   @Test
@@ -138,7 +182,7 @@ public class DownloadScopeAuthorizationStrategyTest {
     for (val hasSystem : choices) {
       for (val hasStudy : choices) {
         for (val hasOther : choices) {
-          val result = run_test(false, true, hasSystem, hasStudy, hasOther);
+          val result = run_test(true, hasSystem, hasStudy, hasOther);
           if (!result) {
             System.err.printf(
                 "Open access wasn't granted to non-expired token (scopes='%s')",
@@ -153,12 +197,12 @@ public class DownloadScopeAuthorizationStrategyTest {
 
   @Test
   public void test_controlled_access_no_scopes_fails() {
-    assertFalse(run_test(false, false, false, false, false));
+    assertFalse(run_test(false, false, false, false));
   }
 
   @Test
   public void test_controlled_access_wrong_scope_fails() {
-    assertFalse(run_test(false, false, false, false, true));
+    assertFalse(run_test(false, false, false, true));
   }
 
   @Test
@@ -166,7 +210,7 @@ public class DownloadScopeAuthorizationStrategyTest {
     val choices = List.of(false, true);
     boolean everythingPassed = true;
     for (val hasOther : choices) {
-      val result = run_test(false, false, false, true, hasOther);
+      val result = run_test(false, false, true, hasOther);
       if (!result) {
         System.err.printf(
             "Access wasn't granted to non-expired token (scopes='%s')",
@@ -183,7 +227,7 @@ public class DownloadScopeAuthorizationStrategyTest {
     boolean everythingPassed = true;
     for (val hasStudy : choices) {
       for (val hasOther : choices) {
-        val result = run_test(false, false, true, hasStudy, hasOther);
+        val result = run_test(false, true, hasStudy, hasOther);
         if (!result) {
           System.err.printf(
               "Controlled access wasn't granted to non-expired token (scopes='%s')",
@@ -198,21 +242,21 @@ public class DownloadScopeAuthorizationStrategyTest {
   @Test
   public void test_controlled_study_scope_wrong_access_fails() {
     val scopes = Set.of(STUDY_PREFIX + TEST_STUDY + ".wrong");
-    val auth = getAuthentication(false, scopes);
+    val auth = getAuthentication(scopes);
     assertFalse(sut.authorize(auth, CONTROLLED_ACCESS_ID));
   }
 
   @Test
   public void test_controlled_system_scope_wrong_access_fails() {
     val scopes = Set.of("DCCAdmin.wrong");
-    val auth = getAuthentication(false, scopes);
+    val auth = getAuthentication(scopes);
     assertFalse(sut.authorize(auth, CONTROLLED_ACCESS_ID));
   }
 
   @Test
   public void test_project_study_object_does_not_exist_fails() {
     val scopes = Set.of(STUDY_PREFIX + TEST_STUDY + DOWNLOAD_SUFFIX);
-    val auth = getAuthentication(false, scopes);
+    val auth = getAuthentication(scopes);
     Exception exception = null;
     try {
       assertFalse(sut.authorize(auth, "non-existent"));
@@ -228,7 +272,7 @@ public class DownloadScopeAuthorizationStrategyTest {
   @Test
   public void test_system_scope_object_not_looked_up() {
     val scopes = Set.of(SYSTEM_SCOPE);
-    val auth = getAuthentication(false, scopes);
+    val auth = getAuthentication(scopes);
     Exception exception = null;
     boolean status = false;
     try {

@@ -1,7 +1,7 @@
 version: '3.7'
 services:
   ego-api:
-    image: "overture/ego:3.1.0"
+    image: "overture/ego:5.3.0"
     environment:
       SERVER_PORT: 8080
       SPRING_DATASOURCE_URL: jdbc:postgresql://ego-postgres:5432/ego?stringtype=unspecified
@@ -9,16 +9,21 @@ services:
       SPRING_DATASOURCE_PASSWORD: password
       SPRING_FLYWAY_ENABLED: "true"
       SPRING_FLYWAY_LOCATIONS: "classpath:flyway/sql,classpath:db/migration"
-      SPRING_PROFILES: demo, auth
+      SPRING_PROFILES_ACTIVE: demo, auth
     expose:
       - "8080"
     ports:
       - "9082:8080"
-    command: java -jar /srv/ego/install/ego.jar
     depends_on:
       - ego-postgres
+    healthcheck:
+      test: "wget --no-verbose --tries=1 --spider http://ego-api:8080/actuator/health || exit 1"
+      interval: 20s
+      timeout: 15s
+      retries: 5
+      start_period: 30s
   ego-postgres:
-    image: postgres:9.5
+    image: postgres:11.1
     environment:
       - POSTGRES_DB=ego
       - POSTGRES_PASSWORD=password
@@ -61,9 +66,11 @@ services:
       S3_ACCESSKEY: minio
       S3_SECRETKEY: minio123
       S3_SIGV4ENABLED: "true"
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_PUBLICKEYLOCATION: http://ego-api:8080/oauth/token/public_key
       AUTH_SERVER_URL: http://ego-api:8080/o/check_api_key/
       AUTH_SERVER_TOKENNAME: apiKey
       AUTH_SERVER_CLIENTID: score
+      AUTH_SERVER_PROVIDER: ego
       AUTH_SERVER_CLIENTSECRET: scoresecret
       AUTH_SERVER_SCOPE_STUDY_PREFIX: score.
       AUTH_SERVER_SCOPE_UPLOAD_SUFFIX: .WRITE
@@ -107,7 +114,7 @@ services:
     command: bin/score-client
     user: "$MY_UID:$MY_GID"
   song-db:
-    image: "postgres:9.6"
+    image: "postgres:11.1"
     environment:
       POSTGRES_DB: song
       POSTGRES_USER: postgres
@@ -118,6 +125,11 @@ services:
       - "12345:5432"
     volumes:
       - "./docker/song-db-init:/docker-entrypoint-initdb.d"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 15s
+      timeout: 15s
+      retries: 5
   aws-cli:
     image: "mesosphere/aws-cli:latest"
     environment:
@@ -127,11 +139,11 @@ services:
     volumes:
       - "./docker/object-storage-init/data/oicr.icgc.test/data:/score-data:ro"
   song-server:
-    image: overture/song-server:4.2.2
+    image: overture/song-server:5.1.1
     environment:
       SERVER_PORT: 8080
       SPRING_PROFILES_ACTIVE: "prod,secure,default"
-      AUTH_SERVER_URL: http://ego-api:8080/o/check_token/
+      AUTH_SERVER_INTROSPECTIONURI: http://ego-api:8080/o/check_api_key
       AUTH_SERVER_CLIENTID: song
       AUTH_SERVER_CLIENTSECRET: songsecret
       AUTH_SERVER_SCOPE_STUDY_PREFIX: song.
@@ -146,11 +158,14 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://song-db/song?stringtype=unspecified
       SPRING_FLYWAY_ENABLED: "true"
       SPRING_FLYWAY_LOCATIONS: "classpath:db/migration"
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_PUBLICKEYLOCATION: http://ego-api:8080/oauth/token/public_key
     ports:
       - "8080:8080"
     depends_on:
-      - song-db 
-      - ego-api
+      song-db:
+        condition: service_healthy
+      ego-api:
+        condition: service_healthy
     volumes:
       - "./docker/scratch/song-server-logs:/opt/dcc/server_logs"
 

@@ -17,12 +17,10 @@
  */
 package bio.overture.score.server.security.scope;
 
-import static bio.overture.score.server.security.TokenChecker.isExpired;
-import static bio.overture.score.server.util.Scopes.extractGrantedScopes;
-
 import bio.overture.score.server.exception.NotRetryableException;
 import bio.overture.score.server.metadata.MetadataService;
 import bio.overture.score.server.security.Access;
+import java.util.Set;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -35,16 +33,16 @@ public class DownloadScopeAuthorizationStrategy extends AbstractScopeAuthorizati
       @NonNull String studyPrefix,
       @NonNull String studySuffix,
       @NonNull String systemScope,
-      MetadataService metadataService) {
-    super(studyPrefix, studySuffix, systemScope, metadataService);
+      MetadataService metadataService,
+      @NonNull String provider) {
+    super(studyPrefix, studySuffix, systemScope, metadataService, provider);
   }
 
   @Override
   public boolean authorize(@NonNull Authentication authentication, @NonNull final String objectId) {
-    if (isExpired(authentication)) {
-      return false;
-    }
-    val grantedScopes = extractGrantedScopes(authentication);
+
+    Set<String> grantedScopes = getGrantedScopes(authentication);
+
     log.info("Checking system-level authorization for objectId {}", objectId);
     if (verifyOneOfSystemScope(grantedScopes)) {
       return true;

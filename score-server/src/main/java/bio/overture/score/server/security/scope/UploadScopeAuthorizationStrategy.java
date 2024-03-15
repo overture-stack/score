@@ -16,10 +16,8 @@
  */
 package bio.overture.score.server.security.scope;
 
-import static bio.overture.score.server.security.TokenChecker.isExpired;
-import static bio.overture.score.server.util.Scopes.extractGrantedScopes;
-
 import bio.overture.score.server.metadata.MetadataService;
+import java.util.Set;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
@@ -31,15 +29,15 @@ public class UploadScopeAuthorizationStrategy extends AbstractScopeAuthorization
       @NonNull String studyPrefix,
       @NonNull String studySuffix,
       @NonNull String systemScope,
-      @NonNull MetadataService metadataService) {
-    super(studyPrefix, studySuffix, systemScope, metadataService);
+      @NonNull MetadataService metadataService,
+      @NonNull String provider) {
+    super(studyPrefix, studySuffix, systemScope, metadataService, provider);
   }
 
   public boolean authorize(@NonNull Authentication authentication, @NonNull final String objectId) {
-    if (isExpired(authentication)) {
-      return false;
-    }
-    val grantedScopes = extractGrantedScopes(authentication);
+
+    Set<String> grantedScopes = getGrantedScopes(authentication);
+
     if (verifyOneOfSystemScope(grantedScopes)) {
       log.info("System-level upload authorization granted");
       return true;

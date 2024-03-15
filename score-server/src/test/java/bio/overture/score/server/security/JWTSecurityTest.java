@@ -49,7 +49,7 @@ import org.springframework.web.context.WebApplicationContext;
 @SpringBootTest
 @ContextConfiguration
 @RunWith(SpringJUnit4ClassRunner.class)
-@ActiveProfiles({"test", "secure", "jwt", "default", "dev"})
+@ActiveProfiles({"test", "secure", "default", "dev"})
 public class JWTSecurityTest {
 
   // -- constants --
