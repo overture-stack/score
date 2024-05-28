@@ -1,6 +1,6 @@
 package bio.overture.score.client.manifest.kf;
 
-import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
+import static bio.overture.score.client.util.Collectors.toImmutableList;
 
 import bio.overture.score.client.manifest.DownloadManifest;
 import bio.overture.score.client.manifest.DownloadManifest.ManifestEntry;

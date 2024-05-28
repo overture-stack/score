@@ -42,7 +42,6 @@ import com.amazonaws.services.s3.model.S3Object;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.io.BaseEncoding;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -116,18 +115,17 @@ public class S3DownloadService implements DownloadService {
           length = objectSpec.getObjectSize() - offset;
         }
 
-
         // Validate offset and length parameters:
         // Check if the offset + length > length - that would be too big
         if ((offset + length) > objectSpec.getObjectSize()) {
           throw new InternalUnrecoverableError(
-                  "Specified parameters exceed object size (object id: "
-                          + objectId
-                          + ", offset: "
-                          + offset
-                          + ", length: "
-                          + length
-                          + ")");
+              "Specified parameters exceed object size (object id: "
+                  + objectId
+                  + ", offset: "
+                  + offset
+                  + ", length: "
+                  + length
+                  + ")");
         }
       }
 
@@ -142,33 +140,27 @@ public class S3DownloadService implements DownloadService {
         parts = partCalculator.divide(offset, length);
       }
       if (objectSpec != null) {
-      fillPartUrls(objectKey, parts, objectSpec.isRelocated(), forExternalUse);
+        fillPartUrls(objectKey, parts, objectSpec.isRelocated(), forExternalUse);
 
-      val spec =
-          new ObjectSpecification(
-              objectKey.getKey(),
-              objectId,
-              objectId,
-              parts,
-              length,
-              objectSpec.getObjectMd5(),
-              objectSpec.isRelocated());
+        val spec =
+            new ObjectSpecification(
+                objectKey.getKey(),
+                objectId,
+                objectId,
+                parts,
+                length,
+                objectSpec.getObjectMd5(),
+                objectSpec.isRelocated());
 
-      return excludeUrls ? removeUrls(spec) : spec;
+        return excludeUrls ? removeUrls(spec) : spec;
       } else {
         ObjectMetadata metadata =
-                s3Client.getObjectMetadata(
-                        bucketNamingService.getStateBucketName(objectId), objectKey.getKey());
+            s3Client.getObjectMetadata(
+                bucketNamingService.getStateBucketName(objectId), objectKey.getKey());
         fillPartUrls(objectKey, parts, false, forExternalUse);
         val spec =
-                new ObjectSpecification(
-                        objectKey.getKey(),
-                        objectId,
-                        objectId,
-                        parts,
-                        length,
-                        metadata.getETag(),
-                        false);
+            new ObjectSpecification(
+                objectKey.getKey(), objectId, objectId, parts, length, metadata.getETag(), false);
 
         return excludeUrls ? removeUrls(spec) : spec;
       }

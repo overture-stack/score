@@ -17,12 +17,12 @@
  */
 package bio.overture.score.client.config;
 
+import static bio.overture.score.client.util.Joiners.WHITESPACE;
+import static bio.overture.score.client.util.VersionUtils.getScmInfo;
 import static com.fasterxml.jackson.databind.SerializationFeature.FAIL_ON_EMPTY_BEANS;
 import static com.google.common.base.MoreObjects.firstNonNull;
 import static com.google.common.base.Strings.padEnd;
 import static com.google.common.base.Strings.repeat;
-import static org.icgc.dcc.common.core.util.Joiners.WHITESPACE;
-import static org.icgc.dcc.common.core.util.VersionUtils.getScmInfo;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;

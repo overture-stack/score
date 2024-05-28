@@ -15,35 +15,34 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package bio.overture.score.client.command;
+package bio.overture.score.server.util;
 
-import static bio.overture.score.client.util.VersionUtils.getScmInfo;
-import static com.google.common.base.MoreObjects.firstNonNull;
+import com.google.common.base.Strings;
 
-import com.beust.jcommander.Parameters;
-import org.springframework.stereotype.Component;
+public class Access {
 
-@Component
-@Parameters(separators = "=", commandDescription = "Display application version information")
-public class VersionCommand extends AbstractClientCommand {
+  public static final String OPEN = "open";
+  public static final String CONTROLLED = "controlled";
 
-  /** Constants. */
-  private static final String SUPPORT_EMAIL = "dcc-support@icgc.org";
+  private String value;
 
-  @Override
-  public int execute() throws Exception {
-    printTitle();
-    version();
-    return SUCCESS_STATUS;
+  public Access(String accessType) {
+    if (Strings.isNullOrEmpty(accessType) || accessType.equalsIgnoreCase("null")) {
+      value = CONTROLLED;
+    } else {
+      value = accessType;
+    }
   }
 
-  private void version() {
-    terminal.println(terminal.label("  Version: ") + getVersion());
-    terminal.println(terminal.label("  Built:   ") + getScmInfo().get("git.build.time"));
-    terminal.println(terminal.label("  Contact: ") + terminal.email(SUPPORT_EMAIL));
+  public boolean isOpen() {
+    return OPEN.equalsIgnoreCase(value);
   }
 
-  private String getVersion() {
-    return firstNonNull(getClass().getPackage().getImplementationVersion(), "[unknown version]");
+  public boolean isControlled() {
+    return CONTROLLED.equalsIgnoreCase(value);
+  }
+
+  public boolean isOther() {
+    return !(isControlled() || isOpen());
   }
 }

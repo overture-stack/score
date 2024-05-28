@@ -17,8 +17,8 @@
  */
 package bio.overture.score.server.config;
 
+import bio.overture.score.server.security.ssl.SSLCertificateValidation;
 import javax.annotation.PostConstruct;
-import org.icgc.dcc.common.core.security.SSLCertificateValidation;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 

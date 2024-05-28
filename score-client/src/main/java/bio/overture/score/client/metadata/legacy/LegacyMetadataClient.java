@@ -17,11 +17,12 @@
  */
 package bio.overture.score.client.metadata.legacy;
 
+import static bio.overture.score.client.util.Collectors.toImmutableList;
 import static java.util.stream.Collectors.joining;
-import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 
 import bio.overture.score.client.metadata.Entity;
 import bio.overture.score.client.metadata.EntityNotFoundException;
+import bio.overture.score.client.ssl.SSLCertificateValidation;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -35,7 +36,6 @@ import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.icgc.dcc.common.core.security.SSLCertificateValidation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
