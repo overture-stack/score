@@ -64,7 +64,7 @@ public class PartitionedBucketIntegrationTest {
   final S3 s3 = new S3();
   protected final FileSystem fs = new FileSystem(new File("target/test"), gnosId);
 
-  Process authServer;
+//  Process authServer;
   Process metaServer;
   Process storageServer;
 
@@ -94,8 +94,8 @@ public class PartitionedBucketIntegrationTest {
     banner("Starting S3 under " + s3ninjaPath + " ...");
     s3.start(s3Root.getRoot());
 
-    banner("Starting dcc-auth-server...");
-    authServer = authServer();
+//    banner("Starting dcc-auth-server...");
+//    authServer = authServer();
 
     banner("Starting dcc-metadata-server...");
     metaServer = metadataServer();
@@ -113,8 +113,8 @@ public class PartitionedBucketIntegrationTest {
   public void tearDown() {
     log.info("Shutting down");
 
-    log.info("Stopping Auth server");
-    if (authServer != null) authServer.destroy();
+//    log.info("Stopping Auth server");
+//    if (authServer != null) authServer.destroy();
 
     log.info("Stopping Meta server");
     if (metaServer != null) metaServer.destroy();
@@ -303,19 +303,19 @@ public class PartitionedBucketIntegrationTest {
     assertThat(view.exitValue()).isEqualTo(0);
   }
 
-  Process authServer() {
-    int debugPort =
-        Integer.parseInt(firstNonNull(System.getProperty("auth.server.debugPort"), "-1"));
-
-    return bootRun(
-        org.icgc.dcc.auth.server.ServerMain.class,
-        debugPort,
-        "-Dspring.profiles.active=dev,no_scope_validation", // Don't validate if user has scopes
-        "-Dlogging.file=" + fs.getLogsDir() + "/dcc-auth-server.log",
-        "-Dserver.port=" + authPort,
-        "-Dmanagement.port=8543",
-        "-Dendpoints.jmx.domain=auth");
-  }
+//  Process authServer() {
+//    int debugPort =
+//        Integer.parseInt(firstNonNull(System.getProperty("auth.server.debugPort"), "-1"));
+//
+//    return bootRun(
+//        org.icgc.dcc.auth.server.ServerMain.class,
+//        debugPort,
+//        "-Dspring.profiles.active=dev,no_scope_validation", // Don't validate if user has scopes
+//        "-Dlogging.file=" + fs.getLogsDir() + "/dcc-auth-server.log",
+//        "-Dserver.port=" + authPort,
+//        "-Dmanagement.port=8543",
+//        "-Dendpoints.jmx.domain=auth");
+//  }
 
   Process metadataServer() {
     int debugPort =
