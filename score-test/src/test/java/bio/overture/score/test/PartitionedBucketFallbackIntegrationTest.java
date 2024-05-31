@@ -304,21 +304,7 @@ public class PartitionedBucketFallbackIntegrationTest {
     view.waitFor(1, MINUTES);
     assertThat(view.exitValue()).isEqualTo(0);
   }
-
-  //  Process authServer() {
-  //    int debugPort =
-  //        Integer.parseInt(firstNonNull(System.getProperty("auth.server.debugPort"), "-1"));
-  //
-  //    return bootRun(
-  //        org.icgc.dcc.auth.server.ServerMain.class,
-  //        debugPort,
-  //        "-Dspring.profiles.active=dev,no_scope_validation", // Don't validate if user has scopes
-  //        "-Dlogging.file=" + fs.getLogsDir() + "/dcc-auth-server.log",
-  //        "-Dserver.port=" + authPort,
-  //        "-Dmanagement.port=8543",
-  //        "-Dendpoints.jmx.domain=auth");
-  //  }
-
+  
   Process metadataServer() {
     int debugPort =
         Integer.parseInt(firstNonNull(System.getProperty("meta.server.debugPort"), "-1"));
