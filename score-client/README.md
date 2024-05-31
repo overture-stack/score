@@ -78,5 +78,10 @@ To enable logging of request bodies and headers, append the following to the com
 `--logging.level.org.apache.http=DEBUG`
 
 ## Azure
-For azure support, use the `azure` profile. Block sizes for uploads
+
+Score-client dynamically loads storage profile specific implementations (currently S3 or Azure) based on the profile score-server is running on.
+It does this by calling an endpoint on score-server to fetch the active storage profiles.
+For older score-server versions where the profile endpoint isn't available, the score-client will use the default (S3) storage profile implementation.
+This eliminates the need for users to ensure that score-client is running on a profile compatible with score-server.
+
 can be configured with the `azure.blockSize` property. 

@@ -17,6 +17,16 @@
  */
 package bio.overture.score.client.command;
 
+import static bio.overture.score.client.cli.Parameters.checkParameter;
+import static bio.overture.score.client.mount.MountService.INTERNAL_MOUNT_OPTIONS;
+import static bio.overture.score.client.util.Formats.formatBytes;
+import static bio.overture.score.client.util.Formats.formatBytesUnits;
+import static bio.overture.score.fs.util.Formats.formatCount;
+import static com.google.common.base.MoreObjects.firstNonNull;
+import static com.google.common.collect.Maps.newHashMap;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
+
 import bio.overture.score.client.cli.ConverterFactory.MountOptionsConverter;
 import bio.overture.score.client.cli.ConverterFactory.StorageFileLayoutConverter;
 import bio.overture.score.client.cli.DirectoryValidator;
@@ -40,6 +50,11 @@ import com.google.common.base.Supplier;
 import com.sun.akuma.Daemon;
 import com.sun.akuma.JavaVMArguments;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Stream;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -47,77 +62,88 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Stream;
-
-import static bio.overture.score.client.cli.Parameters.checkParameter;
-import static bio.overture.score.client.mount.MountService.INTERNAL_MOUNT_OPTIONS;
-import static bio.overture.score.client.util.Formats.formatBytes;
-import static bio.overture.score.client.util.Formats.formatBytesUnits;
-import static bio.overture.score.fs.util.Formats.formatCount;
-import static com.google.common.base.MoreObjects.firstNonNull;
-import static com.google.common.collect.Maps.newHashMap;
-import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toSet;
-
 @Slf4j
 @Component
-@Parameters(separators = "=", commandDescription = "Mount a read-only FUSE file system view of the remote storage repository")
+@Parameters(
+    separators = "=",
+    commandDescription = "Mount a read-only FUSE file system view of the remote storage repository")
 @Profile("!kf")
 public class MountCommand extends RepositoryAccessCommand {
 
-  /**
-   * Constants.
-   */
-  private static final String FUSE_README_URL = "http://sourceforge.net/p/fuse/fuse/ci/master/tree/README?format=raw";
+  /** Constants. */
+  private static final String FUSE_README_URL =
+      "http://sourceforge.net/p/fuse/fuse/ci/master/tree/README?format=raw";
 
-  /**
-   * Options
-   */
-  @Parameter(names = "--mount-point", description = "The mount point of the FUSE file system. This must exist, be empty and be executable by the current user.", required = true, validateValueWith = DirectoryValidator.class)
+  /** Options */
+  @Parameter(
+      names = "--mount-point",
+      description =
+          "The mount point of the FUSE file system. This must exist, be empty and be executable by the current user.",
+      required = true,
+      validateValueWith = DirectoryValidator.class)
   private File mountPoint;
-  @Parameter(names = "--manifest", description = "Manifest id (from the Data Portal), url or file path")
+
+  @Parameter(
+      names = "--manifest",
+      description = "Manifest id (from the Data Portal), url or file path")
   private ManifestResource manifestResource;
-  @Parameter(names = "--layout", description = "Layout of the mount point. One of 'bundle' (nest files in bundle directory) or 'object-id' (flat list of files named by their associated object id)", converter = StorageFileLayoutConverter.class)
+
+  @Parameter(
+      names = "--layout",
+      description =
+          "Layout of the mount point. One of 'bundle' (nest files in bundle directory) or 'object-id' (flat list of files named by their associated object id)",
+      converter = StorageFileLayoutConverter.class)
   private StorageFileLayout layout = StorageFileLayout.BUNDLE;
-  @Parameter(names = "--cache-metadata", description = "To speedup load times, cache metadata on disk locally and use if available")
+
+  @Parameter(
+      names = "--cache-metadata",
+      description = "To speedup load times, cache metadata on disk locally and use if available")
   private boolean cacheMetadata;
+
   @Parameter(names = "--daemonize", description = "Detach and run in background")
   private boolean daemonize;
-  @Parameter(names = "--verify-connection", description = "Verify connection to repository", arity = 1)
+
+  @Parameter(
+      names = "--verify-connection",
+      description = "Verify connection to repository",
+      arity = 1)
   private boolean verifyConnection = true;
-  @Parameter(names = "--options", description =
-    "The mount options of the file system (e.g. --options user_allow_other,allow_other,fsname=icgc,debug) "
-      + "in addition to those specified internally: " + INTERNAL_MOUNT_OPTIONS + ". See " + FUSE_README_URL
-      + " for details", converter = MountOptionsConverter.class)
+
+  @Parameter(
+      names = "--options",
+      description =
+          "The mount options of the file system (e.g. --options user_allow_other,allow_other,fsname=icgc,debug) "
+              + "in addition to those specified internally: "
+              + INTERNAL_MOUNT_OPTIONS
+              + ". See "
+              + FUSE_README_URL
+              + " for details",
+      converter = MountOptionsConverter.class)
   private Map<String, String> options = newHashMap();
 
-  /**
-   * Dependencies.
-   */
-  @Autowired
-  private ManifestService manifestService;
-  @Autowired
-  private MetadataService metadataServices;
-  @Autowired
-  private StorageService storageService;
-  @Autowired
-  private DownloadService downloadService;
-  @Autowired
-  private MountService mountService;
+  /** Dependencies. */
+  @Autowired private ManifestService manifestService;
+
+  @Autowired private MetadataService metadataServices;
+  @Autowired private StorageService storageService;
+  @Autowired private DownloadService downloadService;
+  @Autowired private MountService mountService;
 
   private static final ObjectMapper MAPPER = new ObjectMapper();
 
   @Override
-  @SuppressFBWarnings(value = "NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE", justification = "JCommander parameter ensures File is valid")
+  @SuppressFBWarnings(
+      value = "NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE",
+      justification = "JCommander parameter ensures File is valid")
   public int execute() throws Exception {
-    checkParameter(mountPoint.canExecute(),
-      "Cannot mount to '%s'. Please check directory permissions and try again", mountPoint);
-    checkParameter(mountPoint.list() != null && mountPoint.list().length == 0,
-      "Cannot mount to '%s'. Please ensure the directory is empty and is not already mounted", mountPoint);
+    checkParameter(
+        mountPoint.canExecute(),
+        "Cannot mount to '%s'. Please check directory permissions and try again",
+        mountPoint);
+    checkParameter(
+        mountPoint.list() != null && mountPoint.list().length == 0,
+        "Cannot mount to '%s'. Please ensure the directory is empty and is not already mounted",
+        mountPoint);
 
     // If requested, put into the background
     if (daemonize()) {
@@ -140,7 +166,11 @@ public class MountCommand extends RepositoryAccessCommand {
       //
 
       val tip =
-        cacheMetadata ? "" : " (Tip: use " + terminal.option("--cache-metadata") + " to skip this step next time)";
+          cacheMetadata
+              ? ""
+              : " (Tip: use "
+                  + terminal.option("--cache-metadata")
+                  + " to skip this step next time)";
 
       log.info("Indexing remote entities...");
       terminal.printStatus(i++, "Indexing remote entities" + tip + ". Please wait");
@@ -164,8 +194,7 @@ public class MountCommand extends RepositoryAccessCommand {
 
       log.info("Checking access...");
       terminal.printStatus(i++, "Checking access. Please wait");
-      val context =
-        new MountStorageContext(layout, downloadService, entities, objects);
+      val context = new MountStorageContext(layout, downloadService, entities, objects);
       if (!terminal.printWaiting(context::isAuthorized)) {
         terminal.printError("Access denied");
         return FAILURE_STATUS;
@@ -186,15 +215,17 @@ public class MountCommand extends RepositoryAccessCommand {
       //
 
       terminal.printStatus(i++, "Mounting file system to '" + mountPoint.getAbsolutePath() + "'");
-      //Java 11 compatibility change
-      //Changed to fix this error
-      //[ERROR] Compilation failure
-      //[ERROR] MountCommand.java:[188,28] incompatible types: inference variable T has incompatible bounds
-      //[ERROR]     lower bounds: java.lang.Object
-      //[ERROR]     lower bounds: void
-      terminal.printWaiting(() -> {
-        mount(context);
-      });
+      // Java 11 compatibility change
+      // Changed to fix this error
+      // [ERROR] Compilation failure
+      // [ERROR] MountCommand.java:[188,28] incompatible types: inference variable T has
+      // incompatible bounds
+      // [ERROR]     lower bounds: java.lang.Object
+      // [ERROR]     lower bounds: void
+      terminal.printWaiting(
+          () -> {
+            mount(context);
+          });
       reportMount();
 
       //
@@ -203,9 +234,12 @@ public class MountCommand extends RepositoryAccessCommand {
 
       // Let the user know we are done when the JVM exits
       val watch = Stopwatch.createStarted();
-      Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-        reportSummary(context, watch);
-      }));
+      Runtime.getRuntime()
+          .addShutdownHook(
+              new Thread(
+                  () -> {
+                    reportSummary(context, watch);
+                  }));
 
       // Wait for interrupt
       Thread.sleep(Long.MAX_VALUE);
@@ -263,29 +297,39 @@ public class MountCommand extends RepositoryAccessCommand {
     log.info("Files: {}", files);
 
     for (val file : files) {
-      terminal.printf(" - %s: %s/%s %s %s %s%n",
-        terminal.ansi("@|blue " + file.getObjectId() + "|@"),
-        terminal.ansi("@|green " + file.getGnosId() + "|@"),
-        terminal.ansi("@|green " + file.getFileName() + "|@"),
-        terminal.ansi("@|bold @|@"),
-        formatBytes(file.getSize()),
-        terminal.ansi("@|bold " + formatBytesUnits(file.getSize()) + "|@"));
+      terminal.printf(
+          " - %s: %s/%s %s %s %s%n",
+          terminal.ansi("@|blue " + file.getObjectId() + "|@"),
+          terminal.ansi("@|green " + file.getGnosId() + "|@"),
+          terminal.ansi("@|green " + file.getFileName() + "|@"),
+          terminal.ansi("@|bold @|@"),
+          formatBytes(file.getSize()),
+          terminal.ansi("@|bold " + formatBytesUnits(file.getSize()) + "|@"));
 
       totalSize += file.getSize();
     }
 
     terminal.printLine();
-    terminal.println(" Total count: " + formatCount(files.size()) +
-      ", Total size: " + formatBytes(totalSize) + " " + formatBytesUnits(totalSize) + "\n");
+    terminal.println(
+        " Total count: "
+            + formatCount(files.size())
+            + ", Total size: "
+            + formatBytes(totalSize)
+            + " "
+            + formatBytesUnits(totalSize)
+            + "\n");
   }
 
   private void reportMount() {
     val location = terminal.value(mountPoint.getAbsolutePath());
     terminal.printStatus(
-      terminal.label("Successfully mounted file system at " + location + " and is now ready for use."));
+        terminal.label(
+            "Successfully mounted file system at " + location + " and is now ready for use."));
 
-    terminal.print("\nOpen a new terminal for interaction or relaunch with " + terminal.option("--daemonize")
-      + " to put in background");
+    terminal.print(
+        "\nOpen a new terminal for interaction or relaunch with "
+            + terminal.option("--daemonize")
+            + " to put in background");
   }
 
   private void reportSummary(MountStorageContext context, Stopwatch watch) {
@@ -295,7 +339,14 @@ public class MountCommand extends RepositoryAccessCommand {
     val time = terminal.value(watch.toString());
     val connects = terminal.value(c + " connects");
     val bytes = terminal.value(formatBytes(n) + " " + formatBytesUnits(n));
-    val status = "Shut down mount after " + time + " with a total of " + connects + " and " + bytes + " bytes read.\n";
+    val status =
+        "Shut down mount after "
+            + time
+            + " with a total of "
+            + connects
+            + " and "
+            + bytes
+            + " bytes read.\n";
 
     terminal.printStatus(terminal.label(status));
   }
@@ -305,18 +356,20 @@ public class MountCommand extends RepositoryAccessCommand {
   //
 
   private List<ObjectInfo> resolveObjects() throws IOException {
-    return resolveList("objects", storageService::listObjects, new TypeReference<List<ObjectInfo>>() {
-    });
+    return resolveList(
+        "objects", storageService::listObjects, new TypeReference<List<ObjectInfo>>() {});
   }
 
   private List<Entity> resolveEntities() throws IOException {
-    return resolveList("entities", () -> metadataServices.getEntities("id", "fileName", "gnosId"),
-      new TypeReference<List<Entity>>() {
-      });
+    return resolveList(
+        "entities",
+        () -> metadataServices.getEntities("id", "fileName", "gnosId"),
+        new TypeReference<List<Entity>>() {});
   }
 
   @SneakyThrows
-  private <T> List<T> resolveList(String name, Supplier<List<T>> factory, TypeReference<List<T>> typeReference) {
+  private <T> List<T> resolveList(
+      String name, Supplier<List<T>> factory, TypeReference<List<T>> typeReference) {
     val cacheFile = new File("." + name + ".cache");
     if (cacheMetadata && cacheFile.exists()) {
       return MAPPER.readValue(cacheFile, typeReference);
@@ -343,13 +396,11 @@ public class MountCommand extends RepositoryAccessCommand {
 
     validateManifest(manifest);
 
-    val objectIds = manifest.getEntries().stream()
-      .flatMap(entry -> Stream.of(entry.getFileUuid(), entry.getIndexFileUuid()))
-      .collect(toSet());
+    val objectIds =
+        manifest.getEntries().stream()
+            .flatMap(entry -> Stream.of(entry.getFileUuid(), entry.getIndexFileUuid()))
+            .collect(toSet());
 
-    return objects.stream()
-      .filter(object -> objectIds.contains(object.getId()))
-      .collect(toList());
+    return objects.stream().filter(object -> objectIds.contains(object.getId())).collect(toList());
   }
-
 }

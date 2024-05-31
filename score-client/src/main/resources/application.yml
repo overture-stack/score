@@ -76,42 +76,9 @@ mount:
 token:
   public-key: MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAlvqX7PDezX7BC0yc14zwJw2qgs5KDyZZvEeNowHCgHLcCtCVZ2JIx+ccUPp1FVudfZpLoboZ3RjT+6oOPHpNilXqUZfT81acCVHhvyJe7FNxdUWKpIIVKM/8bJj1pVkst0YHLBJ3KojZYJCMNUxUkyHM+yGrn9tmSdFBmwJnBLTkSxOrS2bvuZvkjERnoQJCoTm2XBKoCOzEuVPjIeB2KiFcNqiZwhjnCSQGPmg7fyJfQt1vMl+8RST3IXxphf8KKaWMl0rTXQhIHYL23P/tvC2lpJgx0rzgnxkAgFSrCxLstIklFAAg+j7ykivOyynIlCfXGv4cPTq5UqvIB8MBRQIDAQAB
 
----
 
-###############################################################################
-# Profile - "aws"
-###############################################################################
-
-spring.profiles: aws
-
-storage:
-  url: https://virginia.cloud.icgc.org
-  
-metadata:
-  url: https://virginia.song.icgc.org
-  ssl:
-    enabled: true
-
-client:
-  ssl:
-    custom: false
-    
----
-
-###############################################################################
-# Profile - "azure"
-###############################################################################
-
-spring.profiles: azure
-
-storage:
-  url: https://score.azure.icgc.overture.bio
-  
-metadata:
-  url: https://song.azure.icgc.overture.bio
-
-azure:
-  blockSize: 104857600
+isTest: false
+defaultProfile: collaboratory
 
 ---
 
@@ -127,25 +94,6 @@ storage:
 
 
 client:
-  ssl:
-    custom: false
-
----
-
-###############################################################################
-# Profile - "collab"
-###############################################################################
-
-spring.profiles: collab
-
-# Storage server
-storage:
-  url: https://storage.cancercollaboratory.org
-  
-metadata:
-  url: https://song.cancercollaboratory.org
-  
-client:    
   ssl:
     custom: false
 
@@ -174,3 +122,8 @@ logging:
     springframework.retry: DEBUG
     springframework.web: DEBUG
     com.amazonaws.services: DEBUG
+
+---
+###############################################################################
+# Profile - "debug"
+###############################################################################

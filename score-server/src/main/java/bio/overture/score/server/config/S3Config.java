@@ -21,13 +21,11 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 
-/**
- * S3/Ceph Object Gateway configuration.
- */
+/** S3/Ceph Object Gateway configuration. */
 @Data
 @Slf4j
 @Configuration
-@Profile({ "aws", "collaboratory", "default" })
+@Profile({"aws", "collaboratory", "default"})
 @ConfigurationProperties(prefix = "s3")
 public class S3Config {
 
@@ -48,7 +46,8 @@ public class S3Config {
   public AmazonS3 s3() {
     AmazonS3 s3Client = null;
     if (accessKey != null && secretKey != null) {
-      s3Client = new AmazonS3Client(new BasicAWSCredentials(accessKey, secretKey), clientConfiguration());
+      s3Client =
+          new AmazonS3Client(new BasicAWSCredentials(accessKey, secretKey), clientConfiguration());
     } else {
       s3Client = new AmazonS3Client(new ProfileCredentialsProvider(), clientConfiguration());
     }
@@ -80,7 +79,8 @@ public class S3Config {
     } else {
       clientConfiguration.setProtocol(Protocol.HTTP);
     }
-    clientConfiguration.setRetryPolicy(PredefinedRetryPolicies.getDefaultRetryPolicyWithCustomMaxRetries(retryLimit));
+    clientConfiguration.setRetryPolicy(
+        PredefinedRetryPolicies.getDefaultRetryPolicyWithCustomMaxRetries(retryLimit));
     clientConfiguration.setConnectionTimeout(connectionTimeout);
     return clientConfiguration;
   }
@@ -89,12 +89,12 @@ public class S3Config {
     if (isEncryptionEnabled()) {
       log.debug("Encryption is on. Key: {}", masterEncryptionKeyId);
       req.putCustomRequestHeader(Headers.SERVER_SIDE_ENCRYPTION, SSEAlgorithm.KMS.getAlgorithm());
-      req.putCustomRequestHeader(Headers.SERVER_SIDE_ENCRYPTION_AWS_KMS_KEYID, masterEncryptionKeyId);
+      req.putCustomRequestHeader(
+          Headers.SERVER_SIDE_ENCRYPTION_AWS_KMS_KEYID, masterEncryptionKeyId);
     }
   }
 
   private boolean isEncryptionEnabled() {
     return masterEncryptionKeyId != null && !masterEncryptionKeyId.isEmpty();
   }
-
 }

@@ -17,6 +17,11 @@
  */
 package bio.overture.score.client.command;
 
+import static bio.overture.score.client.cli.Parameters.checkParameter;
+import static java.lang.String.format;
+import static java.util.stream.Collectors.toList;
+import static org.icgc.dcc.common.core.util.Formats.formatBytes;
+
 import bio.overture.score.client.cli.ConverterFactory.OutputLayoutConverter;
 import bio.overture.score.client.cli.CreatableDirectoryValidator;
 import bio.overture.score.client.cli.ObjectIdListValidator;
@@ -31,12 +36,6 @@ import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import com.google.common.collect.Multimaps;
 import com.google.common.io.Files;
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
-import lombok.val;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
@@ -45,71 +44,97 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
-
-import static bio.overture.score.client.cli.Parameters.checkParameter;
-import static java.util.stream.Collectors.toList;
-import static org.icgc.dcc.common.core.util.Formats.formatBytes;
-import static java.lang.String.format;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
-@Parameters(separators = "=", commandDescription = "Retrieve file object(s) from the remote storage repository")
+@Parameters(
+    separators = "=",
+    commandDescription = "Retrieve file object(s) from the remote storage repository")
 public class DownloadCommand extends RepositoryAccessCommand {
 
   public enum OutputLayout {
-    BUNDLE, FILENAME, ID
+    BUNDLE,
+    FILENAME,
+    ID
   }
 
-  /**
-   * Options
-   */
+  /** Options */
   // 1) Which files to download
   @Parameter(names = "--manifest", description = "Manifest id, url, or path to manifest file")
   private ManifestResource manifestResource;
-  @Parameter(names = "--object-id", description = "Object id to download", validateValueWith = ObjectIdListValidator.class, variableArity = true)
+
+  @Parameter(
+      names = "--object-id",
+      description = "Object id to download",
+      validateValueWith = ObjectIdListValidator.class,
+      variableArity = true)
   private List<String> objectId = new ArrayList<>();
+
   @Parameter(names = "--analysis-id", description = "Analysis to download")
   private String analysisId;
-  @Parameter(names = {"--program-id", "--study-id"}, description = "Program Id for the analysis to download")
+
+  @Parameter(
+      names = {"--program-id", "--study-id"},
+      description = "Program Id for the analysis to download")
   private String programId;
 
   // 2) Where to put them
-  @Parameter(names = "--output-dir", description = "Path to output directory", required = true,
-    validateValueWith = CreatableDirectoryValidator.class)
+  @Parameter(
+      names = "--output-dir",
+      description = "Path to output directory",
+      required = true,
+      validateValueWith = CreatableDirectoryValidator.class)
   private File outputDir;
 
   // 3) How to name them (default = by their filename)
-  @Parameter(names = "--output-layout",
-    description = "Layout of the output-dir. One of 'bundle' (saved according to filename under GNOS bundle id directory), 'filename' (saved according to filename in output directory), or 'id' (saved according to object id in output directory)", converter = OutputLayoutConverter.class)
+  @Parameter(
+      names = "--output-layout",
+      description =
+          "Layout of the output-dir. One of 'bundle' (saved according to filename under GNOS bundle id directory), 'filename' (saved according to filename in output directory), or 'id' (saved according to object id in output directory)",
+      converter = OutputLayoutConverter.class)
   private OutputLayout layout = OutputLayout.FILENAME;
 
   // 4) What part of each file do we download (default=all)
-  @Parameter(names = "--offset", description = "The byte position in source file to begin download from")
+  @Parameter(
+      names = "--offset",
+      description = "The byte position in source file to begin download from")
   private long offset = 0;
+
   @Parameter(names = "--length", description = "The number of bytes to download")
   private long length = -1;
 
-  // 5) How to download files (default = download available index files, don't force re-download of local files,
+  // 5) How to download files (default = download available index files, don't force re-download of
+  // local files,
   //    validate download against the md5 checksum, and do verify the connection to the repository
   //    before trying to download files)
   @Parameter(names = "--index", description = "Download file index if available?", arity = 1)
   private boolean index = true;
+
   @Parameter(names = "--force", description = "Force re-download (override local file)")
   private boolean force = false;
-  @Parameter(names = "--validate", description = "Perform check of MD5 checksum (if available)", arity = 1)
+
+  @Parameter(
+      names = "--validate",
+      description = "Perform check of MD5 checksum (if available)",
+      arity = 1)
   private boolean validate = true;
-  @Parameter(names = "--verify-connection", description = "Verify connection to repository", arity = 1)
+
+  @Parameter(
+      names = "--verify-connection",
+      description = "Verify connection to repository",
+      arity = 1)
   private boolean verifyConnection = true;
 
-  /**
-   * Dependencies
-   */
-  @Autowired
-  private ManifestService manifestService;
-  @Autowired
-  private MetadataService metadataService;
-  @Autowired
-  private DownloadService downloadService;
+  /** Dependencies */
+  @Autowired private ManifestService manifestService;
+
+  @Autowired private MetadataService metadataService;
+  @Autowired private DownloadService downloadService;
 
   @Override
   public int execute() throws Exception {
@@ -134,16 +159,17 @@ public class DownloadCommand extends RepositoryAccessCommand {
     }
     terminal.printStatus("Downloading...");
     return downloadObjects(objectsToDownload);
-
   }
 
-  private List<String> getIdsFromManifest(ManifestResource manifestResource) throws BadManifestException {
+  private List<String> getIdsFromManifest(ManifestResource manifestResource)
+      throws BadManifestException {
 
     if (manifestResource.isGnosManifest()) {
-      throw new BadManifestException(format(
-        "Manifest '%s' looks like a GNOS-format manifest file. Please ensure you are using a tab-delimited text file"
-          + " manifest from https://dcc.icgc.org/repositories",
-        manifestResource.getValue()));
+      throw new BadManifestException(
+          format(
+              "Manifest '%s' looks like a GNOS-format manifest file. Please ensure you are using a tab-delimited text file"
+                  + " manifest from https://dcc.icgc.org/repositories",
+              manifestResource.getValue()));
     }
     val manifest = manifestService.getDownloadManifest(manifestResource);
 
@@ -160,7 +186,6 @@ public class DownloadCommand extends RepositoryAccessCommand {
   private List<String> getIdsFromAnalysis(String programId, String analysisId) {
     return metadataService.getObjectIdsByAnalysisId(programId, analysisId);
   }
-
 
   private int downloadObjects(List<String> objectIds) throws IOException {
     // Entities are defined in Meta service
@@ -179,7 +204,8 @@ public class DownloadCommand extends RepositoryAccessCommand {
       entitySet = filterEntities(entities);
     }
 
-    // If --force is specified, delete all the old files first, so that we can resume later if the new downloads fail.
+    // If --force is specified, delete all the old files first, so that we can resume later if the
+    // new downloads fail.
     if (force) {
       for (val entity : entitySet) {
         val target = getLayoutTarget(entity);
@@ -189,33 +215,45 @@ public class DownloadCommand extends RepositoryAccessCommand {
       }
     }
 
-
     for (val entity : entitySet) {
       terminal
-        .printLine()
-        .printf("[%s/%s] Downloading object: %s (%s)%n", i++, entities.size(), terminal.value(entity.getId()),
-          entity.getFileName())
-        .printLine();
+          .printLine()
+          .printf(
+              "[%s/%s] Downloading object: %s (%s)%n",
+              i++, entities.size(), terminal.value(entity.getId()), entity.getFileName())
+          .printLine();
 
       val builder = DownloadRequest.builder();
-      val request = builder.outputDir(outputDir).entity(entity).objectId(entity.getId()).offset(offset).length(length)
-        .validate(validate).build();
+      val request =
+          builder
+              .outputDir(outputDir)
+              .entity(entity)
+              .objectId(entity.getId())
+              .offset(offset)
+              .length(length)
+              .validate(validate)
+              .build();
 
       // only try to re-download a file that exists if --force was specified on the command line
       val target = getLayoutTarget(entity);
       if (target.exists()) {
         if (force) {
-          log.warn(format("File '%s' shouldn't exist anymore, but it does... trying to delete it...", target));
-          if ( !target.delete()) {
+          log.warn(
+              format(
+                  "File '%s' shouldn't exist anymore, but it does... trying to delete it...",
+                  target));
+          if (!target.delete()) {
             log.warn(format("Couldn't delete existing file '%s'", target));
           }
         } else {
           terminal.printf(
-            "Download file '%s' already exists and --force was not specified... not re-downloading it.", target);
+              "Download file '%s' already exists and --force was not specified... not re-downloading it.",
+              target);
           continue;
         }
       }
-      // Download the file by parts into <outputDir>/<.objectId>, resuming from previous downloads if possible.
+      // Download the file by parts into <outputDir>/<.objectId>, resuming from previous downloads
+      // if possible.
       // Don't try to resume if --force was specified.
       downloadService.download(request, force);
 
@@ -229,8 +267,8 @@ public class DownloadCommand extends RepositoryAccessCommand {
   }
 
   /**
-   * Move the entity into its final destination. File is initially downloaded into file named with object id. To
-   * complete download, it is renamed to filename stored in Metadata record
+   * Move the entity into its final destination. File is initially downloaded into file named with
+   * object id. To complete download, it is renamed to filename stored in Metadata record
    */
   private void finalizeDownload(Entity entity) throws IOException {
     val source = getLayoutSource(entity);
@@ -241,21 +279,20 @@ public class DownloadCommand extends RepositoryAccessCommand {
 
     // For cases like layout = bundle, make sure sub-directory exists
     val targetDir = target.getParentFile();
-    checkParameter(targetDir.exists() || targetDir.mkdirs(), "Could not create target sub-directory '%s'", targetDir);
+    checkParameter(
+        targetDir.exists() || targetDir.mkdirs(),
+        "Could not create target sub-directory '%s'",
+        targetDir);
 
     Files.move(source, target);
   }
 
-  /**
-   * Get the source file for the supplied {@code entity}.
-   */
+  /** Get the source file for the supplied {@code entity}. */
   private File getLayoutSource(Entity entity) {
     return new File(outputDir, entity.getId());
   }
 
-  /**
-   * Get the destination file for the supplied {@code entity}.
-   */
+  /** Get the destination file for the supplied {@code entity}. */
   private File getLayoutTarget(Entity entity) {
     if (layout == OutputLayout.BUNDLE) {
       // "bundle/filename"
@@ -278,9 +315,7 @@ public class DownloadCommand extends RepositoryAccessCommand {
     throw new IllegalStateException("Unsupported layout: " + layout);
   }
 
-  /**
-   * Lookup entities by {@code objectId} from the metadata service.
-   */
+  /** Lookup entities by {@code objectId} from the metadata service. */
   private Set<Entity> resolveEntities(List<String> objectIds) {
     // Set to remove duplicates
     // We don't want it to be immutable (there's going to be subsequent filtering)
@@ -301,8 +336,8 @@ public class DownloadCommand extends RepositoryAccessCommand {
   }
 
   /**
-   * Filters downloadable entities. Strips out duplicate file names. This removes duplicates at source rather than
-   * trying to resolve filenames when trying to finalize download.
+   * Filters downloadable entities. Strips out duplicate file names. This removes duplicates at
+   * source rather than trying to resolve filenames when trying to finalize download.
    */
   private Set<Entity> filterEntities(Set<Entity> entities) {
 
@@ -312,7 +347,8 @@ public class DownloadCommand extends RepositoryAccessCommand {
     val normalizedEntities = new HashSet<Entity>();
     for (val fileName : groupEntities.keySet()) {
       // We only process first entity encountered for each file name
-      // Contract for Multimap states if we have a key (file name), we have a collection with at least one member
+      // Contract for Multimap states if we have a key (file name), we have a collection with at
+      // least one member
       val entityCollection = groupEntities.get(fileName);
       normalizedEntities.add(entityCollection.get(0));
 
@@ -321,8 +357,7 @@ public class DownloadCommand extends RepositoryAccessCommand {
         // Inform user about every additional entity with the same file name
         for (int i = 1; i < entityCollection.size(); i++) {
           val e = entityCollection.get(i);
-          terminal
-            .printWarn(
+          terminal.printWarn(
               "File '%s' (with object id '%s') already scheduled for download. Omitting file with duplicate name (and object id '%s')",
               e.getFileName(), firstObjectId, e.getId());
         }
@@ -334,7 +369,10 @@ public class DownloadCommand extends RepositoryAccessCommand {
 
   @SneakyThrows
   private void validateOutputDirectory() {
-    checkParameter(outputDir.exists() || outputDir.mkdirs(), "Could not create output directory %s", outputDir);
+    checkParameter(
+        outputDir.exists() || outputDir.mkdirs(),
+        "Could not create output directory %s",
+        outputDir);
   }
 
   @SneakyThrows
@@ -347,12 +385,17 @@ public class DownloadCommand extends RepositoryAccessCommand {
   private boolean verifyLocalAvailableSpace(Set<Entity> entities) {
     val spaceRequired = downloadService.getSpaceRequired(entities);
     val spaceAvailable = getLocalAvailableSpace();
-    log.warn("Space required: {} ({})  Space available: {} ({})",
-      formatBytes(spaceRequired), spaceRequired, formatBytes(spaceAvailable), spaceAvailable);
+    log.warn(
+        "Space required: {} ({})  Space available: {} ({})",
+        formatBytes(spaceRequired),
+        spaceRequired,
+        formatBytes(spaceAvailable),
+        spaceAvailable);
 
     if (spaceRequired > spaceAvailable) {
-      terminal.printWarn("Insufficient space to download requested files: Require %s. %s Available",
-        formatBytes(spaceRequired), formatBytes(spaceAvailable));
+      terminal.printWarn(
+          "Insufficient space to download requested files: Require %s. %s Available",
+          formatBytes(spaceRequired), formatBytes(spaceAvailable));
       terminal.clearLine();
       return false;
     }
@@ -362,10 +405,14 @@ public class DownloadCommand extends RepositoryAccessCommand {
 
   private void validateParms() {
     checkParameter(
-      Stream.of(!objectId.isEmpty(), manifestResource != null,analysisId != null && programId != null).
-      filter(i -> i == Boolean.TRUE).count() == 1,
-      "Only one of --object-id, --manifest, or --analysis-id may be specified. "
-        + "--study-id may only be used together with --analysis-id, and is required if analysis-id is specified.");
+        Stream.of(
+                    !objectId.isEmpty(),
+                    manifestResource != null,
+                    analysisId != null && programId != null)
+                .filter(i -> i == Boolean.TRUE)
+                .count()
+            == 1,
+        "Only one of --object-id, --manifest, or --analysis-id may be specified. "
+            + "--study-id may only be used together with --analysis-id, and is required if analysis-id is specified.");
   }
 }
-

@@ -1,6 +1,11 @@
 package bio.overture.score.client.cli;
 
+import static com.google.common.base.Strings.repeat;
+import static org.fusesource.jansi.Ansi.Color.GREEN;
+
 import com.google.common.base.Strings;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Executors;
 import jline.TerminalFactory;
 import lombok.SneakyThrows;
 import lombok.val;
@@ -10,29 +15,21 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import java.util.concurrent.Callable;
-import java.util.concurrent.Executors;
-
-import static com.google.common.base.Strings.repeat;
-import static org.fusesource.jansi.Ansi.Color.GREEN;
-
 @Component
 public class Terminal {
 
-  /**
-   * Constants.
-   */
+  /** Constants. */
   private static final boolean SPIN_WAITING = false;
 
-  /**
-   * Configuration.
-   */
+  /** Configuration. */
   private final boolean ansi;
+
   private final boolean silent;
   private final jline.Terminal delegate;
 
   @Autowired
-  public Terminal(@Value("${client.ansi}") boolean ansi, @Value("${client.silent}") boolean silent) {
+  public Terminal(
+      @Value("${client.ansi}") boolean ansi, @Value("${client.silent}") boolean silent) {
     this.ansi = ansi;
     this.silent = silent;
 
@@ -95,10 +92,11 @@ public class Terminal {
 
   @SneakyThrows
   public Terminal printWaiting(Runnable task) {
-    printWaiting(() -> {
-      task.run();
-      return null;
-    });
+    printWaiting(
+        () -> {
+          task.run();
+          return null;
+        });
 
     return this;
   }
@@ -175,7 +173,10 @@ public class Terminal {
     if (args.length == 0) {
       text = text.replace("%", "%%");
     }
-    return ansi().render("@|bold,yellow WARN: |@").render("@|yellow " + text + "|@", args).toString();
+    return ansi()
+        .render("@|bold,yellow WARN: |@")
+        .render("@|yellow " + text + "|@", args)
+        .toString();
   }
 
   public String value(String text) {
@@ -211,5 +212,4 @@ public class Terminal {
   private static String stripAnsi(String text) {
     return jline.internal.Ansi.stripAnsi(text);
   }
-
 }

@@ -60,7 +60,6 @@ _ping_score_server:
 	@echo $(YELLOW)$(INFO_HEADER) "Pinging score-server on http://localhost:8087" $(END)
 	@$(RETRY_CMD) curl  \
 		-XGET \
-		-H 'Authorization: Bearer f69b726d-d40f-4261-b105-1ec7e6bf04d5' \
 		'http://localhost:8087/download/ping'
 	@echo ""
 
@@ -210,8 +209,8 @@ log-score-server:
 
 # Display logs for score-client
 log-score-client:
-	@echo $(YELLOW)$(INFO_HEADER) "Displaying logs for score-server" $(END)
-	@$(DOCKER_COMPOSE_CMD) logs score-server
+	@echo $(YELLOW)$(INFO_HEADER) "Displaying logs for score-client" $(END)
+	@$(DOCKER_COMPOSE_CMD) logs score-client
 
 
 #############################################################

@@ -1,57 +1,56 @@
 /*
- * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.                             
- *                                                                                                               
+ * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.
+ *
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
- * You should have received a copy of the GNU General Public License along with                                  
- * this program. If not, see <http://www.gnu.org/licenses/>.                                                     
- *                                                                                                               
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY                           
- * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES                          
- * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT                           
- * SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,                                
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED                          
- * TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;                               
- * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER                              
- * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
+ * You should have received a copy of the GNU General Public License along with
+ * this program. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
+ * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT
+ * SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+ * TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+ * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 package bio.overture.score.client.command;
-
-import com.beust.jcommander.JCommander;
-import com.beust.jcommander.Parameter;
-import com.beust.jcommander.ParameterDescription;
-import com.beust.jcommander.Parameters;
-import com.beust.jcommander.internal.Lists;
-import lombok.val;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-
-import java.util.List;
 
 import static bio.overture.score.client.cli.Parameters.checkParameter;
 import static com.google.common.base.MoreObjects.firstNonNull;
 import static com.google.common.base.Strings.padEnd;
 import static com.google.common.base.Strings.repeat;
 
+import com.beust.jcommander.JCommander;
+import com.beust.jcommander.Parameter;
+import com.beust.jcommander.ParameterDescription;
+import com.beust.jcommander.Parameters;
+import com.beust.jcommander.internal.Lists;
+import java.util.List;
+import lombok.val;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
 @Component
-@Parameters(separators = "=", commandDescription = "Display help information for a specified command name")
+@Parameters(
+    separators = "=",
+    commandDescription = "Display help information for a specified command name")
 public class HelpCommand extends AbstractClientCommand {
 
-  /**
-   * Options.
-   */
+  /** Options. */
   @Parameter(description = "[command]")
   private List<String> commandNames = Lists.newArrayList();
 
-  /**
-   * Dependencies.
-   */
-  @Autowired
-  private JCommander cli;
+  /** Dependencies. */
+  @Autowired private JCommander cli;
 
   @Override
   public int execute() throws Exception {
-    checkParameter(commandNames.size() <= 1, "At most one command name is expected, got %s", commandNames.size());
+    checkParameter(
+        commandNames.size() <= 1,
+        "At most one command name is expected, got %s",
+        commandNames.size());
 
     if (commandNames.isEmpty()) {
       printAppUsage();
@@ -72,7 +71,8 @@ public class HelpCommand extends AbstractClientCommand {
     printHeading("Commands");
     for (val commandName : cli.getCommands().keySet()) {
       val description = cli.getCommandDescription(commandName);
-      terminal.println("    " + terminal.ansi("@|blue " + padEnd(commandName, 10, ' ') + "|@") + description);
+      terminal.println(
+          "    " + terminal.ansi("@|blue " + padEnd(commandName, 10, ' ') + "|@") + description);
     }
   }
 
@@ -153,5 +153,4 @@ public class HelpCommand extends AbstractClientCommand {
 
     return defaultValue.toString();
   }
-
 }

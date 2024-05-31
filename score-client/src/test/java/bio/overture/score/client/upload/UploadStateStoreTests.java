@@ -1,13 +1,12 @@
 package bio.overture.score.client.upload;
 
-import lombok.val;
-import org.junit.Test;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Optional;
-
-import static org.assertj.core.api.Assertions.assertThat;
+import lombok.val;
+import org.junit.Test;
 
 public class UploadStateStoreTests {
 
