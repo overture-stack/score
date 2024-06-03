@@ -21,8 +21,6 @@ import static com.fasterxml.jackson.databind.SerializationFeature.FAIL_ON_EMPTY_
 import static com.google.common.base.MoreObjects.firstNonNull;
 import static com.google.common.base.Strings.padEnd;
 import static com.google.common.base.Strings.repeat;
-import static org.icgc.dcc.common.core.util.Joiners.WHITESPACE;
-import static org.icgc.dcc.common.core.util.VersionUtils.getScmInfo;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -59,11 +57,9 @@ public class ClientBanner {
   @PostConstruct
   public void log() {
     log.info("{}", line());
-    log.info("Command:  {}", formatArguments());
     log.info("Version:  {}", getVersion());
     log.info("Built:    {}", getBuildTimestamp());
     log.info("SCM:");
-    log(getScmInfo());
     log.info("Profiles: {}", Arrays.toString(env.getActiveProfiles()));
     log(env);
     log.info("{}\n\n", line());
@@ -107,10 +103,6 @@ public class ClientBanner {
 
   private static String line() {
     return repeat("-", 100);
-  }
-
-  private String formatArguments() {
-    return "java " + WHITESPACE.join(getJavaArguments()) + " -jar " + getJarName() + " ...";
   }
 
   private List<String> getJavaArguments() {

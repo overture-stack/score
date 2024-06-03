@@ -2,8 +2,6 @@ package bio.overture.score.client.manifest.kf;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static lombok.AccessLevel.PRIVATE;
-import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableSet;
-import static org.icgc.dcc.common.core.util.stream.Streams.stream;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.collect.ImmutableSet;
@@ -35,31 +33,7 @@ public class KFParser {
   private static final String TOTAL = "total";
   private static final Set<KFFileEntity> EMPTY_KF_ENTITY_SET = ImmutableSet.of();
 
-  public static Set<KFFileEntity> readEntries(JsonNode root) {
-    val fileNode = getFileNode(getDataNode(root));
-    val totalHits = readFileTotal(fileNode);
-    if (totalHits > 0) {
-      val edgesNode = getEdgesNode(getHitsNode(fileNode));
-      return stream(edgesNode)
-          .map(KFParser::getNodeNode)
-          .map(
-              x ->
-                  KFFileEntity.builder()
-                      .controlledAccess(isControlledAccess(x))
-                      .participants(readParticipants(getParticipantsNode(x)))
-                      .fileId(readFileId(x))
-                      .fileName(readFileName(x))
-                      .dataType(readDataType(x))
-                      .fileFormat(readFileFormat(x))
-                      .size(readSize(x))
-                      .latestDid(readLatestDid(x))
-                      .id(readId(x))
-                      .build())
-          .collect(toImmutableSet());
-    } else {
-      return EMPTY_KF_ENTITY_SET;
-    }
-  }
+
 
   private static JsonNode getDataNode(JsonNode root) {
     return requiredGet(root, DATA);
@@ -144,22 +118,6 @@ public class KFParser {
   private static JsonNode getParticipantsNode(JsonNode node) {
     return requiredGet(node, PARTICIPANTS);
   }
-
-  private static Set<KFParticipantEntity> readParticipants(JsonNode participantsNode) {
-    val edgesNode = getEdgesNode(getHitsNode(participantsNode));
-    return stream(edgesNode)
-        .map(KFParser::getNodeNode)
-        .map(
-            x ->
-                KFParticipantEntity.builder()
-                    .participantId(readParticipantId(x))
-                    .proband(isProband(x))
-                    .studyShortName(readStudyShortName(getStudyNode(x)))
-                    .studyId(readStudyStudyId(getStudyNode(x)))
-                    .build())
-        .collect(toImmutableSet());
-  }
-
   private static JsonNode requiredGet(JsonNode root, String key) {
     checkArgument(
         root.has(key), "The following root element doesnt have the key '%s': %s", key, root);
