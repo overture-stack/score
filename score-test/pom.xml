@@ -59,32 +59,33 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
     </dependency>
 
 <!--    &lt;!&ndash; Test - DCC Auth &ndash;&gt;-->
-<!--    <dependency>-->
+<!-- <dependency>-->
 <!--      <groupId>org.icgc.dcc</groupId>-->
 <!--      <artifactId>dcc-auth-server</artifactId>-->
 <!--      <version>${dcc-auth.version}</version>-->
 <!--      <scope>test</scope>-->
-<!--    </dependency>-->
+<!-- </dependency>-->
 
     <!-- Test - DCC Metadata -->
-    <dependency>
-      <groupId>org.icgc.dcc</groupId>
-      <artifactId>dcc-metadata-core</artifactId>
-      <version>${dcc-metadata.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.icgc.dcc</groupId>
-      <artifactId>dcc-metadata-client</artifactId>
-      <version>${dcc-metadata.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.icgc.dcc</groupId>
-      <artifactId>dcc-metadata-server</artifactId>
-      <version>${dcc-metadata.version}</version>
-      <scope>test</scope>
-    </dependency>
+<!--    <dependency>-->
+<!--      <groupId>org.icgc.dcc</groupId>-->
+<!--      <artifactId>dcc-metadata-core</artifactId>-->
+<!--      <version>${dcc-metadata.version}</version>-->
+<!--      <scope>test</scope>-->
+<!--    </dependency>-->
+<!--    <dependency>-->
+<!--      <groupId>org.icgc.dcc</groupId>-->
+<!--      <artifactId>dcc-metadata-client</artifactId>-->
+<!--      <version>${dcc-metadata.version}</version>-->
+<!--      <scope>test</scope>-->
+<!--    </dependency>-->
+<!--    <dependency>-->
+<!--      <groupId>org.icgc.dcc</groupId>-->
+<!--      <artifactId>dcc-metadata-server</artifactId>-->
+<!--      <version>${dcc-metadata.version}</version>-->
+<!--      <scope>test</scope>-->
+<!--    </dependency>-->
+
 
     <!-- Test - Mongo -->
     <dependency>

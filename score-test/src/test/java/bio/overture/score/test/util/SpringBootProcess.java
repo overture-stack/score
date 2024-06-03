@@ -17,16 +17,11 @@
  */
 package bio.overture.score.test.util;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.StandardSystemProperty.JAVA_CLASS_PATH;
-
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.icgc.dcc.common.core.util.Joiners;
-import org.icgc.dcc.common.core.util.Splitters;
 
 /** Spring boot process wrapper. */
 @Slf4j
@@ -75,7 +70,7 @@ public class SpringBootProcess {
             .add(args)
             .build()
             .toArray(new String[args.length + 1]);
-    log.info(Joiners.WHITESPACE.join(args));
+    //    log.info(Joiners.WHITESPACE.join(args));
     val process = new ProcessBuilder(args).inheritIO().start();
     Runtime.getRuntime().addShutdownHook(new Thread(() -> process.destroyForcibly()));
     return process;
@@ -84,24 +79,25 @@ public class SpringBootProcess {
   @SneakyThrows
   private static File findArtifact(String artifactId) {
     // Try other dependencies
-    val paths = Splitters.COLON.splitToList(System.getProperty(JAVA_CLASS_PATH.key()));
-    for (val path : paths) {
-      val file = new File(path);
-      if (file.getName().startsWith(artifactId)) {
-        return file;
-      }
-    }
-
-    // Try project dependencies
-    val targetDir = new File("../" + artifactId + "/target").getCanonicalFile();
-    File[] localFiles =
-        targetDir.listFiles(
-            (File file, String name) -> name.startsWith(artifactId) && name.endsWith(".jar"));
-    if (localFiles != null && localFiles.length > 0) {
-      return localFiles[0];
-    }
-
-    checkArgument(false, "Could not find artifact %s in %s or %s", artifactId, targetDir, paths);
+    //    val paths = Splitters.COLON.splitToList(System.getProperty(JAVA_CLASS_PATH.key()));
+    //    for (val path : paths) {
+    //      val file = new File(path);
+    //      if (file.getName().startsWith(artifactId)) {
+    //        return file;
+    //      }
+    //    }
+    //
+    //    // Try project dependencies
+    //    val targetDir = new File("../" + artifactId + "/target").getCanonicalFile();
+    //    File[] localFiles =
+    //        targetDir.listFiles(
+    //            (File file, String name) -> name.startsWith(artifactId) && name.endsWith(".jar"));
+    //    if (localFiles != null && localFiles.length > 0) {
+    //      return localFiles[0];
+    //    }
+    //
+    //    checkArgument(false, "Could not find artifact %s in %s or %s", artifactId, targetDir,
+    // paths);
 
     return null;
   }

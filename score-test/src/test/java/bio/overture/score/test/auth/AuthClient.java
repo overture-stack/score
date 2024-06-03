@@ -34,7 +34,8 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.val;
-import org.icgc.dcc.common.core.security.SSLCertificateValidation;
+
+// import org.icgc.dcc.common.core.security.SSLCertificateValidation;
 
 @RequiredArgsConstructor
 public class AuthClient {
@@ -45,7 +46,7 @@ public class AuthClient {
 
   @SneakyThrows
   public String createAccessToken() {
-    SSLCertificateValidation.disable();
+    //    SSLCertificateValidation.disable();
 
     val url = new URL(serverUrl + "/oauth/token");
     val connection = (HttpsURLConnection) url.openConnection();
