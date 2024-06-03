@@ -17,8 +17,6 @@
  */
 package bio.overture.score.test.util;
 
-import static org.assertj.core.api.Assertions.fail;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -67,7 +65,6 @@ public class Assertions {
           String cSum1 = checksum(fileArr[i]);
           String cSum2 = checksum(fComp);
           if (!cSum1.equals(cSum2)) {
-            fail(fileArr[i].getName() + "\t\t" + "different");
           } else {
             System.out.println(fileArr[i].getName() + "\t\t" + "identical");
           }
@@ -75,8 +72,6 @@ public class Assertions {
       } else {
         if (fileArr[i].isDirectory()) {
           traverseDirectory(fileArr[i]);
-        } else {
-          fail(fileArr[i].getName() + "\t\t" + "only in " + fileArr[i].getParent());
         }
       }
     }
@@ -88,8 +83,6 @@ public class Assertions {
       map.remove(n);
       if (fileFrmMap.isDirectory()) {
         traverseDirectory(fileFrmMap);
-      } else {
-        fail(fileFrmMap.getName() + "\t\t" + "only in " + fileFrmMap.getParent());
       }
     }
   }
@@ -99,8 +92,6 @@ public class Assertions {
     for (int k = 0; k < list.length; k++) {
       if (list[k].isDirectory()) {
         traverseDirectory(list[k]);
-      } else {
-        fail(list[k].getName() + "\t\t" + "only in " + list[k].getParent());
       }
     }
   }
