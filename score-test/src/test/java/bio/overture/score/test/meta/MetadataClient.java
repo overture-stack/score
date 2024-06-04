@@ -19,7 +19,7 @@ package bio.overture.score.test.meta;
 
 import static bio.overture.score.core.util.Collectors.toImmutableList;
 
-import bio.overture.score.server.security.ssl.SSLCertificateValidation;
+import bio.overture.score.core.security.ssl.SSLCertificateValidation;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
