@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.
+ * Copyright (c) 2024 The Ontario Institute for Cancer Research. All rights reserved.
  *
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
  * You should have received a copy of the GNU General Public License along with
@@ -15,34 +15,30 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package bio.overture.score.server.util;
+package bio.overture.score.core.util;
 
-import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
+import lombok.NonNull;
 
-public class Access {
-
-  public static final String OPEN = "open";
-  public static final String CONTROLLED = "controlled";
-
-  private String value;
-
-  public Access(String accessType) {
-    if (Strings.isNullOrEmpty(accessType) || accessType.equalsIgnoreCase("null")) {
-      value = CONTROLLED;
+public class Streams {
+  public static <T> Stream<T> stream(@NonNull Iterable<T> iterable) {
+    if (iterable == null) {
+      throw new NullPointerException("iterable");
     } else {
-      value = accessType;
+      return StreamSupport.stream(iterable.spliterator(), false);
     }
   }
 
-  public boolean isOpen() {
-    return OPEN.equalsIgnoreCase(value);
+  @SafeVarargs
+  public static <T> Stream<T> stream(@NonNull T... values) {
+    if (values == null) {
+      throw new NullPointerException("values");
+    } else {
+      return ImmutableList.copyOf(values).stream();
+    }
   }
 
-  public boolean isControlled() {
-    return CONTROLLED.equalsIgnoreCase(value);
-  }
-
-  public boolean isOther() {
-    return !(isControlled() || isOpen());
-  }
+  private Streams() {}
 }

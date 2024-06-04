@@ -23,6 +23,7 @@ import static com.google.common.net.HttpHeaders.CONTENT_LENGTH;
 import static com.google.common.net.HttpHeaders.CONTENT_TYPE;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+import bio.overture.score.server.security.ssl.SSLCertificateValidation;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.io.BaseEncoding;
@@ -35,8 +36,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.val;
 
-// import org.icgc.dcc.common.core.security.SSLCertificateValidation;
-
 @RequiredArgsConstructor
 public class AuthClient {
 
@@ -46,7 +45,7 @@ public class AuthClient {
 
   @SneakyThrows
   public String createAccessToken() {
-    //    SSLCertificateValidation.disable();
+    SSLCertificateValidation.disable();
 
     val url = new URL(serverUrl + "/oauth/token");
     val connection = (HttpsURLConnection) url.openConnection();

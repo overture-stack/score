@@ -17,12 +17,12 @@
  */
 package bio.overture.score.client.metadata.legacy;
 
-import static bio.overture.score.client.util.Collectors.toImmutableList;
+import static bio.overture.score.core.util.Collectors.toImmutableList;
 import static java.util.stream.Collectors.joining;
 
 import bio.overture.score.client.metadata.Entity;
 import bio.overture.score.client.metadata.EntityNotFoundException;
-import bio.overture.score.client.ssl.SSLCertificateValidation;
+import bio.overture.score.server.security.ssl.SSLCertificateValidation;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;

@@ -37,7 +37,6 @@ import bio.overture.score.server.repository.URLGenerator;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.GetObjectRequest;
-import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.S3Object;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -104,29 +103,27 @@ public class S3DownloadService implements DownloadService {
       val objectSpec = getSpecification(objectId);
 
       // Short-circuit in default case
-      if (objectSpec != null) {
-        if (!forExternalUse && (offset == 0L && length < 0L)) {
-          return excludeUrls ? removeUrls(objectSpec) : objectSpec;
-        }
+      if (!forExternalUse && (offset == 0L && length < 0L)) {
+        return excludeUrls ? removeUrls(objectSpec) : objectSpec;
+      }
 
-        // Calculate range values
-        // To retrieve to the end of the file
-        if (!forExternalUse && (length < 0L)) {
-          length = objectSpec.getObjectSize() - offset;
-        }
+      // Calculate range values
+      // To retrieve to the end of the file
+      if (!forExternalUse && (length < 0L)) {
+        length = objectSpec.getObjectSize() - offset;
+      }
 
-        // Validate offset and length parameters:
-        // Check if the offset + length > length - that would be too big
-        if ((offset + length) > objectSpec.getObjectSize()) {
-          throw new InternalUnrecoverableError(
-              "Specified parameters exceed object size (object id: "
-                  + objectId
-                  + ", offset: "
-                  + offset
-                  + ", length: "
-                  + length
-                  + ")");
-        }
+      // Validate offset and length parameters:
+      // Check if the offset + length > length - that would be too big
+      if ((offset + length) > objectSpec.getObjectSize()) {
+        throw new InternalUnrecoverableError(
+            "Specified parameters exceed object size (object id: "
+                + objectId
+                + ", offset: "
+                + offset
+                + ", length: "
+                + length
+                + ")");
       }
 
       // Construct ObjectSpecification for actual object in /data logical folder
@@ -139,31 +136,20 @@ public class S3DownloadService implements DownloadService {
       } else {
         parts = partCalculator.divide(offset, length);
       }
-      if (objectSpec != null) {
-        fillPartUrls(objectKey, parts, objectSpec.isRelocated(), forExternalUse);
 
-        val spec =
-            new ObjectSpecification(
-                objectKey.getKey(),
-                objectId,
-                objectId,
-                parts,
-                length,
-                objectSpec.getObjectMd5(),
-                objectSpec.isRelocated());
+      fillPartUrls(objectKey, parts, objectSpec.isRelocated(), forExternalUse);
 
-        return excludeUrls ? removeUrls(spec) : spec;
-      } else {
-        ObjectMetadata metadata =
-            s3Client.getObjectMetadata(
-                bucketNamingService.getStateBucketName(objectId), objectKey.getKey());
-        fillPartUrls(objectKey, parts, false, forExternalUse);
-        val spec =
-            new ObjectSpecification(
-                objectKey.getKey(), objectId, objectId, parts, length, metadata.getETag(), false);
+      val spec =
+          new ObjectSpecification(
+              objectKey.getKey(),
+              objectId,
+              objectId,
+              parts,
+              length,
+              objectSpec.getObjectMd5(),
+              objectSpec.isRelocated());
 
-        return excludeUrls ? removeUrls(spec) : spec;
-      }
+      return excludeUrls ? removeUrls(spec) : spec;
 
     } catch (Exception e) {
       log.error(
@@ -239,8 +225,6 @@ public class S3DownloadService implements DownloadService {
           objectKey,
           e);
       throw new NotRetryableException(e);
-    } catch (IdNotFoundException e) {
-      return null;
     }
   }
 

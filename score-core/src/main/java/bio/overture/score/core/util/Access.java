@@ -15,28 +15,34 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package bio.overture.score.server.security.ssl;
+package bio.overture.score.core.util;
 
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.KeyManager;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManager;
+import com.google.common.base.Strings;
 
-public class SSLCertificateValidation {
-  public static void disable() {
-    try {
-      SSLContext sslContext = SSLContext.getInstance("TLS");
-      TrustManager[] trustManagerArray = new TrustManager[] {new NoTestX509TrustManager()};
-      sslContext.init((KeyManager[]) null, trustManagerArray, (SecureRandom) null);
-      HttpsURLConnection.setDefaultSSLSocketFactory(sslContext.getSocketFactory());
-      HttpsURLConnection.setDefaultHostnameVerifier(new NoTestHostnameVerifier());
-    } catch (NoSuchAlgorithmException | KeyManagementException e) {
-      throw new RuntimeException(e);
+public class Access {
+
+  public static final String OPEN = "open";
+  public static final String CONTROLLED = "controlled";
+
+  private String value;
+
+  public Access(String accessType) {
+    if (Strings.isNullOrEmpty(accessType) || accessType.equalsIgnoreCase("null")) {
+      value = CONTROLLED;
+    } else {
+      value = accessType;
     }
   }
 
-  private SSLCertificateValidation() {}
+  public boolean isOpen() {
+    return OPEN.equalsIgnoreCase(value);
+  }
+
+  public boolean isControlled() {
+    return CONTROLLED.equalsIgnoreCase(value);
+  }
+
+  public boolean isOther() {
+    return !(isControlled() || isOpen());
+  }
 }

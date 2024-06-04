@@ -17,26 +17,20 @@
  */
 package bio.overture.score.server.security.ssl;
 
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.KeyManager;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManager;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
+import javax.net.ssl.X509TrustManager;
 
-public class SSLCertificateValidation {
-  public static void disable() {
-    try {
-      SSLContext sslContext = SSLContext.getInstance("TLS");
-      TrustManager[] trustManagerArray = new TrustManager[] {new NoTestX509TrustManager()};
-      sslContext.init((KeyManager[]) null, trustManagerArray, (SecureRandom) null);
-      HttpsURLConnection.setDefaultSSLSocketFactory(sslContext.getSocketFactory());
-      HttpsURLConnection.setDefaultHostnameVerifier(new NoTestHostnameVerifier());
-    } catch (NoSuchAlgorithmException | KeyManagementException e) {
-      throw new RuntimeException(e);
-    }
+public class NoTestX509TrustManager implements X509TrustManager {
+  public NoTestX509TrustManager() {}
+
+  public void checkClientTrusted(X509Certificate[] chain, String authType)
+      throws CertificateException {}
+
+  public void checkServerTrusted(X509Certificate[] chain, String authType)
+      throws CertificateException {}
+
+  public X509Certificate[] getAcceptedIssuers() {
+    return null;
   }
-
-  private SSLCertificateValidation() {}
 }

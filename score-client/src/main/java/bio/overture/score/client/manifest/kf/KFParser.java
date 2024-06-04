@@ -1,7 +1,7 @@
 package bio.overture.score.client.manifest.kf;
 
-import static bio.overture.score.client.util.Collectors.toImmutableSet;
-import static bio.overture.score.client.util.Streams.stream;
+import static bio.overture.score.core.util.Collectors.toImmutableSet;
+import static bio.overture.score.core.util.Streams.stream;
 import static com.google.common.base.Preconditions.checkArgument;
 import static lombok.AccessLevel.PRIVATE;
 

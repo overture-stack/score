@@ -1,6 +1,6 @@
 package bio.overture.score.client.manifest.kf;
 
-import static bio.overture.score.client.util.Collectors.toImmutableList;
+import static bio.overture.score.core.util.Collectors.toImmutableList;
 import static java.lang.String.format;
 
 import bio.overture.score.client.manifest.DownloadManifest;

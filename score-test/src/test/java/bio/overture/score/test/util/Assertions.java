@@ -17,7 +17,7 @@
  */
 package bio.overture.score.test.util;
 
-// import static org.assertj.core.api.Assertions.fail;
+import static org.assertj.core.api.Assertions.fail;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -67,7 +67,7 @@ public class Assertions {
           String cSum1 = checksum(fileArr[i]);
           String cSum2 = checksum(fComp);
           if (!cSum1.equals(cSum2)) {
-            //            fail(fileArr[i].getName() + "\t\t" + "different");
+            fail(fileArr[i].getName() + "\t\t" + "different");
           } else {
             System.out.println(fileArr[i].getName() + "\t\t" + "identical");
           }
@@ -76,7 +76,7 @@ public class Assertions {
         if (fileArr[i].isDirectory()) {
           traverseDirectory(fileArr[i]);
         } else {
-          //          fail(fileArr[i].getName() + "\t\t" + "only in " + fileArr[i].getParent());
+          fail(fileArr[i].getName() + "\t\t" + "only in " + fileArr[i].getParent());
         }
       }
     }
@@ -89,7 +89,7 @@ public class Assertions {
       if (fileFrmMap.isDirectory()) {
         traverseDirectory(fileFrmMap);
       } else {
-        //        fail(fileFrmMap.getName() + "\t\t" + "only in " + fileFrmMap.getParent());
+        fail(fileFrmMap.getName() + "\t\t" + "only in " + fileFrmMap.getParent());
       }
     }
   }
@@ -100,7 +100,7 @@ public class Assertions {
       if (list[k].isDirectory()) {
         traverseDirectory(list[k]);
       } else {
-        //        fail(list[k].getName() + "\t\t" + "only in " + list[k].getParent());
+        fail(list[k].getName() + "\t\t" + "only in " + list[k].getParent());
       }
     }
   }

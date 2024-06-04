@@ -17,26 +17,13 @@
  */
 package bio.overture.score.server.security.ssl;
 
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.KeyManager;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManager;
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.SSLSession;
 
-public class SSLCertificateValidation {
-  public static void disable() {
-    try {
-      SSLContext sslContext = SSLContext.getInstance("TLS");
-      TrustManager[] trustManagerArray = new TrustManager[] {new NoTestX509TrustManager()};
-      sslContext.init((KeyManager[]) null, trustManagerArray, (SecureRandom) null);
-      HttpsURLConnection.setDefaultSSLSocketFactory(sslContext.getSocketFactory());
-      HttpsURLConnection.setDefaultHostnameVerifier(new NoTestHostnameVerifier());
-    } catch (NoSuchAlgorithmException | KeyManagementException e) {
-      throw new RuntimeException(e);
-    }
+public class NoTestHostnameVerifier implements HostnameVerifier {
+  public NoTestHostnameVerifier() {}
+
+  public boolean verify(String hostname, SSLSession sslSession) {
+    return true;
   }
-
-  private SSLCertificateValidation() {}
 }

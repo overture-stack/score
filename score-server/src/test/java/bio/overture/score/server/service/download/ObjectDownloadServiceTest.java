@@ -27,6 +27,7 @@ import static org.mockito.Mockito.when;
 import bio.overture.score.core.util.ObjectKeys;
 import bio.overture.score.core.util.SimplePartCalculator;
 import bio.overture.score.server.config.ServerConfig;
+import bio.overture.score.server.exception.IdNotFoundException;
 import bio.overture.score.server.metadata.MetadataEntity;
 import bio.overture.score.server.metadata.MetadataService;
 import bio.overture.score.server.repository.s3.S3BucketNamingService;
@@ -103,7 +104,7 @@ public class ObjectDownloadServiceTest extends S3DownloadService {
     when(mockService.getEntity(objectId)).thenReturn(metadataEntity);
   }
 
-  @Test(expected = NullPointerException.class)
+  @Test(expected = IdNotFoundException.class)
   public void it_takes_two_to_fail_with_not_found() {
     // stubbing appears before the actual execution
     val firstException = new AmazonServiceException("Didn't find Object Id in bucket");

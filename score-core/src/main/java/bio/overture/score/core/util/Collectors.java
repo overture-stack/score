@@ -15,28 +15,42 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package bio.overture.score.server.security.ssl;
+package bio.overture.score.core.util;
 
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.KeyManager;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManager;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import java.util.stream.Collector;
 
-public class SSLCertificateValidation {
-  public static void disable() {
-    try {
-      SSLContext sslContext = SSLContext.getInstance("TLS");
-      TrustManager[] trustManagerArray = new TrustManager[] {new NoTestX509TrustManager()};
-      sslContext.init((KeyManager[]) null, trustManagerArray, (SecureRandom) null);
-      HttpsURLConnection.setDefaultSSLSocketFactory(sslContext.getSocketFactory());
-      HttpsURLConnection.setDefaultHostnameVerifier(new NoTestHostnameVerifier());
-    } catch (NoSuchAlgorithmException | KeyManagementException e) {
-      throw new RuntimeException(e);
-    }
+public class Collectors {
+  public static <T> Collector<T, ImmutableList.Builder<T>, ImmutableList<T>> toImmutableList() {
+    return Collector.of(
+        ImmutableList.Builder::new,
+        (builder, e) -> {
+          builder.add(e);
+        },
+        (b1, b2) -> {
+          return b1.addAll(b2.build());
+        },
+        (builder) -> {
+          return builder.build();
+        });
   }
 
-  private SSLCertificateValidation() {}
+  public static <T> Collector<T, ImmutableSet.Builder<T>, ImmutableSet<T>> toImmutableSet() {
+    return Collector.of(
+        ImmutableSet.Builder::new,
+        (builder, e) -> {
+          builder.add(e);
+        },
+        (b1, b2) -> {
+          return b1.addAll(b2.build());
+        },
+        (builder) -> {
+          return builder.build();
+        });
+  }
+
+  private Collectors() {
+    throw new UnsupportedOperationException("This is a utility class and cannot be instantiated");
+  }
 }

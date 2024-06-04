@@ -17,7 +17,7 @@
  */
 package bio.overture.score.client.command;
 
-import static bio.overture.score.client.util.VersionUtils.getScmInfo;
+import static bio.overture.score.core.util.VersionUtils.getScmInfo;
 import static com.google.common.base.MoreObjects.firstNonNull;
 
 import com.beust.jcommander.Parameters;
