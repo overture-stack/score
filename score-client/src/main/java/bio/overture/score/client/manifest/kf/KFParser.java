@@ -1,9 +1,9 @@
 package bio.overture.score.client.manifest.kf;
 
+import static bio.overture.score.core.util.Collectors.toImmutableSet;
+import static bio.overture.score.core.util.Streams.stream;
 import static com.google.common.base.Preconditions.checkArgument;
 import static lombok.AccessLevel.PRIVATE;
-import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableSet;
-import static org.icgc.dcc.common.core.util.stream.Streams.stream;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.collect.ImmutableSet;

@@ -17,8 +17,9 @@
  */
 package bio.overture.score.test.meta;
 
-import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
+import static bio.overture.score.core.util.Collectors.toImmutableList;
 
+import bio.overture.score.core.security.ssl.SSLCertificateValidation;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -30,7 +31,6 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.val;
-import org.icgc.dcc.common.core.security.SSLCertificateValidation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;

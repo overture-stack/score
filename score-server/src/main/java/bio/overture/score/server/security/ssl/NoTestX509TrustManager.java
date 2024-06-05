@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.
+ * Copyright (c) 2024 The Ontario Institute for Cancer Research. All rights reserved.
  *
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
  * You should have received a copy of the GNU General Public License along with
@@ -15,20 +15,22 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package bio.overture.score.server.config;
+package bio.overture.score.server.security.ssl;
 
-import bio.overture.score.server.security.ssl.SSLCertificateValidation;
-import javax.annotation.PostConstruct;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
+import javax.net.ssl.X509TrustManager;
 
-/** Disables verification of SSL self-signed certificates. */
-@Profile("dev")
-@Configuration
-public class SSLConfig {
+public class NoTestX509TrustManager implements X509TrustManager {
+  public NoTestX509TrustManager() {}
 
-  @PostConstruct
-  public void init() {
-    SSLCertificateValidation.disable();
+  public void checkClientTrusted(X509Certificate[] chain, String authType)
+      throws CertificateException {}
+
+  public void checkServerTrusted(X509Certificate[] chain, String authType)
+      throws CertificateException {}
+
+  public X509Certificate[] getAcceptedIssuers() {
+    return null;
   }
 }

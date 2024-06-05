@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.
+ * Copyright (c) 2024 The Ontario Institute for Cancer Research. All rights reserved.
  *
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
  * You should have received a copy of the GNU General Public License along with
@@ -15,20 +15,28 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package bio.overture.score.server.config;
+package bio.overture.score.server.security.ssl;
 
-import bio.overture.score.server.security.ssl.SSLCertificateValidation;
-import javax.annotation.PostConstruct;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.KeyManager;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
 
-/** Disables verification of SSL self-signed certificates. */
-@Profile("dev")
-@Configuration
-public class SSLConfig {
-
-  @PostConstruct
-  public void init() {
-    SSLCertificateValidation.disable();
+public class SSLCertificateValidation {
+  public static void disable() {
+    try {
+      SSLContext sslContext = SSLContext.getInstance("TLS");
+      TrustManager[] trustManagerArray = new TrustManager[] {new NoTestX509TrustManager()};
+      sslContext.init((KeyManager[]) null, trustManagerArray, (SecureRandom) null);
+      HttpsURLConnection.setDefaultSSLSocketFactory(sslContext.getSocketFactory());
+      HttpsURLConnection.setDefaultHostnameVerifier(new NoTestHostnameVerifier());
+    } catch (NoSuchAlgorithmException | KeyManagementException e) {
+      throw new RuntimeException(e);
+    }
   }
+
+  private SSLCertificateValidation() {}
 }

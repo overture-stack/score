@@ -18,9 +18,9 @@
 package bio.overture.score.client.command;
 
 import static bio.overture.score.client.cli.Parameters.checkParameter;
+import static bio.overture.score.client.util.Formats.formatBytes;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
-import static org.icgc.dcc.common.core.util.Formats.formatBytes;
 
 import bio.overture.score.client.cli.ConverterFactory.OutputLayoutConverter;
 import bio.overture.score.client.cli.CreatableDirectoryValidator;

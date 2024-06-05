@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.
+ * Copyright (c) 2024 The Ontario Institute for Cancer Research. All rights reserved.
  *
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
  * You should have received a copy of the GNU General Public License along with
@@ -15,20 +15,30 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package bio.overture.score.server.config;
+package bio.overture.score.core.util;
 
-import bio.overture.score.server.security.ssl.SSLCertificateValidation;
-import javax.annotation.PostConstruct;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
+import com.google.common.collect.ImmutableList;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
+import lombok.NonNull;
 
-/** Disables verification of SSL self-signed certificates. */
-@Profile("dev")
-@Configuration
-public class SSLConfig {
-
-  @PostConstruct
-  public void init() {
-    SSLCertificateValidation.disable();
+public class Streams {
+  public static <T> Stream<T> stream(@NonNull Iterable<T> iterable) {
+    if (iterable == null) {
+      throw new NullPointerException("iterable");
+    } else {
+      return StreamSupport.stream(iterable.spliterator(), false);
+    }
   }
+
+  @SafeVarargs
+  public static <T> Stream<T> stream(@NonNull T... values) {
+    if (values == null) {
+      throw new NullPointerException("values");
+    } else {
+      return ImmutableList.copyOf(values).stream();
+    }
+  }
+
+  private Streams() {}
 }

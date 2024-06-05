@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.
+ * Copyright (c) 2024 The Ontario Institute for Cancer Research. All rights reserved.
  *
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
  * You should have received a copy of the GNU General Public License along with
@@ -15,20 +15,15 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package bio.overture.score.server.config;
+package bio.overture.score.core.security.ssl;
 
-import bio.overture.score.server.security.ssl.SSLCertificateValidation;
-import javax.annotation.PostConstruct;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.SSLSession;
 
-/** Disables verification of SSL self-signed certificates. */
-@Profile("dev")
-@Configuration
-public class SSLConfig {
+public class NoTestHostnameVerifier implements HostnameVerifier {
+  public NoTestHostnameVerifier() {}
 
-  @PostConstruct
-  public void init() {
-    SSLCertificateValidation.disable();
+  public boolean verify(String hostname, SSLSession sslSession) {
+    return true;
   }
 }
