@@ -53,24 +53,6 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
               <enabled>true</enabled>
           </snapshots>
       </repository>
-      <!-- DCC -->
-      <repository>
-          <id>dcc-release</id>
-          <url>https://artifacts.oicr.on.ca/artifactory/dcc-release</url>
-          <snapshots>
-              <enabled>false</enabled>
-          </snapshots>
-      </repository>
-      <repository>
-          <id>dcc-snapshot</id>
-          <url>https://artifacts.oicr.on.ca/artifactory/dcc-snapshot</url>
-          <releases>
-              <enabled>false</enabled>
-          </releases>
-          <snapshots>
-              <enabled>true</enabled>
-          </snapshots>
-      </repository>
   </repositories>
 
   <dependencies>
@@ -269,10 +251,6 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
     <maven-compiler-plugin.version>3.1</maven-compiler-plugin.version>
     <maven-compiler-plugin.source>${jdk.version}</maven-compiler-plugin.source>
     <maven-compiler-plugin.target>${jdk.version}</maven-compiler-plugin.target>
-
-    <!-- Versions - DCC -->
-    <dcc-metadata.version>0.0.22</dcc-metadata.version>
-    <dcc-auth.version>4.3.2</dcc-auth.version>
 
     <!-- Versions - Spring -->
     <spring-boot.version>2.1.6.RELEASE</spring-boot.version>
