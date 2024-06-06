@@ -120,15 +120,17 @@ spring:
   profiles.include: prod
 
 s3:
-  endpoint: s3-external-1.amazonaws.com
-  masterEncryptionKeyId: af628f04-ac12-4b11-bf83-6545fd44ad18
+  endpoint: http://localhost:8085
+  access-key: minio
+  secret-key: minio123
+#  masterEncryptionKeyId: af628f04-ac12-4b11-bf83-6545fd44ad18
 
 bucket:
-  name.object: oicr.icgc
-  name.state: oicr.icgc
+  name.object: oicr.icgc.test
+  name.state: oicr.icgc.test
 
 metadata:
-  url: https://virginia.song.icgc.org
+  url: http://localhost:8080
   useLegacyMode: false
 
 ---
@@ -145,7 +147,7 @@ s3:
   masterEncryptionKeyId:
 
 metadata:
-  url: https://song.cancercollaboratory.org
+  url: http://localhost:8080
   useLegacyMode: false
 
 ---
