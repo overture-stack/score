@@ -119,11 +119,10 @@ public class S3DownloadService implements DownloadService {
         fillPartUrls(objectKey, parts, false, forExternalUse);
         objectSpec =
             new ObjectSpecification(
-                objectKey.getKey(), objectId, objectId, parts, length, metadata.getETag(), false);
+                objectKey.getKey(), objectId, objectId, parts, metadata.getContentLength(), metadata.getETag(), false);
       }
 
       // Short-circuit in default case
-      if (objectSpec != null) {
         if (!forExternalUse && (offset == 0L && length < 0L)) {
           return excludeUrls ? removeUrls(objectSpec) : objectSpec;
         }
@@ -146,8 +145,6 @@ public class S3DownloadService implements DownloadService {
                   + length
                   + ")");
         }
-      }
-      if (objectSpec != null) {
         fillPartUrls(objectKey, parts, objectSpec.isRelocated(), forExternalUse);
 
         val spec =
@@ -160,8 +157,7 @@ public class S3DownloadService implements DownloadService {
                 objectSpec.getObjectMd5(),
                 objectSpec.isRelocated());
 
-        return excludeUrls ? removeUrls(spec) : spec;
-      }
+      return excludeUrls ? removeUrls(spec) : spec;
     } catch (Exception e) {
       log.error(
           "Failed to download objectId: {}, offset: {}, length: {}, forExternalUse: {}, excludeUrls: {} : {} ",
@@ -174,7 +170,6 @@ public class S3DownloadService implements DownloadService {
 
       throw e;
     }
-    return null;
   }
 
   private static ObjectSpecification removeUrls(ObjectSpecification spec) {
