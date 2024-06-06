@@ -37,6 +37,7 @@ import bio.overture.score.server.repository.URLGenerator;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.GetObjectRequest;
+import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.S3Object;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -99,32 +100,7 @@ public class S3DownloadService implements DownloadService {
 
       checkArgument(offset > -1L);
 
-      // Retrieve our meta file for object id
-      val objectSpec = getSpecification(objectId);
-
-      // Short-circuit in default case
-      if (!forExternalUse && (offset == 0L && length < 0L)) {
-        return excludeUrls ? removeUrls(objectSpec) : objectSpec;
-      }
-
-      // Calculate range values
-      // To retrieve to the end of the file
-      if (!forExternalUse && (length < 0L)) {
-        length = objectSpec.getObjectSize() - offset;
-      }
-
-      // Validate offset and length parameters:
-      // Check if the offset + length > length - that would be too big
-      if ((offset + length) > objectSpec.getObjectSize()) {
-        throw new InternalUnrecoverableError(
-            "Specified parameters exceed object size (object id: "
-                + objectId
-                + ", offset: "
-                + offset
-                + ", length: "
-                + length
-                + ")");
-      }
+      var objectSpec = getSpecification(objectId);
 
       // Construct ObjectSpecification for actual object in /data logical folder
       val objectKey = ObjectKeys.getObjectKey(dataDir, objectId);
@@ -136,21 +112,52 @@ public class S3DownloadService implements DownloadService {
       } else {
         parts = partCalculator.divide(offset, length);
       }
+      if (objectSpec == null) {
+        ObjectMetadata metadata =
+            s3Client.getObjectMetadata(
+                bucketNamingService.getStateBucketName(objectId), objectKey.getKey());
+        fillPartUrls(objectKey, parts, false, forExternalUse);
+        objectSpec =
+            new ObjectSpecification(
+                objectKey.getKey(), objectId, objectId, parts, metadata.getContentLength(), metadata.getETag(), false);
+      }
 
-      fillPartUrls(objectKey, parts, objectSpec.isRelocated(), forExternalUse);
+      // Short-circuit in default case
+        if (!forExternalUse && (offset == 0L && length < 0L)) {
+          return excludeUrls ? removeUrls(objectSpec) : objectSpec;
+        }
 
-      val spec =
-          new ObjectSpecification(
-              objectKey.getKey(),
-              objectId,
-              objectId,
-              parts,
-              length,
-              objectSpec.getObjectMd5(),
-              objectSpec.isRelocated());
+        // Calculate range values
+        // To retrieve to the end of the file
+        if (!forExternalUse && (length < 0L)) {
+          length = objectSpec.getObjectSize() - offset;
+        }
+
+        // Validate offset and length parameters:
+        // Check if the offset + length > length - that would be too big
+        if ((offset + length) > objectSpec.getObjectSize()) {
+          throw new InternalUnrecoverableError(
+              "Specified parameters exceed object size (object id: "
+                  + objectId
+                  + ", offset: "
+                  + offset
+                  + ", length: "
+                  + length
+                  + ")");
+        }
+        fillPartUrls(objectKey, parts, objectSpec.isRelocated(), forExternalUse);
+
+        val spec =
+            new ObjectSpecification(
+                objectKey.getKey(),
+                objectId,
+                objectId,
+                parts,
+                length,
+                objectSpec.getObjectMd5(),
+                objectSpec.isRelocated());
 
       return excludeUrls ? removeUrls(spec) : spec;
-
     } catch (Exception e) {
       log.error(
           "Failed to download objectId: {}, offset: {}, length: {}, forExternalUse: {}, excludeUrls: {} : {} ",
@@ -186,8 +193,6 @@ public class S3DownloadService implements DownloadService {
       }
     }
   }
-
-  // This really is a misleading method name - should be retrieveMetaFile() or something
   public ObjectSpecification getSpecification(String objectId) {
     val objectKey = ObjectKeys.getObjectKey(dataDir, objectId);
     val objectMetaKey = ObjectKeys.getObjectMetaKey(dataDir, objectId);
@@ -225,6 +230,8 @@ public class S3DownloadService implements DownloadService {
           objectKey,
           e);
       throw new NotRetryableException(e);
+    } catch (IdNotFoundException e) {
+      return null;
     }
   }
 
