@@ -100,8 +100,27 @@ public class S3DownloadService implements DownloadService {
 
       checkArgument(offset > -1L);
 
-      // Retrieve our meta file for object id
-      val objectSpec = getSpecification(objectId);
+      var objectSpec = getSpecification(objectId);
+
+      // Construct ObjectSpecification for actual object in /data logical folder
+      val objectKey = ObjectKeys.getObjectKey(dataDir, objectId);
+
+      List<Part> parts;
+      if (forExternalUse) {
+        // Return as a single part - no matter how large
+        parts = partCalculator.specify(0L, -1L);
+      } else {
+        parts = partCalculator.divide(offset, length);
+      }
+      if (objectSpec == null) {
+        ObjectMetadata metadata =
+            s3Client.getObjectMetadata(
+                bucketNamingService.getStateBucketName(objectId), objectKey.getKey());
+        fillPartUrls(objectKey, parts, false, forExternalUse);
+        objectSpec =
+            new ObjectSpecification(
+                objectKey.getKey(), objectId, objectId, parts, length, metadata.getETag(), false);
+      }
 
       // Short-circuit in default case
       if (objectSpec != null) {
@@ -128,17 +147,6 @@ public class S3DownloadService implements DownloadService {
                   + ")");
         }
       }
-
-      // Construct ObjectSpecification for actual object in /data logical folder
-      val objectKey = ObjectKeys.getObjectKey(dataDir, objectId);
-
-      List<Part> parts;
-      if (forExternalUse) {
-        // Return as a single part - no matter how large
-        parts = partCalculator.specify(0L, -1L);
-      } else {
-        parts = partCalculator.divide(offset, length);
-      }
       if (objectSpec != null) {
         fillPartUrls(objectKey, parts, objectSpec.isRelocated(), forExternalUse);
 
@@ -151,16 +159,6 @@ public class S3DownloadService implements DownloadService {
                 length,
                 objectSpec.getObjectMd5(),
                 objectSpec.isRelocated());
-
-        return excludeUrls ? removeUrls(spec) : spec;
-      } else {
-        ObjectMetadata metadata =
-            s3Client.getObjectMetadata(
-                bucketNamingService.getStateBucketName(objectId), objectKey.getKey());
-        fillPartUrls(objectKey, parts, false, forExternalUse);
-        val spec =
-            new ObjectSpecification(
-                objectKey.getKey(), objectId, objectId, parts, length, metadata.getETag(), false);
 
         return excludeUrls ? removeUrls(spec) : spec;
       }
@@ -176,6 +174,7 @@ public class S3DownloadService implements DownloadService {
 
       throw e;
     }
+    return null;
   }
 
   private static ObjectSpecification removeUrls(ObjectSpecification spec) {
@@ -199,8 +198,6 @@ public class S3DownloadService implements DownloadService {
       }
     }
   }
-
-  // This really is a misleading method name - should be retrieveMetaFile() or something
   public ObjectSpecification getSpecification(String objectId) {
     val objectKey = ObjectKeys.getObjectKey(dataDir, objectId);
     val objectMetaKey = ObjectKeys.getObjectMetaKey(dataDir, objectId);
