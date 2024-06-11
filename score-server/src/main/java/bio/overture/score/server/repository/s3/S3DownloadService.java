@@ -115,7 +115,7 @@ public class S3DownloadService implements DownloadService {
       if (objectSpec == null) {
         ObjectMetadata metadata =
             s3Client.getObjectMetadata(
-                bucketNamingService.getStateBucketName(objectId), objectKey.getKey());
+                bucketNamingService.getObjectBucketName(objectId), objectKey.getKey());
         fillPartUrls(objectKey, parts, false, forExternalUse);
         objectSpec =
             new ObjectSpecification(
