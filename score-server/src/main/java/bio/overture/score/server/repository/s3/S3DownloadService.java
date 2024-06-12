@@ -36,17 +36,17 @@ import bio.overture.score.server.repository.DownloadService;
 import bio.overture.score.server.repository.URLGenerator;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.GetObjectRequest;
-import com.amazonaws.services.s3.model.ObjectMetadata;
-import com.amazonaws.services.s3.model.S3Object;
+import com.amazonaws.services.s3.model.*;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import lombok.Cleanup;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -105,6 +105,70 @@ public class S3DownloadService implements DownloadService {
       // Construct ObjectSpecification for actual object in /data logical folder
       val objectKey = ObjectKeys.getObjectKey(dataDir, objectId);
 
+      if (objectSpec == null) {
+        ObjectMetadata metadata =
+            s3Client.getObjectMetadata(
+                bucketNamingService.getObjectBucketName(objectId), objectKey.getKey());
+        // fetch the list of multipartUploads for the bucket
+        ListMultipartUploadsRequest listMultipartUploadsRequest =
+            new ListMultipartUploadsRequest(bucketNamingService.getObjectBucketName(objectId));
+        List<MultipartUpload> multipartUploads =
+            s3Client.listMultipartUploads(listMultipartUploadsRequest).getMultipartUploads();
+        // filter the required uploadId amongst multipartUploads
+        Optional<MultipartUpload> multipartUpload =
+            multipartUploads.stream()
+                .filter(upload -> upload.getKey().equals(objectKey.getKey()))
+                .findFirst();
+        List<Part> parts = new ArrayList<>();
+        if (multipartUpload.isPresent()) {
+          // fetch the list of Parts using the Upload ID
+          String uploadId = multipartUpload.get().getUploadId();
+          ListPartsRequest listPartsRequest =
+              new ListPartsRequest(
+                  bucketNamingService.getObjectBucketName(objectId), objectKey.getKey(), uploadId);
+          PartListing partListing = s3Client.listParts(listPartsRequest);
+
+          // calculate the parts and the offset
+          List<PartSummary> partSummaries = partListing.getParts();
+          long offsetTemp = 0;
+          for (PartSummary partSummary : partSummaries) {
+            Part part = new Part(partSummary.getPartNumber(), partSummary.getSize(), offsetTemp);
+            parts.add(part);
+            offset += partSummary.getSize();
+          }
+        }
+        fillPartUrls(objectKey, parts, false, forExternalUse);
+        objectSpec =
+            new ObjectSpecification(
+                objectKey.getKey(),
+                objectId,
+                objectId,
+                parts,
+                metadata.getContentLength(),
+                metadata.getETag(),
+                false);
+      }
+      // Short-circuit in default case
+      if (!forExternalUse && (offset == 0L && length < 0L)) {
+        return excludeUrls ? removeUrls(objectSpec) : objectSpec;
+      }
+      // Calculate range values
+      // To retrieve to the end of the file
+      if (!forExternalUse && (length < 0L)) {
+        length = objectSpec.getObjectSize() - offset;
+      }
+      // Validate offset and length parameters:
+      // Check if the offset + length > length - that would be too big
+      if ((offset + length) > objectSpec.getObjectSize()) {
+        throw new InternalUnrecoverableError(
+            "Specified parameters exceed object size (object id: "
+                + objectId
+                + ", offset: "
+                + offset
+                + ", length: "
+                + length
+                + ")");
+      }
       List<Part> parts;
       if (forExternalUse) {
         // Return as a single part - no matter how large
@@ -112,50 +176,17 @@ public class S3DownloadService implements DownloadService {
       } else {
         parts = partCalculator.divide(offset, length);
       }
-      if (objectSpec == null) {
-        ObjectMetadata metadata =
-            s3Client.getObjectMetadata(
-                bucketNamingService.getObjectBucketName(objectId), objectKey.getKey());
-        fillPartUrls(objectKey, parts, false, forExternalUse);
-        objectSpec =
-            new ObjectSpecification(
-                objectKey.getKey(), objectId, objectId, parts, metadata.getContentLength(), metadata.getETag(), false);
-      }
+      fillPartUrls(objectKey, parts, objectSpec.isRelocated(), forExternalUse);
 
-      // Short-circuit in default case
-        if (!forExternalUse && (offset == 0L && length < 0L)) {
-          return excludeUrls ? removeUrls(objectSpec) : objectSpec;
-        }
-
-        // Calculate range values
-        // To retrieve to the end of the file
-        if (!forExternalUse && (length < 0L)) {
-          length = objectSpec.getObjectSize() - offset;
-        }
-
-        // Validate offset and length parameters:
-        // Check if the offset + length > length - that would be too big
-        if ((offset + length) > objectSpec.getObjectSize()) {
-          throw new InternalUnrecoverableError(
-              "Specified parameters exceed object size (object id: "
-                  + objectId
-                  + ", offset: "
-                  + offset
-                  + ", length: "
-                  + length
-                  + ")");
-        }
-        fillPartUrls(objectKey, parts, objectSpec.isRelocated(), forExternalUse);
-
-        val spec =
-            new ObjectSpecification(
-                objectKey.getKey(),
-                objectId,
-                objectId,
-                parts,
-                length,
-                objectSpec.getObjectMd5(),
-                objectSpec.isRelocated());
+      val spec =
+          new ObjectSpecification(
+              objectKey.getKey(),
+              objectId,
+              objectId,
+              parts,
+              length,
+              objectSpec.getObjectMd5(),
+              objectSpec.isRelocated());
 
       return excludeUrls ? removeUrls(spec) : spec;
     } catch (Exception e) {
@@ -265,9 +296,9 @@ public class S3DownloadService implements DownloadService {
    * Retrieve meta file object
    */
   private S3FetchedObject getObject(String objectId, String objectMetaKey) {
-    String stateBucketName = bucketNamingService.getStateBucketName(objectId);
+    String objectBucketName = bucketNamingService.getObjectBucketName(objectId);
     try {
-      return fetchObject(stateBucketName, objectMetaKey);
+      return fetchObject(objectBucketName, objectMetaKey);
     } catch (AmazonServiceException e) {
       if (e.getStatusCode() == HttpStatus.NOT_FOUND.value()) {
         if (bucketNamingService.isPartitioned()) {
@@ -275,20 +306,20 @@ public class S3DownloadService implements DownloadService {
           log.warn(
               "Object with objectId: {} not found in {}, objectKey: {}: {}. Trying master bucket {}",
               objectId,
-              stateBucketName,
+              objectBucketName,
               objectMetaKey,
               e,
               bucketNamingService.getBaseStateBucketName());
           try {
-            stateBucketName = bucketNamingService.getBaseStateBucketName(); // use base bucket name
-            val obj = fetchObject(stateBucketName, objectMetaKey);
+            objectBucketName = bucketNamingService.getBaseStateBucketName(); // use base bucket name
+            val obj = fetchObject(objectBucketName, objectMetaKey);
             obj.setRelocated(true);
             return obj;
           } catch (AmazonServiceException e2) {
             log.error(
                 "Failed to get object with objectId: {} from {}, objectKey: {}: {}",
                 objectId,
-                stateBucketName,
+                objectBucketName,
                 objectMetaKey,
                 e);
             if ((e.getStatusCode() == HttpStatus.NOT_FOUND.value()) || (!e.isRetryable())) {
