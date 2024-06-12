@@ -33,7 +33,7 @@ public final class ObjectKeys {
   }
 
   public static String getObjectId(@NonNull String dataDir, @NonNull String objectKey) {
-    return objectKey.replaceAll(dataDir + "/", "");
+    return dataDir.isBlank() ? objectKey : objectKey.replaceAll(dataDir + "/", "");
   }
 
   /**
@@ -41,6 +41,6 @@ public final class ObjectKeys {
    * URL's for each part of file)
    */
   public static String getObjectMetaKey(@NonNull String dataDir, @NonNull String objectId) {
-    return dataDir + "/" + objectId + ".meta";
+    return dataDir.isBlank() ? objectId + ".meta" : dataDir + "/" + objectId + ".meta";
   }
 }
