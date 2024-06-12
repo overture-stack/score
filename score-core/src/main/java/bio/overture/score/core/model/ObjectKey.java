@@ -43,10 +43,10 @@ public class ObjectKey {
   }
 
   public String getKey() {
-    return dir + "/" + objectId;
+    return dir.isBlank() ? objectId : dir + "/" + objectId;
   }
 
   public String getMetaKey() {
-    return dir + "/" + objectId + ".meta";
+    return dir.isBlank() ? objectId + ".meta" : dir + "/" + objectId + ".meta";
   }
 }
