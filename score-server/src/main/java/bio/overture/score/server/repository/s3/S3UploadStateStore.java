@@ -87,6 +87,7 @@ public class S3UploadStateStore implements UploadStateStore {
 
   @Autowired private BucketNamingService bucketNamingService;
 
+  //Fixme Comments related to icgc.dcc can be removed in the following instance
   /*
    * (non-Javadoc)
    *

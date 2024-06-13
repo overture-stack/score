@@ -129,6 +129,7 @@ public class S3UploadService implements UploadService {
       val progress = checkProgress(uploadFile, objectId);
       resume(uploadFile, progress, objectId, checksum);
     } catch (NotRetryableException e) {
+      //Fixme Comments related to icgc.dcc can be removed
       // org.icgc.dcc.storage.client.exception.ServiceRetryableResponseErrorHandler translates the
       // 404 received from
       // server into a NotRetryableException

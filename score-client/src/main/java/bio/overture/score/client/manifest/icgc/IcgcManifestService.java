@@ -35,6 +35,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @Profile("!kf")
+// Fixme No usage found for this class
 public class IcgcManifestService implements ManifestService {
 
   /** Constants */

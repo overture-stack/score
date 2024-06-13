@@ -14,6 +14,8 @@ public class ClientProperties {
   /** Constants. */
   private static final int DEFAULT_LIMIT = 10;
 
+  //Fixme Change to the ICGC name reference 
+
   /** OAuth2 access token for ICGC authorization server */
   private String accessToken;
 

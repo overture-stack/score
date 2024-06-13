@@ -65,6 +65,7 @@ public class S3BucketNamingService implements BucketNamingService {
     return stateBucketName;
   }
 
+  //Fixme Comments related to icgc.dcc can be removed over here and similar in the same instance
   /* (non-Javadoc)
    * @see org.icgc.dcc.storage.server.repository.s3.BucketNamingService#getObjectBucketName(java.lang.String, boolean)
    */
