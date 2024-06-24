@@ -97,27 +97,41 @@ public class S3DownloadService implements DownloadService {
       if (!excludeUrls) {
         checkPublishedAnalysisState(metadataService.getEntity(objectId));
       }
-
       checkArgument(offset > -1L);
 
-      var objectSpec = getSpecification(objectId);
       val objectKey = ObjectKeys.getObjectKey(dataDir, objectId);
+
+      var objectSpec = getSpecification(objectId);
+
       if (objectSpec == null) {
         ObjectMetadata metadata =
-                s3Client.getObjectMetadata(
-                        bucketNamingService.getObjectBucketName(objectId), objectKey.getKey());
-        length = metadata.getContentLength();
+            s3Client.getObjectMetadata(
+                bucketNamingService.getObjectBucketName(objectId), objectKey.getKey());
+
         List<Part> parts;
         if (forExternalUse) {
           // Return as a single part - no matter how large
           parts = partCalculator.specify(0L, -1L);
+        } else if (length < 0L) {
+          parts = partCalculator.divide(offset, metadata.getContentLength() - offset);
         } else {
-          parts = partCalculator.divide(offset,length);
+          parts = partCalculator.divide(offset, length);
         }
         fillPartUrls(objectKey, parts, false, forExternalUse);
         objectSpec =
-                new ObjectSpecification(
-                        objectKey.getKey(), objectId, objectId, parts, metadata.getContentLength(), metadata.getETag(), false);
+            new ObjectSpecification(
+                objectKey.getKey(),
+                objectId,
+                objectId,
+                parts,
+                metadata.getContentLength(),
+                metadata.getETag(),
+                false);
+      }
+
+      // Short-circuit in default case
+      if (!forExternalUse && (offset == 0L && length < 0L)) {
+        return excludeUrls ? removeUrls(objectSpec) : objectSpec;
       }
 
       // Construct ObjectSpecification for actual object in /data logical folder
@@ -126,17 +140,18 @@ public class S3DownloadService implements DownloadService {
       if (!forExternalUse && (length < 0L)) {
         length = objectSpec.getObjectSize() - offset;
       }
+
       // Validate offset and length parameters:
       // Check if the offset + length > length - that would be too big
       if ((offset + length) > objectSpec.getObjectSize()) {
         throw new InternalUnrecoverableError(
-                "Specified parameters exceed object size (object id: "
-                        + objectId
-                        + ", offset: "
-                        + offset
-                        + ", length: "
-                        + length
-                        + ")");
+            "Specified parameters exceed object size (object id: "
+                + objectId
+                + ", offset: "
+                + offset
+                + ", length: "
+                + length
+                + ")");
       }
 
       List<Part> parts;
@@ -147,21 +162,17 @@ public class S3DownloadService implements DownloadService {
         parts = partCalculator.divide(offset, length);
       }
 
-      // Short-circuit in default case
-        if (!forExternalUse && (offset == 0L && length < 0L)) {
-          return excludeUrls ? removeUrls(objectSpec) : objectSpec;
-        }
-        fillPartUrls(objectKey, parts, objectSpec.isRelocated(), forExternalUse);
+      fillPartUrls(objectKey, parts, objectSpec.isRelocated(), forExternalUse);
 
-        val spec =
-            new ObjectSpecification(
-                objectKey.getKey(),
-                objectId,
-                objectId,
-                parts,
-                length,
-                objectSpec.getObjectMd5(),
-                objectSpec.isRelocated());
+      val spec =
+          new ObjectSpecification(
+              objectKey.getKey(),
+              objectId,
+              objectId,
+              parts,
+              length,
+              objectSpec.getObjectMd5(),
+              objectSpec.isRelocated());
 
       return excludeUrls ? removeUrls(spec) : spec;
     } catch (Exception e) {
@@ -199,6 +210,7 @@ public class S3DownloadService implements DownloadService {
       }
     }
   }
+
   public ObjectSpecification getSpecification(String objectId) {
     val objectKey = ObjectKeys.getObjectKey(dataDir, objectId);
     val objectMetaKey = ObjectKeys.getObjectMetaKey(dataDir, objectId);
