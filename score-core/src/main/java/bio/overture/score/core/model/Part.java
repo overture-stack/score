@@ -40,12 +40,6 @@ public final class Part implements Comparable<Part> {
   String url;
   String md5; // md5 of a local copy of the part (i.e., after a download)
 
-  public Part(int partNumber, long partSize, long offset) {
-    this.partNumber = partNumber;
-    this.partSize = partSize;
-    this.offset = offset;
-  }
-
   @JsonInclude(Include.NON_NULL)
   String sourceMd5; // original md5 of part; set when uploaded to S3/Ceph
 
