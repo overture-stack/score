@@ -23,8 +23,10 @@ import static com.google.common.base.Preconditions.checkArgument;
 import bio.overture.score.core.model.ObjectKey;
 import bio.overture.score.core.model.ObjectSpecification;
 import bio.overture.score.core.model.Part;
+import bio.overture.score.core.util.MD5s;
 import bio.overture.score.core.util.ObjectKeys;
 import bio.overture.score.core.util.PartCalculator;
+import bio.overture.score.server.config.S3Config;
 import bio.overture.score.server.exception.IdNotFoundException;
 import bio.overture.score.server.exception.InternalUnrecoverableError;
 import bio.overture.score.server.exception.NotRetryableException;
@@ -89,6 +91,7 @@ public class S3DownloadService implements DownloadService {
   @Autowired private URLGenerator urlGenerator;
   @Autowired private PartCalculator partCalculator;
   @Autowired private MetadataService metadataService;
+  @Autowired private S3Config s3config;
 
   @Override
   public ObjectSpecification download(
@@ -118,6 +121,9 @@ public class S3DownloadService implements DownloadService {
           parts = partCalculator.divide(offset, length);
         }
         fillPartUrls(objectKey, parts, false, forExternalUse);
+
+        val md5 = getObjectMd5(metadata);
+
         objectSpec =
             new ObjectSpecification(
                 objectKey.getKey(),
@@ -125,7 +131,7 @@ public class S3DownloadService implements DownloadService {
                 objectId,
                 parts,
                 metadata.getContentLength(),
-                metadata.getETag(),
+                md5,
                 false);
       }
 
@@ -187,6 +193,35 @@ public class S3DownloadService implements DownloadService {
 
       throw e;
     }
+  }
+
+  /**
+   * Looks for MD5 hash in the object metadata. This is used as part of the fallback behaviour when
+   * the .meta file cannot be found. To find the MD5, we will look for a value using the built in S3
+   * getContendMD5(), and if no value is found there we will check in a configurable user meta data
+   * property. The name of this property is configurable via the S3 Config. If no MD5 value can be
+   * found in either of these locations then it will be returned null.
+   *
+   * <p>A user can still download files with the MD5 set to null, but they will always fail to
+   * validate through the CLI. To complete a download of a file in this state, the user should add
+   * the argument to their CLI download command: --validate false
+   *
+   * @param metadata
+   * @return
+   */
+  private String getObjectMd5(ObjectMetadata metadata) {
+    val contentMd5 = metadata.getContentMD5();
+    if (contentMd5 != null) {
+      return contentMd5;
+    }
+    val userMetadataMd5 =
+        metadata.getUserMetaDataOf(s3config.getCustomMd5Property()); // get literal from config
+    if (userMetadataMd5 != null) {
+      return MD5s.toHex(userMetadataMd5);
+    }
+
+    // No value found, returning null.
+    return null;
   }
 
   private static ObjectSpecification removeUrls(ObjectSpecification spec) {

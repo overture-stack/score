@@ -39,6 +39,9 @@ public class S3Config {
   private boolean sigV4Enabled;
   private String masterEncryptionKeyId;
 
+  @Value("md5chksum")
+  private String customMd5Property;
+
   @Value("${upload.connection.timeout}")
   private int connectionTimeout;
 
