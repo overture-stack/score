@@ -1,5 +1,7 @@
 package bio.overture.score.client.storage;
 
+import static com.google.common.base.Preconditions.checkState;
+
 import bio.overture.score.client.download.DownloadStateStore;
 import bio.overture.score.client.exception.NotResumableException;
 import bio.overture.score.client.exception.NotRetryableException;
@@ -9,6 +11,10 @@ import bio.overture.score.core.model.Part;
 import bio.overture.score.core.util.Parts;
 import com.google.common.hash.Hashing;
 import com.google.common.hash.HashingInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.net.URI;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
@@ -17,13 +23,6 @@ import org.springframework.retry.RetryCallback;
 import org.springframework.retry.RetryContext;
 import org.springframework.retry.support.RetryTemplate;
 import org.springframework.web.client.RestTemplate;
-
-import java.io.File;
-import java.io.IOException;
-import java.net.URI;
-import java.util.Optional;
-
-import static com.google.common.base.Preconditions.checkState;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -36,50 +35,63 @@ public abstract class AbstractStorageService implements StorageService {
 
   protected abstract Optional<String> getEncryptedAccessToken();
 
-  @Override public void downloadPart(DataChannel channel, Part part, String objectId, File outputDir)
+  @Override
+  public void downloadPart(DataChannel channel, Part part, String objectId, File outputDir)
       throws IOException {
-    retry.execute(new RetryCallback<Void, IOException>() {
+    retry.execute(
+        new RetryCallback<Void, IOException>() {
 
-      @Override
-      public Void doWithRetry(RetryContext ctx) throws IOException {
-        log.debug("Download Part URL: {}", part.getUrl());
-        try {
-          // the actual GET operation
-          log.debug("performing GET {}", part.getUrl());
-          String md5 = dataTemplate.execute(new URI(part.getUrl()), HttpMethod.GET,
+          @Override
+          public Void doWithRetry(RetryContext ctx) throws IOException {
+            log.debug("Download Part URL: {}", part.getUrl());
+            try {
+              // the actual GET operation
+              log.debug("performing GET {}", part.getUrl());
+              String md5 =
+                  dataTemplate.execute(
+                      new URI(part.getUrl()),
+                      HttpMethod.GET,
+                      request -> {
+                        request.getHeaders().set(HttpHeaders.RANGE, Parts.getHttpRangeValue(part));
+                        String token = getEncryptedAccessToken().orElse("");
+                        request.getHeaders().set(ICGC_TOKEN_KEY, token);
+                      },
+                      response -> {
+                        try (HashingInputStream his =
+                            new HashingInputStream(Hashing.md5(), response.getBody())) {
+                          channel.readFrom(his);
+                          return his.hash().toString();
+                        }
+                      });
 
-              request -> {
-                request.getHeaders().set(HttpHeaders.RANGE, Parts.getHttpRangeValue(part));
-                String token = getEncryptedAccessToken().orElse("");
-                request.getHeaders().set(ICGC_TOKEN_KEY, token);
-              },
+              part.setMd5(md5);
+              checkState(
+                  !part.hasFailedChecksum(),
+                  "Checksum failed for Part# %s: %s",
+                  part.getPartNumber(),
+                  part.getMd5());
 
-              response -> {
-                try (HashingInputStream his = new HashingInputStream(Hashing.md5(), response.getBody())) {
-                  channel.readFrom(his);
-                  return his.hash().toString();
-                }
-              });
-
-          part.setMd5(md5);
-          checkState(!part.hasFailedChecksum(), "Checksum failed for Part# %s: %s", part.getPartNumber(),
-              part.getMd5());
-
-          // TODO: try catch here for commit
-          downloadStateStore.commit(outputDir, objectId, part);
-          log.debug("committed {} part# {} to download state store", objectId, part.getPartNumber());
-        } catch (NotResumableException | NotRetryableException e) {
-          log.error("Cannot proceed. Failed to receive part for part# {} : {}", part.getPartNumber(), e.getMessage());
-          throw e;
-        } catch (Throwable e) {
-          log.warn("Failed to receive part for part number: {}. Retrying. {}", part.getPartNumber(), e.getMessage());
-          channel.reset();
-          throw new RetryableException(e);
-        }
-        return null;
-      }
-    });
-
+              // TODO: try catch here for commit
+              downloadStateStore.commit(outputDir, objectId, part);
+              log.debug(
+                  "committed {} part# {} to download state store", objectId, part.getPartNumber());
+            } catch (NotResumableException | NotRetryableException e) {
+              log.error(
+                  "Cannot proceed. Failed to receive part for part# {} : {}",
+                  part.getPartNumber(),
+                  e.getMessage());
+              throw e;
+            } catch (Throwable e) {
+              log.warn(
+                  "Failed to receive part for part number: {}. Retrying. {}",
+                  part.getPartNumber(),
+                  e.getMessage());
+              channel.reset();
+              throw new RetryableException(e);
+            }
+            return null;
+          }
+        });
   }
 
   @Override
@@ -98,7 +110,8 @@ public abstract class AbstractStorageService implements StorageService {
   }
 
   @Override
-  public boolean isDownloadDataRecoverable(File stateDir, String objectId, long fileSize) throws IOException {
+  public boolean isDownloadDataRecoverable(File stateDir, String objectId, long fileSize)
+      throws IOException {
     try {
       return (fileSize == downloadStateStore.getObjectSize(stateDir, objectId));
     } catch (Throwable e) {
@@ -106,5 +119,4 @@ public abstract class AbstractStorageService implements StorageService {
     }
     return false;
   }
-
 }

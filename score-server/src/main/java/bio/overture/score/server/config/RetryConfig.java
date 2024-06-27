@@ -16,7 +16,12 @@
  */
 package bio.overture.score.server.config;
 
+import static java.lang.Boolean.TRUE;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.springframework.retry.backoff.ExponentialBackOffPolicy.DEFAULT_MULTIPLIER;
+
 import com.google.common.collect.ImmutableMap;
+import java.util.Map;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -27,12 +32,6 @@ import org.springframework.retry.policy.SimpleRetryPolicy;
 import org.springframework.retry.support.RetryTemplate;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.ResourceAccessException;
-
-import java.util.Map;
-
-import static java.lang.Boolean.TRUE;
-import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.springframework.retry.backoff.ExponentialBackOffPolicy.DEFAULT_MULTIPLIER;
 
 @Configuration
 public class RetryConfig {
@@ -54,8 +53,7 @@ public class RetryConfig {
     val result = new RetryTemplate();
     result.setBackOffPolicy(defineBackOffPolicy());
 
-    result.setRetryPolicy(
-        new SimpleRetryPolicy(maxRetries, getRetryableExceptions(), true));
+    result.setRetryPolicy(new SimpleRetryPolicy(maxRetries, getRetryableExceptions(), true));
     return result;
   }
 
@@ -69,7 +67,7 @@ public class RetryConfig {
 
   private static Map<Class<? extends Throwable>, Boolean> getRetryableExceptions() {
     return ImmutableMap.of(
-            ResourceAccessException.class, TRUE,
-            HttpServerErrorException.class, TRUE);
+        ResourceAccessException.class, TRUE,
+        HttpServerErrorException.class, TRUE);
   }
 }

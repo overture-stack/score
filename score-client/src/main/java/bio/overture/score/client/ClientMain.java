@@ -1,21 +1,28 @@
 /*
- * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.                             
- *                                                                                                               
+ * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.
+ *
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
- * You should have received a copy of the GNU General Public License along with                                  
- * this program. If not, see <http://www.gnu.org/licenses/>.                                                     
- *                                                                                                               
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY                           
- * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES                          
- * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT                           
- * SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,                                
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED                          
- * TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;                               
- * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER                              
- * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
+ * You should have received a copy of the GNU General Public License along with
+ * this program. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
+ * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT
+ * SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+ * TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+ * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 package bio.overture.score.client;
+
+import static bio.overture.score.client.command.ClientCommand.APPLICATION_NAME;
+import static bio.overture.score.client.command.ClientCommand.FAILURE_STATUS;
+import static bio.overture.score.client.util.SingletonBeansInitializer.singletonBeans;
+import static com.google.common.base.MoreObjects.firstNonNull;
+import static java.lang.System.err;
+import static java.lang.System.out;
 
 import bio.overture.score.client.cli.ConverterFactory;
 import bio.overture.score.client.cli.Terminal;
@@ -24,6 +31,9 @@ import bio.overture.score.client.exception.BadManifestException;
 import bio.overture.score.client.metadata.EntityNotFoundException;
 import com.beust.jcommander.*;
 import htsjdk.samtools.util.Log;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Consumer;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -34,20 +44,7 @@ import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 
-import java.util.List;
-import java.util.Map;
-import java.util.function.Consumer;
-
-import static bio.overture.score.client.command.ClientCommand.APPLICATION_NAME;
-import static bio.overture.score.client.command.ClientCommand.FAILURE_STATUS;
-import static bio.overture.score.client.util.SingletonBeansInitializer.singletonBeans;
-import static com.google.common.base.MoreObjects.firstNonNull;
-import static java.lang.System.err;
-import static java.lang.System.out;
-
-/**
- * Application entry-point.
- */
+/** Application entry-point. */
 @Slf4j
 @Configuration
 @ComponentScan
@@ -56,37 +53,52 @@ public class ClientMain implements CommandLineRunner {
 
   /**
    * Exit handler.
-   * <p>
-   * This can be changed in testing environments in order to prevent JVM exiting before the test is complete.
+   *
+   * <p>This can be changed in testing environments in order to prevent JVM exiting before the test
+   * is complete.
    */
   public static Consumer<Integer> exit = System::exit;
 
-  /**
-   * Options.
-   */
+  /** Options. */
   @Getter
-  @Parameter(names = "--profile", description = "Define environment profile used to resolve configuration properties", required = false, help = true)
+  @Parameter(
+      names = "--profile",
+      description = "Define environment profile used to resolve configuration properties",
+      required = false,
+      help = true)
   private String profile = getDefaultProfile();
+
   @Getter
-  @Parameter(names = "--quiet", description = "Reduce output for non-interactive usage", required = false, help = true)
+  @Parameter(
+      names = "--quiet",
+      description = "Reduce output for non-interactive usage",
+      required = false,
+      help = true)
   private boolean quiet = false;
+
   @Getter
-  @Parameter(names = "--silent", description = "Do not produce any informational messages", required = false, help = true)
+  @Parameter(
+      names = "--silent",
+      description = "Do not produce any informational messages",
+      required = false,
+      help = true)
   private boolean silent = false;
-  @Parameter(names = "--version", description = "Show version information", required = false, help = true)
+
+  @Parameter(
+      names = "--version",
+      description = "Show version information",
+      required = false,
+      help = true)
   private boolean version = false;
+
   @Parameter(names = "--help", description = "Show help information", required = false, help = true)
   private boolean help = false;
 
-  /**
-   * Dependencies.
-   */
-  @Autowired
-  private JCommander cli;
-  @Autowired
-  private Terminal terminal;
-  @Autowired
-  private Map<String, ClientCommand> commands;
+  /** Dependencies. */
+  @Autowired private JCommander cli;
+
+  @Autowired private Terminal terminal;
+  @Autowired private Map<String, ClientCommand> commands;
 
   public static void main(String[] args) {
     try {
@@ -119,9 +131,7 @@ public class ClientMain implements CommandLineRunner {
     }
   }
 
-  /**
-   * Handle user parameters
-   */
+  /** Handle user parameters */
   @Override
   public void run(String... params) throws Exception {
     terminal.printStatus("Running...");
@@ -150,13 +160,16 @@ public class ClientMain implements CommandLineRunner {
     } catch (EntityNotFoundException e) {
       log.error("Entity not found: ", e);
       terminal.printError("Entity not found: " + e.getMessage());
-    } catch(BadManifestException e) {
+    } catch (BadManifestException e) {
       log.error("Bad manifest:", e);
       terminal.printError(e.getMessage());
       exit(FAILURE_STATUS);
     } catch (Throwable t) {
       log.error("Unknown error: ", t);
-      terminal.printError("Command error: " + t.getMessage() + "\n\nPlease check the log for detailed error messages");
+      terminal.printError(
+          "Command error: "
+              + t.getMessage()
+              + "\n\nPlease check the log for detailed error messages");
 
       exit(FAILURE_STATUS);
     }
@@ -183,10 +196,12 @@ public class ClientMain implements CommandLineRunner {
       return getCommand("help");
     } else {
       val commandName = cli.getParsedCommand();
-      bio.overture.score.client.cli.Parameters.checkCommand(commandName != null, "Command name is empty. Please specify a command to execute");
+      bio.overture.score.client.cli.Parameters.checkCommand(
+          commandName != null, "Command name is empty. Please specify a command to execute");
 
       val command = getCommand(commandName);
-      bio.overture.score.client.cli.Parameters.checkCommand(command != null, "Unknown command: %s", commandName);
+      bio.overture.score.client.cli.Parameters.checkCommand(
+          command != null, "Unknown command: %s", commandName);
 
       return command;
     }
@@ -198,17 +213,16 @@ public class ClientMain implements CommandLineRunner {
   }
 
   /**
-   * This is required to bootstrap arguments for Spring Boot consumption very early in the app lifecycle. The method
-   * returns the active profiles.
+   * This is required to bootstrap arguments for Spring Boot consumption very early in the app
+   * lifecycle. The method returns the active profiles.
    */
   private static String[] bootstrap(String[] args) {
-    val options = new ClientMain() {
+    val options =
+        new ClientMain() {
 
-      // Required to ignore the part of args that deals with commands and their options
-      @Parameter
-      private List<String> values;
-
-    };
+          // Required to ignore the part of args that deals with commands and their options
+          @Parameter private List<String> values;
+        };
 
     // Digest parse of the command line args
     val cli = new JCommander();
@@ -227,7 +241,7 @@ public class ClientMain implements CommandLineRunner {
     System.setProperty("client.quiet", Boolean.toString(options.isQuiet()));
     System.setProperty("storage.profile", options.getProfile());
 
-    return options.getProfile() == null ? new String[] {} : new String[] { options.getProfile() };
+    return options.getProfile() == null ? new String[] {} : new String[] {options.getProfile()};
   }
 
   private ClientCommand getCommand(String commandName) {
@@ -241,11 +255,11 @@ public class ClientMain implements CommandLineRunner {
 
   private static String getDefaultProfile() {
     // First try system properties, then environment variables, then default value
-    return System.getProperty("storage.profile", firstNonNull(System.getenv("STORAGE_PROFILE"), "default"));
+    return System.getProperty(
+        "storage.profile", firstNonNull(System.getenv("STORAGE_PROFILE"), "default"));
   }
 
   private static final void exit(int status) {
     exit.accept(status);
   }
-
 }

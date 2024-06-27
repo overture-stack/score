@@ -1,6 +1,15 @@
 package bio.overture.score.client.storage.kf;
 
+import static com.google.common.base.Preconditions.checkState;
+import static java.lang.String.format;
+import static java.util.Objects.isNull;
+import static org.springframework.http.HttpHeaders.AUTHORIZATION;
+import static org.springframework.http.HttpHeaders.CONTENT_LENGTH;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
+import java.net.HttpURLConnection;
+import java.net.URI;
+import java.net.URL;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NonNull;
@@ -16,16 +25,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.retry.support.RetryTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
-
-import java.net.HttpURLConnection;
-import java.net.URI;
-import java.net.URL;
-
-import static com.google.common.base.Preconditions.checkState;
-import static java.lang.String.format;
-import static java.util.Objects.isNull;
-import static org.springframework.http.HttpHeaders.AUTHORIZATION;
-import static org.springframework.http.HttpHeaders.CONTENT_LENGTH;
 
 @Builder
 @Component
@@ -45,7 +44,7 @@ public class KFStorageClient {
       @Value("${kf.token.url}") @NonNull String tokenUrl,
       @Value("${kf.download.url}") @NonNull String apiUrl,
       @Value("${kf.download.expiration}") long urlExpiration,
-      @Autowired RetryTemplate retry ){
+      @Autowired RetryTemplate retry) {
     this.jwt = jwt;
     this.apiUrl = apiUrl;
     this.urlExpiration = Math.max(urlExpiration, MIN_EXPIRATION);
@@ -53,54 +52,56 @@ public class KFStorageClient {
     this.retry = retry;
   }
 
-  public String generateAccessToken(){
+  public String generateAccessToken() {
     val accessTokenResponse = getObject(AccessTokenResponse.class, jwt, tokenUrl);
     return accessTokenResponse.getAccessToken();
   }
 
-  public PresignedUrl generatePresignedUrl(@NonNull String objectId){
+  public PresignedUrl generatePresignedUrl(@NonNull String objectId) {
     val accessToken = generateAccessToken();
     val response = getResponse(UrlResponse.class, accessToken, getKFDownloadEndpoint(objectId));
     val url = response.getBody().getUrl();
     val size = peekResponseContentSize(url);
-    return PresignedUrl.builder()
-        .size(size)
-        .url(url)
-        .build();
+    return PresignedUrl.builder().size(size).url(url).build();
   }
 
-  private String getKFDownloadEndpoint(String objectId){
+  private String getKFDownloadEndpoint(String objectId) {
     return format("%s/user/data/download/%s?expires_in=%s", apiUrl, objectId, urlExpiration);
   }
 
   @SneakyThrows
-  private <T> ResponseEntity<T> getResponse(Class<T> responseType, String accessToken, String url){
+  private <T> ResponseEntity<T> getResponse(Class<T> responseType, String accessToken, String url) {
     val entity = new HttpEntity<T>(null, buildAuthHeader(accessToken));
-    return retry.execute(ctx -> restTemplate.exchange(new URI(url), HttpMethod.GET, entity, responseType));
+    return retry.execute(
+        ctx -> restTemplate.exchange(new URI(url), HttpMethod.GET, entity, responseType));
   }
 
   @SneakyThrows
-  private <T> T getObject(Class<T> responseType, String accessToken, String url){
+  private <T> T getObject(Class<T> responseType, String accessToken, String url) {
     return getResponse(responseType, accessToken, url).getBody();
   }
 
   @SneakyThrows
-  private static long peekResponseContentSize(String url){
+  private static long peekResponseContentSize(String url) {
     val u = new URL(url);
-    val conn = (HttpURLConnection)u.openConnection();
+    val conn = (HttpURLConnection) u.openConnection();
     val contentLength = conn.getContentLengthLong();
-    checkState(contentLength != -1,
+    checkState(
+        contentLength != -1,
         "The following response does not contain the '%s' header: %s",
-        CONTENT_LENGTH, conn.getHeaderFields());
-    checkState(contentLength > 0,
-        "The following response contains a content length of 0: %s", conn.getHeaderFields());
+        CONTENT_LENGTH,
+        conn.getHeaderFields());
+    checkState(
+        contentLength > 0,
+        "The following response contains a content length of 0: %s",
+        conn.getHeaderFields());
     return contentLength;
   }
 
-  private static HttpHeaders buildAuthHeader(String accessToken ){
+  private static HttpHeaders buildAuthHeader(String accessToken) {
     val headers = new HttpHeaders();
-    if (!isNull(accessToken)){
-      headers.set(AUTHORIZATION, "Bearer "+accessToken);
+    if (!isNull(accessToken)) {
+      headers.set(AUTHORIZATION, "Bearer " + accessToken);
     }
     return headers;
   }
@@ -122,8 +123,7 @@ public class KFStorageClient {
   }
 
   @Data
-  public static class UrlResponse{
+  public static class UrlResponse {
     private String url;
   }
-
 }

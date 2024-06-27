@@ -1,21 +1,26 @@
 /*
- * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.                             
- *                                                                                                               
+ * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.
+ *
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
- * You should have received a copy of the GNU General Public License along with                                  
- * this program. If not, see <http://www.gnu.org/licenses/>.                                                     
- *                                                                                                               
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY                           
- * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES                          
- * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT                           
- * SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,                                
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED                          
- * TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;                               
- * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER                              
- * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
+ * You should have received a copy of the GNU General Public License along with
+ * this program. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
+ * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT
+ * SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+ * TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+ * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 package bio.overture.score.client.config;
+
+import static com.google.common.base.MoreObjects.firstNonNull;
+import static java.lang.String.format;
+import static java.util.Collections.singletonList;
+import static javax.ws.rs.core.HttpHeaders.AUTHORIZATION;
 
 import bio.overture.score.client.download.DownloadStateStore;
 import bio.overture.score.client.exception.AmazonS3RetryableResponseErrorHandler;
@@ -28,6 +33,9 @@ import bio.overture.score.client.manifest.kf.KFFileBean;
 import bio.overture.score.client.upload.UploadStateStore;
 import bio.overture.score.client.util.CsvParser;
 import com.google.common.collect.ImmutableMap;
+import java.io.IOException;
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.SSLContext;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -53,18 +61,7 @@ import org.thymeleaf.spring5.templateresolver.SpringResourceTemplateResolver;
 import org.thymeleaf.templatemode.TemplateMode;
 import org.thymeleaf.templateresolver.ITemplateResolver;
 
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.SSLContext;
-import java.io.IOException;
-
-import static com.google.common.base.MoreObjects.firstNonNull;
-import static java.lang.String.format;
-import static java.util.Collections.singletonList;
-import static javax.ws.rs.core.HttpHeaders.AUTHORIZATION;
-
-/**
- * Configurations for connections for uploads
- */
+/** Configurations for connections for uploads */
 @Slf4j
 @Configuration
 @EnableConfigurationProperties
@@ -72,32 +69,28 @@ import static javax.ws.rs.core.HttpHeaders.AUTHORIZATION;
 public class ClientConfig {
 
   private static final Character TAB_SEP = '\t';
-  /**
-   * Configuration.
-   */
-  @Autowired
-  private ClientProperties properties;
 
-  /**
-   * Dependencies.
-   */
-  @Autowired
-  private SSLContext sslContext;
-  @Autowired
-  private HostnameVerifier hostnameVerifier;
+  /** Configuration. */
+  @Autowired private ClientProperties properties;
+
+  /** Dependencies. */
+  @Autowired private SSLContext sslContext;
+
+  @Autowired private HostnameVerifier hostnameVerifier;
 
   @Bean
   public String clientVersion() {
-    return firstNonNull(ClientConfig.class.getPackage().getImplementationVersion(), "[unknown version]");
+    return firstNonNull(
+        ClientConfig.class.getPackage().getImplementationVersion(), "[unknown version]");
   }
 
   @Bean
-  public CsvParser<KFFileBean> kfFileBeanCsvParser(){
+  public CsvParser<KFFileBean> kfFileBeanCsvParser() {
     return new CsvParser<>(KFFileBean.class, TAB_SEP);
   }
 
   @Bean
-  public TemplateEngine textTemplateEngine(){
+  public TemplateEngine textTemplateEngine() {
     val templateEngine = new TemplateEngine();
     templateEngine.addTemplateResolver(springThymeleafTemplateResolver());
     return templateEngine;
@@ -156,7 +149,7 @@ public class ClientConfig {
       @Value("${storage.retryTimeout}") int retryTimeout) {
     val maxAttempts = retryNumber < 0 ? Integer.MAX_VALUE : retryNumber;
 
-    val exceptions = ImmutableMap.<Class<? extends Throwable>, Boolean> builder();
+    val exceptions = ImmutableMap.<Class<? extends Throwable>, Boolean>builder();
     exceptions.put(Error.class, Boolean.FALSE);
     exceptions.put(NotResumableException.class, Boolean.FALSE);
     exceptions.put(NotRetryableException.class, Boolean.FALSE);
@@ -186,9 +179,7 @@ public class ClientConfig {
     return factory;
   }
 
-  /**
-   * Request Factory that contains security headers
-   */
+  /** Request Factory that contains security headers */
   private HttpComponentsClientHttpRequestFactory clientHttpRequestFactory() {
     val factory = new HttpComponentsClientHttpRequestFactory();
 
@@ -236,22 +227,27 @@ public class ClientConfig {
 
   /**
    * Configure JVM wide timeouts of HTTP sockets.
-   * <p>
-   * May not be respected by all library implementors.
-   * 
-   * @see http://stackoverflow.com/questions/9934970/can-i-globally-set-the-timeout-of-http-connections#answer-10705424
+   *
+   * <p>May not be respected by all library implementors.
+   *
+   * @see
+   *     http://stackoverflow.com/questions/9934970/can-i-globally-set-the-timeout-of-http-connections#answer-10705424
    */
   private void configureSystemHttpTimeouts() {
     // These lines are ignored by SimpleClientHttpRequestFactory
-    System.setProperty("sun.net.client.defaultConnectTimeout",
+    System.setProperty(
+        "sun.net.client.defaultConnectTimeout",
         Long.toString(properties.getConnectTimeoutSeconds() * 1000));
-    System.setProperty("sun.net.client.defaultReadTimeout",
+    System.setProperty(
+        "sun.net.client.defaultReadTimeout",
         Long.toString(properties.getReadTimeoutSeconds() * 1000));
   }
 
   /**
    * Populates Authorization header with OAuth token
-   * @param HttpClientBuilder instance to set Default Header on. Existing Headers will be overwritten.
+   *
+   * @param HttpClientBuilder instance to set Default Header on. Existing Headers will be
+   *     overwritten.
    */
   private void configureOAuth(HttpClientBuilder client) {
     val accessToken = properties.getAccessToken();
@@ -259,11 +255,12 @@ public class ClientConfig {
     val defined = (accessToken != null) && (!accessToken.isEmpty());
     if (defined) {
       log.trace("Setting access token: {}", accessToken);
-      client.setDefaultHeaders(singletonList(new BasicHeader(AUTHORIZATION, format("Bearer %s", accessToken))));
+      client.setDefaultHeaders(
+          singletonList(new BasicHeader(AUTHORIZATION, format("Bearer %s", accessToken))));
     } else {
-      // Omit header if access token is null/empty in configuration (application.yml and conf/properties file
+      // Omit header if access token is null/empty in configuration (application.yml and
+      // conf/properties file
       log.warn("No access token specified");
     }
   }
-
 }

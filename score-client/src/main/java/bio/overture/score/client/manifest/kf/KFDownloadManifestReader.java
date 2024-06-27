@@ -1,17 +1,16 @@
 package bio.overture.score.client.manifest.kf;
 
+import static bio.overture.score.core.util.Collectors.toImmutableList;
+
 import bio.overture.score.client.manifest.DownloadManifest;
 import bio.overture.score.client.manifest.DownloadManifest.ManifestEntry;
 import bio.overture.score.client.util.CsvParser;
+import java.io.File;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import java.io.File;
-
-import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 
 @Component
 public class KFDownloadManifestReader {
@@ -19,21 +18,20 @@ public class KFDownloadManifestReader {
   private final CsvParser<KFFileBean> kfFileBeanCsvParser;
 
   @Autowired
-  public KFDownloadManifestReader(
-      @NonNull CsvParser<KFFileBean> kfFileBeanCsvParser) {
+  public KFDownloadManifestReader(@NonNull CsvParser<KFFileBean> kfFileBeanCsvParser) {
     this.kfFileBeanCsvParser = kfFileBeanCsvParser;
   }
 
   @SneakyThrows
   public DownloadManifest readManifest(@NonNull File manifestFile) {
-    val entries = kfFileBeanCsvParser.parseFile(manifestFile)
-        .stream()
-        .map(KFDownloadManifestReader::convertToManifestEntry)
-        .collect(toImmutableList());
+    val entries =
+        kfFileBeanCsvParser.parseFile(manifestFile).stream()
+            .map(KFDownloadManifestReader::convertToManifestEntry)
+            .collect(toImmutableList());
     return new DownloadManifest(entries);
   }
 
-  private static ManifestEntry convertToManifestEntry(KFFileBean bean){
+  private static ManifestEntry convertToManifestEntry(KFFileBean bean) {
     return ManifestEntry.builder()
         .projectId(null)
         .donorId(bean.getParticipantsId())
@@ -48,7 +46,5 @@ public class KFDownloadManifestReader {
         .repoCode(null)
         .study(null)
         .build();
-
   }
-
 }

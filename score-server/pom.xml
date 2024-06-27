@@ -21,7 +21,7 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
   <parent>
     <groupId>bio.overture</groupId>
     <artifactId>score</artifactId>
-    <version>5.10.0</version>
+    <version>5.10.1</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
@@ -50,15 +50,7 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
   </dependencyManagement>
 
   <dependencies>
-    <!-- DCC - Common -->
-    <dependency>
-      <groupId>org.icgc.dcc</groupId>
-      <artifactId>dcc-common-core</artifactId>
-      <version>${dcc-common.version}</version>
-    </dependency>
 
-
-    <!-- DCC - Storage -->
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>score-core</artifactId>
@@ -166,9 +158,6 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
 
   <properties>
     <guava.version>19.0</guava.version>
-
-    <!-- Versions - DCC -->
-    <dcc-common.version>3.8.17.2</dcc-common.version>
     <jackson.version>2.8.3</jackson.version>
     <azure-storage.version>4.4.0</azure-storage.version>
   </properties>
@@ -210,6 +199,7 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>
+        <version>3.3.0</version>
         <configuration>
           <archive>
             <manifest>

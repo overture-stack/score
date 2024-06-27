@@ -1,18 +1,18 @@
 /*
- * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.                             
- *                                                                                                               
+ * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.
+ *
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
- * You should have received a copy of the GNU General Public License along with                                  
- * this program. If not, see <http://www.gnu.org/licenses/>.                                                     
- *                                                                                                               
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY                           
- * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES                          
- * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT                           
- * SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,                                
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED                          
- * TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;                               
- * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER                              
- * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
+ * You should have received a copy of the GNU General Public License along with
+ * this program. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
+ * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT
+ * SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+ * TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+ * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 package bio.overture.score.server.controller;
@@ -21,6 +21,7 @@ import bio.overture.score.core.model.ObjectSpecification;
 import bio.overture.score.server.repository.DownloadService;
 import bio.overture.score.server.security.TokenHasher;
 import bio.overture.score.server.util.HttpServletRequests;
+import javax.servlet.http.HttpServletRequest;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -40,30 +41,29 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.servlet.http.HttpServletRequest;
-
-/**
- * A controller to expose RESTful API for download
- */
+/** A controller to expose RESTful API for download */
 @Setter
 @RestController
 @RequestMapping("/download")
 @Slf4j
-@Profile({ "prod", "default", "debug" })
+@Profile({"prod", "default", "debug"})
 public class DownloadController {
 
-  @Autowired
-  DownloadService downloadService;
+  @Autowired DownloadService downloadService;
 
   @RequestMapping(method = RequestMethod.GET, value = "/ping")
   public @ResponseBody String ping(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) final String accessToken,
-      @RequestHeader(value = "User-Agent", defaultValue = "unknown") String userAgent, HttpServletRequest request) {
+      @RequestHeader(value = "User-Agent", defaultValue = "unknown") String userAgent,
+      HttpServletRequest request) {
 
     val ipAddress = HttpServletRequests.getIpAddress(request);
 
-    log.info("Requesting download of sentinel object id with access token {} (MD5) from {} and client version {}",
-        identifier(accessToken), ipAddress, userAgent);
+    log.info(
+        "Requesting download of sentinel object id with access token {} (MD5) from {} and client version {}",
+        identifier(accessToken),
+        ipAddress,
+        userAgent);
     return downloadService.getSentinelObject();
   }
 
@@ -81,8 +81,12 @@ public class DownloadController {
 
     val ipAddress = HttpServletRequests.getIpAddress(request);
 
-    log.info("Requesting download of object id {} with access token {} (MD5) from {} and client version {}", objectId,
-        identifier(accessToken), ipAddress, userAgent);
+    log.info(
+        "Requesting download of object id {} with access token {} (MD5) from {} and client version {}",
+        objectId,
+        identifier(accessToken),
+        ipAddress,
+        userAgent);
     return downloadService.download(objectId, offset, length, external, excludeUrls);
   }
 
@@ -96,14 +100,16 @@ public class DownloadController {
 
   /**
    * Exception handler specific to the Spring Security processing in this controller
+   *
    * @return Error if Spring Security policies are violated
    */
   @ExceptionHandler(AccessDeniedException.class)
-  public ResponseEntity<Object> handleAccessDeniedException(HttpServletRequest req, AccessDeniedException ex) {
+  public ResponseEntity<Object> handleAccessDeniedException(
+      HttpServletRequest req, AccessDeniedException ex) {
     log.error("Token missing required scope to download controlled-access file");
-    return new ResponseEntity<Object>("Token missing required scope to download controlled-access file",
+    return new ResponseEntity<Object>(
+        "Token missing required scope to download controlled-access file",
         new HttpHeaders(),
         HttpStatus.FORBIDDEN);
   }
-
 }

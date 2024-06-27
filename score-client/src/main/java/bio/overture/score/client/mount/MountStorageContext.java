@@ -17,6 +17,13 @@
  */
 package bio.overture.score.client.mount;
 
+import static bio.overture.score.fs.StorageFile.storageFile;
+import static com.google.common.collect.Iterables.getLast;
+import static com.google.common.collect.Maps.uniqueIndex;
+import static com.google.common.collect.Multimaps.index;
+import static java.util.concurrent.TimeUnit.HOURS;
+import static lombok.AccessLevel.PRIVATE;
+
 import bio.overture.score.client.download.DownloadService;
 import bio.overture.score.client.metadata.Entity;
 import bio.overture.score.core.model.IndexFileType;
@@ -29,8 +36,6 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Multimap;
-import lombok.*;
-
 import java.io.IOException;
 import java.net.URL;
 import java.util.Collection;
@@ -38,54 +43,44 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
-
-import static bio.overture.score.fs.StorageFile.storageFile;
-import static com.google.common.collect.Iterables.getLast;
-import static com.google.common.collect.Maps.uniqueIndex;
-import static com.google.common.collect.Multimaps.index;
-import static java.util.concurrent.TimeUnit.HOURS;
-import static lombok.AccessLevel.PRIVATE;
+import lombok.*;
 
 @RequiredArgsConstructor
 public class MountStorageContext implements StorageContext {
 
-  /**
-   * Configuration.
-   */
-  @Getter
-  private final StorageFileLayout layout;
+  /** Configuration. */
+  @Getter private final StorageFileLayout layout;
 
-  /**
-   * Dependencies
-   */
-  @NonNull
-  private final DownloadService downloadService;
+  /** Dependencies */
+  @NonNull private final DownloadService downloadService;
 
-  /**
-   * Caches.
-   */
-  @NonNull
-  private final List<Entity> entities;
-  @NonNull
-  private final List<ObjectInfo> objects;
+  /** Caches. */
+  @NonNull private final List<Entity> entities;
+
+  @NonNull private final List<ObjectInfo> objects;
 
   @Getter(lazy = true)
   private final List<StorageFile> files = resolveFiles();
+
   @Getter(lazy = true, value = PRIVATE)
   private final Map<String, StorageFile> fileObjectIdIndex = resolveFileObjectIdIndex();
+
   @Getter(lazy = true, value = PRIVATE)
   private final Multimap<String, StorageFile> fileGnosIdIndex = resolveFileGnosIdIndex();
+
   @Getter(lazy = true, value = PRIVATE)
   private final LoadingCache<String, URL> urlCache = createURLCache();
+
   @Getter(lazy = true)
   private final boolean authorized = resolveAuthorized();
-  @Getter
-  private Map<String, Long> metrics = new ConcurrentHashMap<>();
+
+  @Getter private Map<String, Long> metrics = new ConcurrentHashMap<>();
 
   @SneakyThrows
   public boolean resolveAuthorized() {
     try {
-      // TODO: Figure out why getFirst fails. All objects should exist! May need to filter out junk bucket paths on
+      // TODO: Figure out why getFirst fails. All objects should exist! May need to filter out junk
+      // bucket paths on
       // server as this could be causing the failure.
       val probe = getLast(entities);
       val probeUrl = downloadService.getUrl(probe.getId());
@@ -114,7 +109,8 @@ public class MountStorageContext implements StorageContext {
   }
 
   @Override
-  public Optional<StorageFile> getIndexFile(@NonNull String objectId, @NonNull IndexFileType indexFileType) {
+  public Optional<StorageFile> getIndexFile(
+      @NonNull String objectId, @NonNull IndexFileType indexFileType) {
     val file = getFile(objectId);
     if (file == null) {
       return Optional.empty();
@@ -122,8 +118,10 @@ public class MountStorageContext implements StorageContext {
 
     val gnosId = file.getGnosId();
     val stream = getFilesByGnosId(gnosId).stream();
-    return stream.filter(f -> f.getFileName().contains(file.getFileName() + '.' + indexFileType.getExtension()))
-      .findFirst();
+    return stream
+        .filter(
+            f -> f.getFileName().contains(file.getFileName() + '.' + indexFileType.getExtension()))
+        .findFirst();
   }
 
   @Override
@@ -146,23 +144,27 @@ public class MountStorageContext implements StorageContext {
     if (objects == null) {
       return files.build();
     }
-    objects.stream().filter(o -> {
-      val objectId = o.getId();
-      return entityIndex.get(objectId) != null;
-    }).forEach(object -> {
-      val objectId = object.getId();
-      val entity = entityIndex.get(objectId);
+    objects.stream()
+        .filter(
+            o -> {
+              val objectId = o.getId();
+              return entityIndex.get(objectId) != null;
+            })
+        .forEach(
+            object -> {
+              val objectId = object.getId();
+              val entity = entityIndex.get(objectId);
 
-      // Join entity to object
-      files.add(
-        storageFile()
-          .objectId(objectId)
-          .fileName(entity.getFileName())
-          .gnosId(entity.getGnosId())
-          .lastModified(object.getLastModified())
-          .size(object.getSize())
-          .build());
-    });
+              // Join entity to object
+              files.add(
+                  storageFile()
+                      .objectId(objectId)
+                      .fileName(entity.getFileName())
+                      .gnosId(entity.getGnosId())
+                      .lastModified(object.getLastModified())
+                      .size(object.getSize())
+                      .build());
+            });
 
     return files.build();
   }
@@ -184,5 +186,4 @@ public class MountStorageContext implements StorageContext {
     val serverExpiration = 24;
     return cache.expireAfterWrite(serverExpiration - 1, HOURS).build(loader);
   }
-
 }

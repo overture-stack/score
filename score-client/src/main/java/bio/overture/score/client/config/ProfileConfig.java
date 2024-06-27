@@ -18,11 +18,10 @@ import org.springframework.web.client.RestTemplate;
 
 @Configuration
 @Slf4j
-@ConditionalOnProperty(value="isTest", havingValue="false")
+@ConditionalOnProperty(value = "isTest", havingValue = "false")
 public class ProfileConfig {
 
-  @Autowired
-  private RestTemplate serviceTemplate;
+  @Autowired private RestTemplate serviceTemplate;
 
   @Value("${storage.url}")
   @NonNull
@@ -42,22 +41,24 @@ public class ProfileConfig {
   String clientVersion;
 
   @Bean
-  public String storageProfile(){
-    String profile =  getStorageProfile();
+  public String storageProfile() {
+    String profile = getStorageProfile();
     return profile;
   }
 
   private String getStorageProfile() {
-    log.debug("get profile endpoint: "+endpoint);
-  try{
-    String storageProfile = serviceTemplate.exchange(endpoint + "/profile", HttpMethod.GET, defaultEntity(), String.class).getBody();
-    return storageProfile;
-  }catch(NotRetryableException nre ){
-    log.error("received exception when getting profiles: " + nre.getMessage());
+    log.debug("get profile endpoint: " + endpoint);
+    try {
+      String storageProfile =
+          serviceTemplate
+              .exchange(endpoint + "/profile", HttpMethod.GET, defaultEntity(), String.class)
+              .getBody();
+      return storageProfile;
+    } catch (NotRetryableException nre) {
+      log.error("received exception when getting profiles: " + nre.getMessage());
+    }
+    return StorageProfiles.getProfileValue(defaultProfile);
   }
-  return StorageProfiles.getProfileValue(defaultProfile);
-  }
-
 
   private HttpEntity<Object> defaultEntity() {
     return new HttpEntity<Object>(defaultHeaders());
@@ -68,5 +69,4 @@ public class ProfileConfig {
     requestHeaders.add(HttpHeaders.USER_AGENT, clientVersion);
     return requestHeaders;
   }
-
 }

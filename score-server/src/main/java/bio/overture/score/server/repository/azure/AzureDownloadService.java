@@ -17,19 +17,25 @@
  */
 package bio.overture.score.server.repository.azure;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 import bio.overture.score.core.model.ObjectSpecification;
 import bio.overture.score.core.model.Part;
 import bio.overture.score.core.util.ObjectKeys;
+import bio.overture.score.core.util.PartCalculator;
 import bio.overture.score.server.exception.IdNotFoundException;
 import bio.overture.score.server.exception.InternalUnrecoverableError;
 import bio.overture.score.server.exception.NotRetryableException;
 import bio.overture.score.server.repository.BucketNamingService;
 import bio.overture.score.server.repository.DownloadService;
-import bio.overture.score.core.util.PartCalculator;
 import bio.overture.score.server.repository.URLGenerator;
 import com.microsoft.azure.storage.StorageException;
 import com.microsoft.azure.storage.blob.CloudBlobContainer;
 import com.microsoft.azure.storage.blob.CloudBlockBlob;
+import java.net.URISyntaxException;
+import java.util.Base64;
+import java.util.List;
+import java.util.Objects;
 import lombok.Setter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -40,38 +46,29 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
-import java.net.URISyntaxException;
-import java.util.Base64;
-import java.util.List;
-import java.util.Objects;
-
-import static com.google.common.base.Preconditions.checkArgument;
-
 @Slf4j
 @Setter
 @Service
 @Profile("azure")
 public class AzureDownloadService implements DownloadService {
 
-  /**
-   * Dependencies.
-   */
+  /** Dependencies. */
+  @Autowired private BucketNamingService bucketNamingService;
 
-  @Autowired
-  private BucketNamingService bucketNamingService;
-  @Autowired
-  private URLGenerator urlGenerator;
+  @Autowired private URLGenerator urlGenerator;
+
   @Autowired
   @Qualifier("download")
   private PartCalculator partCalculator;
-  @Autowired
-  private CloudBlobContainer container;
+
+  @Autowired private CloudBlobContainer container;
 
   @Value("${object.sentinel}")
   private String sentinelObjectId;
 
   @Override
-  public ObjectSpecification download(String objectId, long offset, long length, boolean forExternalUse, boolean excludeUrls) {
+  public ObjectSpecification download(
+      String objectId, long offset, long length, boolean forExternalUse, boolean excludeUrls) {
     try {
       checkArgument(offset >= 0L);
 
@@ -88,9 +85,10 @@ public class AzureDownloadService implements DownloadService {
       // Validate offset and length parameters:
       // Check if the offset + length > length - that would be too big
       if ((offset + rangeLength) > blobSize) {
-        throw new InternalUnrecoverableError(String.format(
-          "Specified parameters offset: %d length: %d exceed object size %d (object id: %s)",
-          offset, rangeLength, blobSize, objectId));
+        throw new InternalUnrecoverableError(
+            String.format(
+                "Specified parameters offset: %d length: %d exceed object size %d (object id: %s)",
+                offset, rangeLength, blobSize, objectId));
       }
 
       List<Part> parts;
@@ -104,14 +102,19 @@ public class AzureDownloadService implements DownloadService {
 
       String contentMd5 = blob.getProperties().getContentMD5();
       String md5 = null;
-      if(Objects.nonNull(contentMd5)) {
+      if (Objects.nonNull(contentMd5)) {
         md5 = base64ToHexMD5(contentMd5);
       }
 
       return new ObjectSpecification(objectId, objectId, objectId, parts, rangeLength, md5, false);
     } catch (StorageException e) {
-      log.error("Failed to download objectId: {}, offset: {}, length: {}, forExternalUse: {}: {} ",
-        objectId, offset, length, forExternalUse, e);
+      log.error(
+          "Failed to download objectId: {}, offset: {}, length: {}, forExternalUse: {}: {} ",
+          objectId,
+          offset,
+          length,
+          forExternalUse,
+          e);
 
       throw new NotRetryableException(e);
     } catch (URISyntaxException e) {
@@ -121,23 +124,23 @@ public class AzureDownloadService implements DownloadService {
     return null;
   }
 
-  public CloudBlockBlob getBlobReference(String objectId) throws URISyntaxException, StorageException {
+  public CloudBlockBlob getBlobReference(String objectId)
+      throws URISyntaxException, StorageException {
     val result = container.getBlockBlobReference(objectId);
     if (result.exists()) {
       return result;
     } else {
-      throw new IdNotFoundException(String.format("Object '%s' not found in container '%s'", objectId,
-        container.getName()));
+      throw new IdNotFoundException(
+          String.format("Object '%s' not found in container '%s'", objectId, container.getName()));
     }
   }
 
   private void fillPartUrls(String objectId, List<Part> parts) {
-    // Construct pre-signed URL's for objects - the same for all parts in Azure. Parts determined entirely by range
+    // Construct pre-signed URL's for objects - the same for all parts in Azure. Parts determined
+    // entirely by range
     // header
-    val presignedUrl = urlGenerator.getDownloadUrl(
-      null,
-      ObjectKeys.getObjectKey("", objectId),
-      null);
+    val presignedUrl =
+        urlGenerator.getDownloadUrl(null, ObjectKeys.getObjectKey("", objectId), null);
     for (val part : parts) {
       part.setUrl(presignedUrl);
     }
@@ -146,12 +149,11 @@ public class AzureDownloadService implements DownloadService {
   @Override
   public String getSentinelObject() {
     if ((sentinelObjectId == null) || (sentinelObjectId.isEmpty())) {
-      throw new NotRetryableException(new IllegalArgumentException("Sentinel object id not defined"));
+      throw new NotRetryableException(
+          new IllegalArgumentException("Sentinel object id not defined"));
     }
-    val result = urlGenerator.getDownloadUrl(
-      null,
-      ObjectKeys.getObjectKey("", sentinelObjectId),
-      null);
+    val result =
+        urlGenerator.getDownloadUrl(null, ObjectKeys.getObjectKey("", sentinelObjectId), null);
     return result;
   }
 
