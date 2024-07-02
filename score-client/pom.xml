@@ -59,7 +59,6 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
   </dependencyManagement>
   <dependencies>
 
-    <!-- DCC - Storage -->
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>score-core</artifactId>
@@ -67,13 +66,6 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>score-fs</artifactId>
-    </dependency>
-
-    <!-- DCC - Common -->
-    <dependency>
-      <groupId>org.icgc.dcc</groupId>
-      <artifactId>dcc-common-core</artifactId>
-      <version>${dcc-common.version}</version>
     </dependency>
 
     <!-- Spring -->
@@ -251,9 +243,6 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
   <properties>
     <guava.version>19.0</guava.version>
     <jcommander.version>1.35</jcommander.version>
-
-    <!-- Versions - DCC -->
-    <dcc-common.version>4.0.9</dcc-common.version>
 
     <!-- Versions - Genomics -->
     <!--  <htsjdk.version>1.138</htsjdk.version> -->

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.
+ * Copyright (c) 2024 The Ontario Institute for Cancer Research. All rights reserved.
  *
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
  * You should have received a copy of the GNU General Public License along with
@@ -15,38 +15,15 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package bio.overture.score.core.model;
+package bio.overture.score.server.security.ssl;
 
-import com.google.common.base.Preconditions;
-import lombok.Data;
-import lombok.NonNull;
-import lombok.val;
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.SSLSession;
 
-@Data
-public class ObjectKey {
+public class NoTestHostnameVerifier implements HostnameVerifier {
+  public NoTestHostnameVerifier() {}
 
-  private String dir;
-  private String objectId;
-
-  public ObjectKey(@NonNull String subDir, @NonNull String objectId) {
-    this.dir = subDir;
-    this.objectId = objectId;
-  }
-
-  public ObjectKey(@NonNull String objectKey) {
-    Preconditions.checkArgument(objectKey.contains("/"));
-    Preconditions.checkArgument(objectKey.split("/").length == 2);
-
-    val pieces = objectKey.split("/");
-    dir = pieces[0];
-    objectId = pieces[1];
-  }
-
-  public String getKey() {
-    return dir.isBlank() ? objectId : dir + "/" + objectId;
-  }
-
-  public String getMetaKey() {
-    return dir.isBlank() ? objectId + ".meta" : dir + "/" + objectId + ".meta";
+  public boolean verify(String hostname, SSLSession sslSession) {
+    return true;
   }
 }

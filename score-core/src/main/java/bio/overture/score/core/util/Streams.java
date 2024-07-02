@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.
+ * Copyright (c) 2024 The Ontario Institute for Cancer Research. All rights reserved.
  *
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
  * You should have received a copy of the GNU General Public License along with
@@ -17,30 +17,28 @@
  */
 package bio.overture.score.core.util;
 
-import static lombok.AccessLevel.PRIVATE;
-
-import bio.overture.score.core.model.ObjectKey;
-import lombok.NoArgsConstructor;
+import com.google.common.collect.ImmutableList;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 import lombok.NonNull;
 
-/** Object key related utilities. */
-@NoArgsConstructor(access = PRIVATE)
-public final class ObjectKeys {
-
-  /** Returns S3 key for actual object blob */
-  public static ObjectKey getObjectKey(@NonNull String dataDir, @NonNull String objectId) {
-    return new ObjectKey(dataDir, objectId);
+public class Streams {
+  public static <T> Stream<T> stream(@NonNull Iterable<T> iterable) {
+    if (iterable == null) {
+      throw new NullPointerException("iterable");
+    } else {
+      return StreamSupport.stream(iterable.spliterator(), false);
+    }
   }
 
-  public static String getObjectId(@NonNull String dataDir, @NonNull String objectKey) {
-    return dataDir.isBlank() ? objectKey : objectKey.replaceAll(dataDir + "/", "");
+  @SafeVarargs
+  public static <T> Stream<T> stream(@NonNull T... values) {
+    if (values == null) {
+      throw new NullPointerException("values");
+    } else {
+      return ImmutableList.copyOf(values).stream();
+    }
   }
 
-  /**
-   * Returns S3 key for metadata file for blob (contains upload id's, MD5 checksums, pre-signed
-   * URL's for each part of file)
-   */
-  public static String getObjectMetaKey(@NonNull String dataDir, @NonNull String objectId) {
-    return dataDir.isBlank() ? objectId + ".meta" : dataDir + "/" + objectId + ".meta";
-  }
+  private Streams() {}
 }

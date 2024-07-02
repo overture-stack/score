@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.
+ * Copyright (c) 2024 The Ontario Institute for Cancer Research. All rights reserved.
  *
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
  * You should have received a copy of the GNU General Public License along with
@@ -17,30 +17,40 @@
  */
 package bio.overture.score.core.util;
 
-import static lombok.AccessLevel.PRIVATE;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import java.util.stream.Collector;
 
-import bio.overture.score.core.model.ObjectKey;
-import lombok.NoArgsConstructor;
-import lombok.NonNull;
-
-/** Object key related utilities. */
-@NoArgsConstructor(access = PRIVATE)
-public final class ObjectKeys {
-
-  /** Returns S3 key for actual object blob */
-  public static ObjectKey getObjectKey(@NonNull String dataDir, @NonNull String objectId) {
-    return new ObjectKey(dataDir, objectId);
+public class Collectors {
+  public static <T> Collector<T, ImmutableList.Builder<T>, ImmutableList<T>> toImmutableList() {
+    return Collector.of(
+        ImmutableList.Builder::new,
+        (builder, e) -> {
+          builder.add(e);
+        },
+        (b1, b2) -> {
+          return b1.addAll(b2.build());
+        },
+        (builder) -> {
+          return builder.build();
+        });
   }
 
-  public static String getObjectId(@NonNull String dataDir, @NonNull String objectKey) {
-    return dataDir.isBlank() ? objectKey : objectKey.replaceAll(dataDir + "/", "");
+  public static <T> Collector<T, ImmutableSet.Builder<T>, ImmutableSet<T>> toImmutableSet() {
+    return Collector.of(
+        ImmutableSet.Builder::new,
+        (builder, e) -> {
+          builder.add(e);
+        },
+        (b1, b2) -> {
+          return b1.addAll(b2.build());
+        },
+        (builder) -> {
+          return builder.build();
+        });
   }
 
-  /**
-   * Returns S3 key for metadata file for blob (contains upload id's, MD5 checksums, pre-signed
-   * URL's for each part of file)
-   */
-  public static String getObjectMetaKey(@NonNull String dataDir, @NonNull String objectId) {
-    return dataDir.isBlank() ? objectId + ".meta" : dataDir + "/" + objectId + ".meta";
+  private Collectors() {
+    throw new UnsupportedOperationException("This is a utility class and cannot be instantiated");
   }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.
+ * Copyright (c) 2024 The Ontario Institute for Cancer Research. All rights reserved.
  *
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
  * You should have received a copy of the GNU General Public License along with
@@ -17,30 +17,32 @@
  */
 package bio.overture.score.core.util;
 
-import static lombok.AccessLevel.PRIVATE;
+import com.google.common.base.Strings;
 
-import bio.overture.score.core.model.ObjectKey;
-import lombok.NoArgsConstructor;
-import lombok.NonNull;
+public class Access {
 
-/** Object key related utilities. */
-@NoArgsConstructor(access = PRIVATE)
-public final class ObjectKeys {
+  public static final String OPEN = "open";
+  public static final String CONTROLLED = "controlled";
 
-  /** Returns S3 key for actual object blob */
-  public static ObjectKey getObjectKey(@NonNull String dataDir, @NonNull String objectId) {
-    return new ObjectKey(dataDir, objectId);
+  private String value;
+
+  public Access(String accessType) {
+    if (Strings.isNullOrEmpty(accessType) || accessType.equalsIgnoreCase("null")) {
+      value = CONTROLLED;
+    } else {
+      value = accessType;
+    }
   }
 
-  public static String getObjectId(@NonNull String dataDir, @NonNull String objectKey) {
-    return dataDir.isBlank() ? objectKey : objectKey.replaceAll(dataDir + "/", "");
+  public boolean isOpen() {
+    return OPEN.equalsIgnoreCase(value);
   }
 
-  /**
-   * Returns S3 key for metadata file for blob (contains upload id's, MD5 checksums, pre-signed
-   * URL's for each part of file)
-   */
-  public static String getObjectMetaKey(@NonNull String dataDir, @NonNull String objectId) {
-    return dataDir.isBlank() ? objectId + ".meta" : dataDir + "/" + objectId + ".meta";
+  public boolean isControlled() {
+    return CONTROLLED.equalsIgnoreCase(value);
+  }
+
+  public boolean isOther() {
+    return !(isControlled() || isOpen());
   }
 }

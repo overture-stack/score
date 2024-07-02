@@ -20,13 +20,13 @@ package bio.overture.score.test.util;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.StandardSystemProperty.JAVA_CLASS_PATH;
 
+import bio.overture.score.core.util.Joiners;
+import bio.overture.score.core.util.Splitters;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.icgc.dcc.common.core.util.Joiners;
-import org.icgc.dcc.common.core.util.Splitters;
 
 /** Spring boot process wrapper. */
 @Slf4j

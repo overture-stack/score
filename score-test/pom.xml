@@ -46,7 +46,6 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
       </exclusions>
     </dependency>
 
-    <!-- Test - DCC Storage -->
     <dependency>
       <groupId>bio.overture</groupId>
       <artifactId>score-client</artifactId>
@@ -57,32 +56,10 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
       <artifactId>score-server</artifactId>
       <scope>test</scope>
     </dependency>
-
-    <!-- Test - DCC Auth -->
     <dependency>
-      <groupId>org.icgc.dcc</groupId>
-      <artifactId>dcc-auth-server</artifactId>
-      <version>${dcc-auth.version}</version>
-      <scope>test</scope>
-    </dependency>
-
-    <!-- Test - DCC Metadata -->
-    <dependency>
-      <groupId>org.icgc.dcc</groupId>
-      <artifactId>dcc-metadata-core</artifactId>
-      <version>${dcc-metadata.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.icgc.dcc</groupId>
-      <artifactId>dcc-metadata-client</artifactId>
-      <version>${dcc-metadata.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.icgc.dcc</groupId>
-      <artifactId>dcc-metadata-server</artifactId>
-      <version>${dcc-metadata.version}</version>
+      <groupId>org.assertj</groupId>
+      <artifactId>assertj-core</artifactId>
+      <version>3.25.3</version>
       <scope>test</scope>
     </dependency>
 

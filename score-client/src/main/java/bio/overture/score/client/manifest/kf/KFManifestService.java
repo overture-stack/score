@@ -1,7 +1,7 @@
 package bio.overture.score.client.manifest.kf;
 
+import static bio.overture.score.core.util.Collectors.toImmutableList;
 import static java.lang.String.format;
-import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 
 import bio.overture.score.client.manifest.DownloadManifest;
 import bio.overture.score.client.manifest.DownloadManifest.ManifestEntry;

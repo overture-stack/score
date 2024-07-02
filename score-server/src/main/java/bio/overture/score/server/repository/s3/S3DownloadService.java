@@ -23,8 +23,10 @@ import static com.google.common.base.Preconditions.checkArgument;
 import bio.overture.score.core.model.ObjectKey;
 import bio.overture.score.core.model.ObjectSpecification;
 import bio.overture.score.core.model.Part;
+import bio.overture.score.core.util.MD5s;
 import bio.overture.score.core.util.ObjectKeys;
 import bio.overture.score.core.util.PartCalculator;
+import bio.overture.score.server.config.S3Config;
 import bio.overture.score.server.exception.IdNotFoundException;
 import bio.overture.score.server.exception.InternalUnrecoverableError;
 import bio.overture.score.server.exception.NotRetryableException;
@@ -37,6 +39,7 @@ import bio.overture.score.server.repository.URLGenerator;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.GetObjectRequest;
+import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.S3Object;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -88,6 +91,7 @@ public class S3DownloadService implements DownloadService {
   @Autowired private URLGenerator urlGenerator;
   @Autowired private PartCalculator partCalculator;
   @Autowired private MetadataService metadataService;
+  @Autowired private S3Config s3config;
 
   @Override
   public ObjectSpecification download(
@@ -96,17 +100,47 @@ public class S3DownloadService implements DownloadService {
       if (!excludeUrls) {
         checkPublishedAnalysisState(metadataService.getEntity(objectId));
       }
-
       checkArgument(offset > -1L);
 
-      // Retrieve our meta file for object id
-      val objectSpec = getSpecification(objectId);
+      val objectKey = ObjectKeys.getObjectKey(dataDir, objectId);
+
+      var objectSpec = getSpecification(objectId);
+
+      if (objectSpec == null) {
+        ObjectMetadata metadata =
+            s3Client.getObjectMetadata(
+                bucketNamingService.getObjectBucketName(objectId), objectKey.getKey());
+
+        List<Part> parts;
+        if (forExternalUse) {
+          // Return as a single part - no matter how large
+          parts = partCalculator.specify(0L, -1L);
+        } else if (length < 0L) {
+          parts = partCalculator.divide(offset, metadata.getContentLength() - offset);
+        } else {
+          parts = partCalculator.divide(offset, length);
+        }
+        fillPartUrls(objectKey, parts, false, forExternalUse);
+
+        val md5 = getObjectMd5(metadata);
+
+        objectSpec =
+            new ObjectSpecification(
+                objectKey.getKey(),
+                objectId,
+                objectId,
+                parts,
+                metadata.getContentLength(),
+                md5,
+                false);
+      }
 
       // Short-circuit in default case
       if (!forExternalUse && (offset == 0L && length < 0L)) {
         return excludeUrls ? removeUrls(objectSpec) : objectSpec;
       }
 
+      // Construct ObjectSpecification for actual object in /data logical folder
       // Calculate range values
       // To retrieve to the end of the file
       if (!forExternalUse && (length < 0L)) {
@@ -125,9 +159,6 @@ public class S3DownloadService implements DownloadService {
                 + length
                 + ")");
       }
-
-      // Construct ObjectSpecification for actual object in /data logical folder
-      val objectKey = ObjectKeys.getObjectKey(dataDir, objectId);
 
       List<Part> parts;
       if (forExternalUse) {
@@ -150,7 +181,6 @@ public class S3DownloadService implements DownloadService {
               objectSpec.isRelocated());
 
       return excludeUrls ? removeUrls(spec) : spec;
-
     } catch (Exception e) {
       log.error(
           "Failed to download objectId: {}, offset: {}, length: {}, forExternalUse: {}, excludeUrls: {} : {} ",
@@ -163,6 +193,35 @@ public class S3DownloadService implements DownloadService {
 
       throw e;
     }
+  }
+
+  /**
+   * Looks for MD5 hash in the object metadata. This is used as part of the fallback behaviour when
+   * the .meta file cannot be found. To find the MD5, we will look for a value using the built in S3
+   * getContendMD5(), and if no value is found there we will check in a configurable user meta data
+   * property. The name of this property is configurable via the S3 Config. If no MD5 value can be
+   * found in either of these locations then it will be returned null.
+   *
+   * <p>A user can still download files with the MD5 set to null, but they will always fail to
+   * validate through the CLI. To complete a download of a file in this state, the user should add
+   * the argument to their CLI download command: --validate false
+   *
+   * @param metadata
+   * @return
+   */
+  private String getObjectMd5(ObjectMetadata metadata) {
+    val contentMd5 = metadata.getContentMD5();
+    if (contentMd5 != null) {
+      return  MD5s.toHex(contentMd5);
+    }
+    val userMetadataMd5 =
+        metadata.getUserMetaDataOf(s3config.getCustomMd5Property()); // get literal from config
+    if (userMetadataMd5 != null) {
+      return MD5s.toHex(userMetadataMd5);
+    }
+
+    // No value found, returning null.
+    return null;
   }
 
   private static ObjectSpecification removeUrls(ObjectSpecification spec) {
@@ -187,7 +246,6 @@ public class S3DownloadService implements DownloadService {
     }
   }
 
-  // This really is a misleading method name - should be retrieveMetaFile() or something
   public ObjectSpecification getSpecification(String objectId) {
     val objectKey = ObjectKeys.getObjectKey(dataDir, objectId);
     val objectMetaKey = ObjectKeys.getObjectMetaKey(dataDir, objectId);
@@ -225,6 +283,8 @@ public class S3DownloadService implements DownloadService {
           objectKey,
           e);
       throw new NotRetryableException(e);
+    } catch (IdNotFoundException e) {
+      return null;
     }
   }
 
