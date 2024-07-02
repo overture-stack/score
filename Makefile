@@ -70,7 +70,7 @@ _ping_song_server:
 		--retry 5 \
 		--retry-delay 0 \
 		--retry-max-time 40 \
-		--retry-connrefuse \
+		--retry-connrefused \
 		'http://localhost:8080/isAlive'
 	@echo ""
 
