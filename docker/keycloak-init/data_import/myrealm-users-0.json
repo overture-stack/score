@@ -24,64 +24,44 @@
     "notBefore" : 0,
     "groups" : [ "/ADMIN" ]
   }, {
-    "id" : "e64e4228-b9fb-48b3-9b57-5425937d4df2",
-    "createdTimestamp" : 1700587923345,
-    "username" : "service-account-score",
-    "enabled" : true,
-    "totp" : false,
-    "emailVerified" : false,
-    "serviceAccountClientId" : "score",
-    "credentials" : [ ],
-    "disableableCredentialTypes" : [ ],
-    "requiredActions" : [ ],
-    "realmRoles" : [ "default-roles-myrealm" ],
-    "clientRoles" : {
-      "score" : [ "uma_protection" ]
-    },
-    "notBefore" : 0,
-    "groups" : [ ]
-  }, {
     "id" : "76fa81e0-ae36-4f80-b891-a939d67a82e0",
     "createdTimestamp" : 1695916686570,
-    "username" : "service-account-song",
+    "username" : "service-account-system",
     "enabled" : true,
     "totp" : false,
     "emailVerified" : false,
-    "serviceAccountClientId" : "song",
+    "serviceAccountClientId" : "system",
     "credentials" : [ ],
     "disableableCredentialTypes" : [ ],
     "requiredActions" : [ ],
     "realmRoles" : [ "default-roles-myrealm" ],
     "clientRoles" : {
-      "song" : [ "uma_protection" ]
+      "system" : [ "uma_protection" ]
     },
     "notBefore" : 0,
     "groups" : [ ]
   }, {
-    "id" : "8b11be5f-c738-408b-85d5-9e0966c2fd7a",
-    "createdTimestamp" : 1695916594573,
-    "username" : "user@example.com",
+    "id" : "a5797177-24ab-437a-8110-8ab238d5804e",
+    "createdTimestamp" : 1720008009839,
+    "username" : "testca_user",
     "enabled" : true,
     "totp" : false,
-    "emailVerified" : true,
-    "firstName" : "user",
-    "lastName" : "example",
-    "email" : "user@example.com",
+    "emailVerified" : false,
     "attributes" : {
-      "api-keys" : [ "{\"name\":\"549E49311EF94D9B50A772E2E2E5F0CE25B70AD5C6B429DBF6F82B54C4E14718\",\"scope\":[\"ABC123.WRITE\",\"ABC123.READ\"],\"expiryDate\":1746486436919,\"issueDate\":1714950436919,\"isRevoked\":false,\"description\":\"write and read\"}" ]
+      "api-keys" : [ "{\"name\":\"7EC9363B25465C07FD885B297EAF7AACD702C5752551FBEE8E5B802BC390A927\",\"scope\":[\"TEST-CA.READ\",\"song.READ\",\"TEST-CA.WRITE\",\"song.WRITE\"],\"expiryDate\":1751546629422,\"issueDate\":1720010629421,\"isRevoked\":false,\"description\":\"write and read\"}" ]
     },
     "credentials" : [ {
-      "id" : "4ee844f9-25bc-4f33-8ee1-ed89e25f78fc",
+      "id" : "97cb294d-d79f-4d36-87b1-040dbf4ac9de",
       "type" : "password",
       "userLabel" : "My password",
-      "createdDate" : 1695916612424,
-      "secretData" : "{\"value\":\"+QJdAuFVawvqg4m2M5oiZyj1kIZIZf0IRDUy9s/Du2o=\",\"salt\":\"VyfgE81KbbxdNYRKzvYziQ==\",\"additionalParameters\":{}}",
+      "createdDate" : 1720008034778,
+      "secretData" : "{\"value\":\"nh/z1H4LWnOMSL/7d/BIYADiaeMu8uTWW2EgWLDtc88=\",\"salt\":\"gjDcFeQhaVKRLRsLMck6MQ==\",\"additionalParameters\":{}}",
       "credentialData" : "{\"hashIterations\":27500,\"algorithm\":\"pbkdf2-sha256\",\"additionalParameters\":{}}"
     } ],
     "disableableCredentialTypes" : [ ],
     "requiredActions" : [ ],
     "realmRoles" : [ "default-roles-myrealm" ],
     "notBefore" : 0,
-    "groups" : [ "/STUDYGROUP" ]
+    "groups" : [ "/TESTCASONG_GROUP" ]
   } ]
 }

@@ -69,8 +69,8 @@ services:
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak-server:8080/realms/myrealm/protocol/openid-connect/certs
       AUTH_SERVER_URL: http://keycloak-server:8080/realms/myrealm/apikey/check_api_key/
       AUTH_SERVER_TOKENNAME: apiKey
-      AUTH_SERVER_CLIENTID: score
-      AUTH_SERVER_CLIENTSECRET: scoresecret
+      AUTH_SERVER_CLIENTID: system
+      AUTH_SERVER_CLIENTSECRET: systemsecret
       AUTH_SERVER_PROVIDER: keycloak
       AUTH_SERVER_KEYCLOAK_HOST: http://keycloak-server:8080
       AUTH_SERVER_KEYCLOAK_REALM: myrealm
@@ -147,8 +147,8 @@ services:
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak-server:8080/realms/myrealm/protocol/openid-connect/certs
       AUTH_SERVER_INTROSPECTIONURI: http://keycloak-server:8080/realms/myrealm/apikey/check_api_key/
       AUTH_SERVER_TOKENNAME: apiKey
-      AUTH_SERVER_CLIENTID: song
-      AUTH_SERVER_CLIENTSECRET: songsecret
+      AUTH_SERVER_CLIENTID: system
+      AUTH_SERVER_CLIENTSECRET: systemsecret
       AUTH_SERVER_PROVIDER: keycloak
       AUTH_SERVER_KEYCLOAK_HOST: http://keycloak-server:8080
       AUTH_SERVER_KEYCLOAK_REALM: myrealm
