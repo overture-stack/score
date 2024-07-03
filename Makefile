@@ -70,7 +70,7 @@ _ping_song_server:
 		--retry 5 \
 		--retry-delay 0 \
 		--retry-max-time 40 \
-		--retry-connrefuse \
+		--retry-connrefused \
 		'http://localhost:8080/isAlive'
 	@echo ""
 
@@ -192,10 +192,10 @@ rebuild-server: clean-mvn package
 rebuild-all: clean-mvn package
 	@$(DOCKER_COMPOSE_CMD) build score-server score-client
 
-# Start ego, song, and object-storage.
+# Start keycloak, song, and object-storage.
 start-deps: _setup package
-	@echo $(YELLOW)$(INFO_HEADER) "Starting dependencies: ego, song and object-storage" $(END)
-	@$(DC_UP_CMD) ego-api song-server object-storage
+	@echo $(YELLOW)$(INFO_HEADER) "Starting dependencies: keycloak, song and object-storage" $(END)
+	@$(DC_UP_CMD) keycloak-server song-server object-storage
 
 # Start score-server and all dependencies. Affected by DEMO_MODE
 start-score-server: _setup package start-deps _setup-object-storage

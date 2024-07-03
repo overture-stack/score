@@ -1,31 +1,36 @@
 version: '3.7'
 services:
-  ego-api:
-    image: "overture/ego:3.1.0"
+  keycloak-server:
+    image: docker.io/bitnami/keycloak:22
     environment:
-      SERVER_PORT: 8080
-      SPRING_DATASOURCE_URL: jdbc:postgresql://ego-postgres:5432/ego?stringtype=unspecified
-      SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: password
-      SPRING_FLYWAY_ENABLED: "true"
-      SPRING_FLYWAY_LOCATIONS: "classpath:flyway/sql,classpath:db/migration"
-      SPRING_PROFILES: demo, auth
-    expose:
-      - "8080"
+      - KC_DB=postgres
+      - KC_DB_URL=jdbc:postgresql://keycloak-postgresql/bitnami_keycloak
+      - KC_DB_USERNAME=bn_keycloak
+      # default expiration days of apiKeys is 365
+      # - APIKEY_DURATION_DAYS=365
     ports:
       - "9082:8080"
-    command: java -jar /srv/ego/install/ego.jar
     depends_on:
-      - ego-postgres
-  ego-postgres:
-    image: postgres:9.5
+      - keycloak-postgresql
+    volumes:
+      - type: bind
+        source: ./docker/keycloak-init/data_import
+        target: /opt/bitnami/keycloak/data/import
+    command:
+      - /bin/bash
+      - -c
+      - |
+        curl -sL https://github.com/oicr-softeng/keycloak-apikeys/releases/download/1.0.1/keycloak-apikeys-1.0.1.jar -o /opt/bitnami/keycloak/providers/keycloak-apikeys-1.0.1.jar
+        kc.sh start-dev --import-realm
+  keycloak-postgresql:
+    image: docker.io/bitnami/postgresql:11
     environment:
-      - POSTGRES_DB=ego
-      - POSTGRES_PASSWORD=password
+      # ALLOW_EMPTY_PASSWORD is recommended only for development.
+      - ALLOW_EMPTY_PASSWORD=yes
+      - POSTGRESQL_USERNAME=bn_keycloak
+      - POSTGRESQL_DATABASE=bitnami_keycloak
     expose:
       - "5432"
-    volumes:
-      - "./docker/ego-init:/docker-entrypoint-initdb.d"
     ports:
       - "9444:5432"
   object-storage:
@@ -36,7 +41,7 @@ services:
       MINIO_SECRET_KEY: minio123
     command: server /data
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      test: [ "CMD", "curl", "-f", "http://localhost:9000/minio/health/live" ]
       interval: 30s
       timeout: 20s
       retries: 3
@@ -61,11 +66,15 @@ services:
       S3_ACCESSKEY: minio
       S3_SECRETKEY: minio123
       S3_SIGV4ENABLED: "true"
-      AUTH_SERVER_URL: http://ego-api:8080/o/check_api_key/
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak-server:8080/realms/myrealm/protocol/openid-connect/certs
+      AUTH_SERVER_URL: http://keycloak-server:8080/realms/myrealm/apikey/check_api_key/
       AUTH_SERVER_TOKENNAME: apiKey
-      AUTH_SERVER_CLIENTID: score
-      AUTH_SERVER_CLIENTSECRET: scoresecret
-      AUTH_SERVER_SCOPE_STUDY_PREFIX: score.
+      AUTH_SERVER_CLIENTID: system
+      AUTH_SERVER_CLIENTSECRET: systemsecret
+      AUTH_SERVER_PROVIDER: keycloak
+      AUTH_SERVER_KEYCLOAK_HOST: http://keycloak-server:8080
+      AUTH_SERVER_KEYCLOAK_REALM: myrealm
+      AUTH_SERVER_SCOPE_STUDY_PREFIX: PROGRAMDATA.
       AUTH_SERVER_SCOPE_UPLOAD_SUFFIX: .WRITE
       AUTH_SERVER_SCOPE_DOWNLOAD_SUFFIX: .READ
       AUTH_SERVER_SCOPE_DOWNLOAD_SYSTEM: score.WRITE
@@ -86,7 +95,6 @@ services:
     depends_on:
       - object-storage
       - song-server
-      - ego-api
     volumes:
       - "./docker/scratch/storage-server-logs:/opt/dcc/storage_server_logs"
   score-client:
@@ -95,7 +103,7 @@ services:
       dockerfile: "$DOCKERFILE_NAME"
       target: client
     environment:
-      ACCESSTOKEN: f69b726d-d40f-4261-b105-1ec7e6bf04d5 
+      ACCESSTOKEN: 07a5a12e-a85f-4248-a9a1-851a8062b6ac
       METADATA_URL: http://song-server:8080
       STORAGE_URL: http://score-server:8080
       JAVA_TOOL_OPTIONS: -agentlib:jdwp=transport=dt_socket,address=*:5005,server=y,suspend=n
@@ -107,7 +115,7 @@ services:
     command: bin/score-client
     user: "$MY_UID:$MY_GID"
   song-db:
-    image: "postgres:9.6"
+    image: "postgres:11.1"
     environment:
       POSTGRES_DB: song
       POSTGRES_USER: postgres
@@ -118,6 +126,11 @@ services:
       - "12345:5432"
     volumes:
       - "./docker/song-db-init:/docker-entrypoint-initdb.d"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 15s
+      timeout: 15s
+      retries: 5
   aws-cli:
     image: "mesosphere/aws-cli:latest"
     environment:
@@ -127,18 +140,23 @@ services:
     volumes:
       - "./docker/object-storage-init/data/oicr.icgc.test/data:/score-data:ro"
   song-server:
-    image: overture/song-server:4.2.2
+    image: ghcr.io/overture-stack/song-server:438c2c42
     environment:
       SERVER_PORT: 8080
       SPRING_PROFILES_ACTIVE: "prod,secure,default"
-      AUTH_SERVER_URL: http://ego-api:8080/o/check_token/
-      AUTH_SERVER_CLIENTID: song
-      AUTH_SERVER_CLIENTSECRET: songsecret
-      AUTH_SERVER_SCOPE_STUDY_PREFIX: song.
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak-server:8080/realms/myrealm/protocol/openid-connect/certs
+      AUTH_SERVER_INTROSPECTIONURI: http://keycloak-server:8080/realms/myrealm/apikey/check_api_key/
+      AUTH_SERVER_TOKENNAME: apiKey
+      AUTH_SERVER_CLIENTID: system
+      AUTH_SERVER_CLIENTSECRET: systemsecret
+      AUTH_SERVER_PROVIDER: keycloak
+      AUTH_SERVER_KEYCLOAK_HOST: http://keycloak-server:8080
+      AUTH_SERVER_KEYCLOAK_REALM: myrealm
+      AUTH_SERVER_SCOPE_STUDY_PREFIX: PROGRAMDATA.
       AUTH_SERVER_SCOPE_STUDY_SUFFIX: .WRITE
       AUTH_SERVER_SCOPE_SYSTEM: song.WRITE
       SCORE_URL: http://score-server:8080
-      SCORE_ACCESSTOKEN: f69b726d-d40f-4261-b105-1ec7e6bf04d5
+      SCORE_ACCESSTOKEN: 07a5a12e-a85f-4248-a9a1-851a8062b6ac
       MANAGEMENT_SERVER_PORT: 8081
       ID_USELOCAL: "true"
       SPRING_DATASOURCE_USERNAME: postgres
@@ -149,8 +167,8 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      - song-db 
-      - ego-api
+      song-db:
+        condition: service_healthy
     volumes:
       - "./docker/scratch/song-server-logs:/opt/dcc/server_logs"
 

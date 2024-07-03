@@ -86,7 +86,10 @@ defaultProfile: collaboratory
 # Profile - "kf"
 ###############################################################################
 
-spring.profiles: kf
+spring:
+  config:
+    activate:
+      on-profile: kf
 
 # Storage server
 storage:
@@ -103,7 +106,10 @@ client:
 # Profile - "oicr"
 ###############################################################################
 
-spring.profiles: oicr
+spring:
+  config:
+    activate:
+      on-profile: oicr
 
 # uses storage.url and client.ssl.custom define in common 
 
@@ -114,7 +120,10 @@ spring.profiles: oicr
 # Profile - "debug"
 ###############################################################################
 
-spring.profiles: debug
+spring:
+  config:
+    activate:
+      on-profile: debug
 
 logging:
   level:

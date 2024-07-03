@@ -1,0 +1,67 @@
+{
+  "realm" : "myrealm",
+  "users" : [ {
+    "id" : "96dfb80d-8b4c-4f97-a86e-05e9de4571d5",
+    "createdTimestamp" : 1714963439023,
+    "username" : "admin",
+    "enabled" : true,
+    "totp" : false,
+    "emailVerified" : false,
+    "attributes" : {
+      "api-keys" : [ "{\"name\":\"4978D340EDFA11ABF4A6B282C762676DCFAAEF55496631A6474D55C17CB96DCB\",\"scope\":[\"song.READ\",\"score.WRITE\",\"score.READ\",\"song.WRITE\"],\"expiryDate\":1746499545473,\"issueDate\":1714963545473,\"isRevoked\":false,\"description\":\"write and read\"}" ]
+    },
+    "credentials" : [ {
+      "id" : "b2152773-6246-4f74-bddd-6440e99dc860",
+      "type" : "password",
+      "userLabel" : "My password",
+      "createdDate" : 1714963450546,
+      "secretData" : "{\"value\":\"92EMxAP2Ze8gZVA+elHSaFIa7VAmVoeXk6ck7Pgm5HM=\",\"salt\":\"p4jYgjne+B+4yiwQVoCySg==\",\"additionalParameters\":{}}",
+      "credentialData" : "{\"hashIterations\":27500,\"algorithm\":\"pbkdf2-sha256\",\"additionalParameters\":{}}"
+    } ],
+    "disableableCredentialTypes" : [ ],
+    "requiredActions" : [ ],
+    "realmRoles" : [ "default-roles-myrealm" ],
+    "notBefore" : 0,
+    "groups" : [ "/ADMIN" ]
+  }, {
+    "id" : "76fa81e0-ae36-4f80-b891-a939d67a82e0",
+    "createdTimestamp" : 1695916686570,
+    "username" : "service-account-system",
+    "enabled" : true,
+    "totp" : false,
+    "emailVerified" : false,
+    "serviceAccountClientId" : "system",
+    "credentials" : [ ],
+    "disableableCredentialTypes" : [ ],
+    "requiredActions" : [ ],
+    "realmRoles" : [ "default-roles-myrealm" ],
+    "clientRoles" : {
+      "system" : [ "uma_protection" ]
+    },
+    "notBefore" : 0,
+    "groups" : [ ]
+  }, {
+    "id" : "a5797177-24ab-437a-8110-8ab238d5804e",
+    "createdTimestamp" : 1720008009839,
+    "username" : "testca_user",
+    "enabled" : true,
+    "totp" : false,
+    "emailVerified" : false,
+    "attributes" : {
+      "api-keys" : [ "{\"name\":\"7EC9363B25465C07FD885B297EAF7AACD702C5752551FBEE8E5B802BC390A927\",\"scope\":[\"TEST-CA.READ\",\"song.READ\",\"TEST-CA.WRITE\",\"song.WRITE\"],\"expiryDate\":1751546629422,\"issueDate\":1720010629421,\"isRevoked\":false,\"description\":\"write and read\"}" ]
+    },
+    "credentials" : [ {
+      "id" : "97cb294d-d79f-4d36-87b1-040dbf4ac9de",
+      "type" : "password",
+      "userLabel" : "My password",
+      "createdDate" : 1720008034778,
+      "secretData" : "{\"value\":\"nh/z1H4LWnOMSL/7d/BIYADiaeMu8uTWW2EgWLDtc88=\",\"salt\":\"gjDcFeQhaVKRLRsLMck6MQ==\",\"additionalParameters\":{}}",
+      "credentialData" : "{\"hashIterations\":27500,\"algorithm\":\"pbkdf2-sha256\",\"additionalParameters\":{}}"
+    } ],
+    "disableableCredentialTypes" : [ ],
+    "requiredActions" : [ ],
+    "realmRoles" : [ "default-roles-myrealm" ],
+    "notBefore" : 0,
+    "groups" : [ "/TESTCASONG_GROUP" ]
+  } ]
+}
