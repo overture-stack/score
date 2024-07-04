@@ -1,7 +1,7 @@
 #!/bin/bash
 set -x
 SCORE_CLIENT="/score-client/bin/score-client"
-token="f69b726d-d40f-4261-b105-1ec7e6bf04d5" # score.write, song.write
+token="07a5a12e-a85f-4248-a9a1-851a8062b6ac" # score.write, song.write
 
 function upload() {
   $SCORE_CLIENT upload --manifest /data/$1 && echo "OK" || echo "FAILED"

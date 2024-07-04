@@ -1,8 +1,8 @@
 #!/bin/bash
 export PATH="/data:$PATH"
 token1="" # empty 
-token2="1f070fb0-0ee4-4815-8097-b5b065c661cc" # score.TEST-CA.write,song.write
-token3="f69b726d-d40f-4261-b105-1ec7e6bf04d5" # score.write, song.write
+token2="d5b12aed-b3c7-4075-87dc-d46a89e54d18" # score.TEST-CA.write,song.write
+token3="07a5a12e-a85f-4248-a9a1-851a8062b6ac" # score.write, song.write
 
 /data/unpublish-analysis.sh $token3 TEST-CA a25ae8b4-097d-11ea-b4b9-41f0d4c18919
 /data/unpublish-analysis.sh $token3 ABC123  a22f44d3-097d-11ea-b4b9-374b8c686482
