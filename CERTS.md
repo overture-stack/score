@@ -1,4 +1,4 @@
-# ICGC DCC - Storage - Certificates
+# SCORe - Storage - Certificates
 
 First run [gencert.sh](../score-server/bin/gencert.sh):
 

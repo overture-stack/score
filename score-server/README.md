@@ -1,6 +1,6 @@
-# ICGC DCC - Storage Server
+# SCORe - Storage Server
 
-Storage server for ICGC storage system. 
+Storage server for SCORe CLI. 
 
 ## Libraries
 

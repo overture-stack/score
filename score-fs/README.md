@@ -1,7 +1,7 @@
-ICGC DCC - Storage File System
+SCORe - Storage File System
 ===
 
-ICGC storage file system for the ICGC storage system.
+SCORe storage file system for the SCORe CLI.
 
 ## Build
 

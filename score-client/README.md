@@ -35,13 +35,13 @@ An example usage of the container which will download a remote file (with associ
 pull overture/score
 
 # Publish token
-export ACCESSTOKEN=<access token from https://dcc.icgc.org>
+export ACCESSTOKEN=<access token>
 
 # Make life easy for usage
 alias score-client="docker run -it --rm  -u $(id -u):$(id -g) -e ACCESSTOKEN -v /tmp:/data score-client 
 bin/score-client"
 
-# Usage with an example object-id from https://dcc.icgc.org
+# Usage with an example object-id 
 score-client download --object-id 5b845b9a-3dcd-59ef-9f56-9a99396e988f --output-dir /data --output-layout bundle
 ```
 
