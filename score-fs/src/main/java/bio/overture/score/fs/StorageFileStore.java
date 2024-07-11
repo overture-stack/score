@@ -43,7 +43,7 @@ public class StorageFileStore extends FileStore {
 
   @Override
   public String name() {
-    return "icgc";
+    return "score";
   }
 
   @Override
