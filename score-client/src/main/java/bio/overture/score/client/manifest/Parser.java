@@ -1,4 +1,4 @@
-package bio.overture.score.client.manifest.kf;
+package bio.overture.score.client.manifest;
 
 import static bio.overture.score.core.util.Collectors.toImmutableSet;
 import static bio.overture.score.core.util.Streams.stream;
@@ -12,14 +12,13 @@ import lombok.NoArgsConstructor;
 import lombok.val;
 
 @NoArgsConstructor(access = PRIVATE)
-public class KFParser {
+public class Parser {
 
   private static final String DATA = "data";
   private static final String FILE = "file";
   private static final String HITS = "hits";
   private static final String EDGES = "edges";
   private static final String NODE = "node";
-  private static final String KF_ID = "kf_id";
   private static final String DATA_TYPE = "data_type";
   private static final String FILE_FORMAT = "file_format";
   private static final String SIZE = "size";
@@ -33,18 +32,18 @@ public class KFParser {
   private static final String EXTERNAL_ID = "external_id";
   private static final String FILE_NAME = "file_name";
   private static final String TOTAL = "total";
-  private static final Set<KFFileEntity> EMPTY_KF_ENTITY_SET = ImmutableSet.of();
+  private static final Set<FileEntity> EMPTY_ENTITY_SET = ImmutableSet.of();
 
-  public static Set<KFFileEntity> readEntries(JsonNode root) {
+  public static Set<FileEntity> readEntries(JsonNode root) {
     val fileNode = getFileNode(getDataNode(root));
     val totalHits = readFileTotal(fileNode);
     if (totalHits > 0) {
       val edgesNode = getEdgesNode(getHitsNode(fileNode));
       return stream(edgesNode)
-          .map(KFParser::getNodeNode)
+          .map(Parser::getNodeNode)
           .map(
               x ->
-                  KFFileEntity.builder()
+                  FileEntity.builder()
                       .controlledAccess(isControlledAccess(x))
                       .participants(readParticipants(getParticipantsNode(x)))
                       .fileId(readFileId(x))
@@ -57,7 +56,7 @@ public class KFParser {
                       .build())
           .collect(toImmutableSet());
     } else {
-      return EMPTY_KF_ENTITY_SET;
+      return EMPTY_ENTITY_SET;
     }
   }
 
@@ -90,7 +89,7 @@ public class KFParser {
   }
 
   private static String readFileId(JsonNode node) {
-    return requiredGet(node, KF_ID).textValue();
+    return requiredGet(node, ID).textValue();
   }
 
   private static long readFileTotal(JsonNode file) {
@@ -122,7 +121,7 @@ public class KFParser {
   }
 
   private static String readParticipantId(JsonNode node) {
-    return requiredGet(node, KF_ID).textValue();
+    return requiredGet(node, ID).textValue();
   }
 
   private static boolean isProband(JsonNode node) {
@@ -145,13 +144,13 @@ public class KFParser {
     return requiredGet(node, PARTICIPANTS);
   }
 
-  private static Set<KFParticipantEntity> readParticipants(JsonNode participantsNode) {
+  private static Set<ParticipantEntity> readParticipants(JsonNode participantsNode) {
     val edgesNode = getEdgesNode(getHitsNode(participantsNode));
     return stream(edgesNode)
-        .map(KFParser::getNodeNode)
+        .map(Parser::getNodeNode)
         .map(
             x ->
-                KFParticipantEntity.builder()
+                ParticipantEntity.builder()
                     .participantId(readParticipantId(x))
                     .proband(isProband(x))
                     .studyShortName(readStudyShortName(getStudyNode(x)))

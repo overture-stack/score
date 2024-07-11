@@ -15,14 +15,10 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package bio.overture.score.client.manifest.icgc;
+package bio.overture.score.client.manifest;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-import bio.overture.score.client.manifest.DownloadManifest;
-import bio.overture.score.client.manifest.ManifestResource;
-import bio.overture.score.client.manifest.ManifestService;
-import bio.overture.score.client.manifest.UploadManifest;
 import com.google.common.io.Resources;
 import java.io.File;
 import java.net.MalformedURLException;
@@ -30,12 +26,10 @@ import java.net.URL;
 import lombok.SneakyThrows;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
 @Service
-@Profile("!kf")
-public class IcgcManifestService implements ManifestService {
+public class ManifestServiceImpl implements ManifestService {
 
   /** Constants */
   private static final DownloadManifestReader DOWNLOAD_READER = new DownloadManifestReader();
@@ -81,12 +75,12 @@ public class IcgcManifestService implements ManifestService {
 
   @SneakyThrows
   public DownloadManifest getDownloadManifestByFile(File manifestFile) {
-    return DOWNLOAD_READER.readManifest(manifestFile);
+    return DOWNLOAD_READER.readManifestByFile(manifestFile);
   }
 
   private DownloadManifest readDownloadManifestByURL(URL url) {
     try {
-      return DOWNLOAD_READER.readManifest(url);
+      return DOWNLOAD_READER.readManifestByURI(url);
     } catch (Exception e) {
       throw new RuntimeException(
           "Could not read manifest from '" + url + "': " + e.getMessage(), e);

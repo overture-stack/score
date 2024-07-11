@@ -22,7 +22,6 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertThat;
 
 import bio.overture.score.client.manifest.DownloadManifest.ManifestEntry;
-import bio.overture.score.client.manifest.icgc.DownloadManifestReader;
 import java.io.File;
 import lombok.val;
 import org.junit.Test;
@@ -33,7 +32,7 @@ public class DownloadManifestReaderTest {
   public void testReadManifest() {
     val reader = new DownloadManifestReader();
     val manifest =
-        reader.readManifest(new File("src/test/resources/fixtures/download/manifest.txt"));
+        reader.readManifestByFile(new File("src/test/resources/fixtures/download/manifest.txt"));
 
     assertThat(manifest.getEntries(), hasSize(2));
     assertThat(

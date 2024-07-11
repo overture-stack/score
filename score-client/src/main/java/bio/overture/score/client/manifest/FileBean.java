@@ -1,4 +1,4 @@
-package bio.overture.score.client.manifest.kf;
+package bio.overture.score.client.manifest;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -18,7 +18,7 @@ import lombok.Data;
   "External Sample Id",
   "External Aliquot Id"
 })
-public class KFFileBean {
+public class FileBean {
 
   @JsonProperty("File ID")
   private String fileId;

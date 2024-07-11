@@ -1,6 +1,6 @@
-package bio.overture.score.client.manifest.kf;
+package bio.overture.score.client.manifest;
 
-import static bio.overture.score.client.manifest.kf.KFParser.readEntries;
+import static bio.overture.score.client.manifest.Parser.readEntries;
 import static com.google.common.base.Preconditions.checkState;
 import static org.springframework.http.HttpMethod.POST;
 
@@ -25,7 +25,7 @@ import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
 @Component
-public class KFPortalClient {
+public class PortalClient {
 
   private static final String MANIFEST_ID_SEARCH_QUERY_TEMPLATE_NAME = "manifest_id_query";
   private static final String OBJECT_ID_SEARCH_QUERY_TEMPLATE_NAME = "object_id_search_query";
@@ -34,31 +34,31 @@ public class KFPortalClient {
   private static final String OFFSET = "offset";
   private static final String FIRST = "first";
   private static final int MAX_SIZE = 10000;
-  private final String kfPortalUrl;
+  private final String portalUrl;
   private final RestTemplate serviceTemplate;
   private final RetryTemplate retry;
   private final TemplateEngine textTemplateEngine;
 
   @Autowired
-  public KFPortalClient(
-      @Value("${kfportal.url}") @NonNull String kfportalUrl,
+  public PortalClient(
+      @Value("${portalUrl.url}") @NonNull String portalUrl,
       @Qualifier("serviceTemplate") @NonNull RestTemplate serviceTemplate,
       @NonNull RetryTemplate retry,
       @NonNull TemplateEngine textTemplateEngine) {
-    this.kfPortalUrl = kfportalUrl;
+    this.portalUrl = portalUrl;
     this.serviceTemplate = serviceTemplate;
     this.retry = retry;
     this.textTemplateEngine = textTemplateEngine;
   }
 
   /** Page through all entities belonging to a manifestId, MAX_SIZE at a time */
-  public Set<KFFileEntity> findEntitiesFromManifest(String manifestId) {
+  public Set<FileEntity> findEntitiesFromManifest(String manifestId) {
     int currentOffset = 0;
-    val allEntities = ImmutableSet.<KFFileEntity>builder();
+    val allEntities = ImmutableSet.<FileEntity>builder();
     val pageSize = MAX_SIZE;
     while (true) {
       val query = createManifestIdQuery(manifestId, currentOffset, pageSize);
-      val response = post(String.class, kfPortalUrl, query);
+      val response = post(String.class, portalUrl, query);
       val entities = parseManifestEntityResponse(response);
       if (entities.isEmpty()) {
         return allEntities.build();
@@ -68,9 +68,9 @@ public class KFPortalClient {
     }
   }
 
-  public Optional<KFFileEntity> findEntity(@NonNull String objectId) {
+  public Optional<FileEntity> findEntity(@NonNull String objectId) {
     val query = createObjectIdQuery(objectId);
-    val response = post(String.class, kfPortalUrl, query);
+    val response = post(String.class, portalUrl, query);
     val entities = parseManifestEntityResponse(response);
     checkState(
         entities.size() < 2,
@@ -98,7 +98,7 @@ public class KFPortalClient {
   }
 
   @SneakyThrows
-  private Set<KFFileEntity> parseManifestEntityResponse(ResponseEntity<String> response) {
+  private Set<FileEntity> parseManifestEntityResponse(ResponseEntity<String> response) {
     val mapper = new ObjectMapper();
     val root = mapper.readTree(response.getBody());
     return readEntries(root);

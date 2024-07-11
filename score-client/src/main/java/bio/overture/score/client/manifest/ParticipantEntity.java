@@ -1,4 +1,4 @@
-package bio.overture.score.client.manifest.kf;
+package bio.overture.score.client.manifest;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class KFParticipantEntity {
+public class ParticipantEntity {
   private String participantId;
   private boolean proband;
   private String studyShortName;
