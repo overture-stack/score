@@ -17,6 +17,9 @@
  */
 package bio.overture.score.core.security.ssl;
 
+import bio.overture.score.core.security.ssl.NoTestHostnameVerifier;
+import bio.overture.score.core.security.ssl.NoTestX509TrustManager;
+
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
