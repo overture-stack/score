@@ -1,7 +1,5 @@
 # SCORe - Storage Server
 
-Storage server for SCORe CLI. 
-
 ## Libraries
 
 The storage server is comprised of the following components:
