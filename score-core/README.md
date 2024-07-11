@@ -1,6 +1,6 @@
 # SCORe - Storage Core
 
-Core library / shared classes for SCORe CLI.
+Core library / shared classes for SCORe.
 
 ## Build
 
