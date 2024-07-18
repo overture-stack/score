@@ -22,12 +22,6 @@ import java.util.List;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.Value;
-
-/**
- * See
- * https://wiki.oicr.on.ca/display/DCCSOFT/Uniform+metadata+JSON+document+for+ICGC+Data+Repositories#
- * UniformmetadataJSONdocumentforICGCDataRepositories-Manifestfileformatfordownloader
- */
 @Value
 public class DownloadManifest {
   @NonNull private final List<ManifestEntry> entries;
