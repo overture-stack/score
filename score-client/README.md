@@ -41,7 +41,7 @@ export ACCESSTOKEN=<access token>
 alias score-client="docker run -it --rm  -u $(id -u):$(id -g) -e ACCESSTOKEN -v /tmp:/data score-client 
 bin/score-client"
 
-# Usage with an example object-id 
+# Usage with an example object-id
 score-client download --object-id 5b845b9a-3dcd-59ef-9f56-9a99396e988f --output-dir /data --output-layout bundle
 ```
 
