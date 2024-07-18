@@ -38,7 +38,7 @@ public class StorageFileSystems {
   public StorageFileSystem newFileSystem(@NonNull StorageContext context, Map<String, ?> env)
       throws IOException, URISyntaxException {
     val provider = new StorageFileSystemProvider(context);
-    val uri = new URI("score://storage");
+    val uri = new URI("icgc://storage");
 
     return (StorageFileSystem) provider.newFileSystem(uri, env);
   }
