@@ -24,11 +24,11 @@ import java.nio.file.attribute.FileStoreAttributeView;
 
 public class StorageFileStore extends FileStore {
 
-  public static final String ICGCFS = "icgcfs";
+  public static final String SCOREFS = "scorefs";
 
   @Override
   public String type() {
-    return ICGCFS;
+    return SCOREFS;
   }
 
   @Override
@@ -43,7 +43,7 @@ public class StorageFileStore extends FileStore {
 
   @Override
   public String name() {
-    return "icgc";
+    return "score";
   }
 
   @Override
