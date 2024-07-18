@@ -212,7 +212,7 @@ public class S3DownloadService implements DownloadService {
   private String getObjectMd5(ObjectMetadata metadata) {
     val contentMd5 = metadata.getContentMD5();
     if (contentMd5 != null) {
-      return MD5s.toHex(contentMd5);
+      return  MD5s.toHex(contentMd5);
     }
     val userMetadataMd5 =
         metadata.getUserMetaDataOf(s3config.getCustomMd5Property()); // get literal from config

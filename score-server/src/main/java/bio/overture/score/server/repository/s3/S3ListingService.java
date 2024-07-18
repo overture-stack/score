@@ -109,10 +109,8 @@ public class S3ListingService implements ListingService {
   }
 
   private void readBucket(String bucketName, String prefix, Consumer<S3ObjectSummary> callback) {
-    val request =
-        prefix.isBlank()
-            ? new ListObjectsRequest().withBucketName(bucketName)
-            : new ListObjectsRequest().withBucketName(bucketName).withPrefix(prefix);
+    val request = prefix.isBlank() ? new ListObjectsRequest().withBucketName(bucketName) :
+            new ListObjectsRequest().withBucketName(bucketName).withPrefix(prefix);
     log.debug("Reading summaries from '{}/{}'...", bucketName, prefix);
 
     ObjectListing listing;
