@@ -1,6 +1,4 @@
-# ICGC DCC - Storage Server
-
-Storage server for ICGC storage system. 
+# SCORe - Storage Server
 
 ## Libraries
 
