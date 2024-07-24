@@ -14,7 +14,7 @@ public class ClientProperties {
   /** Constants. */
   private static final int DEFAULT_LIMIT = 10;
 
-  /** OAuth2 access token for ICGC authorization server */
+  /** OAuth2 access token for SCORe authorization server */
   private String accessToken;
 
   private String encryptedAccessToken;
