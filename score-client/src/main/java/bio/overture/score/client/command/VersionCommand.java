@@ -28,7 +28,7 @@ import org.springframework.stereotype.Component;
 public class VersionCommand extends AbstractClientCommand {
 
   /** Constants. */
-  private static final String SUPPORT_EMAIL = "dcc-support@icgc.org";
+  private static final String SUPPORT_EMAIL = "";
 
   @Override
   public int execute() throws Exception {
@@ -40,7 +40,6 @@ public class VersionCommand extends AbstractClientCommand {
   private void version() {
     terminal.println(terminal.label("  Version: ") + getVersion());
     terminal.println(terminal.label("  Built:   ") + getScmInfo().get("git.build.time"));
-    terminal.println(terminal.label("  Contact: ") + terminal.email(SUPPORT_EMAIL));
   }
 
   private String getVersion() {
