@@ -167,7 +167,7 @@ public class DownloadCommand extends RepositoryAccessCommand {
     if (manifestResource.isGnosManifest()) {
       throw new BadManifestException(
           format(
-              "Manifest '%s' looks like a GNOS-format manifest file. Please ensure you are using a tab-delimited text file",
+              "Manifest '%s' looks like a GNOS-format manifest file. Please ensure you are using a tab-delimited text file manifest",
               manifestResource.getValue()));
     }
     val manifest = manifestService.getDownloadManifest(manifestResource);
