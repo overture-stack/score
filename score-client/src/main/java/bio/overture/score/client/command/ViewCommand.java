@@ -84,7 +84,7 @@ public class ViewCommand extends RepositoryAccessCommand {
   public static final int MAX_FILENAME_LENGTH = 120;
 
   public static final String PROGRAM_NAME = "Score Client";
-  public static final String ICGC = "ICGC";
+  public static final String SCORE = "score";
 
   /** Options. */
   @Parameter(
@@ -274,7 +274,7 @@ public class ViewCommand extends RepositoryAccessCommand {
         builder
             .programName(PROGRAM_NAME)
             .version(VersionUtils.getScmInfo().get("git.commit.id.describe"))
-            .programId(ICGC)
+            .programId(SCORE)
             .commandLine(getCommandLine())
             .containedOnly(containedOnly)
             .useOriginalHeader(useOriginalHeader)
