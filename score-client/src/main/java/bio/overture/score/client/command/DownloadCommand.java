@@ -173,8 +173,6 @@ public class DownloadCommand extends RepositoryAccessCommand {
     }
     val manifest = manifestService.getDownloadManifest(manifestResource);
 
-    validateManifest(manifest);
-
     val entries = manifest.getEntries();
     if (entries.isEmpty()) {
       throw new BadManifestException(format("Manifest '%s' is empty", manifestResource));
