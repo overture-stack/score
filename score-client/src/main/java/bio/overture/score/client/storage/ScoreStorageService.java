@@ -15,7 +15,7 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package bio.overture.score.client.storage.score;
+package bio.overture.score.client.storage;
 
 import static org.springframework.http.HttpMethod.DELETE;
 import static org.springframework.http.HttpMethod.GET;
@@ -66,7 +66,7 @@ import org.springframework.web.client.RestTemplate;
 /** Service responsible for interacting with the remote upload service. */
 @Slf4j
 @Service
-@Profile({"dev", "collab", "aws", "default", "!kf"})
+@Profile({"dev", "collab", "aws", "default"})
 public class ScoreStorageService extends AbstractStorageService {
 
   /** Configuration. */
