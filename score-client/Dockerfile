@@ -8,7 +8,6 @@
 # Banner @ https://goo.gl/Yyoc6R
 
 FROM       ubuntu:16.04
-MAINTAINER SCORe <>
 
 #
 # Update apt, add FUSE support and basic command line tools

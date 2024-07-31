@@ -28,8 +28,6 @@ import org.springframework.stereotype.Component;
 public class VersionCommand extends AbstractClientCommand {
 
   /** Constants. */
-  private static final String SUPPORT_EMAIL = "";
-
   @Override
   public int execute() throws Exception {
     printTitle();
