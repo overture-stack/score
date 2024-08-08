@@ -22,7 +22,6 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertThat;
 
 import bio.overture.score.client.manifest.DownloadManifest.ManifestEntry;
-import bio.overture.score.client.manifest.icgc.DownloadManifestReader;
 import java.io.File;
 import lombok.val;
 import org.junit.Test;
