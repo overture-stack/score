@@ -394,8 +394,6 @@ public class MountCommand extends RepositoryAccessCommand {
   private List<ObjectInfo> filterManifestObjects(List<ObjectInfo> objects) {
     val manifest = manifestService.getDownloadManifest(manifestResource);
 
-    validateManifest(manifest);
-
     val objectIds =
         manifest.getEntries().stream()
             .flatMap(entry -> Stream.of(entry.getFileUuid(), entry.getIndexFileUuid()))

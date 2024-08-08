@@ -66,7 +66,7 @@ import org.springframework.web.client.RestTemplate;
 /** Service responsible for interacting with the remote upload service. */
 @Slf4j
 @Service
-@Profile({"dev", "collab", "aws", "default", "!kf"})
+@Profile({"dev", "collab", "aws", "default"})
 public class ScoreStorageService extends AbstractStorageService {
 
   /** Configuration. */

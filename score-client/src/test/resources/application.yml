@@ -54,13 +54,13 @@ transport:
 
 storage:
   # default for backwards compatibility
-  url: https://virginia.cloud.icgc.org
+  url: ""
   retryNumber: 10
   retryTimeout: 1	
 
 metadata:
   # default for backwards compatibility
-  url: https://virginia.song.icgc.org
+  url: ""
   ssl:
     enabled: true
     
@@ -69,7 +69,7 @@ portal:
     
 logging:
   file: target/logs/client.log
-  
+
 mount:
   logging: false
 
@@ -79,34 +79,6 @@ token:
 
 isTest: true
 defaultProfile: collaboratory
-
----
-
-###############################################################################
-# Profile - "kf"
-###############################################################################
-
-spring.profiles: kf
-
-# Storage server
-storage:
-  url: https://kf.com
-
-
-client:
-  ssl:
-    custom: false
-
----
-
-###############################################################################
-# Profile - "oicr"
-###############################################################################
-
-spring.profiles: oicr
-
-# uses storage.url and client.ssl.custom define in common 
-
 
 ---
 
