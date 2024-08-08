@@ -24,11 +24,9 @@ import java.util.Optional;
 import lombok.NonNull;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
 @Service
-@Profile("!kf")
 public class LegacyMetadataService implements MetadataService {
 
   @Autowired private LegacyMetadataClient legacyMetadataClient;

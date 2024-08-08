@@ -36,17 +36,6 @@ client:
   ssl:
     custom: false
 
-kfportal:
-  url: https://arranger.kids-first.io/june_13/graphql
-
-kf:
-  token:
-    url: https://v2i1r42t6d.execute-api.us-east-1.amazonaws.com/beta/token
-  download:
-    url: https://data.kidsfirstdrc.org
-    partSize: 1073741824
-    expiration: 86400
-
 transport:
   fileFrom: memory
   memory: 1
@@ -79,23 +68,6 @@ token:
 
 isTest: true
 defaultProfile: collaboratory
-
----
-
-###############################################################################
-# Profile - "kf"
-###############################################################################
-
-spring.profiles: kf
-
-# Storage server
-storage:
-  url: https://kf.com
-
-
-client:
-  ssl:
-    custom: false
 
 ---
 
