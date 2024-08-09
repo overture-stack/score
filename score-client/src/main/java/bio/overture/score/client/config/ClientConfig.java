@@ -66,8 +66,6 @@ import org.thymeleaf.templateresolver.ITemplateResolver;
 @Import(PropertyPlaceholderAutoConfiguration.class)
 public class ClientConfig {
 
-  private static final Character TAB_SEP = '\t';
-
   /** Configuration. */
   @Autowired private ClientProperties properties;
 
