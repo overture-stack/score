@@ -18,6 +18,9 @@ public class StorageConfig {
   @Value("${storage.url}")
   private String endpoint;
 
+  @Value("${download.partSize}")
+  private int partSize;
+
   @Autowired private DownloadStateStore downloadStateStore;
 
   @Autowired
