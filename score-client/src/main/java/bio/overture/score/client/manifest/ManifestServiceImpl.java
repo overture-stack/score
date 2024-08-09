@@ -15,14 +15,10 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package bio.overture.score.client.manifest.icgc;
+package bio.overture.score.client.manifest;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-import bio.overture.score.client.manifest.DownloadManifest;
-import bio.overture.score.client.manifest.ManifestResource;
-import bio.overture.score.client.manifest.ManifestService;
-import bio.overture.score.client.manifest.UploadManifest;
 import com.google.common.io.Resources;
 import java.io.File;
 import java.net.MalformedURLException;
@@ -35,7 +31,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @Profile("!kf")
-public class IcgcManifestService implements ManifestService {
+public class ManifestServiceImpl implements ManifestService {
 
   /** Constants */
   private static final DownloadManifestReader DOWNLOAD_READER = new DownloadManifestReader();
