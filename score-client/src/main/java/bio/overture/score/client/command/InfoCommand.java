@@ -64,8 +64,8 @@ public class InfoCommand extends AbstractClientCommand {
   }
 
   private void active() {
-    if ((storageUrl.isEmpty() || storageUrl == null)
-        && (metadataUrl.isEmpty() || metadataUrl == null)) {
+    if ((storageUrl == null || storageUrl.isEmpty())
+        && (metadataUrl == null || metadataUrl.isEmpty())) {
       throw new IllegalArgumentException(
           "Error: Storage URL or Metadata URL is not configured. Please provide a valid URL.");
     }
