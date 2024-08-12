@@ -79,11 +79,8 @@ token:
 
 isTest: true
 defaultProfile: collaboratory
-logging:
-  file:
-    name: target/logs/client.log
----
 
+---
 ###############################################################################
 # Profile - "debug"
 ###############################################################################
