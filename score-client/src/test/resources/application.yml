@@ -40,7 +40,7 @@ kfportal:
   url: https://arranger.kids-first.io/june_13/graphql
 
 download:
-  partSize: 250000000
+  partSize: 1073741824
 
 kf:
   token:
