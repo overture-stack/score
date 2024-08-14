@@ -36,7 +36,6 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 @Slf4j
@@ -44,7 +43,6 @@ import org.springframework.stereotype.Component;
 @Parameters(
     separators = "=",
     commandDescription = "Upload file object(s) to the remote storage repository")
-@Profile("!kf")
 public class UploadCommand extends RepositoryAccessCommand {
 
   /** Options. */
