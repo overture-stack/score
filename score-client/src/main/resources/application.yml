@@ -36,8 +36,9 @@ client:
   ssl:
     custom: false
 
-  download:
-    partSize: 1073741824
+
+download:
+  partSize: 1073741824
 
 transport:
   fileFrom: memory
