@@ -55,7 +55,7 @@ Profile Name: ``s3``
 s3.secured
 Description: Determines whether the connection to the S3 service should use HTTPS (true) or HTTP (false). Set to true to secure the connection.
 s3.endpoint
-Description: The URL of the S3-compatible service. This is the endpoint where the service is hosted (e.g., s3.amazonaws.com for AWS S3 or a custom URL for MinIO). This property should be provided based on the service you're using.
+Description: The URL of the S3-compatible service. This is the endpoint where the service is hosted. This property should be provided based on the service you're using.
 s3.accessKey
 Description: The access key for authenticating with the S3 service. It's required for secure access and should be kept confidential.
 s3.secretKey
