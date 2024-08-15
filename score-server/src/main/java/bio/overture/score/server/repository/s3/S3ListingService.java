@@ -36,14 +36,12 @@ import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 @Slf4j
 @Setter
 @Service
-@Profile({"aws", "collaboratory", "default"})
 public class S3ListingService implements ListingService {
 
   /** Configuration. */
@@ -109,8 +107,10 @@ public class S3ListingService implements ListingService {
   }
 
   private void readBucket(String bucketName, String prefix, Consumer<S3ObjectSummary> callback) {
-    val request = prefix.isBlank() ? new ListObjectsRequest().withBucketName(bucketName) :
-            new ListObjectsRequest().withBucketName(bucketName).withPrefix(prefix);
+    val request =
+        prefix.isBlank()
+            ? new ListObjectsRequest().withBucketName(bucketName)
+            : new ListObjectsRequest().withBucketName(bucketName).withPrefix(prefix);
     log.debug("Reading summaries from '{}/{}'...", bucketName, prefix);
 
     ObjectListing listing;
