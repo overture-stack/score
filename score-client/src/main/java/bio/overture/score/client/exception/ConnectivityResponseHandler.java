@@ -33,18 +33,14 @@ public class ConnectivityResponseHandler extends DefaultResponseErrorHandler {
     val status = response.getStatusCode();
     switch (status) {
       case FORBIDDEN:
-        log.warn(
-            "FORBIDDEN response code received. If you are trying to connect to the AWS S3 Repository, you need to be running ths ICGC client on an EC2 VM instance.");
+        log.warn("Connection to object storage refused, received response code FORBIDDEN.");
         throw notRetryableException(
-            "Amazon S3 error: FORBIDDEN: If you are trying to connect to the AWS S3 Repository, you need to be running ths ICGC client on an EC2 VM instance",
-            response);
+            "Connection to object storage refused, received response code FORBIDDEN.", response);
 
       case REQUEST_TIMEOUT:
-        log.warn(
-            "Unable to connect to repository endpoint. You need to be running on a compute node within the repository cloud. Or else your network connection is hinky.");
+        log.warn("Connection to object storage failed, request timed out.");
         throw notRetryableException(
-            "Cloud error: Access refused by object store. Confirm request host is on permitted list",
-            response);
+            "Connection to object storage failed, request timed out.", response);
 
       default:
         log.warn("Non-Retryable exception: {}", response.getStatusText());

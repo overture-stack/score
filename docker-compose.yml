@@ -56,8 +56,8 @@ services:
       SPRING_PROFILES_ACTIVE: amazon,collaboratory,prod,secure
       SERVER_PORT: 8080
       OBJECT_SENTINEL: heliograph
-      BUCKET_NAME_OBJECT: oicr.icgc.test
-      BUCKET_NAME_STATE: oicr.icgc.test
+      BUCKET_NAME_OBJECT: score.data
+      BUCKET_NAME_STATE: score.test
       COLLABORATORY_DATA_DIRECTORY: data
       METADATA_URL: http://song-server:8080
       S3_ENDPOINT:  http://object-storage:9000
@@ -138,7 +138,7 @@ services:
       AWS_SECRET_ACCESS_KEY: minio123
       AWS_DEFAULT_REGION: us-east-1
     volumes:
-      - "./docker/object-storage-init/data/oicr.icgc.test/data:/score-data:ro"
+      - "./docker/object-storage-init/data/score.data/data:/score-data:ro"
   song-server:
     image: ghcr.io/overture-stack/song-server:438c2c42
     environment:

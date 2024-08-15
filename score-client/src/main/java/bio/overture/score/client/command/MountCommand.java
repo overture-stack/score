@@ -112,7 +112,7 @@ public class MountCommand extends RepositoryAccessCommand {
   @Parameter(
       names = "--options",
       description =
-          "The mount options of the file system (e.g. --options user_allow_other,allow_other,fsname=icgc,debug) "
+          "The mount options of the file system (e.g. --options user_allow_other,allow_other,fsname=score,debug) "
               + "in addition to those specified internally: "
               + INTERNAL_MOUNT_OPTIONS
               + ". See "
@@ -393,8 +393,6 @@ public class MountCommand extends RepositoryAccessCommand {
 
   private List<ObjectInfo> filterManifestObjects(List<ObjectInfo> objects) {
     val manifest = manifestService.getDownloadManifest(manifestResource);
-
-    validateManifest(manifest);
 
     val objectIds =
         manifest.getEntries().stream()

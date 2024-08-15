@@ -22,6 +22,7 @@ import java.util.List;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.Value;
+
 @Value
 public class DownloadManifest {
   @NonNull private final List<ManifestEntry> entries;
