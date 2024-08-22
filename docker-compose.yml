@@ -57,7 +57,7 @@ services:
       SERVER_PORT: 8080
       OBJECT_SENTINEL: heliograph
       BUCKET_NAME_OBJECT: score.data
-      BUCKET_NAME_STATE: score.test
+      BUCKET_NAME_STATE: score.data
       COLLABORATORY_DATA_DIRECTORY: data
       METADATA_URL: http://song-server:8080
       S3_ENDPOINT:  http://object-storage:9000
