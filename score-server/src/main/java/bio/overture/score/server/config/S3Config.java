@@ -19,13 +19,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
 
 /** S3/Ceph Object Gateway configuration. */
 @Data
 @Slf4j
 @Configuration
-@Profile({"aws", "collaboratory", "default"})
 @ConfigurationProperties(prefix = "s3")
 public class S3Config {
 

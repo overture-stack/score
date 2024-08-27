@@ -22,12 +22,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
-import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 /** check health for object upload service */
 @Component
-@Profile({"aws", "collaboratory", "default"})
 public class BackendHealth implements HealthIndicator {
 
   @Autowired AmazonS3 s3;
