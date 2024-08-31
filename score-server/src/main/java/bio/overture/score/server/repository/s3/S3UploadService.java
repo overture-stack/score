@@ -62,10 +62,10 @@ public class S3UploadService implements UploadService {
   private static final String UNPUBLISHED_ANALYSIS_STATE = "UNPUBLISHED";
 
   /** Configuration. */
-  @Value("${collaboratory.data.directory}")
+  @Value("${s3.data.directory}")
   private String dataDir;
 
-  @Value("${collaboratory.upload.expiration}")
+  @Value("${s3.upload.expiration}")
   private int expiration;
 
   @Value("${metadata.useLegacyMode:false}")

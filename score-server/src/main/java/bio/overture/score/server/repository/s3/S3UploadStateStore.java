@@ -76,10 +76,10 @@ public class S3UploadStateStore implements UploadStateStore {
   private static final ObjectMapper MAPPER = new ObjectMapper();
 
   /** Configuration. */
-  @Value("${collaboratory.data.directory}")
+  @Value("${s3.data.directory}")
   private String dataDir;
 
-  @Value("${collaboratory.upload.directory}")
+  @Value("${s3.upload.directory}")
   private String uploadDir;
 
   /** Dependencies. */
