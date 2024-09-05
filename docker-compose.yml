@@ -53,7 +53,7 @@ services:
       dockerfile: "$DOCKERFILE_NAME"
       target: server
     environment:
-      SPRING_PROFILES_ACTIVE: amazon,prod,secure
+      SPRING_PROFILES_ACTIVE: s3,prod,secure
       SERVER_PORT: 8080
       OBJECT_SENTINEL: heliograph
       BUCKET_NAME_OBJECT: score.data
