@@ -70,7 +70,7 @@ token:
 
 
 isTest: true
-defaultProfile: collaboratory
+defaultProfile: s3
 
 ---
 ###############################################################################

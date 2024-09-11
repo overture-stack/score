@@ -48,13 +48,8 @@ public class S3ListingService implements ListingService {
   @Value("${bucket.name.object}")
   private String bucketName;
 
-  @Value("${collaboratory.data.directory}")
+  @Value("${s3.data.directory}")
   private String dataDir;
-
-  // @Value("${collaboratory.bucket.poolsize}")
-  // private int bucketPoolSize;
-  // @Value("${collaboratory.bucket.keysize}")
-  // private int bucketKeySize;
 
   /** Dependencies. */
   @Autowired private AmazonS3 s3;

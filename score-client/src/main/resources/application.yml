@@ -71,7 +71,7 @@ token:
 
 
 isTest: false
-defaultProfile: collaboratory
+defaultProfile: s3
 
 ---
 

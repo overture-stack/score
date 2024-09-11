@@ -5,7 +5,7 @@ import java.util.Set;
 
 public enum StorageProfiles {
   AZURE("azure", "az"),
-  COLLABORATORY("collaboratory", "s3");
+  S3("s3", "s3");
 
   private final String profileKey;
   private final String profileValue;
