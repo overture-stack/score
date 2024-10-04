@@ -27,7 +27,7 @@ public class ProfileConfig {
   private String endpoint;
 
   @Autowired
-  @Value("${defaultProfile:collaboratory}")
+  @Value("${defaultProfile:s3}")
   private String defaultProfile;
 
   @Autowired

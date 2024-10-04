@@ -49,7 +49,7 @@ public class AzureURLGenerator implements URLGenerator {
   @Value("${bucket.policy.download}")
   private String downloadPolicy;
 
-  @Value("${collaboratory.download.expiration}")
+  @Value("${s3.download.expiration}")
   private int expiration;
 
   @Autowired private CloudBlobContainer azureContainer;
