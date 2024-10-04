@@ -2,6 +2,18 @@
 
 Score is a file transfer service designed for cloud-based projects, providing a robust API for secure file transfer and storage operations. It serves as an intermediary between object storage systems and user authorization mechanisms, using pre-signed URLs for efficient and protected data access.
 
+## System Architecture
+
+Score's primary function is to broker authenticated access to your object storage provider. It achieves this by:
+
+1. Validating user access rights against an authorization system (Keycloak)
+2. Generating time-limited pre-signed URLs for object access
+3. Facilitating secure data transfer between clients and object storage
+
+Score specializes in data transfer, while its companion application, Song, manages metadata independently from object storage concerns. 
+
+![Score Arch](./assets/scoreArch.svg 'Score Architecture Diagram')
+
 ## Key Features
 
 - **Multi-cloud Support**: Compatible with AWS S3, Azure Storage, and Google Cloud Storage
@@ -14,18 +26,8 @@ Score is a file transfer service designed for cloud-based projects, providing a 
 - **File Bundling**: Enables efficient transfer of multiple files in a single bundle
 - **Resumable Downloads**: Supports resuming downloads after network interruptions
 - **FUSE Support**: Offers file system in Userspace (FUSE) support for enhanced file operations
+- **Interactive API Documentation:** Built-in Swagger UI for easy API interaction and exploration.
 
-## System Architecture
-
-Score's primary function is to broker authenticated access to your object storage provider. It achieves this by:
-
-1. Validating user access rights against an authorization system (Keycloak)
-2. Generating time-limited pre-signed URLs for object access
-3. Facilitating secure data transfer between clients and object storage
-
-Score specializes in data transfer, while its companion application, Song, manages metadata independently from object storage concerns. 
-
-![Score Dev](./assets/scoreArch.svg 'Score Dev Environment')
 
 ## Repository Structure
 

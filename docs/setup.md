@@ -114,3 +114,13 @@ mvn spring-boot:run -Dspring-boot.run.profiles=default,s3,secure,dev
 :::warning
 This guide is meant to demonstrate the configuration and usage of Score for development purposes and is not intended for production. If you ignore this warning and use this in any public or production environment, please remember to use Spring profiles accordingly. For production do not use **dev** profile.
 :::
+
+## Troubleshooting
+
+If you encounter any issues during setup:
+
+1. Ensure all prerequisites are correctly installed and at the specified versions.
+2. Check that all services in the Docker Compose setup are running correctly.
+3. If you're having network issues, ensure that the ports specified in the configuration are not being used by other services.
+
+For further assistance, feel free to [open an issue through GitHub here](https://github.com/overture-stack/stage/issues/new?assignees=&labels=&projects=&template=Feature_Requests.md).
