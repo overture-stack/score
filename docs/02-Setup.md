@@ -173,6 +173,8 @@ mvn spring-boot:run -Dspring-boot.run.profiles=default,s3,secure,dev
 
 <details>
 <summary>Click here for an overview of Scores Spring boot profiles</summary>
+
+
 </details>
 
 :::warning
