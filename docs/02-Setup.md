@@ -1,5 +1,80 @@
 # Setup
 
+## Prerequisites
+
+Before you begin, ensure you have the following installed on your system:
+- [JDK11](https://www.oracle.com/ca-en/java/technologies/downloads/)
+- [Maven3](https://maven.apache.org/download.cgi)
+
+## Installation
+
+This guide will walk you through setting up a complete development environment, including Score and its complementary services outlined below:
+
+![ScoreDev](./assets/scoreDev.svg 'Score Dev Environment')
+
+
+### 1. Set up supporting services
+
+We'll use our Conductor service, a flexible Docker Compose setup, to spin up Scores complementary services.
+
+```bash
+git clone https://github.com/overture-stack/conductor.git
+cd conductor
+```
+
+Next, run the appropriate start command for your operating system:
+
+| Operating System | Command |
+|------------------|---------|
+| Unix/macOS       | `make scoreDev` |
+| Windows          | `make.bat scoreDev` |
+
+This command will set up all complementary services for Score development as follows
+
+
+| Service | Port | Description |
+|------------------|---------|------------------|
+| Conductor | `9204` | Orchestrates deployments and environment setups |
+| Keycloak-db | - | Database for Keycloak (no exposed port) |
+| Keycloak | `8180` | Authorization and authentication service |
+| Song-db | - | Database for Song (no exposed port) |
+| Song | `8080` | Metadata management service |
+| Minio | `9000` | Object storage provider |
+
+In the next steps, we will run a Score development server against these supporting services
+
+### 2. Run the Score Development Server 
+
+Begin by cloning Score and moving into it's directory:
+
+```bash
+git clone https://github.com/overture-stack/score.git
+cd score
+```
+
+Build the application locally by running:
+
+```bash
+./mvnw clean install -DskipTests
+```
+
+:::tip
+Ensure you are running JDK11 and Maven3, to check you can run `mvn --version`, you should see somthing similar to the following:
+```bash
+Apache Maven 3.8.6 (84538c9988a25aec085021c365c560670ad80f63)
+Maven home: /opt/maven
+Java version: 11.0.18, vendor: Amazon.com Inc., runtime: /Users/{username}/.sdkman/candidates/java/11.0.18-amzn
+Default locale: en_CA, platform encoding: UTF-8
+OS name: "mac os x", version: "14.6.1", arch: "aarch64", family: "mac"
+```
+:::
+
+
+
+---
+
+# Old >>>>>>>>>>>>>>>>>>
+
 There are two ways to set up a score-server in a development environment:
 ​
 - Or in a **[Docker environment](#run-as-a-container)** 
@@ -89,7 +164,20 @@ cd score-server/
 mvn spring-boot:run -Dspring-boot.run.profiles=default,s3,secure,dev
 ```
 
-**Warning:** This guide is meant to demonstrate the configuration and usage of Score for development purposes and is not intended for production. If you ignore this warning and use this in any public or production environment, please remember to use Spring profiles accordingly. For production do not use ***dev*** profile.
+Run the following command to start the score-server:
+
+```bash
+cd score-server/
+mvn spring-boot:run -Dspring-boot.run.profiles=default,s3,secure,dev
+```
+
+<details>
+<summary>Click here for an overview of Scores Spring boot profiles</summary>
+</details>
+
+:::warning
+This guide is meant to demonstrate the configuration and usage of Score for development purposes and is not intended for production. If you ignore this warning and use this in any public or production environment, please remember to use Spring profiles accordingly. For production do not use ***dev*** profile.
+:::
 
 ## Configure with Keycloak
 
