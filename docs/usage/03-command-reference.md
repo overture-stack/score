@@ -1,4 +1,4 @@
-# Command Reference
+# Command Client Reference
 
 The sections below provide a reference for all commands and their respective options supported by the Score client.
 

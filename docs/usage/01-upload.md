@@ -1,12 +1,6 @@
 # Uploading Data
 
-## Using the Swagger API
-
-## Using the Score Client
-
-The Score command-line client is a tool designed to enable user interactions with Score endpoints.
-
-### Installing the Score-Client
+## Installing the Score-Client
 
 To run the score-client using a Docker image, you need to provide specific environment variables including the Score server `STORAGE_URL`, the Song server `METADATA_URL`, and a valid `ACCESSTOKEN`.
 
@@ -59,7 +53,7 @@ Replace all placeholders `${}` with the appropriate values for your environment.
 
 **Note:** For step-by-step instructions on installing and using the Song and Score clients, including downloading and uploading data, see our platform guides on [CLI submissions](https://www.overture.bio/documentation/guides/submission/clientsubmission/) and [CLI downloads](https://www.overture.bio/documentation/guides/download/clientdownload/).
 
-### Uploading with the Score-Client
+## Uploading File Data
 
 File uploads can be executed with the Score client's `upload` command.
 
@@ -85,7 +79,7 @@ For complete information on uploading data, including generating a manifest, che
 
 ### Upload Example
 
-1. Execute the following command from your home directory:
+Here is an example of a song-client upload command using a previously generated manifest file from Song:
 
 ```bash
 docker exec score-client sh -c "score-client upload --manifest ./<directory>/manifest.txt"
@@ -111,3 +105,10 @@ Total bytes read    :               0
 Total bytes written :              52
 Upload completed
 ```
+
+:::tip
+We have a comprehensive guide, with demo resources, covering [data submission and upload located here](https://www.overture.bio/documentation/guides/submission/clientsubmission/)
+:::
+
+
+

@@ -1,12 +1,6 @@
 # Downloading Data
 
-# Using the Swagger API
-
-## Using the Score Client
-
-The Score command-line client is a tool designed to enable user interactions with Score endpoints.
-
-### Installing the Score-Client
+## Installing the Score-Client
 
 To run the score-client using a Docker image, you need to provide specific environment variables including the Score server `STORAGE_URL`, the Song server `METADATA_URL`, and a valid `ACCESSTOKEN`.
 
@@ -59,7 +53,7 @@ Replace all placeholders `${}` with the appropriate values for your environment.
 
 **Note:** For step-by-step instructions on installing and using the Song and Score clients, including downloading and uploading data, see our platform guides on [CLI submissions](https://www.overture.bio/documentation/guides/submission/clientsubmission/) and [CLI downloads](https://www.overture.bio/documentation/guides/download/clientdownload/).
 
-### Downloading with the Score Client
+## Downloading File Data
 
 File downloads can be run using the Score Client's `download` command.
 
@@ -94,9 +88,7 @@ The table below details the options available when using the Score-Client `downl
 
 ### Download Example
 
-Here is an example of downloading files using a previously generated manifest file from Song.
-
-Execute the following command from your home directory:
+Here is an example of a score-client download command using a previously generated manifest file from Song:
 
 ```shell
 docker exec score-client sh -c "score-client download --manifest ./<manifestDirectory>/manifest.txt --output-dir ./<outputDirectory>"
@@ -105,7 +97,7 @@ docker exec score-client sh -c "score-client download --manifest ./<manifestDire
 -  `<manifestDirectory>` represents the location of the earlier generated manifest file
 - `<outputDirectory>` specifies where you intend to download the files
 
-**What is a Manifest?** To understand more about key terms in Overture's data workflows, check this guide on [data submission using Song and Score](../../01-song/usage/01-submitting-data.md).
+:::tip
+We have a comprehensive guide, with demo resources, covering data download [located here](https://www.overture.bio/documentation/guides/download/clientdownload/)
+:::
 
-
-If successful the Score Client will indicate the download has completed.

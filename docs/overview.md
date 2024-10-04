@@ -25,23 +25,7 @@ Score's primary function is to broker authenticated access to your object storag
 
 Score specializes in data transfer, while its companion application, Song, manages metadata independently from object storage concerns. 
 
-```mermaid
-
-graph LR
-    U[User]
-    SS[Song Metadata Server]
-    SD[(Song Database)]
-    SCS[Score File Data Server]
-    OS[Object Storage Provider]
-
-    U <---> SS
-    U <---> SCS
-    SS <---> SD
-    SCS <---> OS
-```
-
-For more detailed information on data flow and common processes see our usage section
-
+![Score Dev](./assets/scoreArch.svg 'Score Dev Environment')
 
 ## Repository Structure
 
