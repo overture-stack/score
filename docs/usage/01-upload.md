@@ -81,7 +81,7 @@ Here are the different options available with the Score-Client `upload` command:
 | `--validate` | If available, validate the file using its MD5 checksum. |
 | `--verify-connection` | Initially, verify the connection to the object storage repository. |
 
-For complete information on uploading data, including generating a manifest, check out our guide on [data submission using Song and Score](../../01-song/03-Usage/01-submitting-data.md). The following example outlines uploading files using a previously created manifest file from Song:
+For complete information on uploading data, including generating a manifest, check out our guide on [data submission using Song and Score](../../01-song/usage/01-submitting-data.md). The following example outlines uploading files using a previously created manifest file from Song:
 
 ### Upload Example
 
