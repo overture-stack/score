@@ -1,13 +1,27 @@
+#
+# Copyright (c) 2024 The Ontario Institute for Cancer Research. All rights reserved.
+#
+# This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
+# You should have received a copy of the GNU General Public License along with
+# this program. If not, see <http://www.gnu.org/licenses/>.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
+# EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+# OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT
+# SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+# TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+# OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+# IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+# ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+
+###############################################################################
 # Application Configurations for the Score Server
-
-# About Spring Framework:
-# Spring is a popular Java application framework used for building enterprise-grade applications.
-# This YAML file configures Spring Boot, which is part of the Spring ecosystem and simplifies the setup
-# and deployment of Spring applications. The profiles defined here allow for environment-specific
-# configurations, making it easier to manage settings across different deployment scenarios.
-
+#
 # This file contains various configuration profiles for the Score Server application.
 # Many of the values provided are placeholders. Please update them according to your specific deployment.
+###############################################################################
 
 ###############################################################################
 # Profile - common (default)
@@ -156,9 +170,9 @@ spring:
 
 s3:
   secured: false # Set to False for conductor quickstart
-  endpoint: http://localhsot:9000  # Uncomment and set your S3 endpoint
-  accessKey: admin # Uncomment and set your access key
-  secretKey: admin123  # Uncomment and set your secret key
+  endpoint: http://localhsot:9000 
+  accessKey: admin 
+  secretKey: admin123  #
   # masterEncryptionKeyId: your-encryption-key-id  # Uncomment for server-side encryption
   customMd5Property: md5chksum
   connectionTimeout: 1200000
@@ -199,7 +213,7 @@ spring:
       resourceserver:
         jwt:
           public-key-location: "https://localhost:8180/oauth/token/public_key"  # Update with your actual OAuth server URL
-          jwk-set-uri: http://keycloak:8180/realms/myrealm/protocol/openid-connect/certs  # Uncomment for Keycloak
+          jwk-set-uri: http://keycloak:8180/realms/myrealm/protocol/openid-connect/certs  
 
 auth:
   server:
