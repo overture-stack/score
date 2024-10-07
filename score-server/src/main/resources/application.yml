@@ -46,6 +46,8 @@ s3:
   upload:
     directory: upload           # Directory for temporary upload files
     expiration: 6               # Expiration time for uploads (in hours)
+  download:
+    expiration: 1               # Expiration time for download links (in days)
   data:
     directory: data             # Directory for permanent data storage
 
@@ -74,8 +76,6 @@ bucket:
 
 object:
   sentinel: heliograph          # Sentinel value for object operations
-  download:
-    expiration: 1               # Expiration time for download links (in days)
 
 upload:
   retry:
