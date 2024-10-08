@@ -20,7 +20,7 @@
 # Application Configurations for the Score Server
 #
 # This file contains various configuration profiles for the Score Server application.
-# Many of the values provided are placeholders. Please update them according to your specific deployment.
+# Please update the values according to your specific environment.
 ###############################################################################
 
 ###############################################################################
@@ -33,12 +33,9 @@ server:
   compression:
     enabled: true
     mime-types: application/json
-  cors:
-    # Allowed origins for CORS (Cross-Origin Resource Sharing)
-    # Multiple values can be added, separated by commas
-    # Update this with your frontend application URL(s)
-    allowedOrigins: http://localhost:8081
-
+  # Allowed origins for CORS (Cross-Origin Resource Sharing), multiple values can be added, separated by commas
+  cors: 
+    allowedOrigins: http://localhost:8081 # Update this with your frontend application URL(s)
 s3:
   # S3 connection settings
   secured: true                 # Use HTTPS for S3 connections
@@ -48,22 +45,14 @@ s3:
     expiration: 6               # Expiration time for uploads (in hours)
   data:
     directory: data             # Directory for permanent data storage
-
-  # Uncomment and set this property to use a custom MD5 hash metadata
+  # Uncomment below to set the customMd5Property property to use a custom MD5 hash metadata
   # customMd5Property: md5chksum
-
-  # S3 endpoint configuration
-  # Replace with your actual S3 endpoint
-  endpoint: s3-external-1.amazonaws.com
-
-  # Optional override for S3 pre-signed URL generation
-  preSignedUrl:
+  endpoint: s3-external-1.amazonaws.com  # S3 endpoint configuration, replace with your actual S3 endpoint
+  preSignedUrl:                  # Optional override for S3 pre-signed URL generation
     override:
       host:
-
 metadata:
   useLegacyMode: false          # Set to true to use legacy metadata handling
-
 bucket:
   name:
     object: oicr.icgc           # Bucket name for object storage (update as needed)
@@ -71,12 +60,10 @@ bucket:
   size:
     pool: 0                     # Size of the connection pool
     key: 2                      # Size of the key used for encryption
-
 object:
   sentinel: heliograph          # Sentinel value for object operations
   download:
     expiration: 1               # Expiration time for download links (in days)
-
 upload:
   retry:
     limit: 5                    # Maximum number of retry attempts for uploads
@@ -86,25 +73,20 @@ upload:
   clean:
     cron: "0 0 0 * * ?"         # Cron expression for cleanup job (daily at midnight)
     enabled: true               # Enable or disable the cleanup job
-
 auth:
   connection:
     maxRetries: 5               # Maximum number of connection retries
     initialBackoff: 15000       # Initial backoff time before first retry (in milliseconds)
     multiplier: 2.0             # Multiplier for subsequent backoff times
-
 management:
   endpoints:
     web:
       cors:
-        # Update this with your management console URL(s)
-        allowedOrigins: http://localhost:8081
-
+        allowedOrigins: http://localhost:8081 # Update this with your management console URL(s)
 spring:
   mvc:
     pathmatch:
       matching-strategy: ant_path_matcher  # Use Ant-style path matching
-
 logging:
   level:
     root: INFO
@@ -116,12 +98,10 @@ logging:
 # Profile - "ssl"
 # Configuration for using a self-signed certificate in production deployments
 ###############################################################################
-
 spring:
   config:
     activate:
       on-profile: ssl
-
 server:
   ssl:
     key-store-type: JKS
@@ -135,24 +115,20 @@ server:
 # Profile - "azure"
 # Configuration for Azure blob storage
 ###############################################################################
-
 spring:
   config:
     activate:
       on-profile: azure
-
 azure:
   endpointProtocol: https
   accountName: oicricgc  # Replace with your Azure account name
   accountKey:  # Add your Azure account key here
-
 bucket:
   name:
     object: data
   policy:
     upload: UploadPolicy
     download: DownloadPolicy
-
 download:
   partsize: 250000000  # Part size for downloads in Azure (in bytes)
 
@@ -162,12 +138,10 @@ download:
 # Profile - "s3"
 # Configuration for Amazon S3 or S3-compatible storage
 ###############################################################################
-
 spring:
   config:
     activate:
       on-profile: s3
-
 s3:
   secured: false # Set to False for conductor quickstart
   endpoint: http://localhsot:9000 
@@ -185,15 +159,12 @@ s3:
 # Profile - "prod"
 # Production environment configuration
 ###############################################################################
-
 spring:
   config:
     activate:
       on-profile: prod
-
 s3:
   secured: true
-
 metadata:
   url: https://meta.icgc.org  # Update with your actual metadata server URL
 
@@ -203,7 +174,6 @@ metadata:
 # Profile - "secure"
 # Security configuration for OAuth2 and JWT
 ###############################################################################
-
 spring:
   config:
     activate:
@@ -214,7 +184,6 @@ spring:
         jwt:
           public-key-location: "https://localhost:8180/oauth/token/public_key"  # Update with your actual OAuth server URL
           jwk-set-uri: http://keycloak:8180/realms/myrealm/protocol/openid-connect/certs  
-
 auth:
   server:
     url: http://localhost:8180/realms/myrealm/apikey/check_api_key/ # Update with your actual OAuth server URL
@@ -243,30 +212,24 @@ auth:
 # Profile - "dev"
 # Development environment configuration
 ###############################################################################
-
 spring:
   config:
     activate:
       on-profile: dev
-
 s3:
   secured: false
   endpoint: http://localhost:9000  # Update with your local S3 endpoint
   accessKey: admin  # Update with your local access key
   secretKey: admin123  # Update with your local secret key
-
 server:
   port: 8087  # Development server port
-
 bucket:
   name:
     object: object # Test bucket for object storage
     state: state  # Test bucket for state storage
-
 upload:
   clean:
     enabled: false  # Disable cleanup in development
-
 metadata:
   url: http://localhost:8080  # Local metadata server URL
 
@@ -276,16 +239,13 @@ metadata:
 # Profile - "benchmark"
 # Configuration for benchmarking purposes
 ###############################################################################
-
 spring:
   config:
     activate:
       on-profile: benchmark
-
 server:
   ssl:
     key-store-type: JKS
-
 s3:
   secured: false
   endpoint:  # Add your benchmark S3 endpoint here
