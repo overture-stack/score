@@ -249,3 +249,4 @@ server:
 s3:
   secured: false
   endpoint:  # Add your benchmark S3 endpoint here
+  
