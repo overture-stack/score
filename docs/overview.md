@@ -10,9 +10,14 @@ Score's primary function is to broker authenticated access to your object storag
 2. Generating time-limited pre-signed URLs for object access
 3. Facilitating secure data transfer between clients and object storage
 
-Score specializes in data transfer, while its companion application, Song, manages metadata independently from object storage concerns. 
-
 ![Score Arch](./assets/scoreArch.svg 'Score Architecture Diagram')
+
+As part of the larger Overture.bio software suite, Score is typically used with multiple other services including:
+
+- **Song:** A metadata management service made to manage file metadata independently from object storage concerns. 
+- **Score Client:** A command line tool to streamline interactions with Scores REST API endpoints
+- **Keycloak:** The authorization and authentication service used to provided OAuth2 authentication for Score
+
 
 ## Key Features
 
@@ -22,7 +27,6 @@ Score specializes in data transfer, while its companion application, Song, manag
 - **Data Integrity**: Ensures file integrity through MD5 checksum validation on uploads and downloads
 - **Security**: Implements ACL-based security using OAuth2 with study code-scoped access
 - **Metadata Integration**: Integrates with the Song metadata management system for comprehensive data tracking
-- **API**: Exposes a RESTful API with Swagger documentation for easy integration
 - **File Bundling**: Enables efficient transfer of multiple files in a single bundle
 - **Resumable Downloads**: Supports resuming downloads after network interruptions
 - **FUSE Support**: Offers file system in Userspace (FUSE) support for enhanced file operations
@@ -39,6 +43,8 @@ Score specializes in data transfer, while its companion application, Song, manag
 ├── /score-server
 └── /score-test
 ```
+
+[Click here to view the Score respository on GitHub ](https://github.com/overture-stack/score)
 
 #### Score-client
 
