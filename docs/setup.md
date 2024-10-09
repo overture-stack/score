@@ -6,7 +6,7 @@ Before you begin, ensure you have the following installed on your system:
 - [JDK11](https://www.oracle.com/ca-en/java/technologies/downloads/)
 - [Docker](https://www.docker.com/products/docker-desktop/) (v4.32.0 or higher)
 
-## Developer Setup
+## Score-Server Development Setup
 
 This guide will walk you through setting up a complete development environment, including Score and its complementary services.
 
@@ -137,6 +137,31 @@ After installing and configuring Score, verify that the system is functioning co
      - Verify you're using the correct URL
 
 For further assistance, [open an issue on GitHub](https://github.com/overture-stack/score/issues/new?assignees=&labels=&projects=&template=Feature_Requests.md).
+
+## Score-Client Setup
+
+The `score-client` is a CLI tool used for communicating with a `score-server`. For ease of deployment it can be run using Docker. The client can be configured through environment variables, which take precedence over the `application.yml` config.
+
+   ```bash
+docker run -d --name score-client \
+    -e ACCESSTOKEN=68fb42b4-f1ed-4e8c-beab-3724b99fe528 \
+    -e STORAGE_URL=http://localhost:8087 \
+    -e METADATA_URL=http://localhost:8080 \
+    --network="host" \
+    --platform="linux/amd64" \
+    --mount type=bind,source=${pwd},target=/output \
+    ghcr.io/overture-stack/score:latest
+   ```
+
+    <details>
+    <summary>**Click here for an explaination of command above**</summary>
+      - `-e ACCESSTOKEN=68fb42b4-f1ed-4e8c-beab-3724b99fe528` sets up the score-client with a pre-configured system-wide access token that works with the conductor service setup.
+      - `-e STORAGE_URL=http://score:8087` is the url for the Score server that the Score-Client will interact with.
+      - `-e METADATA_URL=http://song:8080` is the url for the song server that the score-client will interact with.
+      - `--network="host"` Uses the host network stack inside the container, bypassing the usual network isolation. This means the container shares the network namespace with the host machine.
+      - `--platform="linux/amd64"` Specifies the platform the container should emulate. In this case, it's set to linux/amd64, indicating the container is intended to run on a Linux system with an AMD64 architecture.
+      - `--mount type=bind,source={pwd},target=/output` mounts the directory and its contents (volume) from the host machine to the container. In this case, it binds the present working directory from the host to /output inside the container. Any changes made to the files in this directory will be reflected in both locations.
+    </details>
 
 :::warning
 This guide is meant to demonstrate the configuration and usage of Score for development purposes and is not intended for production. If you ignore this warning and use this in any public or production environment, please remember to use Spring profiles accordingly. For production do not use **dev** profile.
