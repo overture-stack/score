@@ -1,0 +1,38 @@
+# API Reference
+
+Scores API is a RESTful API that uses JSON for request and response bodies. It follows standard HTTP methods and status codes, providing a robust interface for managing score-related data in the Overture platform.
+
+### Access
+
+Depending on your environment, the Scores Swagger API can be accessed from the following URLs:
+
+- Development URL: `http://localhost:8087/swagger.html`
+- Example production URL: `https://score.demo.overture.bio/swagger-ui.html`
+
+### Authentication
+
+In production environments, all requests to the Songs API require authentication using an API key. 
+
+Include your API key in the `Authorization` header of each request as follows:
+
+```
+Authorization: Bearer YOUR_API_KEY
+```
+
+:::info API Key Access & Management
+For information on accessing an API key from a deployed Overture platform, [**see our platform guide here**](/guides/user-guides/cli-submissions#generate-an-api-key). 
+
+For information on generating and managing API keys in Overture using Keycloak, [**see our administration guide on identity & access management here**](/guides/administration-guides).
+:::
+
+### Endpoints
+
+The following Swagger UI provides an interactive reference for all available Score API endpoints. You can explore the endpoints, request parameters and response schemas from the interface below.
+
+import SwaggerAPIDoc from '/src/components/SwaggerAPIDoc';
+
+<SwaggerAPIDoc specName="score" />
+
+### Need Help?
+
+If you encounter any issues or have questions about our API, please don't hesitate to reach out through our relevant [community support channels](/community/support)
