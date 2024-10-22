@@ -1,71 +1,72 @@
-# Score - File Transfer & Object Storage
+# Score
 
-[<img hspace="5" src="https://img.shields.io/badge/chat-on--slack-blue?style=for-the-badge">](http://slack.overture.bio)
-[<img hspace="5" src="https://img.shields.io/badge/License-gpl--v3.0-blue?style=for-the-badge">](https://github.com/overture-stack/score/blob/develop/LICENSE)
-[<img hspace="5" src="https://img.shields.io/badge/Code%20of%20Conduct-2.1-blue?style=for-the-badge">](code_of_conduct.md)
-
-<div>
-<img align="right" width="100vw" src="icon-score.png" alt="score-logo" hspace="30"/>
-</div>
-
-Genomics data volume and velocity have increased dramatically, rendering on-premise storage insufficient and demanding specialized software tools to manage data in the cloud. [Score](https://www.overture.bio/documentation/score/) addresses this by facilitating the transfer and storage of genomics data to and from a cloud network.
-
-<!--Blockqoute-->
+Score is a file transfer service designed for cloud-based projects, providing a robust API for secure file transfer and storage operations. It serves as an intermediary between object storage systems and user authorization mechanisms, using pre-signed URLs for efficient and protected data access.
 
 </br>
 
 > 
 > <div>
-> <img align="left" src="ov-logo.png" height="90"/>
+> <img align="left" src="ov-logo.png" height="50"/>
 > </div>
 > 
-> *Score is a core component within the [Overture](https://www.overture.bio/) research software ecosystem. Overture is a toolkit of modular software components made to build into scalable genomics data management systems. See our [related products](#related-products) for more information on what Overture can offer.*
+> *Score is part of [Overture](https://www.overture.bio/), a collection of open-source software microservices used to create platforms for researchers to organize and share genomics data.*
 > 
 > 
-<!--Blockqoute-->
+## Repository Structure
+The repository is organized with the following directory structure:
+```
+.
+├── /score-client
+├── /score-core
+├── /score-fs
+├── /score-server
+└── /score-test
+```
 
-## Technical Specifications
-
-- Written in JAVA 
-- Supports AWS S3, Azure, Google Cloud, Openstack with Ceph, Minio and all other S3-compliant cloud storage solutions
-- Built-in [Samtools](http://www.htslib.org/) functionality including BAM and CRAM file slicing by genomic region 
-- ACL security using [OAuth 2.0](https://oauth.net/2/) and scopes based on study codes
-- Multipart Uploads and Downloads
-- REST API with [Swagger UI](https://swagger.io/tools/swagger-ui/)
-- [MD5sum](https://www.intel.com/content/www/us/en/support/programmable/articles/000078103.html) validation
+- **Score-client:** Command line app for uploading and downloading files
+- **Score-core:** Core library containing shared utilities and data models
+- **Score-fs:** File system operations module for managing local files
+- **Score-server:** Main server application that handles object storage and transfers
+- **Score-test:** Integration and end-to-end test suite components
 
 ## Documentation
 
-- :construction: Developer documentation, including instructions for running Score from source can be found in the [Wiki](https://github.com/overture-stack/score/wiki) :construction:
-- For user documentation, including installation, configuration and usage guides, see the Overture websites [Score documentation page](https://www.overture.bio/documentation/score/)
+Technical resources for those working with or contributing to the project are available from our official documentation site, the following content can also be read and updated within the `/docs` folder of this repository.
+
+- **[Score Overview](https://main--overturedev.netlify.app/docs/core-software/Score/overview)** 
+- [**Setting up the Development Enviornment**](https://main--overturedev.netlify.app/docs/core-software/Score/setup)
+- [**Common Usage Docs**](https://main--overturedev.netlify.app/docs/core-software/Score/setup)
+
+##  Development Environment
+
+- [Java 11 (OpenJDK)](https://openjdk.java.net/projects/jdk/11/)
+- [Maven 3.5+](https://maven.apache.org/) (or use provided wrapper)
+- [VS Code](https://code.visualstudio.com/) or preferred Java IDE
+- [Docker](https://www.docker.com/) Container platform
 
 ## Support & Contributions
 
-- Filing an [issue](https://github.com/overture-stack/score/issues)
-- Making a [contribution](CONTRIBUTING.md)
-- Connect with us on [Slack](https://join.slack.com/t/overture-bio/shared_invite/zt-21tdumtdh-9fP1TFeLepK4~Lc377rOYw)
-- Add or Upvote a [feature request](https://github.com/overture-stack/score/issues?q=is%3Aopen+is%3Aissue+label%3Anew-feature+sort%3Areactions-%2B1-desc)
+- For support, feature requests, and bug reports, please see our [Support Guide](https://main--overturedev.netlify.app/community/support).
+- For detailed information on how to contribute to this project, please see our [Contributing Guide](https://main--overturedev.netlify.app/docs/contribution).
 
 ## Related Software 
 
-<div>
-  <img align="right" alt="Overture overview" src="https://www.overture.bio/static/124ca0fede460933c64fe4e50465b235/a6d66/system-diagram.png" width="45%" hspace="5">
-</div>
-
-Score commonly works in tandem with our metadata service, [Song](https://github.com/overture-stack/SONG). While Score handles object storage and file transfer, Song validates and tracks all the associated file metadata. 
-
-All our core microservices are included in the Overture **Data Management System** (DMS). Built from our core collection of microservices, the DMS offers turnkey installation, configuration, and deployment of Overture software. For more information on the DMS, read our [DMS documentation](https://www.overture.bio/documentation/dms/).
-
-See the links below for information on our other research software tools:
+The Overture Platform includes the following Overture Components:
 
 </br>
 
 |Software|Description|
 |---|---|
-|[Ego](https://github.com/overture-stack/ego)|An authorization and user management service|
-|[Ego UI](https://github.com/overture-stack/ego-ui)|A UI for managing Ego authentication and authorization services|
-|[Score](https://github.com/overture-stack/score)| Transfer data to and from any cloud-based storage system|
-|[Song](https://github.com/overture-stack/song)|Catalog and manage metadata associated to file data spread across cloud storage systems|
-|[Maestro](https://github.com/overture-stack/maestro)|Organizing your distributed data into a centralized Elasticsearch index|
-|[Arranger](https://github.com/overture-stack/arranger)|A search API with reusable UI components that build into configurable and functional data portals|
-|[DMS-UI](https://github.com/overture-stack/dms-ui)|A simple web browser UI that integrates Ego and Arranger|
+|[Score](https://github.com/overture-stack/score/)| Transfer data to and from any cloud-based storage system |
+|[Song](https://github.com/overture-stack/song/)| Catalog and manage metadata associated to file data spread across cloud storage systems |
+|[Maestro](https://github.com/overture-stack/maestro/)| Organizing your distributed data into a centralized Elasticsearch index |
+|[Arranger](https://github.com/overture-stack/arranger/)| A search API with reusable search UI components |
+|[Stage](https://github.com/overture-stack/stage)| A React-based front-data portal UI |
+|[Lyric](https://github.com/overture-stack/lyric)| A data-agnostic tabular data submission system |
+|[Lectern](https://github.com/overture-stack/lectern)| A simple web browser UI that integrates Ego and Arranger |
+
+If you'd like to get started using our platform [check out our quickstart guides](https://main--overturedev.netlify.app/guides/getting-started)
+
+## Funding Acknowledgement
+
+Overture is supported by grant #U24CA253529 from the National Cancer Institute at the US National Institutes of Health, and additional funding from Genome Canada, the Canada Foundation for Innovation, the Canadian Institutes of Health Research, Canarie, and the Ontario Institute for Cancer Research.
