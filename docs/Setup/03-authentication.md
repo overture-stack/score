@@ -2,13 +2,21 @@
 
 There are multiple methods of deploying Keycloak. Documentation on Keycloak deployment can be found on the [Official Keycloak website](https://www.keycloak.org/guides#getting-started).
 
-To expedite the setup process using Docker, execute the following command in your terminal:
+:::info Docker Quickstart
+With Docker installed and running on your system you can quickly spin up Keycloak by running:
 
 ```bash
-docker run --name keycloak -d -p 8080:8080 -e KEYCLOAK_ADMIN=admin -e KEYCLOAK_ADMIN_PASSWORD=admin quay.io/keycloak/keycloak:22.0 start-dev
+docker run --name keycloak -d \
+  -p 8080:8080 \
+  -e KEYCLOAK_ADMIN=admin \
+  -e KEYCLOAK_ADMIN_PASSWORD=admin \
+  quay.io/keycloak/keycloak:22.0 start-dev
 ```
+If you need to install Docker, visit the [official Docker installation guide](https://docs.docker.com/get-docker/).
 
-This command starts Keycloak exposed on local port `8080` and creates an initial admin user with the username `admin` and password `admin`.
+This command starts Keycloak on local port `8080` and creates an initial admin user with the username `admin` and password `admin`.
+
+:::
 
 :::warning Development Configuration
 This setup is designated for development and testing purposes and should not be used in production settings. For production deployments, please refer to [Configuring Keycloak for Production](https://www.keycloak.org/server/configuration-production).
@@ -142,7 +150,7 @@ Permissions are the final decision-making mechanism connecting resources, scopes
 
 As mentioned previously, when introducing a new study or program, the creation of an additional resource within Keycloak is required. This includes re-applying policies and permissions to desired users and groups.
 
-To add a new study, **create a new resource** with the desired name of your study or program (i.e., `score.study123`) and **repeat the steps outlined above**, specifically the Resources, Policies, and Permissions sections of [configuring your application](/documentation/score/docker-install/configuration/authentication/#configuring-your-application). Once complete, you should have the following:
+To add a new study, **create a new resource** with the desired name of your study or program (i.e., `score.study123`) and **repeat the steps outlined above**, specifically the Resources, Policies, and Permissions sections of configuring your application. Once complete, you should have the following:
 
 ![Completed](../assets/complete.png)
 

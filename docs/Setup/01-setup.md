@@ -136,7 +136,9 @@ After installing and configuring Score, verify that the system is functioning co
      - Check browser console for error messages
      - Verify you're using the correct URL
 
-For further assistance, [open an issue on GitHub](https://github.com/overture-stack/score/issues/new?assignees=&labels=&projects=&template=Feature_Requests.md).
+:::info Need Help?
+If you encounter any issues or have questions about our API, please don't hesitate to reach out through our relevant [**community support channels**](/community/support).
+:::
 
 ## Score-Client Setup
 

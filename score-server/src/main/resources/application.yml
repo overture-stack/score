@@ -91,7 +91,32 @@ logging:
   level:
     root: INFO
     org.springframework.web: INFO
-
+spring:
+  config:
+    import: optional:vault://  # Required for Vault integration
+  cloud:
+    vault:
+      # Basic Configuration (Optional)
+      # host: localhost
+      # port: 8200
+      # scheme: https
+      
+      # Authentication (Choose ONE method)
+      
+      # Method 1: Token Authentication
+      # authentication: TOKEN
+      # token: your-vault-token
+      
+      # Method 2: AppRole Authentication
+      # authentication: APPROLE
+      # app-role:
+      #   role-id: your-role-id
+      #   secret-id: your-secret-id
+      #   app-auth-path: approle
+      
+      # Connection Timeouts (Optional)
+      # connection-timeout: 5000
+      # read-timeout: 15000
 ---
 
 ###############################################################################
