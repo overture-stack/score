@@ -33,7 +33,7 @@ We'll use our Conductor service, a flexible Docker Compose setup, to spin up Sco
 
     This command will set up all complementary services for Score development as follows:
 
-    ![ScoreDev](../assets/scoreDev.svg 'Score Dev Environment')
+    ![ScoreDev](./assets/scoreDev.svg 'Score Dev Environment')
 
     | Service | Port | Description | Purpose in Score Development |
     |---------|------|-------------|------------------------------|

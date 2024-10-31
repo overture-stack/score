@@ -1,4 +1,4 @@
-# Object Storage
+# Object Storage Setup
 
 To set up your object storage for Score:
 
