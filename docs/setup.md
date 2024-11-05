@@ -26,7 +26,7 @@ We'll use our Conductor service, a flexible Docker Compose setup, to spin up Sco
     | Operating System | Command |
     |------------------|---------|
     | Unix/macOS       | `make scoreDev` |
-    | Windows          | `make.bat scoreDev` |
+    | Windows          | `./make.bat scoreDev` |
 
     <details>
     <summary>**Click here for a detailed breakdown**</summary>
