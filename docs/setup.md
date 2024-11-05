@@ -1,4 +1,4 @@
-# Score Server
+# Setup
 
 ## Prerequisites
 
