@@ -1,6 +1,6 @@
 # Score
 
-Score is a file transfer service designed for cloud-based projects, providing a robust API for secure file transfer and storage operations. It serves as an intermediary between object storage systems and user authorization mechanisms, using pre-signed URLs for efficient and protected data access.
+Score is a file transfer service designed to enable large-file upload and download, providing a robust API for secure file transfer and storage operations. It serves as an intermediary between object storage systems and user authorization mechanisms, using pre-signed URLs for efficient and protected data access.
 
 </br>
 
@@ -11,7 +11,20 @@ Score is a file transfer service designed for cloud-based projects, providing a 
 > 
 > *Score is part of [Overture](https://www.overture.bio/), a collection of open-source software microservices used to create platforms for researchers to organize and share genomics data.*
 > 
-> 
+
+## Key Features
+
+- **Multi-cloud Support**: Compatible with AWS S3, Azure Storage, and any object storage with an S3 compliant API (Minio, Ceph, etc.)
+- **High-performance Transfers**: Implements multipart uploads and downloads for optimal throughput
+- **Genomic Data Handling (SamTools)**: Supports BAM/CRAM file slicing by genomic region and provides built-in samtools operations for BAM file handling
+- **Data Integrity**: Ensures file integrity through MD5 checksum validation on uploads and downloads
+- **Security**: Implements ACL-based security using OAuth2 with study code-scoped access
+- **Metadata Integration**: Integrates with the Song metadata management system for comprehensive data tracking
+- **File Bundling**: Enables efficient transfer of multiple files in a single bundle
+- **Resumable Downloads**: Supports resuming downloads after network interruptions
+- **FUSE Support**: Offers file system in Userspace (FUSE) support for enhanced file operations
+- **Interactive API Documentation:** Built-in Swagger UI for easy API interaction and exploration
+
 ## Repository Structure
 The repository is organized with the following directory structure:
 ```
