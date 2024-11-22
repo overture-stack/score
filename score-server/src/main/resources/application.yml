@@ -84,10 +84,6 @@ management:
     web:
       cors:
         allowedOrigins: http://localhost:8081 # Update this with your management console URL(s)
-spring:
-  mvc:
-    pathmatch:
-      matching-strategy: ant_path_matcher  # Use Ant-style path matching
 logging:
   level:
     root: INFO
@@ -118,6 +114,9 @@ spring:
       # Connection Timeouts (Optional)
       # connection-timeout: 5000
       # read-timeout: 15000
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher  # Use Ant-style path matching
 ---
 
 ###############################################################################
