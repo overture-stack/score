@@ -23,9 +23,9 @@ We'll use our Conductor service, a flexible Docker Compose setup, to spin up Sco
 
 2. Run the appropriate start command for your operating system:
 
-    | Operating System | Command |
-    |------------------|---------|
-    | Unix/macOS       | `make scoreDev` |
+    | Operating System | Command               |
+    | ---------------- | --------------------- |
+    | Unix/macOS       | `make scoreDev`       |
     | Windows          | `./make.bat scoreDev` |
 
     <details>
@@ -35,16 +35,16 @@ We'll use our Conductor service, a flexible Docker Compose setup, to spin up Sco
 
     ![ScoreDev](./assets/scoreDev.svg 'Score Dev Environment')
 
-    | Service | Port | Description | Purpose in Score Development |
-    |---------|------|-------------|------------------------------|
-    | Conductor | `9204` | Orchestrates deployments and environment setups | Manages the overall development environment |
-    | Keycloak-db | - | Database for Keycloak (no exposed port) | Stores Keycloak data for authentication |
-    | Keycloak | `8180` | Authorization and authentication service | Provides OAuth2 authentication for Score |
-    | Song-db | `5433` | Database for Song | Stores metadata managed by Song |
-    | Song | `8080` | Metadata management service | Manages metadata for files stored by Score |
-    | Minio | `9000` | Object storage provider | Simulates S3-compatible storage for Score |
+    | Service     | Port   | Description                                     | Purpose in Score Development                |
+    | ----------- | ------ | ----------------------------------------------- | ------------------------------------------- |
+    | Conductor   | `9204` | Orchestrates deployments and environment setups | Manages the overall development environment |
+    | Keycloak-db | -      | Database for Keycloak (no exposed port)         | Stores Keycloak data for authentication     |
+    | Keycloak    | `8180` | Authorization and authentication service        | Provides OAuth2 authentication for Score    |
+    | Song-db     | `5433` | Database for Song                               | Stores metadata managed by Song             |
+    | Song        | `8080` | Metadata management service                     | Manages metadata for files stored by Score  |
+    | Minio       | `9000` | Object storage provider                         | Simulates S3-compatible storage for Score   |
 
-    - Ensure all ports are free on your system before starting the environment.
+    - Ensure these ports are free on your system before starting the environment.
     - You may need to adjust the ports in the `docker-compose.yml` file if you have conflicts with existing services.
 
     For more information, see our [Conductor documentation linked here](/docs/other-software/Conductor)
@@ -99,16 +99,16 @@ We'll use our Conductor service, a flexible Docker Compose setup, to spin up Sco
         <summary>**Click here for a summary of the Score-server spring profiles**</summary>
 
         **Score Profiles**
-        | Profile | Description |
-        |---------|-------------|
-        | `default` | Common settings for all environments. Includes server, S3, bucket, object, upload, and authentication configurations. |
-        | `ssl` | Enables SSL configuration for using a self-signed certificate in production deployments. |
-        | `azure` | Configuration for Azure blob storage. Includes Azure-specific settings and bucket policies. |
-        | `s3` | Configuration for Amazon S3 or S3-compatible storage. Includes endpoint, access key, and secret key settings. |
-        | `prod` | Production environment configuration. Enables secure S3 connections and sets the metadata URL. |
-        | `secure` | Security configuration for OAuth2 and JWT. Includes settings for resource server, authentication server, and scope definitions. |
-        | `dev` | Development environment configuration. Uses non-secure S3 connections, local endpoints, and disables upload cleaning. |
-        | `benchmark` | Configuration for benchmarking purposes. Includes SSL settings and a non-secure S3 endpoint. |
+        | Profile     | Description                                                                                                                     |
+        | ----------- | ------------------------------------------------------------------------------------------------------------------------------- |
+        | `default`   | Common settings for all environments. Includes server, S3, bucket, object, upload, and authentication configurations.           |
+        | `ssl`       | Enables SSL configuration for using a self-signed certificate in production deployments.                                        |
+        | `azure`     | Configuration for Azure blob storage. Includes Azure-specific settings and bucket policies.                                     |
+        | `s3`        | Configuration for Amazon S3 or S3-compatible storage. Includes endpoint, access key, and secret key settings.                   |
+        | `prod`      | Production environment configuration. Enables secure S3 connections and sets the metadata URL.                                  |
+        | `secure`    | Security configuration for OAuth2 and JWT. Includes settings for resource server, authentication server, and scope definitions. |
+        | `dev`       | Development environment configuration. Uses non-secure S3 connections, local endpoints, and disables upload cleaning.           |
+        | `benchmark` | Configuration for benchmarking purposes. Includes SSL settings and a non-secure S3 endpoint.                                    |
 
         </details>
 

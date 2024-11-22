@@ -19,7 +19,8 @@
 ###############################################################################
 # Application Configurations for the Score Server
 #
-# This file contains various configuration profiles for the Score Server application.
+# This file contains placeholder configuration values for the various
+# application profiles used by Score.
 # Please update the values according to your specific environment.
 ###############################################################################
 
@@ -35,7 +36,7 @@ server:
     mime-types: application/json
   # Allowed origins for CORS (Cross-Origin Resource Sharing), multiple values can be added, separated by commas
   cors: 
-    allowedOrigins: http://localhost:8081 # Update this with your frontend application URL(s)
+    allowedOrigins: http://localhost:8081 # If fetching files from a web application, update this with your frontend application domain
 s3:
   # S3 connection settings
   secured: true                 # Use HTTPS for S3 connections
@@ -55,8 +56,8 @@ metadata:
   useLegacyMode: false          # Set to true to use legacy metadata handling
 bucket:
   name:
-    object: oicr.icgc           # Bucket name for object storage (update as needed)
-    state: oicr.icgc            # Bucket name for state storage (update as needed)
+    object: score.data           # Bucket name for object storage (update as needed)
+    state: score.data            # Bucket name for state storage (update as needed)
   size:
     pool: 0                     # Size of the connection pool
     key: 2                      # Size of the key used for encryption
@@ -146,7 +147,7 @@ spring:
       on-profile: azure
 azure:
   endpointProtocol: https
-  accountName: oicricgc  # Replace with your Azure account name
+  accountName:  # Add your Azure account name
   accountKey:  # Add your Azure account key here
 bucket:
   name:
@@ -191,7 +192,7 @@ spring:
 s3:
   secured: true
 metadata:
-  url: https://meta.icgc.org  # Update with your actual metadata server URL
+  url: https://song.example.com  # Update with your actual metadata server URL
 
 ---
 
