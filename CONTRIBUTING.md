@@ -4,7 +4,7 @@ We appreciate your interest in contributing to the Overture project. We are the 
 
 ## Code of Conduct
 
-By participating in this project, you are expected to abide by our [Code of Conduct](/community/code-of-conduct). Please take the time to read it carefully before contributing.
+By participating in this project, you are expected to abide by our [Code of Conduct](https://docs.overture.bio/community/code-of-conduct). Please take the time to read it carefully before contributing.
 
 ## Get Involved
 

@@ -132,4 +132,4 @@ Additional option flags available for the `score-client` executable:
 
 ## Need Help?
 
-If you encounter any issues or have questions, please don't hesitate to reach out through our relevant [community support channels](/community/support)
+If you encounter any issues or have questions, please don't hesitate to reach out through our relevant [community support channels](https://docs.overture.bio/community/support)

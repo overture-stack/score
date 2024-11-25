@@ -3,7 +3,7 @@
 Data uploads using the Client or API.
 
 :::info Data Submission Guide
-For detailed step-by-step instructions on using Song and Score clients for data submissions, see our [**platform guide on CLI submissions**](/guides/user-guides/cli-submissions).
+For detailed step-by-step instructions on using Song and Score clients for data submissions, see our [**platform guide on CLI submissions**](https://docs.overture.bio/guides/user-guides/cli-submissions).
 :::
 
 ## Installing Score-Client
@@ -88,5 +88,5 @@ Upload completed
 ```
 
 :::info Support
-If you encounter any issues or have questions, please don't hesitate to reach out through our relevant [community support channels](/community/support)
+If you encounter any issues or have questions, please don't hesitate to reach out through our relevant [community support channels](https://docs.overture.bio/community/support)
 :::
