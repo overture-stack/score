@@ -25,23 +25,6 @@ Score is a file transfer service designed to enable large-file upload and downlo
 - **FUSE Support**: Offers file system in Userspace (FUSE) support for enhanced file operations
 - **Interactive API Documentation:** Built-in Swagger UI for easy API interaction and exploration
 
-## Repository Structure
-The repository is organized with the following directory structure:
-```
-.
-├── /score-client
-├── /score-core
-├── /score-fs
-├── /score-server
-└── /score-test
-```
-
-- **Score-client:** Command line app for uploading and downloading files
-- **Score-core:** Core library containing shared utilities and data models
-- **Score-fs:** File system operations module for managing local files
-- **Score-server:** Main server application that handles object storage and transfers
-- **Score-test:** Integration and end-to-end test suite components
-
 ## Documentation
 
 Technical resources for those working with or contributing to the project are available from our official documentation site, the following content can also be read and updated within the `/docs` folder of this repository.
