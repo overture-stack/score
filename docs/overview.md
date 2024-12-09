@@ -10,7 +10,7 @@ Score's primary function is to broker authenticated access to your object storag
 2. Generating time-limited pre-signed URLs for object access
 3. Facilitating secure data transfer between clients and object storage
 
-![Score Arch](./assets/scoreArch.svg 'Score Architecture Diagram')
+![Score Arch](./assets/scoreDev.svg 'Score Architecture Diagram')
 
 As part of the larger Overture.bio software suite, Score is typically used with multiple other services including:
 
