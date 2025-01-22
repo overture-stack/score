@@ -55,7 +55,7 @@ Profile Name: ``s3``
 
 | Profile Name  | Description                                                                                                                                                               |
 | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| azure         |                                                                                                                                                                           |
+| azure         | Enable connection to Azure Blob storage for file storage, instead of default S3.                                                                                          |
 | secure        | Enables Authorization validation for all protected routes. Either `secure` or `noSecurityDev` profile must be set for Score to operate. **ALWAYS USE THIS IN PRODUCTION** |
 |               |                                                                                                                                                                           |
 | benchmark     | _Development Profile_ Enables tooling to help with benchmark testing.                                                                                                     |
