@@ -1,6 +1,6 @@
 # Overview
 
-Score is a file transfer service designed to enable large-file upload and download, providign a robust API for secure file transfer and storage operations. It serves as an intermediary between object storage systems and user authorization mechanisms, using pre-signed URLs for efficient and protected data access.
+Score is a file transfer service designed to enable large-file upload and download, providing a robust API for secure file transfer and storage operations. It serves as an intermediary between object storage systems and user authorization mechanisms, using pre-signed URLs for efficient and protected data access.
 
 ## System Architecture
 
@@ -10,14 +10,13 @@ Score's primary function is to broker authenticated access to your object storag
 2. Generating time-limited pre-signed URLs for object access
 3. Facilitating secure data transfer between clients and object storage
 
-![Score Arch](./assets/scoreDev.svg 'Score Architecture Diagram')
+![Score Arch](./assets/scoreDev.svg "Score Architecture Diagram")
 
 As part of the larger Overture.bio software suite, Score is typically used with multiple other services including:
 
 - **Song:** A metadata management service made to manage file metadata independently from object storage concerns
 - **Score Client:** A command line tool to streamline interactions with Scores REST API endpoints
 - **Keycloak:** The authorization and authentication service used to provided OAuth2 authentication for Score
-
 
 ## Key Features
 
@@ -32,9 +31,10 @@ As part of the larger Overture.bio software suite, Score is typically used with 
 - **FUSE Support**: Offers file system in Userspace (FUSE) support for enhanced file operations
 - **Interactive API Documentation:** Built-in Swagger UI for easy API interaction and exploration
 
-
 ## Repository Structure
+
 The repository is organized with the following directory structure:
+
 ```
 .
 ├── /score-client
