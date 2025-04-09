@@ -49,19 +49,33 @@ To configure SCORe to use an S3-compatible object storage service, the s3 Spring
 
 Profile Name: ``s3``
 
-# Configuration Properties
+## Configuration
 
-| Property | Description |
-| ------------- | ------------- |
-|`s3.secured`  | Determines whether the connection to the S3 service should use HTTPS (true) or HTTP (false). Set to true to secure the connection. |
-|`s3.endpoint` |The URL of the S3-compatible service. This is the endpoint where the service is hosted. This property should be provided based on the service you're using.
-|`s3.accessKey` |The access key for authenticating with the S3 service. It's required for secure access and should be kept confidential.|
-|`s3.secretKey`|The secret key paired with the access key for secure authentication to the S3 service. It must also be kept confidential.|
-|`s3.masterEncryptionKeyId`|The ID of the encryption key used for server-side encryption of files stored in S3. If provided, this key ensures that all data at rest is encrypted using the specified key.|
-|`s3.customMd5Property`| A custom metadata property that stores an MD5 checksum of the uploaded files. This is useful for validating the integrity of the files.|
-|`s3.connectionTimeout`| The maximum amount of time (in milliseconds) the client will wait to establish a connection to the S3 service before timing out. This helps manage delays in the network or service availability.|
-|`s3.retryLimit`| The number of retries the client will attempt if an operation fails (e.g., an upload). This helps ensure robustness in case of transient issues.
-|`s3.sigV4Enabled`| Enables AWS Signature Version 4 for request signing. This is required for certain regions or when using advanced features like server-side encryption with AWS KMS.|
+### Operating Profiles
+
+| Profile Name  | Description                                                                                                                                                               |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| azure         | Enable connection to Azure Blob storage for file storage, instead of default S3.                                                                                          |
+| secure        | Enables Authorization validation for all protected routes. Either `secure` or `noSecurityDev` profile must be set for Score to operate. **ALWAYS USE THIS IN PRODUCTION** |
+|               |                                                                                                                                                                           |
+| benchmark     | _Development Profile_ Enables tooling to help with benchmark testing.                                                                                                     |
+| dev           | Disables application level SSL verfication, if configured.                                                                                                                |
+| noSecurityDev | Disable Authorization check for all routes. **DO NOT USE THIS PRODUCTION**                                                                                                |
+| test          | Used to configure app when running unit test suite.                                                                                                                       |
+
+### S3 Configuration Properties
+
+| Property                   | Description                                                                                                                                                                                       |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `s3.secured`               | Determines whether the connection to the S3 service should use HTTPS (true) or HTTP (false). Set to true to secure the connection.                                                                |
+| `s3.endpoint`              | The URL of the S3-compatible service. This is the endpoint where the service is hosted. This property should be provided based on the service you're using.                                       |
+| `s3.accessKey`             | The access key for authenticating with the S3 service. It's required for secure access and should be kept confidential.                                                                           |
+| `s3.secretKey`             | The secret key paired with the access key for secure authentication to the S3 service. It must also be kept confidential.                                                                         |
+| `s3.masterEncryptionKeyId` | The ID of the encryption key used for server-side encryption of files stored in S3. If provided, this key ensures that all data at rest is encrypted using the specified key.                     |
+| `s3.customMd5Property`     | A custom metadata property that stores an MD5 checksum of the uploaded files. This is useful for validating the integrity of the files.                                                           |
+| `s3.connectionTimeout`     | The maximum amount of time (in milliseconds) the client will wait to establish a connection to the S3 service before timing out. This helps manage delays in the network or service availability. |
+| `s3.retryLimit`            | The number of retries the client will attempt if an operation fails (e.g., an upload). This helps ensure robustness in case of transient issues.                                                  |
+| `s3.sigV4Enabled`          | Enables AWS Signature Version 4 for request signing. This is required for certain regions or when using advanced features like server-side encryption with AWS KMS.                               |
 
 
 > [!NOTE]  
