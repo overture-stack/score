@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2024 The Ontario Institute for Cancer Research. All rights reserved.
+# Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.
 #
 # This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
 # You should have received a copy of the GNU General Public License along with
@@ -15,190 +15,196 @@
 # IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-
-###############################################################################
-# Application Configurations for the Score Server
+# DCC Storage Server - Configuration
 #
-# This file contains placeholder configuration values for the various
-# application profiles used by Score.
-# Please update the values according to your specific environment.
-###############################################################################
 
 ###############################################################################
-# Profile - common (default)
-# This is the default profile with common settings for all environments.
+# Profile - common
 ###############################################################################
 
 server:
-  port: 5431  # Default port for the Score application
+  port: 5431
   compression:
     enabled: true
     mime-types: application/json
-  # Allowed origins for CORS (Cross-Origin Resource Sharing), multiple values can be added, separated by commas
-  cors: 
-    allowedOrigins: http://localhost:8081 # If fetching files from a web application, update this with your frontend application domain
+  #allowedOrigins can be configured to contain multiple values, all separated by commas
+  cors:
+    allowedOrigins: http://localhost:8081
 s3:
-  # S3 connection settings
-  secured: true                 # Use HTTPS for S3 connections
-  sigV4Enabled: true            # Enable AWS Signature Version 4 for authentication
-  upload:
-    directory: upload           # Directory for temporary upload files
-    expiration: 6               # Expiration time for uploads (in hours)
-  data:
-    directory: data             # Directory for permanent data storage
-  # Uncomment below to set the customMd5Property property to use a custom MD5 hash metadata
+  secured: true
+  sigV4Enabled: true
+  upload.directory: upload
+  upload.expiration: 6
+  data.directory: data
+  # COL-131: Change pre-signed URLs TTL to 1 day max
+  download.expiration: 1
+
+  # custom meta property with md5 hash, unused when upload state files are available (default behaviour)
   # customMd5Property: md5chksum
-  endpoint: s3-external-1.amazonaws.com  # S3 endpoint configuration, replace with your actual S3 endpoint
-  preSignedUrl:                  # Optional override for S3 pre-signed URL generation
+
+  #amazon
+  endpoint: s3-external-1.amazonaws.com
+
+  # an optional override to replace the s3 endpoint, useful to proxy requests
+  preSignedUrl:
     override:
       host:
+
 metadata:
-  useLegacyMode: false          # Set to true to use legacy metadata handling
+  useLegacyMode: false
+
 bucket:
-  name:
-    object: score.data           # Bucket name for object storage (update as needed)
-    state: score.data            # Bucket name for state storage (update as needed)
-  size:
-    pool: 0                     # Size of the connection pool
-    key: 2                      # Size of the key used for encryption
+  name.object: oicr.icgc
+  name.state: oicr.icgc
+  size.pool: 0
+  size.key: 2
+
 object:
-  sentinel: heliograph          # Sentinel value for object operations
-  download:
-    expiration: 1               # Expiration time for download links (in days)
+  sentinel: heliograph
+
 upload:
-  retry:
-    limit: 5                    # Maximum number of retry attempts for uploads
-  partsize: 20000000            # Size of each part in multipart uploads (in bytes)
-  connection:
-    timeout: 15000              # Connection timeout for uploads (in milliseconds)
-  clean:
-    cron: "0 0 0 * * ?"         # Cron expression for cleanup job (daily at midnight)
-    enabled: true               # Enable or disable the cleanup job
+  retry.limit: 5
+  partsize: 20000000
+  connection.timeout: 15000
+
+  # Every day at midnight
+  clean.cron: "0 0 0 * * ?"
+  clean.enabled: true
+
 auth:
+  # Connection retries in case of connection failure
   connection:
-    maxRetries: 5               # Maximum number of connection retries
-    initialBackoff: 15000       # Initial backoff time before first retry (in milliseconds)
-    multiplier: 2.0             # Multiplier for subsequent backoff times
+    # Max number of retries
+    maxRetries: 5
+
+    # Initial timeoutMs before the first retry. In milliseconds.
+    initialBackoff: 15000
+
+    # Multiplier that defines value of consequent timeouts before the next retry.
+    # E.g. TIMEOUT(n) = TIMEOUT(n-1) * MULTIPLIER
+    multiplier: 2.0
+
+#allowedOrigins can be configured to contain multiple values, all separated by commas
 management:
   endpoints:
     web:
       cors:
-        allowedOrigins: http://localhost:8081 # Update this with your management console URL(s)
+        allowedOrigins: http://localhost:8081
+
+#  SpringBoot >=2.6 default strategy for matching the request path has been changed
+#  from antpathmatcher to pathpatternparser
+spring:
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
+
 logging:
   level:
     root: INFO
     org.springframework.web: INFO
-spring:
-  config:
-    import: optional:vault://  # Required for Vault integration
-  cloud:
-    vault:
-      # Basic Configuration (Optional)
-      # host: localhost
-      # port: 8200
-      # scheme: https
-      
-      # Authentication (Choose ONE method)
-      
-      # Method 1: Token Authentication
-      # authentication: TOKEN
-      # token: your-vault-token
-      
-      # Method 2: AppRole Authentication
-      # authentication: APPROLE
-      # app-role:
-      #   role-id: your-role-id
-      #   secret-id: your-secret-id
-      #   app-auth-path: approle
-      
-      # Connection Timeouts (Optional)
-      # connection-timeout: 5000
-      # read-timeout: 15000
-  mvc:
-    pathmatch:
-      matching-strategy: ant_path_matcher  # Use Ant-style path matching
 ---
-
 ###############################################################################
 # Profile - "ssl"
-# Configuration for using a self-signed certificate in production deployments
+# this is the configuration for the service using the self-signed cert created
+# for initial production deployments. key-store-password would still need to
+# be specified in the properties file
 ###############################################################################
+
 spring:
   config:
     activate:
       on-profile: ssl
+
+# Server
 server:
   ssl:
     key-store-type: JKS
-    key-store: src/main/cert/service.jks  # Update with your actual keystore path
+    key-store: src/main/cert/service.jks
     key-alias: object-store-service
-    # Note: key-store-password should be specified in a separate properties file for security
 
 ---
-
 ###############################################################################
 # Profile - "azure"
-# Configuration for Azure blob storage
 ###############################################################################
+
 spring:
   config:
     activate:
       on-profile: azure
+
 azure:
   endpointProtocol: https
-  accountName:  # Add your Azure account name
-  accountKey:  # Add your Azure account key here
+  accountName: oicricgc
+  accountKey:
+
 bucket:
-  name:
-    object: data
-  policy:
-    upload: UploadPolicy
-    download: DownloadPolicy
+  name.object: data
+  policy.upload: UploadPolicy
+  policy.download: DownloadPolicy
+
 download:
-  partsize: 250000000  # Part size for downloads in Azure (in bytes)
+  partsize: 250000000
 
 ---
-
 ###############################################################################
 # Profile - "s3"
-# Configuration for Amazon S3 or S3-compatible storage
 ###############################################################################
+
 spring:
   config:
     activate:
       on-profile: s3
+
 s3:
-  secured: false # Set to False for conductor quickstart
-  endpoint: http://localhsot:9000 
-  accessKey: admin 
-  secretKey: admin123  #
-  # masterEncryptionKeyId: your-encryption-key-id  # Uncomment for server-side encryption
+  # Whether the connection should use HTTPS (true) or HTTP (false)
+  secured: true
+
+  # Endpoint URL for the S3-compatible service
+  # endpoint: your-s3-endpoint
+
+  # Access key for authentication
+  # accessKey: your-access-key
+
+  # Secret key for authentication
+  # secretKey: your-secret-key
+
+  # Master encryption key ID for server-side encryption
+  # masterEncryptionKeyId: your-encryption-key-id
+
+  # Custom MD5 checksum property (if needed)
   customMd5Property: md5chksum
-  connectionTimeout: 1200000
+
+  # Connection timeout in milliseconds
+  connectionTimeout: 15000
+
+  # Retry limit for failed operations
   retryLimit: 5
+
+  # Whether to use Signature Version 4
   sigV4Enabled: true
 
 ---
-
 ###############################################################################
 # Profile - "prod"
-# Production environment configuration
 ###############################################################################
+
 spring:
   config:
     activate:
       on-profile: prod
+
 s3:
   secured: true
+
+# Metadata server
 metadata:
-  url: https://song.example.com  # Update with your actual metadata server URL
+  url: https://meta.icgc.org
 
 ---
-
 ###############################################################################
 # Profile - "secure"
-# Security configuration for OAuth2 and JWT
 ###############################################################################
+
 spring:
   config:
     activate:
@@ -207,71 +213,82 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          public-key-location: "https://localhost:8180/oauth/token/public_key"  # Update with your actual OAuth server URL
-          jwk-set-uri: http://keycloak:8180/realms/myrealm/protocol/openid-connect/certs  
+          # EGO public key
+          public-key-location: "https://localhost:8443/oauth/token/public_key"
+          # Keycloak JWK
+          #jwk-set-uri: http://localhost/realms/myrealm/protocol/openid-connect/certs
+
+# OAuth authentication server
 auth:
   server:
-    url: http://localhost:8180/realms/myrealm/apikey/check_api_key/ # Update with your actual OAuth server URL
+    # check API Key endpoint
+    url: https://localhost:8443/oauth/check_token
     tokenName: apiToken
-    clientID: dms  # Update with your actual client ID
-    clientSecret: t016kqXfI648ORoIP5gepqCzqtsRjlcc  # Update with your actual client secret
-    provider: keycloak  # Valid options: ego or keycloak
+    clientID: score
+    clientSecret: scoresecret
+    # Define a valid auth provider: ego or keycloak
+    provider: ego
+    # Keycloak config
     keycloak:
-      host: http://localhost:8180  # Update with your Keycloak host if using Keycloak
-      realm: "myrealm"  # Update with your Keycloak realm if using Keycloak
+      host: http://localhost
+      realm: "myrealm"
     scope:
       download:
         system: score.READ
         study:
-          prefix: STUDY.
+          prefix: PROGRAMDATA-
           suffix: .READ
       upload:
         system: score.WRITE
         study:
-          prefix: STUDY.
+          prefix: PROGRAMDATA-
           suffix: .WRITE
 
 ---
-
 ###############################################################################
 # Profile - "dev"
-# Development environment configuration
 ###############################################################################
+
 spring:
   config:
     activate:
       on-profile: dev
+
 s3:
   secured: false
-  endpoint: http://localhost:9000  # Update with your local S3 endpoint
-  accessKey: admin  # Update with your local access key
-  secretKey: admin123  # Update with your local secret key
+  endpoint: http://localhost:8085
+  accessKey: minio
+  secretKey: minio123
+
+# Server
 server:
-  port: 8087  # Development server port
+  port: 8087
+
 bucket:
-  name:
-    object: object # Test bucket for object storage
-    state: state  # Test bucket for state storage
+  name.object: test.icgc.test
+  name.state: test.icgc.test
+
 upload:
-  clean:
-    enabled: false  # Disable cleanup in development
+  clean.enabled: false
+
 metadata:
-  url: http://localhost:8080  # Local metadata server URL
+  url: http://localhost:8080
 
 ---
-
 ###############################################################################
 # Profile - "benchmark"
-# Configuration for benchmarking purposes
 ###############################################################################
+
 spring:
   config:
     activate:
       on-profile: benchmark
+
+# Server
 server:
   ssl:
     key-store-type: JKS
+
 s3:
   secured: false
-  endpoint:  # Add your benchmark S3 endpoint here
-  
+  endpoint:
