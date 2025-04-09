@@ -13,13 +13,13 @@ This guide will walk you through setting up a complete development environment, 
 
 ### Setting up supporting services
 
-We'll use our Conductor service, a flexible Docker Compose setup, to spin up Score's complementary services.
+We'll use our Quickstart service, a flexible Docker Compose setup, to spin up Score's complementary services.
 
-1. Clone the Conductor repository and move into its directory:
+1. Clone the Quickstart repository and move into its directory:
 
    ```bash
-   git clone https://github.com/overture-stack/conductor.git
-   cd conductor
+   git clone -b quickstart https://github.com/overture-stack/prelude.git
+   cd prelude
    ```
 
 2. Run the appropriate start command for your operating system:
@@ -48,7 +48,7 @@ We'll use our Conductor service, a flexible Docker Compose setup, to spin up Sco
    - Ensure these ports are free on your system before starting the environment.
    - You may need to adjust the ports in the `docker-compose.yml` file if you have conflicts with existing services.
 
-   For more information, see our [Conductor documentation linked here](https://docs.overture.bio/docs/other-software/Conductor)
+   For more information, see our [Quickstart documentation linked here](https://docs.overture.bio/docs/other-software/Quickstart)
 
    </details>
 
