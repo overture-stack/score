@@ -30,7 +30,7 @@ Score is a file transfer service designed to enable large-file upload and downlo
 Technical resources for those working with or contributing to the project are available from our official documentation site, the following content can also be read and updated within the `/docs` folder of this repository.
 
 - **[Score Overview](https://docs.overture.bio/docs/core-software/Score/overview)** 
-- [**Setting up the Development Enviornment**](https://docs.overture.bio/docs/core-software/Score/setup)
+- [**Setting up the Development Environment**](https://docs.overture.bio/docs/core-software/Score/setup)
 - [**Common Usage Docs**](https://docs.overture.bio/docs/core-software/Score/setup)
 
 ##  Development Environment
