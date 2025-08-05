@@ -408,21 +408,21 @@ public class SamFileBuilder {
         new ArrayList<SAMProgramRecord>(pgRecords); // get returns an unmodifiable collection
 
     String id = programId == null ? "unknown" : programId;
-    val count = getIcgcProgramRecordCount(pgRecords);
+    val count = getProgramRecordCount(pgRecords);
     if (count > 0) {
       id = String.format("%s.%d", id, count + 1);
     }
-    SAMProgramRecord icgcClientRecord = new SAMProgramRecord(id);
-    if (programName != null) icgcClientRecord.setProgramName(programName);
-    if (commandLine != null) icgcClientRecord.setCommandLine(commandLine);
-    if (description != null) icgcClientRecord.setAttribute("DS", description);
-    if (version != null) icgcClientRecord.setAttribute("VN", version);
-    if (commandLine != null) icgcClientRecord.setCommandLine(commandLine);
-    newPgRecords.add(icgcClientRecord);
+    SAMProgramRecord clientRecord = new SAMProgramRecord(id);
+    if (programName != null) clientRecord.setProgramName(programName);
+    if (commandLine != null) clientRecord.setCommandLine(commandLine);
+    if (description != null) clientRecord.setAttribute("DS", description);
+    if (version != null) clientRecord.setAttribute("VN", version);
+    if (commandLine != null) clientRecord.setCommandLine(commandLine);
+    newPgRecords.add(clientRecord);
     return newPgRecords;
   }
 
-  private int getIcgcProgramRecordCount(List<SAMProgramRecord> pgRecords) {
+  private int getProgramRecordCount(List<SAMProgramRecord> pgRecords) {
     int count = 0;
     for (val pg : pgRecords) {
       if (pg.getId().substring(0, programId.length() - 1).equalsIgnoreCase(programId)) {

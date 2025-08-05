@@ -29,9 +29,7 @@ import bio.overture.score.client.exception.NotResumableException;
 import bio.overture.score.client.exception.NotRetryableException;
 import bio.overture.score.client.exception.RetryableException;
 import bio.overture.score.client.exception.ServiceRetryableResponseErrorHandler;
-import bio.overture.score.client.manifest.kf.KFFileBean;
 import bio.overture.score.client.upload.UploadStateStore;
-import bio.overture.score.client.util.CsvParser;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import javax.net.ssl.HostnameVerifier;
@@ -68,8 +66,6 @@ import org.thymeleaf.templateresolver.ITemplateResolver;
 @Import(PropertyPlaceholderAutoConfiguration.class)
 public class ClientConfig {
 
-  private static final Character TAB_SEP = '\t';
-
   /** Configuration. */
   @Autowired private ClientProperties properties;
 
@@ -82,11 +78,6 @@ public class ClientConfig {
   public String clientVersion() {
     return firstNonNull(
         ClientConfig.class.getPackage().getImplementationVersion(), "[unknown version]");
-  }
-
-  @Bean
-  public CsvParser<KFFileBean> kfFileBeanCsvParser() {
-    return new CsvParser<>(KFFileBean.class, TAB_SEP);
   }
 
   @Bean

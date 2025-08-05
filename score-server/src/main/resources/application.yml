@@ -33,6 +33,11 @@ server:
 s3:
   secured: true
   sigV4Enabled: true
+  upload.directory: upload
+  upload.expiration: 6
+  data.directory: data
+  # COL-131: Change pre-signed URLs TTL to 1 day max
+  download.expiration: 1
 
   # custom meta property with md5 hash, unused when upload state files are available (default behaviour)
   # customMd5Property: md5chksum
@@ -56,14 +61,6 @@ bucket:
 
 object:
   sentinel: heliograph
-
-collaboratory:
-  upload.directory: upload
-  upload.expiration: 6
-  data.directory: data
-
-  # COL-131: Change pre-signed URLs TTL to 1 day max
-  download.expiration: 1
 
 upload:
   retry.limit: 5
@@ -101,13 +98,11 @@ spring:
     pathmatch:
       matching-strategy: ant_path_matcher
 
-
 logging:
   level:
     root: INFO
     org.springframework.web: INFO
 ---
-
 ###############################################################################
 # Profile - "ssl"
 # this is the configuration for the service using the self-signed cert created
@@ -128,49 +123,6 @@ server:
     key-alias: object-store-service
 
 ---
-
-###############################################################################
-# Profile - "amazon"
-###############################################################################
-
-spring:
-  config:
-    activate:
-      on-profile: amazon
-
-s3:
-  endpoint: s3-external-1.amazonaws.com
-  masterEncryptionKeyId: af628f04-ac12-4b11-bf83-6545fd44ad18
-
-bucket:
-  name.object: oicr.icgc
-  name.state: oicr.icgc
-
-metadata:
-  url: https://virginia.song.icgc.org
-  useLegacyMode: false
-
----
-
-###############################################################################
-# Profile - "collaboratory"
-###############################################################################
-
-spring:
-  config:
-    activate:
-      on-profile: collaboratory
-
-s3:
-  endpoint: https://object.cancercollaboratory.org:9080
-  masterEncryptionKeyId:
-
-metadata:
-  url: https://song.cancercollaboratory.org
-  useLegacyMode: false
-
----
-
 ###############################################################################
 # Profile - "azure"
 ###############################################################################
@@ -194,7 +146,44 @@ download:
   partsize: 250000000
 
 ---
+###############################################################################
+# Profile - "s3"
+###############################################################################
 
+spring:
+  config:
+    activate:
+      on-profile: s3
+
+s3:
+  # Whether the connection should use HTTPS (true) or HTTP (false)
+  secured: true
+
+  # Endpoint URL for the S3-compatible service
+  # endpoint: your-s3-endpoint
+
+  # Access key for authentication
+  # accessKey: your-access-key
+
+  # Secret key for authentication
+  # secretKey: your-secret-key
+
+  # Master encryption key ID for server-side encryption
+  # masterEncryptionKeyId: your-encryption-key-id
+
+  # Custom MD5 checksum property (if needed)
+  customMd5Property: md5chksum
+
+  # Connection timeout in milliseconds
+  connectionTimeout: 15000
+
+  # Retry limit for failed operations
+  retryLimit: 5
+
+  # Whether to use Signature Version 4
+  sigV4Enabled: true
+
+---
 ###############################################################################
 # Profile - "prod"
 ###############################################################################
@@ -212,7 +201,6 @@ metadata:
   url: https://meta.icgc.org
 
 ---
-
 ###############################################################################
 # Profile - "secure"
 ###############################################################################
@@ -257,7 +245,6 @@ auth:
           suffix: .WRITE
 
 ---
-
 ###############################################################################
 # Profile - "dev"
 ###############################################################################
@@ -288,7 +275,6 @@ metadata:
   url: http://localhost:8080
 
 ---
-
 ###############################################################################
 # Profile - "benchmark"
 ###############################################################################
@@ -305,5 +291,4 @@ server:
 
 s3:
   secured: false
-  # Sinai Center
-  endpoint: http://www.cancercollaboratory.org:9081
+  endpoint:

@@ -64,6 +64,11 @@ public class InfoCommand extends AbstractClientCommand {
   }
 
   private void active() {
+    if ((storageUrl == null || storageUrl.isEmpty())
+        && (metadataUrl == null || metadataUrl.isEmpty())) {
+      throw new IllegalArgumentException(
+          "Error: Storage URL or Metadata URL is not configured. Please provide a valid URL.");
+    }
     terminal.println(terminal.label("  Active Configuration: "));
     terminal.println("    Profile:          " + storageProfile);
     terminal.println("    Storage URL: " + terminal.url(storageUrl));

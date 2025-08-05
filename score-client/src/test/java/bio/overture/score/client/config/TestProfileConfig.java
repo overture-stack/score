@@ -10,7 +10,7 @@ import org.springframework.context.annotation.Bean;
 public class TestProfileConfig {
 
   @Autowired
-  @Value("${defaultProfile:collaboratory}")
+  @Value("${defaultProfile:s3}")
   private String defaultProfile;
 
   @Bean

@@ -55,7 +55,6 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -63,7 +62,6 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Setter
 @Service
-@Profile({"aws", "collaboratory", "default"})
 public class S3DownloadService implements DownloadService {
 
   /** Constants. */
@@ -72,10 +70,10 @@ public class S3DownloadService implements DownloadService {
   private static final String PUBLISHED_ANALYSIS_STATE = "PUBLISHED";
 
   /** Configuration. */
-  @Value("${collaboratory.data.directory}")
+  @Value("${s3.data.directory}")
   private String dataDir;
 
-  @Value("${collaboratory.download.expiration}")
+  @Value("${s3.download.expiration}")
   private int expiration;
 
   @Value("${object.sentinel}")
@@ -212,7 +210,7 @@ public class S3DownloadService implements DownloadService {
   private String getObjectMd5(ObjectMetadata metadata) {
     val contentMd5 = metadata.getContentMD5();
     if (contentMd5 != null) {
-      return  MD5s.toHex(contentMd5);
+      return MD5s.toHex(contentMd5);
     }
     val userMetadataMd5 =
         metadata.getUserMetaDataOf(s3config.getCustomMd5Property()); // get literal from config

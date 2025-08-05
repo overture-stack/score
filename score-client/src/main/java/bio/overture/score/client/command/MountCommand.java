@@ -59,7 +59,6 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 @Slf4j
@@ -67,7 +66,6 @@ import org.springframework.stereotype.Component;
 @Parameters(
     separators = "=",
     commandDescription = "Mount a read-only FUSE file system view of the remote storage repository")
-@Profile("!kf")
 public class MountCommand extends RepositoryAccessCommand {
 
   /** Constants. */
@@ -112,7 +110,7 @@ public class MountCommand extends RepositoryAccessCommand {
   @Parameter(
       names = "--options",
       description =
-          "The mount options of the file system (e.g. --options user_allow_other,allow_other,fsname=icgc,debug) "
+          "The mount options of the file system (e.g. --options user_allow_other,allow_other,fsname=score,debug) "
               + "in addition to those specified internally: "
               + INTERNAL_MOUNT_OPTIONS
               + ". See "
@@ -393,8 +391,6 @@ public class MountCommand extends RepositoryAccessCommand {
 
   private List<ObjectInfo> filterManifestObjects(List<ObjectInfo> objects) {
     val manifest = manifestService.getDownloadManifest(manifestResource);
-
-    validateManifest(manifest);
 
     val objectIds =
         manifest.getEntries().stream()

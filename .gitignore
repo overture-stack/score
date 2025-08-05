@@ -76,7 +76,7 @@ KeyczarTest.java
 HelperTest.java
 DownloadPartRequest.java
 
-# collaboratory
+# s3
 service.jks
 application-prod.properties
 

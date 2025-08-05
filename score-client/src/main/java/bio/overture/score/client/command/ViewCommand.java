@@ -57,7 +57,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
-import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 @Slf4j
@@ -65,7 +64,6 @@ import org.springframework.stereotype.Component;
 @Parameters(
     separators = "=",
     commandDescription = "Locally store/display some or all of a remote SAM/BAM file object")
-@Profile("!kf")
 public class ViewCommand extends RepositoryAccessCommand {
 
   public enum OutputFormat {
@@ -84,7 +82,7 @@ public class ViewCommand extends RepositoryAccessCommand {
   public static final int MAX_FILENAME_LENGTH = 120;
 
   public static final String PROGRAM_NAME = "Score Client";
-  public static final String ICGC = "ICGC";
+  public static final String SCORE = "score";
 
   /** Options. */
   @Parameter(
@@ -274,7 +272,7 @@ public class ViewCommand extends RepositoryAccessCommand {
         builder
             .programName(PROGRAM_NAME)
             .version(VersionUtils.getScmInfo().get("git.commit.id.describe"))
-            .programId(ICGC)
+            .programId(SCORE)
             .commandLine(getCommandLine())
             .containedOnly(containedOnly)
             .useOriginalHeader(useOriginalHeader)

@@ -28,7 +28,7 @@ import org.springframework.web.client.RestTemplate;
 @RequiredArgsConstructor
 public abstract class AbstractStorageService implements StorageService {
 
-  private static final String ICGC_TOKEN_KEY = "X-ICGC-TOKEN";
+  private static final String SCORE_TOKEN_KEY = "X-SCORE-TOKEN";
   private final DownloadStateStore downloadStateStore;
   private final RestTemplate dataTemplate;
   private final RetryTemplate retry;
@@ -54,7 +54,7 @@ public abstract class AbstractStorageService implements StorageService {
                       request -> {
                         request.getHeaders().set(HttpHeaders.RANGE, Parts.getHttpRangeValue(part));
                         String token = getEncryptedAccessToken().orElse("");
-                        request.getHeaders().set(ICGC_TOKEN_KEY, token);
+                        request.getHeaders().set(SCORE_TOKEN_KEY, token);
                       },
                       response -> {
                         try (HashingInputStream his =

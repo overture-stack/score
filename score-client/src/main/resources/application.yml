@@ -36,16 +36,9 @@ client:
   ssl:
     custom: false
 
-kfportal:
-  url: https://arranger.kids-first.io/june_13/graphql
 
-kf:
-  token:
-    url: https://v2i1r42t6d.execute-api.us-east-1.amazonaws.com/beta/token
-  download:
-    url: https://data.kidsfirstdrc.org
-    partSize: 1073741824
-    expiration: 86400
+download:
+  partSize: 1073741824
 
 transport:
   fileFrom: memory
@@ -54,13 +47,13 @@ transport:
 
 storage:
   # default for backwards compatibility
-  url: https://virginia.cloud.icgc.org
+#  url:
   retryNumber: 10
   retryTimeout: 1	
 
 metadata:
   # default for backwards compatibility
-  url: https://virginia.song.icgc.org
+#  url:
   ssl:
     enabled: true
     
@@ -78,41 +71,7 @@ token:
 
 
 isTest: false
-defaultProfile: collaboratory
-
----
-
-###############################################################################
-# Profile - "kf"
-###############################################################################
-
-spring:
-  config:
-    activate:
-      on-profile: kf
-
-# Storage server
-storage:
-  url: https://kf.com
-
-
-client:
-  ssl:
-    custom: false
-
----
-
-###############################################################################
-# Profile - "oicr"
-###############################################################################
-
-spring:
-  config:
-    activate:
-      on-profile: oicr
-
-# uses storage.url and client.ssl.custom define in common 
-
+defaultProfile: s3
 
 ---
 
@@ -132,7 +91,3 @@ logging:
     springframework.web: DEBUG
     com.amazonaws.services: DEBUG
 
----
-###############################################################################
-# Profile - "debug"
-###############################################################################

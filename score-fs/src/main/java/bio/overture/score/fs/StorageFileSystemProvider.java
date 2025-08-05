@@ -70,7 +70,7 @@ public class StorageFileSystemProvider extends ReadOnlyFileSystemProvider {
 
   @Override
   public String getScheme() {
-    return "icgc";
+    return "score";
   }
 
   @Override
