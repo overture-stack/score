@@ -89,9 +89,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         .permitAll()
         .antMatchers("/profile")
         .permitAll()
-        .antMatchers("/upload/**")
-        .permitAll()
-        .antMatchers("/download/**")
+        .antMatchers("/download/ping")
         .permitAll()
         .antMatchers(
             swaggerConfig.getAlternateSwaggerUrl(),

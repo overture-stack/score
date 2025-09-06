@@ -35,7 +35,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -56,13 +55,11 @@ public class BenchmarkUploadController extends UploadController {
   @Override
   @RequestMapping(method = RequestMethod.POST, value = "/{object-id}/uploads")
   public @ResponseBody ObjectSpecification initializeMultipartUpload(
-      @RequestHeader(value = "access-token", required = true) final String accessToken,
       @PathVariable(value = "object-id") String objectId,
       @RequestParam(value = "overwrite", required = false, defaultValue = "false")
           boolean overwrite,
       @RequestParam(value = "fileSize", required = true) long fileSize,
       @RequestParam(value = "md5", required = false) String md5,
-      @RequestHeader(value = "User-Agent", defaultValue = "unknown") String userAgent,
       HttpServletRequest request) {
     return uploadService.initiateUpload(objectId, fileSize, md5, overwrite);
   }
@@ -71,11 +68,9 @@ public class BenchmarkUploadController extends UploadController {
   @RequestMapping(method = RequestMethod.DELETE, value = "/{object-id}/parts")
   @ResponseStatus(value = HttpStatus.OK)
   public void deletePart(
-      @RequestHeader(value = "access-token", required = true) final String accessToken,
       @PathVariable(value = "object-id") String objectId,
       @RequestParam(value = "partNumber", required = true) int partNumber,
       @RequestParam(value = "uploadId", required = true) String uploadId,
-      @RequestHeader(value = "User-Agent", defaultValue = "unknown") String userAgent,
       HttpServletRequest request) {
     // NO-OP
   }
@@ -84,7 +79,6 @@ public class BenchmarkUploadController extends UploadController {
   @RequestMapping(method = RequestMethod.POST, value = "/{object-id}/parts")
   @ResponseStatus(value = HttpStatus.OK)
   public void finalizePartUpload(
-      @RequestHeader(value = "access-token", required = true) final String accessToken,
       @PathVariable(value = "object-id") String objectId,
       @RequestParam(value = "partNumber", required = true) int partNumber,
       @RequestParam(value = "uploadId", required = true) String uploadId,
@@ -97,7 +91,6 @@ public class BenchmarkUploadController extends UploadController {
   @RequestMapping(method = RequestMethod.POST, value = "/{object-id}")
   @ResponseStatus(value = HttpStatus.OK)
   public void finalizeUpload(
-      @RequestHeader(value = "access-token", required = true) final String accessToken,
       @PathVariable(value = "object-id") String objectId,
       @RequestParam(value = "uploadId", required = true) String uploadId) {
     // NO-OP
@@ -107,7 +100,6 @@ public class BenchmarkUploadController extends UploadController {
   @RequestMapping(method = RequestMethod.POST, value = "/{object-id}/recovery")
   @ResponseStatus(value = HttpStatus.OK)
   public void tryRecover(
-      @RequestHeader(value = "access-token", required = true) final String accessToken,
       @PathVariable(value = "object-id") String objectId,
       @RequestParam(value = "fileSize", required = true) long fileSize) {
     // NO-OP

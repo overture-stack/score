@@ -4,6 +4,7 @@ import static springfox.documentation.builders.RequestHandlerSelectors.basePacka
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import lombok.Getter;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,8 +21,9 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 import org.springframework.util.StringUtils;
 import springfox.documentation.builders.ApiInfoBuilder;
-import springfox.documentation.service.ApiInfo;
+import springfox.documentation.service.*;
 import springfox.documentation.spi.DocumentationType;
+import springfox.documentation.spi.service.contexts.SecurityContext;
 import springfox.documentation.spring.web.paths.RelativePathProvider;
 import springfox.documentation.spring.web.plugins.Docket;
 import springfox.documentation.swagger2.annotations.EnableSwagger2;
@@ -59,7 +61,9 @@ public class SwaggerConfig {
               public String getApplicationBasePath() {
                 return basePath;
               }
-            });
+            })
+        .securitySchemes(securitySchemes())
+        .securityContexts(Collections.singletonList(securityContext()));
   }
 
   private ApiInfo apiInfo() {
@@ -68,6 +72,23 @@ public class SwaggerConfig {
         .description("Score API reference for developers.")
         .version(serverVersion)
         .build();
+  }
+
+  private static ArrayList<? extends SecurityScheme> securitySchemes() {
+    ArrayList<SecurityScheme> securitySchemes = new ArrayList<>();
+    securitySchemes.add(new ApiKey("Bearer", "Authorization", "header"));
+    return securitySchemes;
+  }
+
+  private SecurityContext securityContext() {
+    return SecurityContext.builder().securityReferences(defaultAuth()).build();
+  }
+
+  private List<SecurityReference> defaultAuth() {
+    AuthorizationScope authorizationScope = new AuthorizationScope("global", "");
+    AuthorizationScope[] authorizationScopes = new AuthorizationScope[1];
+    authorizationScopes[0] = authorizationScope;
+    return Collections.singletonList(new SecurityReference("Bearer", authorizationScopes));
   }
 
   @Bean

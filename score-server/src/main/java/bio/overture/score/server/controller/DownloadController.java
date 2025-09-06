@@ -33,7 +33,6 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -50,31 +49,26 @@ public class DownloadController {
   @Autowired DownloadService downloadService;
 
   @RequestMapping(method = RequestMethod.GET, value = "/ping")
-  public @ResponseBody String ping(
-      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) final String accessToken,
-      @RequestHeader(value = "User-Agent", defaultValue = "unknown") String userAgent,
-      HttpServletRequest request) {
+  public @ResponseBody String ping(HttpServletRequest request) {
 
     val ipAddress = HttpServletRequests.getIpAddress(request);
 
     log.info(
         "Requesting download of sentinel object id with access token {} (MD5) from {} and client version {}",
-        identifier(accessToken),
+        hashToken(request.getHeader(HttpHeaders.AUTHORIZATION)),
         ipAddress,
-        userAgent);
+        request.getHeader(HttpHeaders.USER_AGENT));
     return downloadService.getSentinelObject();
   }
 
   @PreAuthorize("@accessSecurity.authorize(authentication,#objectId)")
   @RequestMapping(method = RequestMethod.GET, value = "/{object-id}")
   public @ResponseBody ObjectSpecification downloadPartialObject(
-      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) final String accessToken,
       @PathVariable(value = "object-id") String objectId,
       @RequestParam(value = "offset", required = true) long offset,
       @RequestParam(value = "length", required = true) long length,
       @RequestParam(value = "external", defaultValue = "false") boolean external,
       @RequestParam(value = "exclude-urls", defaultValue = "false") boolean excludeUrls,
-      @RequestHeader(value = "User-Agent", defaultValue = "unknown") String userAgent,
       HttpServletRequest request) {
 
     val ipAddress = HttpServletRequests.getIpAddress(request);
@@ -82,13 +76,13 @@ public class DownloadController {
     log.info(
         "Requesting download of object id {} with access token {} (MD5) from {} and client version {}",
         objectId,
-        identifier(accessToken),
+        hashToken(request.getHeader(HttpHeaders.AUTHORIZATION)),
         ipAddress,
-        userAgent);
+        request.getHeader(HttpHeaders.USER_AGENT));
     return downloadService.download(objectId, offset, length, external, excludeUrls);
   }
 
-  protected String identifier(String accessToken) {
+  protected String hashToken(String accessToken) {
     String identifier = "<none>";
     if ((accessToken != null) && (!accessToken.isEmpty())) {
       identifier = TokenHasher.hashToken(accessToken);

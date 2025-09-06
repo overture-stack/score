@@ -38,7 +38,6 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -58,25 +57,23 @@ public class UploadController {
   @ProjectCodeScoped
   @RequestMapping(method = RequestMethod.POST, value = "/{object-id}/uploads")
   public @ResponseBody ObjectSpecification initializeMultipartUpload(
-      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "object-id") String objectId,
       @RequestParam(value = "overwrite", required = false, defaultValue = "false")
           boolean overwrite,
       @RequestParam(value = "fileSize", required = true) long fileSize,
       @RequestParam(value = "md5", required = false) String md5,
-      @RequestHeader(value = "User-Agent", defaultValue = "unknown") String userAgent,
       HttpServletRequest request) {
 
-    log.info("Request received from client {}", userAgent);
+    log.info("Request received from client {}", request.getHeader(HttpHeaders.USER_AGENT));
     val ipAddress = HttpServletRequests.getIpAddress(request);
 
     log.info(
         "Initiating upload of object id {} with access token {} (MD5) having size of {} from {} using client version {}",
         objectId,
-        TokenHasher.hashToken(accessToken),
+        hashToken(request.getHeader(HttpHeaders.AUTHORIZATION)),
         Long.toString(fileSize),
         ipAddress,
-        userAgent);
+        request.getHeader(HttpHeaders.USER_AGENT));
     return uploadService.initiateUpload(objectId, fileSize, md5, overwrite);
   }
 
@@ -84,11 +81,9 @@ public class UploadController {
   @RequestMapping(method = RequestMethod.DELETE, value = "/{object-id}/parts")
   @ResponseStatus(value = HttpStatus.OK)
   public void deletePart(
-      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "object-id") String objectId,
       @RequestParam(value = "partNumber", required = true) int partNumber,
       @RequestParam(value = "uploadId", required = true) String uploadId,
-      @RequestHeader(value = "User-Agent", defaultValue = "unknown") String userAgent,
       HttpServletRequest request) {
 
     val ipAddress = HttpServletRequests.getIpAddress(request);
@@ -98,9 +93,9 @@ public class UploadController {
         objectId,
         partNumber,
         uploadId,
-        TokenHasher.hashToken(accessToken),
+        hashToken(request.getHeader(HttpHeaders.AUTHORIZATION)),
         ipAddress,
-        userAgent);
+        request.getHeader(HttpHeaders.USER_AGENT));
     uploadService.deletePart(objectId, uploadId, partNumber);
   }
 
@@ -108,7 +103,6 @@ public class UploadController {
   @RequestMapping(method = RequestMethod.POST, value = "/{object-id}/parts")
   @ResponseStatus(value = HttpStatus.OK)
   public void finalizePartUpload(
-      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "object-id") String objectId,
       @RequestParam(value = "partNumber", required = true) int partNumber,
       @RequestParam(value = "uploadId", required = true) String uploadId,
@@ -121,7 +115,6 @@ public class UploadController {
   @RequestMapping(method = RequestMethod.POST, value = "/{object-id}")
   @ResponseStatus(value = HttpStatus.OK)
   public void finalizeUpload(
-      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "object-id") String objectId,
       @RequestParam(value = "uploadId", required = true) String uploadId) {
     val watch = Stopwatch.createStarted();
@@ -133,7 +126,6 @@ public class UploadController {
   @RequestMapping(method = RequestMethod.POST, value = "/{object-id}/recovery")
   @ResponseStatus(value = HttpStatus.OK)
   public void tryRecover(
-      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "object-id") String objectId,
       @RequestParam(value = "fileSize", required = true) long fileSize) {
     uploadService.recover(objectId, fileSize);
@@ -142,7 +134,6 @@ public class UploadController {
   @ProjectCodeScoped
   @RequestMapping(method = RequestMethod.GET, value = "/{object-id}/status")
   public @ResponseBody UploadProgress getUploadProgress(
-      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "object-id") String objectId,
       @RequestParam(value = "fileSize", required = true) long fileSize) {
     // TODO: if object id/upload id does not exist, throw not found exception
@@ -151,18 +142,14 @@ public class UploadController {
 
   @ProjectCodeScoped
   @RequestMapping(method = RequestMethod.GET, value = "/{object-id}")
-  public @ResponseBody Boolean isObjectExist(
-      @RequestHeader(HttpHeaders.AUTHORIZATION) final String accessToken,
-      @PathVariable("object-id") String objectId) {
+  public @ResponseBody Boolean isObjectExist(@PathVariable("object-id") String objectId) {
     return uploadService.exists(objectId);
   }
 
   @ProjectCodeScoped
   @RequestMapping(method = RequestMethod.DELETE, value = "/{object-id}")
   @ResponseStatus(value = HttpStatus.OK)
-  public void cancelUpload(
-      @RequestHeader(HttpHeaders.AUTHORIZATION) final String accessToken,
-      @PathVariable("object-id") String objectId) {
+  public void cancelUpload(@PathVariable("object-id") String objectId) {
     uploadService.cancelUpload(objectId, uploadService.getUploadId(objectId));
   }
 
@@ -189,4 +176,13 @@ public class UploadController {
   @Retention(RetentionPolicy.RUNTIME)
   @PreAuthorize("@projectSecurity.authorize(authentication,#objectId)")
   public @interface ProjectCodeScoped {}
+
+  /** Logging helper */
+  protected String hashToken(String accessToken) {
+    String identifier = "<none>";
+    if ((accessToken != null) && (!accessToken.isEmpty())) {
+      identifier = TokenHasher.hashToken(accessToken);
+    }
+    return identifier;
+  }
 }
