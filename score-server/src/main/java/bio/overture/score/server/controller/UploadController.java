@@ -173,16 +173,6 @@ public class UploadController {
     uploadService.cancelUploads();
   }
 
-  @ProjectCodeScoped
-  @RequestMapping(method = RequestMethod.GET, value = "/test/{object-id}")
-  @ResponseStatus(value = HttpStatus.OK)
-  public @ResponseBody String test(
-      @RequestHeader(value = HttpHeaders.AUTHORIZATION) final String accessToken,
-      @PathVariable(value = "object-id") String objectId) {
-    log.info("Test invoked!");
-    return "Upload Test Operation executed";
-  }
-
   /**
    * Exception handler specific to the Spring Security processing in this controller
    *
@@ -191,7 +181,6 @@ public class UploadController {
   @ExceptionHandler({AccessDeniedException.class})
   public ResponseEntity<Object> handleAccessDeniedException(
       HttpServletRequest req, AccessDeniedException ex) {
-    log.error("Token missing required scope to update project");
     return new ResponseEntity<Object>(
         "Token missing required scope to update project", new HttpHeaders(), HttpStatus.FORBIDDEN);
   }
