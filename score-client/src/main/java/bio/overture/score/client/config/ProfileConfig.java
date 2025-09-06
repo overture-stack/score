@@ -30,10 +30,6 @@ public class ProfileConfig {
   @Value("${defaultProfile:s3}")
   private String defaultProfile;
 
-  @Autowired
-  @Value("${isTest}")
-  private boolean isTest = false;
-
   @Qualifier("clientVersion")
   @Autowired
   @NonNull
