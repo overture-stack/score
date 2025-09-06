@@ -33,18 +33,14 @@ public class ConnectivityResponseHandler extends DefaultResponseErrorHandler {
     val status = response.getStatusCode();
     switch (status) {
       case FORBIDDEN:
-        log.warn(
-            "Connection to object storage refused, received response code FORBIDDEN.");
+        log.warn("Connection to object storage refused, received response code FORBIDDEN.");
         throw notRetryableException(
-            "Connection to object storage refused, received response code FORBIDDEN.",
-            response);
+            "Connection to object storage refused, received response code FORBIDDEN.", response);
 
       case REQUEST_TIMEOUT:
-        log.warn(
-            "Connection to object storage failed, request timed out.");
+        log.warn("Connection to object storage failed, request timed out.");
         throw notRetryableException(
-            "Connection to object storage failed, request timed out.",
-            response);
+            "Connection to object storage failed, request timed out.", response);
 
       default:
         log.warn("Non-Retryable exception: {}", response.getStatusText());
