@@ -67,6 +67,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
   @Autowired private JwtDecoder jwtDecoder;
 
+  @Autowired private SwaggerConfig swaggerConfig;
+
   @Autowired
   public SecurityConfig(@NonNull ScopeProperties scopeProperties) {
     this.scopeProperties = scopeProperties;
@@ -83,15 +85,20 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     // @formatter:off
     http.authorizeRequests()
-        .antMatchers("/health")
-        .permitAll()
         .antMatchers("/actuator/health")
+        .permitAll()
+        .antMatchers("/profile")
         .permitAll()
         .antMatchers("/upload/**")
         .permitAll()
         .antMatchers("/download/**")
         .permitAll()
-        .antMatchers("/swagger**", "/swagger-resources/**", "/v2/api**", "/webjars/**")
+        .antMatchers(
+            swaggerConfig.getAlternateSwaggerUrl(),
+            "/swagger**",
+            "/swagger-resources/**",
+            "/v2/api**",
+            "/webjars/**")
         .permitAll()
         .and()
         .authorizeRequests()
