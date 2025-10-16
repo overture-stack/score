@@ -9,6 +9,7 @@ For detailed step-by-step instructions on using Song and Score clients for data 
 ## Installing Score-Client
 
 To run the score-client using Docker, provide the following environment variables:
+
 - `STORAGE_URL`: Score server URL
 - `METADATA_URL`: Song server URL
 - `ACCESSTOKEN`: Valid access token
@@ -23,7 +24,7 @@ docker run -d --name score-client \
     --network="host" \
     --platform="linux/amd64" \
     --mount type=bind,source="$(pwd)",target=/output \
-    ghcr.io/overture-stack/score:latest
+    ghcr.io/overture-stack/score-client:latest
 ```
 
 Replace all `${}` placeholders with your environment's values.
@@ -31,13 +32,13 @@ Replace all `${}` placeholders with your environment's values.
 <details>
   <summary><b>Detailed command breakdown</b></summary>
 
-  - `-d`: Runs container in detached mode (background)
-  - `-e ACCESSTOKEN=${token}`: Access token from the platform's auth service
-  - `-e STORAGE_URL=${scoreServerUrl}`: Score server URL
-  - `-e METADATA_URL=${songServerUrl}`: Song server URL
-  - `--network="host"`: Uses host network stack
-  - `--platform="linux/amd64"`: Specifies container platform
-  - `--mount type=bind,source="$(pwd)",target=/output`: Mounts current directory to container's `/output`
+- `-d`: Runs container in detached mode (background)
+- `-e ACCESSTOKEN=${token}`: Access token from the platform's auth service
+- `-e STORAGE_URL=${scoreServerUrl}`: Score server URL
+- `-e METADATA_URL=${songServerUrl}`: Song server URL
+- `--network="host"`: Uses host network stack
+- `--platform="linux/amd64"`: Specifies container platform
+- `--mount type=bind,source="$(pwd)",target=/output`: Mounts current directory to container's `/output`
 
 </details>
 
@@ -51,11 +52,11 @@ Use the Score Client's `upload` command to upload file data. Main upload methods
 
 ### Upload Options
 
-| Option | Description |
-|--------|-------------|
-| `--force` | Re-upload existing files (overwrite) |
-| `--md5` | Specify MD5 checksum of the file |
-| `--validate` | Validate file using MD5 checksum |
+| Option                | Description                                    |
+| --------------------- | ---------------------------------------------- |
+| `--force`             | Re-upload existing files (overwrite)           |
+| `--md5`               | Specify MD5 checksum of the file               |
+| `--validate`          | Validate file using MD5 checksum               |
 | `--verify-connection` | Verify object storage connection before upload |
 
 ### Upload Example
