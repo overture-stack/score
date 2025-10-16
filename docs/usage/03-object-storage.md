@@ -1,36 +1,36 @@
 # Object Storage Setup
 
-To set up your object storage for Score:
+To set up your object storage for score-client:
 
 1. **Register with an object storage provider** of your choice and follow their instructions for setting up and configuring their service.
 
-    :::info Minio Local Quickstart
-    If you'd like to quickly spin up a compatible object storage locally, you can run the following command: `docker run --name minIO -p 9000:9000 -e MINIO_ACCESS_KEY=minio -e MINIO_SECRET_KEY=minio123 minio/minio:RELEASE.2018-05-11T00-29-24Z server /data`
-    :::
+   :::info Minio Local Quickstart
+   If you'd like to quickly spin up a compatible object storage locally, you can run the following command: `docker run --name minIO -p 9000:9000 -e MINIO_ACCESS_KEY=minio -e MINIO_SECRET_KEY=minio123 minio/minio:RELEASE.2018-05-11T00-29-24Z server /data`
+   :::
 
 2. **Create two data buckets for Score** to use:
 
 - A bucket to store object data
 - A bucket to store and maintain state information
 
-    :::tip 
-    After creation, remember the IDs of both buckets, as they will be required later for configuring Score.
-    :::
+  :::tip
+  After creation, remember the IDs of both buckets, as they will be required later for configuring Score.
+  :::
 
 3. You may need to **create a `/data` sub-folder** in advance for each bucket. This requirement depends on your storage provider and is summarized below:
 
-    | Storage Provider | Data sub-folder required |
-    |--|--|
-    | Amazon S3 | No |
-    | Microsoft Azure | No |
-    | MinIO | No |
-    | OpenStack with Ceph | Yes |
+   | Storage Provider    | Data sub-folder required |
+   | ------------------- | ------------------------ |
+   | Amazon S3           | No                       |
+   | Microsoft Azure     | No                       |
+   | MinIO               | No                       |
+   | OpenStack with Ceph | Yes                      |
 
 4. **Record the URL, access key, and secret key** used to access your storage service. These credentials will be required later for configuring Score. Record and securely store these values.
 
-    :::info For Amazon S3 buckets
-    Remember to document the geographical region where you have configured your buckets to be stored, as this will be required when configuring Score.
-    :::
+   :::info For Amazon S3 buckets
+   Remember to document the geographical region where you have configured your buckets to be stored, as this will be required when configuring Score.
+   :::
 
 ## Environment Variable Setup
 
@@ -68,25 +68,29 @@ UPLOAD_CLEAN_ENABLED=true
 <summary>**Click here for a summary of these variables**</summary>
 
 **Storage Connection Settings**
-* `S3_ENDPOINT`: API endpoint URL of your storage service. Score will communicate with the service via this URL
-* `S3_ACCESSKEY`: Access key for your object storage buckets
-* `S3_SECRETKEY`: Secret key for your object storage buckets
-* `S3_SIGV4ENABLED`: Whether to use AWS S3 Signature Version 4 for authentication (true/false)
+
+- `S3_ENDPOINT`: API endpoint URL of your storage service. Score will communicate with the service via this URL
+- `S3_ACCESSKEY`: Access key for your object storage buckets
+- `S3_SECRETKEY`: Secret key for your object storage buckets
+- `S3_SIGV4ENABLED`: Whether to use AWS S3 Signature Version 4 for authentication (true/false)
 
 **Bucket Configuration**
-* `BUCKET_NAME_OBJECT`: ID of the bucket for storing object data
-* `BUCKET_NAME_STATE`: ID of the bucket for storing state information
-* `BUCKET_SIZE_POOL`: Used for bucket size pooling
-* `BUCKET_SIZE_KEY`: Used for bucket size key configuration
+
+- `BUCKET_NAME_OBJECT`: ID of the bucket for storing object data
+- `BUCKET_NAME_STATE`: ID of the bucket for storing state information
+- `BUCKET_SIZE_POOL`: Used for bucket size pooling
+- `BUCKET_SIZE_KEY`: Used for bucket size key configuration
 
 **Upload Settings**
-* `UPLOAD_PARTSIZE`: Byte size of each upload chunk to the object storage (adjust for performance)
-* `UPLOAD_RETRY_LIMIT`: Number of retry attempts for failed uploads before aborting
-* `UPLOAD_CONNECTION_TIMEOUT`: Timeout duration in milliseconds for idle connections
+
+- `UPLOAD_PARTSIZE`: Byte size of each upload chunk to the object storage (adjust for performance)
+- `UPLOAD_RETRY_LIMIT`: Number of retry attempts for failed uploads before aborting
+- `UPLOAD_CONNECTION_TIMEOUT`: Timeout duration in milliseconds for idle connections
 
 **Optional Cleanup Configuration**
-* `UPLOAD_CLEAN_CRON`: Schedule for the cleanup cron job (optional)
-* `UPLOAD_CLEAN_ENABLED`: Whether to enable the cleanup cron job (optional, true/false)
+
+- `UPLOAD_CLEAN_CRON`: Schedule for the cleanup cron job (optional)
+- `UPLOAD_CLEAN_ENABLED`: Whether to enable the cleanup cron job (optional, true/false)
 
 </details>
 
@@ -115,21 +119,25 @@ OBJECT_SENTINEL=heliograph # Required sample object/file name for `ping` operati
 <summary>**Click here for a summary of these variables**</summary>
 
 **Azure Connection Settings**
-* `AZURE_ENDPOINT_PROTOCOL`: Communication protocol for the Azure storage API endpoint (e.g., https)
-* `AZURE_ACCOUNT_NAME`: Account name for accessing Azure object storage
-* `AZURE_ACCOUNT_KEY`: Account key for accessing Azure object storage
+
+- `AZURE_ENDPOINT_PROTOCOL`: Communication protocol for the Azure storage API endpoint (e.g., https)
+- `AZURE_ACCOUNT_NAME`: Account name for accessing Azure object storage
+- `AZURE_ACCOUNT_KEY`: Account key for accessing Azure object storage
 
 **Bucket Configuration**
-* `BUCKET_NAME_OBJECT`: Bucket ID for storing object data
-* `BUCKET_POLICY_UPLOAD`: Access policy name for write operations
-* `BUCKET_POLICY_DOWNLOAD`: Access policy name for read operations
+
+- `BUCKET_NAME_OBJECT`: Bucket ID for storing object data
+- `BUCKET_POLICY_UPLOAD`: Access policy name for write operations
+- `BUCKET_POLICY_DOWNLOAD`: Access policy name for read operations
 
 **Performance Settings**
-* `UPLOAD_PARTSIZE`: Byte size of each upload chunk (adjust for performance)
-* `DOWNLOAD_PARTSIZE`: Byte size of each download chunk (adjust for performance)
+
+- `UPLOAD_PARTSIZE`: Byte size of each upload chunk (adjust for performance)
+- `DOWNLOAD_PARTSIZE`: Byte size of each download chunk (adjust for performance)
 
 **Monitoring Configuration**
-* `OBJECT_SENTINEL`: Default sample object/file name for 'ping' operations
+
+- `OBJECT_SENTINEL`: Default sample object/file name for 'ping' operations
 
 </details>
 
@@ -146,6 +154,6 @@ For Azure storage, you must define a storage access policy for your container.
 
    ![azure-policies](../assets/azure-policies.png)
 
-    :::info Azure storage access policies
-    For more information on Azure storage access policies, visit [the official Azure storage services documentation](https://learn.microsoft.com/en-us/rest/api/storageservices/define-stored-access-policy#create-or-modify-a-stored-access-policy).
-    :::
+   :::info Azure storage access policies
+   For more information on Azure storage access policies, visit [the official Azure storage services documentation](https://learn.microsoft.com/en-us/rest/api/storageservices/define-stored-access-policy#create-or-modify-a-stored-access-policy).
+   :::

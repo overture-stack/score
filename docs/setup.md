@@ -156,13 +156,13 @@ docker run -d --name score-client \
  --network="host" \
  --platform="linux/amd64" \
  --mount type=bind,source=${pwd},target=/output \
- ghcr.io/overture-stack/score:latest
+ ghcr.io/overture-stack/score-client:client:latest
 ```
 
     <details>
     <summary>**Click here for an explaination of command above**</summary>
       - `-e ACCESSTOKEN=68fb42b4-f1ed-4e8c-beab-3724b99fe528` sets up the score-client with a pre-configured system-wide access token that works with the quickstart service setup.
-      - `-e STORAGE_URL=http://score:8087` is the url for the Score server that the Score-Client will interact with.
+      - `-e STORAGE_URL=http://score-client:8087` is the url for the Score server that the Score-Client will interact with.
       - `-e METADATA_URL=http://song:8080` is the url for the song server that the score-client will interact with.
       - `--network="host"` Uses the host network stack inside the container, bypassing the usual network isolation. This means the container shares the network namespace with the host machine.
       - `--platform="linux/amd64"` Specifies the platform the container should emulate. In this case, it's set to linux/amd64, indicating the container is intended to run on a Linux system with an AMD64 architecture.
