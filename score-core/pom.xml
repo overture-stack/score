@@ -85,7 +85,7 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
   </dependencies>
 
   <properties>
-    <assertj-core.version>1.7.1</assertj-core.version>
+    <assertj-core.version>3.27.7</assertj-core.version>
     <!-- Versions -->
     <!-- TODO: This is duplicated in client -->
     <jersey.version>1.19.1</jersey.version>
