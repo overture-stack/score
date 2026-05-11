@@ -259,6 +259,12 @@ public class ScoreStorageService extends AbstractStorageService {
         partNumber);
     retry.execute(
         ctx -> {
+          log.debug(
+              "Local checksum {} for part {}",
+              disableChecksum
+                  ? "disabled"
+                  : (md5.equals(etag) ? "validation passed" : "validation failed"),
+              partNumber);
           if (disableChecksum || md5.equals(etag)) {
             serviceTemplate.exchange(
                 endpoint
