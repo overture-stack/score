@@ -86,7 +86,7 @@ public class S3UploadService implements UploadService {
   public ObjectSpecification initiateUpload(
       String objectId, long fileSize, String md5, boolean overwrite) {
     // First ensure that the system is aware of the requested object
-    checkRegistered(objectId);
+    checkRegistered(objectId, md5);
 
     val objectKey = ObjectKeys.getObjectKey(dataDir, objectId);
     log.debug("Initiating upload for object key: {}, overwrite: {}", objectKey, overwrite);
@@ -142,7 +142,9 @@ public class S3UploadService implements UploadService {
       return spec;
     } catch (AmazonServiceException e) {
       log.error("Multipart Upload Initialization failure", e);
-      if (e.getErrorCode().equals("KMS.DisabledException")) {
+      if (e.getErrorCode().equals("BadDigest")) {
+        throw new NotRetryableException(e);
+      } else if (e.getErrorCode().equals("KMS.DisabledException")) {
         throw new InternalUnrecoverableError(e);
       }
 
@@ -432,13 +434,24 @@ public class S3UploadService implements UploadService {
     stateStore.deletePart(objectId, uploadId, partNumber);
   }
 
-  void checkRegistered(String objectId) {
+  void checkRegistered(String objectId, String md5) {
     val entity = metadataClient.getEntity(objectId);
     if (!entity.getId().equals(objectId)) {
       val message =
           String.format(
               "Critical Error: checked for objectId %s and metadata server returned %s as match",
               objectId, entity.getId());
+
+      log.error(message); // Log to audit log file
+      throw new InternalUnrecoverableError(message);
+    }
+
+    val registeredFile = metadataClient.getFile(entity.getProjectCode(), objectId);
+    if (!registeredFile.getFileMd5sum().equals(md5)) {
+      val message =
+          String.format(
+              "Critical Error: checked for objectId %s with md5 %s and metadata server returned md5 %s as match",
+              objectId, md5, registeredFile.getFileMd5sum());
 
       log.error(message); // Log to audit log file
       throw new InternalUnrecoverableError(message);

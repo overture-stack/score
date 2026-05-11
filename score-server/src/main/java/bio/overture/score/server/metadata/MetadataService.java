@@ -62,6 +62,23 @@ public class MetadataService {
     }
   }
 
+  public MetadataFile getFile(@NonNull String studyId, @NonNull String id) {
+    log.debug("using " + metadataUrl + " for MetaData server");
+    try {
+      return restTemplate
+          .getForEntity(metadataUrl + "/studies/" + studyId + "/files/" + id, MetadataFile.class)
+          .getBody();
+    } catch (HttpClientErrorException e) {
+      if (e.getStatusCode() == NOT_FOUND) {
+        throw new IdNotFoundException(format("File %s is not registered on the server.", id));
+      }
+
+      log.error("Unexpected response code {} while getting ID {}", e.getStatusCode(), id);
+
+      throw e;
+    }
+  }
+
   public String getAnalysisStateForMetadata(@NonNull MetadataEntity metadataEntity) {
     val studyId = getStudyId(metadataEntity);
     val analysisId = getAnalysisId(metadataEntity);
