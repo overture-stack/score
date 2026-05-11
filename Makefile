@@ -5,7 +5,7 @@ DEMO_MODE := 0
 FORCE := 0
 
 # Required System files
-DOCKER_COMPOSE_EXE := $(shell which docker-compose)
+DOCKER_COMPOSE_EXE := $(shell which docker) compose
 CURL_EXE := $(shell which curl)
 MVN_EXE := $(shell which mvn)
 
@@ -38,6 +38,7 @@ RETRY_CMD := $(DOCKER_DIR)/retry-command.sh
 # Commands
 DOCKER_COMPOSE_CMD := echo "*********** DEMO_MODE = $(DEMO_MODE) **************" \
 	&& echo "*********** FORCE = $(FORCE) **************" \
+	&& echo "*********** Docker file = $(DOCKERFILE_NAME) **************" \
 	&& MY_UID=$(MY_UID) MY_GID=$(MY_GID) DOCKERFILE_NAME=$(DOCKERFILE_NAME) $(DOCKER_COMPOSE_EXE) -f $(ROOT_DIR)/docker-compose.yml
 SCORE_CLIENT_CMD := $(DOCKER_COMPOSE_CMD) run --rm -u $(THIS_USER) score-client bin/score-client
 SCORE_CLIENT_TEST := $(DOCKER_COMPOSE_CMD) run --rm -u $(THIS_USER) score-client /data/run_tests.sh
@@ -77,17 +78,17 @@ _ping_song_server:
 
 _setup-object-storage: 
 	@echo $(YELLOW)$(INFO_HEADER) "Setting up bucket score.data and heliograph" $(END)
-	@if  $(DOCKER_COMPOSE_CMD) run aws-cli --endpoint-url http://object-storage:9000 s3 ls s3://score.data ; then \
+	@if  $(DOCKER_COMPOSE_CMD) run --remove-orphans aws-cli --endpoint-url http://object-storage:9000 s3 ls s3://score.data ; then \
 		echo $(YELLOW)$(INFO_HEADER) "Bucket already exists. Skipping creation..." $(END); \
 	else \
-		$(DOCKER_COMPOSE_CMD) run aws-cli --endpoint-url http://object-storage:9000 s3 mb s3://score.data; \
+		$(DOCKER_COMPOSE_CMD) run --remove-orphans aws-cli --endpoint-url http://object-storage:9000 s3 mb s3://score.data; \
 	fi
-	@$(DOCKER_COMPOSE_CMD) run aws-cli --endpoint-url http://object-storage:9000 s3 cp /score-data/heliograph s3://score.data/data/heliograph
+	@$(DOCKER_COMPOSE_CMD) run --remove-orphans aws-cli --endpoint-url http://object-storage:9000 s3 cp /score-data/heliograph s3://score.data/data/heliograph
 
 _destroy-object-storage:
 	@echo $(YELLOW)$(INFO_HEADER) "Removing bucket score.data" $(END)
-	@if  $(DOCKER_COMPOSE_CMD) run aws-cli --endpoint-url http://object-storage:9000 s3 ls s3://score.data ; then \
-		$(DOCKER_COMPOSE_CMD) run aws-cli --endpoint-url http://object-storage:9000 s3 rb s3://score.data --force; \
+	@if  $(DOCKER_COMPOSE_CMD) run --remove-orphans aws-cli --endpoint-url http://object-storage:9000 s3 ls s3://score.data ; then \
+		$(DOCKER_COMPOSE_CMD) run --remove-orphans aws-cli --endpoint-url http://object-storage:9000 s3 rb s3://score.data --force; \
 	else \
 		echo $(YELLOW)$(INFO_HEADER) "Bucket does not exist. Skipping..." $(END); \
 	fi

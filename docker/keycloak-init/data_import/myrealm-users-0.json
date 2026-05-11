@@ -8,7 +8,7 @@
     "totp" : false,
     "emailVerified" : false,
     "attributes" : {
-      "api-keys" : [ "{\"name\":\"4978D340EDFA11ABF4A6B282C762676DCFAAEF55496631A6474D55C17CB96DCB\",\"scope\":[\"song.READ\",\"score.WRITE\",\"score.READ\",\"song.WRITE\"],\"expiryDate\":1746499545473,\"issueDate\":1714963545473,\"isRevoked\":false,\"description\":\"write and read\"}" ]
+      "api-keys" : [ "{\"name\":\"4978D340EDFA11ABF4A6B282C762676DCFAAEF55496631A6474D55C17CB96DCB\",\"scope\":[\"song.READ\",\"score.WRITE\",\"score.READ\",\"song.WRITE\"],\"expiryDate\":1904308934000,\"issueDate\":1714963545473,\"isRevoked\":false,\"description\":\"write and read\"}" ]
     },
     "credentials" : [ {
       "id" : "b2152773-6246-4f74-bddd-6440e99dc860",
