@@ -3,7 +3,7 @@
 Data download using the Score Client.
 
 :::info Download Guide
-For detailed step-by-step instructions on using Song and Score clients for data downloads, see our [**platform guide on CLI downloads**](https://docs.overture.bio/guides/user-guides/cli-downloads).
+For detailed step-by-step instructions on using Song and Score clients for data downloads, see our [**platform guide on CLI downloads**](/use/cli-downloads).
 :::
 
 ## Installing Score-Client
@@ -77,5 +77,5 @@ docker exec score-client sh -c "score-client download --manifest ./<manifestDire
 - Replace `<outputDirectory>` with your desired download location
 
 :::info Score Client Reference Doc
-For more information see our [**Score Client command reference documentation**](https://docs.overture.bio/docs/core-software/Score/usage/client-reference)
+For more information see our [**Score Client command reference documentation**](/develop/Score/reference/client-reference)
 :::

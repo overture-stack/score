@@ -3,7 +3,7 @@
 Data uploads using the Client or API.
 
 :::info Data Submission Guide
-For detailed step-by-step instructions on using Song and Score clients for data submissions, see our [**platform guide on CLI submissions**](https://docs.overture.bio/guides/user-guides/cli-submissions).
+For detailed step-by-step instructions on using Song and Score clients for data submissions, see our [**platform guide on CLI submissions**](/use/cli-submissions).
 :::
 
 ## Installing Score-Client
@@ -56,7 +56,6 @@ Use the Score Client's `upload` command to upload file data. Main upload methods
 | --------------------- | ---------------------------------------------- |
 | `--force`             | Re-upload existing files (overwrite)           |
 | `--md5`               | Specify MD5 checksum of the file               |
-| `--validate`          | Validate file using MD5 checksum               |
 | `--verify-connection` | Verify object storage connection before upload |
 
 ### Upload Example

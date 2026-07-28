@@ -45,10 +45,10 @@ To connect Score with AWS, Ceph, or Minio storage, modify your `.env.score` file
 # Object Storage Configuration Variables
 # ============================
 
-SPRING_PROFILES_ACTIVE=prod,aws
+SPRING_PROFILES_ACTIVE=prod,s3
 
 S3_ENDPOINT=http://localhost:9000
-S3_ACCESS_KEY=minio
+S3_ACCESSKEY=minio
 S3_SECRETKEY=minio123
 S3_SIGV4ENABLED=true
 

@@ -100,7 +100,7 @@ There are two authentication methods with Vault:
     - `role-id`: A permanent identifier (like a username)
     - `secret-id`: A rotatable credential (like a password)
 
-    AppRole provides enhanced security features like credential rotation, fine-grained access control, and IP restrictions. Contact your Vault administrator to set up AppRole authentication. xwFor details, see [Vault's AppRole documentation](https://developer.hashicorp.com/vault/docs/auth/approle).
+    AppRole provides enhanced security features like credential rotation, fine-grained access control, and IP restrictions. Contact your Vault administrator to set up AppRole authentication. For details, see [Vault's AppRole documentation](https://developer.hashicorp.com/vault/docs/auth/approle).
     :::
 
     :::warning Security Notice
