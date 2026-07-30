@@ -165,7 +165,47 @@ docker run -d --name score-client \
 
 :::info Obtaining an API key
 
-`ACCESSTOKEN` is environment-specific; there is no fixed development token. The Keycloak that `make start-deps` brings up on port `9082` loads the `keycloak-apikeys` provider, which issues keys against the `myrealm` realm. Generate a key there and pass its value here. See [Authentication](/develop/Score/reference/authentication) for how the provider is installed and how Score validates the keys it issues.
+`ACCESSTOKEN` is environment-specific; there is no fixed development token. The Keycloak that `make start-deps` brings up on port `9082` loads the `keycloak-apikeys` provider, which issues keys against the `myrealm` realm. See [Authentication](/develop/Score/reference/authentication) for how the provider is installed and how Score validates the keys it issues.
+
+<details>
+<summary>**Click here for the steps to generate a key against the local stack**</summary>
+
+The realm ships the users `admin` (a member of the `ADMIN` group) and `testca_user` (a member of `TESTCASONG_GROUP`), both with hashed passwords that are not recoverable from the realm export. Keys can only be issued by their owner or an administrator, so start by giving one of those users a password you know.
+
+1. Open the Keycloak admin console at `http://localhost:9082` and sign in. The image's default administrator credentials are `user` / `bitnami`.
+
+2. In the `myrealm` realm, set a password for the `admin` user (**Users** → `admin` → **Credentials**). Note its user ID from the same page; you will need it below.
+
+3. Request a token for that user. The realm's `system` client has direct access grants enabled:
+
+   ```bash
+   curl -X POST "http://localhost:9082/realms/myrealm/protocol/openid-connect/token" \
+     -d "grant_type=password" \
+     -d "client_id=system" -d "client_secret=systemsecret" \
+     -d "username=admin" -d "password=<the password you just set>"
+   ```
+
+4. Exchange that token for an API key, substituting the user ID from step 2:
+
+   ```bash
+   curl -X POST "http://localhost:9082/realms/myrealm/apikey/api_key?user_id=<user-id>&scopes=score.WRITE&scopes=score.READ" \
+     -H "Authorization: Bearer <access_token from step 3>"
+   ```
+
+   The `name` field of the response is the key value. Pass it as `ACCESSTOKEN`:
+
+   ```json
+   {
+     "name": "5b1da354-37bd-409d-b938-ea14b8035bc3",
+     "scope": ["score.READ", "score.WRITE"],
+     "expiryDate": "2027-07-30T15:32:59.990+0000",
+     "isRevoked": false
+   }
+   ```
+
+Scopes take the form `<resource>.<READ|WRITE>`, and the resources the realm defines are `song`, `score`, `TEST-CA`, and `ABC123`. A request for a scope the user's group does not carry is rejected with `Invalid Scope`.
+
+</details>
 
 :::
 
