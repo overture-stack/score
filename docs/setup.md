@@ -13,55 +13,59 @@ This guide will walk you through setting up a complete development environment, 
 
 ### Setting up supporting services
 
-We'll use our quickstart service, a flexible Docker Compose setup, to spin up Score's complementary services.
+The Score repository ships its own `docker-compose.yml` and `Makefile`, which together start every service Score depends on. No other repository is required.
 
-1. Clone the quickstart repository and move into its directory:
+1. Clone Score and move into its directory:
 
    ```bash
-   git clone -b quickstart https://github.com/overture-stack/prelude.git
-   cd prelude
+   git clone https://github.com/overture-stack/score.git
+   cd score
    ```
 
-2. Run the appropriate start command for your operating system:
+2. Start Score's dependencies:
 
-   | Operating System | Command               |
-   | ---------------- | --------------------- |
-   | Unix/macOS       | `make scoreDev`       |
-   | Windows          | `./make.bat scoreDev` |
+   ```bash
+   make start-deps
+   ```
 
    <details>
    <summary>**Click here for a detailed breakdown**</summary>
 
-   This command will set up all complementary services for Score development as follows:
+   `make start-deps` packages the project and then brings up Keycloak, Song, and object storage from the repository's `docker-compose.yml`:
 
-   ![ScoreDev](./assets/scoreDev.svg "Score Dev Environment")
+   | Service     | Port    | Description                                     | Purpose in Score Development                |
+   | ----------- | ------- | ----------------------------------------------- | ------------------------------------------- |
+   | Keycloak    | `9082`  | Authorization and authentication service        | Provides OAuth2 authentication for Score    |
+   | Keycloak-db | `9444`  | Database for Keycloak                           | Stores Keycloak data for authentication     |
+   | Song        | `8080`  | Metadata management service                     | Manages metadata for files stored by Score  |
+   | Song-db     | `12345` | Database for Song                               | Stores metadata managed by Song             |
+   | Minio       | `8085`  | Object storage provider                         | Simulates S3-compatible storage for Score   |
 
-   | Service     | Port   | Description                                     | Purpose in Score Development                |
-   | ----------- | ------ | ----------------------------------------------- | ------------------------------------------- |
-   | Conductor   | `9204` | Orchestrates deployments and environment setups | Manages the overall development environment |
-   | Keycloak-db | -      | Database for Keycloak (no exposed port)         | Stores Keycloak data for authentication     |
-   | Keycloak    | `8180` | Authorization and authentication service        | Provides OAuth2 authentication for Score    |
-   | Song-db     | `5433` | Database for Song                               | Stores metadata managed by Song             |
-   | Song        | `8080` | Metadata management service                     | Manages metadata for files stored by Score  |
-   | Minio       | `9000` | Object storage provider                         | Simulates S3-compatible storage for Score   |
+   Keycloak starts with the `myrealm` realm imported from `docker/keycloak-init/data_import`, and downloads the `keycloak-apikeys` provider on start-up so it can issue API keys. The Song server is a pinned prebuilt image rather than a local build.
+
+   To bring up Score itself along with all of the above, use `make start-score-server` instead. That adds:
+
+   | Service      | Port           | Description      | Purpose in Score Development                                 |
+   | ------------ | -------------- | ---------------- | ------------------------------------------------------------ |
+   | Score-server | `8087`, `5006` | The Score server | The service under development; `5006` is the JVM debug port   |
 
    - Ensure these ports are free on your system before starting the environment.
    - You may need to adjust the ports in the `docker-compose.yml` file if you have conflicts with existing services.
+   - `make clean` tears the stack down and removes the build output; `make log-score-server` tails the server's logs.
 
-   For more information, see our [quickstart documentation linked here](/deploy/quickstart)
+   :::note
+
+   These targets build the project with the bundled Maven wrapper and drive Docker Compose, so a JDK is required even when you only want the supporting services. See the prerequisites above.
+
+   :::
 
    </details>
 
 ### Running the Development Server
 
-1.  Clone Score and move into its directory:
+Use these steps to run Score on your host, against the supporting services started above. To run Score in a container instead, `make start-score-server` covers both.
 
-    ```bash
-    git clone https://github.com/overture-stack/score.git
-    cd score
-    ```
-
-2.  Build the application locally:
+1.  Build the application locally:
 
     ```bash
     ./mvnw clean install -DskipTests
@@ -88,7 +92,7 @@ We'll use our quickstart service, a flexible Docker Compose setup, to spin up Sc
 
     :::
 
-3.  Start the Score Server:
+2.  Start the Score Server:
 
     ```bash
     ./mvnw spring-boot:run -Dspring-boot.run.profiles=default,s3,secure,dev -pl score-server
@@ -150,7 +154,7 @@ The `score-client` is a CLI tool used for communicating with a `score-server`. F
 
 ```bash
 docker run -d --name score-client \
- -e ACCESSTOKEN=68fb42b4-f1ed-4e8c-beab-3724b99fe528 \
+ -e ACCESSTOKEN=<your-api-key> \
  -e STORAGE_URL=http://localhost:8087 \
  -e METADATA_URL=http://localhost:8080 \
  --network="host" \
@@ -159,11 +163,17 @@ docker run -d --name score-client \
  ghcr.io/overture-stack/score-client:latest
 ```
 
+:::info Obtaining an API key
+
+`ACCESSTOKEN` is environment-specific; there is no fixed development token. The Keycloak that `make start-deps` brings up on port `9082` loads the `keycloak-apikeys` provider, which issues keys against the `myrealm` realm. Generate a key there and pass its value here. See [Authentication](/develop/Score/reference/authentication) for how the provider is installed and how Score validates the keys it issues.
+
+:::
+
     <details>
     <summary>**Click here for an explaination of command above**</summary>
-      - `-e ACCESSTOKEN=68fb42b4-f1ed-4e8c-beab-3724b99fe528` sets up the score-client with a pre-configured system-wide access token that works with the quickstart service setup.
-      - `-e STORAGE_URL=http://score:8087` is the url for the Score server that the Score-Client will interact with.
-      - `-e METADATA_URL=http://song:8080` is the url for the song server that the score-client will interact with.
+      - `-e ACCESSTOKEN=<your-api-key>` supplies the API key the score-client authenticates with, obtained from Keycloak as described above.
+      - `-e STORAGE_URL=http://localhost:8087` is the url for the Score server that the Score-Client will interact with.
+      - `-e METADATA_URL=http://localhost:8080` is the url for the song server that the score-client will interact with.
       - `--network="host"` Uses the host network stack inside the container, bypassing the usual network isolation. This means the container shares the network namespace with the host machine.
       - `--platform="linux/amd64"` Specifies the platform the container should emulate. In this case, it's set to linux/amd64, indicating the container is intended to run on a Linux system with an AMD64 architecture.
       - `--mount type=bind,source={pwd},target=/output` mounts the directory and its contents (volume) from the host machine to the container. In this case, it binds the present working directory from the host to /output inside the container. Any changes made to the files in this directory will be reflected in both locations.

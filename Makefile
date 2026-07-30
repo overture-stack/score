@@ -4,14 +4,20 @@
 DEMO_MODE := 0
 FORCE := 0
 
+# Repository root. Defined before the tool detection below, which depends on it.
+ROOT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
+
 # Required System files
-DOCKER_COMPOSE_EXE := $(shell which docker) compose
+# Prefer the Compose V2 plugin ("docker compose"), falling back to the standalone
+# V1 binary. V1 is no longer shipped with current Docker Desktop releases.
+DOCKER_COMPOSE_EXE := $(shell docker compose version >/dev/null 2>&1 && echo "docker compose" || which docker-compose)
 CURL_EXE := $(shell which curl)
-MVN_EXE := $(shell which mvn)
+# Prefer the Maven wrapper bundled with this repository, so a system-wide Maven
+# install is not required.
+MVN_EXE := $(shell if [ -x $(ROOT_DIR)/mvnw ]; then echo $(ROOT_DIR)/mvnw; else which mvn; fi)
 
 # Variables
 DOCKERFILE_NAME := $(shell if [ $(DEMO_MODE) -eq 1 ]; then echo Dockerfile; else echo Dockerfile.dev; fi)
-ROOT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 MY_UID := $$(id -u)
 MY_GID := $$(id -g)
 THIS_USER := $$(id -u):$$(id -g)
