@@ -3,7 +3,7 @@
 Data download using the Score Client.
 
 :::info Download Guide
-For detailed step-by-step instructions on using Song and Score clients for data downloads, see our [**platform guide on CLI downloads**](/use/cli-downloads).
+For detailed step-by-step instructions on using Song and Score clients for data downloads, see our [**platform guide on CLI downloads**](https://docs.overture.bio/use/cli-downloads).
 :::
 
 ## Installing Score-Client
