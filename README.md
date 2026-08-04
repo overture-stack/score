@@ -31,7 +31,7 @@ Technical resources for those working with or contributing to the project are av
 
 - **[Score Overview](https://docs.overture.bio/develop/Score/overview)** 
 - [**Setting up the Development Environment**](https://docs.overture.bio/develop/Score/setup)
-- [**Common Usage Docs**](https://docs.overture.bio/develop/Score/setup)
+- [**Reference Docs**](https://docs.overture.bio/develop/Score/reference)
 
 ##  Development Environment
 
