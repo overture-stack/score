@@ -77,5 +77,5 @@ docker exec score-client sh -c "score-client download --manifest ./<manifestDire
 - Replace `<outputDirectory>` with your desired download location
 
 :::info Score Client Reference Doc
-For more information see our [**Score Client command reference documentation**](/develop/Score/reference/client-reference)
+For more information see our [**Score Client command reference documentation**](./07-client-reference.md)
 :::

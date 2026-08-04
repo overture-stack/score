@@ -165,7 +165,7 @@ docker run -d --name score-client \
 
 :::info Obtaining an API key
 
-`ACCESSTOKEN` is environment-specific; there is no fixed development token. The Keycloak that `make start-deps` brings up on port `9082` loads the `keycloak-apikeys` provider, which issues keys against the `myrealm` realm. See [Authentication](/develop/Score/reference/authentication) for how the provider is installed and how Score validates the keys it issues.
+`ACCESSTOKEN` is environment-specific; there is no fixed development token. The Keycloak that `make start-deps` brings up on port `9082` loads the `keycloak-apikeys` provider, which issues keys against the `myrealm` realm. See [Authentication](./reference/04-authentication.md) for how the provider is installed and how Score validates the keys it issues.
 
 <details>
 <summary>**Click here for the steps to generate a key against the local stack**</summary>
