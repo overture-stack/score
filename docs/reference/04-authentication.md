@@ -164,7 +164,7 @@ Update your `.env.score` file with the required Keycloak variables. The followin
 # ============================
 
 # Profile configuration
-SPRING_PROFILES_ACTIVE=aws,prod,secure
+SPRING_PROFILES_ACTIVE=s3,prod,secure
 
 # Server and authentication settings
 SERVER_PORT=8087
