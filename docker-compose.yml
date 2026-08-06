@@ -141,7 +141,7 @@ services:
     volumes:
       - "./docker/object-storage-init/data/score.data/data:/score-data:ro"
   song-server:
-    image: ghcr.io/overture-stack/song-server:438c2c42
+    image: ghcr.io/overture-stack/song-server:5.3.0
     environment:
       SERVER_PORT: 8080
       SPRING_PROFILES_ACTIVE: "prod,secure,default"
