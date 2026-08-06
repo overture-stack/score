@@ -77,7 +77,6 @@ Commands and options supported by the Score client.
     | `--manifest` | Upload files using manifest file ID, URL, or path |
     | `--md5` | MD5 checksum of file to upload |
     | `--object-id` | Upload specific file by object ID |
-    | `--validate` | Perform MD5 checksum validation if available |
     | `--verify-connection` | Verify connection to object storage repository first |
 
 ## Url
@@ -109,12 +108,11 @@ Commands and options supported by the Score client.
     | `--input-file-index` | Local path to index file (requires --input-file) |
     | `--manifest` | Manifest file for querying object IDs and ranges |
     | `--object-id` | Specific object ID to download slice from |
-    | `--output-file` | Name of output file |
     | `--output-format` | Output file format (SAM or BAM) |
     | `--output-dir` | Path to output directory (with --manifest) |
     | `--output-index` | Write index files to output (with --manifest) |
     | `--output-original-header` | Output entire original header |
-    | `--output-type` | Structure of output file (CROSS, MERGED, or TRIMMED) |
+    | `--output-type` | Structure of output file (only `TRIMMED` is implemented) |
     | `--query` | Query for BAM file content extraction (coordinate format) |
     | `--reference-file` | Local path to FASTA file for CRAM decoding |
     | `--stdout` | Send output to stdout (forces SAM format) |
@@ -132,4 +130,4 @@ Additional option flags available for the `score-client` executable:
 
 ## Need Help?
 
-If you encounter any issues or have questions, please don't hesitate to reach out through our relevant [community support channels](https://docs.overture.bio/community/support)
+If you encounter any issues or have questions, please don't hesitate to reach out through our [**support page**](https://docs.overture.bio/community/support) or our [**discussion forum**](https://github.com/overture-stack/docs/discussions?discussions_q=).

@@ -6,12 +6,12 @@ Scores API is a RESTful API that uses JSON for request and response bodies. It f
 
 Depending on your environment, the Scores Swagger API can be accessed from the following URLs:
 
-- Development URL: `http://localhost:8087/swagger.html`
+- Development URL: `http://localhost:8087/swagger-ui.html`
 - Example production URL: `https://score.demo.overture.bio/swagger-ui.html`
 
 ### Authentication
 
-In production environments, all requests to the Songs API require authentication using an API key. 
+In production environments, all requests to the Score API require authentication using an API key. 
 
 Include your API key in the `Authorization` header of each request as follows:
 
@@ -20,9 +20,9 @@ Authorization: Bearer YOUR_API_KEY
 ```
 
 :::info API Key Access & Management
-For information on accessing an API key from a deployed Overture platform, [**see our platform guide here**](https://docs.overture.bio/guides/user-guides/cli-submissions#generate-an-api-key). 
+For information on setting up the API key provider on a deployed Overture platform, [**see our Keycloak deployment guide**](https://docs.overture.bio/deploy/deployment/keycloak). 
 
-For information on generating and managing API keys in Overture using Keycloak, [**see our administration guide on identity & access management here**](https://docs.overture.bio/guides/administration-guides).
+For information on generating and managing API keys in Overture using Keycloak, [**see our Keycloak configuration reference**](./04-authentication.md).
 :::
 
 ### Endpoints
@@ -35,4 +35,4 @@ import SwaggerAPIDoc from '/src/components/SwaggerAPIDoc';
 
 ### Need Help?
 
-If you encounter any issues or have questions about our API, please don't hesitate to reach out through our relevant [community support channels](https://docs.overture.bio/community/support)
+If you encounter any issues or have questions about our API, please don't hesitate to reach out through our [**support page**](https://docs.overture.bio/community/support) or our [**discussion forum**](https://github.com/overture-stack/docs/discussions?discussions_q=).

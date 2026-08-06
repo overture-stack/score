@@ -164,7 +164,7 @@ Update your `.env.score` file with the required Keycloak variables. The followin
 # ============================
 
 # Profile configuration
-SPRING_PROFILES_ACTIVE=aws,prod,secure
+SPRING_PROFILES_ACTIVE=s3,prod,secure
 
 # Server and authentication settings
 SERVER_PORT=8087
@@ -183,13 +183,12 @@ AUTH_SERVER_URL=http://localhost:8080/realms/{realmName}/apikey/check_api_key/
 AUTH_SERVER_TOKENNAME=apiKey
 AUTH_SERVER_CLIENTID=score-api
 AUTH_SERVER_CLIENTSECRET=scoresecret
-AUTH_SERVER_SCOPE_STUDY_PREFIX=score.
-AUTH_SERVER_SCOPE_UPLOAD_SUFFIX=.WRITE
-AUTH_SERVER_SCOPE_DOWNLOAD_SUFFIX=.READ
-AUTH_SERVER_SCOPE_DOWNLOAD_SYSTEM=score.WRITE
-AUTH_SERVER_SCOPE_DOWNLOAD_SUFFIX=.READ
-AUTH_SERVER_SCOPE_UPLOAD_SYSTEM=score.READ
-AUTH_SERVER_SCOPE_UPLOAD_SUFFIX=.WRITE
+AUTH_SERVER_SCOPE_DOWNLOAD_STUDY_PREFIX=PROGRAMDATA-
+AUTH_SERVER_SCOPE_DOWNLOAD_STUDY_SUFFIX=.READ
+AUTH_SERVER_SCOPE_DOWNLOAD_SYSTEM=score.READ
+AUTH_SERVER_SCOPE_UPLOAD_STUDY_PREFIX=PROGRAMDATA-
+AUTH_SERVER_SCOPE_UPLOAD_STUDY_SUFFIX=.WRITE
+AUTH_SERVER_SCOPE_UPLOAD_SYSTEM=score.WRITE
 SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWKSETURI=http://localhost:8080/realms/{realm-name}/protocol/openid-connect/certs
 ```
 
@@ -199,7 +198,7 @@ Replace any default values with the values specific to your environment. The var
 <summary>**Click here for details**</summary>
 
 **Profile Configuration**
-- `SPRING_PROFILES_ACTIVE`: Defines active Spring profiles for the application (aws,prod,secure)
+- `SPRING_PROFILES_ACTIVE`: Defines active Spring profiles for the application (s3,prod,secure)
 
 **Server and Authentication Settings**
 - `SERVER_PORT`: The port number on which the server will listen (default: 8087)
@@ -220,11 +219,12 @@ Replace any default values with the values specific to your environment. The var
 - `AUTH_SERVER_CLIENTSECRET`: Client secret found under "Client details" → "Credentials tab"
 
 **Scope Configuration**
-- `AUTH_SERVER_SCOPE_STUDY_PREFIX`: Prefix for study-specific scopes (default: score.)
-- `AUTH_SERVER_SCOPE_DOWNLOAD_SYSTEM`: System-level download scope (default: score.WRITE)
-- `AUTH_SERVER_SCOPE_DOWNLOAD_SUFFIX`: Study-level download scope suffix (default: .READ)
-- `AUTH_SERVER_SCOPE_UPLOAD_SYSTEM`: System-level upload scope (default: score.READ)
-- `AUTH_SERVER_SCOPE_UPLOAD_SUFFIX`: Study-level upload scope suffix (default: .WRITE)
+- `AUTH_SERVER_SCOPE_DOWNLOAD_STUDY_PREFIX`: Prefix for study-level download scopes (default: PROGRAMDATA-)
+- `AUTH_SERVER_SCOPE_DOWNLOAD_STUDY_SUFFIX`: Suffix for study-level download scopes (default: .READ)
+- `AUTH_SERVER_SCOPE_DOWNLOAD_SYSTEM`: System-level download scope (default: score.READ)
+- `AUTH_SERVER_SCOPE_UPLOAD_STUDY_PREFIX`: Prefix for study-level upload scopes (default: PROGRAMDATA-)
+- `AUTH_SERVER_SCOPE_UPLOAD_STUDY_SUFFIX`: Suffix for study-level upload scopes (default: .WRITE)
+- `AUTH_SERVER_SCOPE_UPLOAD_SYSTEM`: System-level upload scope (default: score.WRITE)
 
 **JWT Configuration**
 - `SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWKSETURI`: URI for JWT JSON Web Key Set for OAuth2 resource server

@@ -1,6 +1,8 @@
 services:
   keycloak-server:
-    image: docker.io/bitnami/keycloak:22
+    # Bitnami moved its versioned Docker Hub tags to the bitnamilegacy archive in 2025;
+    # docker.io/bitnami/keycloak:22 no longer resolves. See DEVELOPMENT notes before bumping.
+    image: docker.io/bitnamilegacy/keycloak:22
     environment:
       - KC_DB=postgres
       - KC_DB_URL=jdbc:postgresql://keycloak-postgresql/bitnami_keycloak
@@ -22,7 +24,7 @@ services:
         curl -sL https://github.com/oicr-softeng/keycloak-apikeys/releases/download/1.0.1/keycloak-apikeys-1.0.1.jar -o /opt/bitnami/keycloak/providers/keycloak-apikeys-1.0.1.jar
         kc.sh start-dev --import-realm
   keycloak-postgresql:
-    image: docker.io/bitnami/postgresql:11
+    image: docker.io/bitnamilegacy/postgresql:11
     environment:
       # ALLOW_EMPTY_PASSWORD is recommended only for development.
       - ALLOW_EMPTY_PASSWORD=yes
@@ -139,7 +141,7 @@ services:
     volumes:
       - "./docker/object-storage-init/data/score.data/data:/score-data:ro"
   song-server:
-    image: ghcr.io/overture-stack/song-server:438c2c42
+    image: ghcr.io/overture-stack/song-server:5.3.0
     environment:
       SERVER_PORT: 8080
       SPRING_PROFILES_ACTIVE: "prod,secure,default"
