@@ -1,74 +1,59 @@
 ###############################
-# Maven builder
+# Maven source
 ###############################
-# JDK image as builder
-FROM adoptopenjdk/openjdk11:jdk-11.0.6_10-slim as builder
-
-ENV SERVER_JAR_FILE    /score-server.jar
-ENV CLIENT_DIST_DIR    /score-client-dist
+FROM adoptopenjdk/openjdk11:jdk-11.0.6_10-slim AS source
 
 WORKDIR /srv
 COPY . /srv
 
-# Build project
-RUN ./mvnw package -DskipTests
+###############################
+# Score Client builder
+###############################
+FROM source AS client-builder
 
-# Prepare server jar
-RUN cd score-server/target \
-    && mv score-server-*-dist.tar.gz score-server.tar.gz \
-    && tar zxvf score-server.tar.gz -C /tmp \
-    && mv -f /tmp/score-server-*  /tmp/score-server-dist  \
-    && cp -f /tmp/score-server-dist/lib/score-server.jar $SERVER_JAR_FILE
+ENV CLIENT_DIST_DIR=/score-client-dist
+
+# Build score-client and the reactor modules it depends on.
+RUN ./mvnw -pl score-client -am package -DskipTests
 
 # Prepare client dist
 RUN cd score-client/target \
-	&& mv score-client-*-dist.tar.gz score-client.tar.gz \
+    && mv score-client-*-dist.tar.gz score-client.tar.gz \
     && tar zxvf score-client.tar.gz -C /tmp \
-    && mv -f /tmp/score-client-*  /tmp/score-client-dist  \
+    && mv -f /tmp/score-client-* /tmp/score-client-dist \
     && cp -r /tmp/score-client-dist $CLIENT_DIST_DIR \
-	&& mkdir -p $CLIENT_DIST_DIR/logs \
-	&& touch $CLIENT_DIST_DIR/logs/client.log \
-	&& chmod 777 $CLIENT_DIST_DIR/logs/client.log 
+    && mkdir -p $CLIENT_DIST_DIR/logs \
+    && touch $CLIENT_DIST_DIR/logs/client.log \
+    && chmod 777 $CLIENT_DIST_DIR/logs/client.log
 
 ###############################
 # Score Client
 ###############################
-FROM --platform=linux/amd64 ubuntu:22.04 as client
+FROM ubuntu:24.04 AS client
 
-ENV CLIENT_DIST_DIR    /score-client-dist
-ENV JDK_DOWNLOAD_URL https://download.java.net/openjdk/jdk17/ri/openjdk-17+35_linux-x64_bin.tar.gz
-ENV SCORE_CLIENT_HOME /score-client
-ENV PATH /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$SCORE_CLIENT_HOME/bin
-ENV SCORE_USER score
+ENV CLIENT_DIST_DIR=/score-client-dist
+ENV SCORE_CLIENT_HOME=/score-client
+ENV SCORE_USER=score
+ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+ENV PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$SCORE_CLIENT_HOME/bin:$JAVA_HOME/bin
 
 # Add score user, update apt, add FUSE support and basic command line tools
-RUN useradd $SCORE_USER  \
-  	&& apt-get update \
-  	&& apt-get -y upgrade \
-    && apt-get install -y libfuse-dev fuse curl wget software-properties-common \
-	&& mkdir $SCORE_CLIENT_HOME
+RUN useradd $SCORE_USER \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    curl \
+    fuse3 \
+    libfuse2 \
+    openjdk-17-jre-headless \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir $SCORE_CLIENT_HOME
 
-# Copy client dist from previous docker build staget
-COPY --from=builder $CLIENT_DIST_DIR/ $SCORE_CLIENT_HOME
+# Copy client dist from the client builder stage
+COPY --from=client-builder $CLIENT_DIST_DIR/ $SCORE_CLIENT_HOME
 
-# Install Open JDK 17, and remove unused things at runtime
-RUN mkdir /usr/lib/jvm \
-	&& cd /usr/lib/jvm \
-	&& wget $JDK_DOWNLOAD_URL -O openjdk17.tar.gz \
-	&& tar zxvf openjdk17.tar.gz \
-	&& rm -rf openjdk17.tar.gz \
-	&& echo 'PATH=$PATH:/usr/lib/jvm/jdk-17/bin' >> /etc/environment \
-	&& echo 'JAVA_HOME=/usr/lib/jvm/jdk-17' >> /etc/environment \
-	&& rm -rf /usr/lib/jvm/jdk-17/jmods \
-	&& rm -rf /usr/lib/jvm/jdk-17/lib/src.zip \
-	&& update-alternatives --install "/usr/bin/java" "java" "/usr/lib/jvm/jdk-17/bin/java" 0 \
-	&& update-alternatives --install "/usr/bin/javac" "javac" "/usr/lib/jvm/jdk-17/bin/javac" 0 \
-	&& update-alternatives --set java /usr/lib/jvm/jdk-17/bin/java \
-	&& update-alternatives --set javac /usr/lib/jvm/jdk-17/bin/javac \
-	&& update-alternatives --list java \
-	&& update-alternatives --list javac \
-	&& java -version \
-	&& chown -R $SCORE_USER:$SCORE_USER $SCORE_CLIENT_HOME
+RUN java -version \
+    && chown -R $SCORE_USER:$SCORE_USER $SCORE_CLIENT_HOME
 
 # Set working directory for convenience with interactive usage
 WORKDIR $SCORE_CLIENT_HOME
@@ -76,7 +61,19 @@ WORKDIR $SCORE_CLIENT_HOME
 ###############################
 # Score Server
 ###############################
-FROM adoptopenjdk/openjdk11:jre-11.0.6_10 as server
+FROM source AS server-builder
+
+ENV SERVER_JAR_FILE=/score-server.jar
+
+RUN ./mvnw -pl score-server -am package -DskipTests
+
+RUN cd score-server/target \
+    && mv score-server-*-dist.tar.gz score-server.tar.gz \
+    && tar zxvf score-server.tar.gz -C /tmp \
+    && mv -f /tmp/score-server-* /tmp/score-server-dist \
+    && cp -f /tmp/score-server-dist/lib/score-server.jar $SERVER_JAR_FILE
+
+FROM adoptopenjdk/openjdk11:jre-11.0.6_10 AS server
 
 # Paths
 ENV SCORE_HOME /score-server
@@ -91,7 +88,7 @@ RUN addgroup --system --gid $SCORE_GID $SCORE_USER  \
     && mkdir $SCORE_HOME $SCORE_LOGS \
     && chown -R $SCORE_UID:$SCORE_GID $SCORE_HOME
 
-COPY --from=builder $JAR_FILE $JAR_FILE
+COPY --from=server-builder $JAR_FILE $JAR_FILE
 
 USER $SCORE_UID
 
